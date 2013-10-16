@@ -100,15 +100,9 @@ namespace Neon.Utility {
             }
         }
 
-        public double ToDouble {
-            get {
-                return (double)this.RawValue / (double)One;
-            }
-        }
-
         public float AsFloat {
             get {
-                return (float)ToDouble;
+                return (float)this.RawValue / (float)One;
             }
         }
 
@@ -434,7 +428,7 @@ namespace Neon.Utility {
             F = Abs(F);
 
             if (F > Real.OneF)
-                throw new ArithmeticException("Bad Asin Input:" + F.ToDouble);
+                throw new ArithmeticException("Bad Asin Input:" + F.AsFloat);
 
             Real f1 = mul(mul(mul(mul(Real.Create(145103 >> Real.SHIFT_AMOUNT, false), F) -
                 Real.Create(599880 >> Real.SHIFT_AMOUNT, false), F) +

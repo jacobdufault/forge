@@ -24,7 +24,7 @@ namespace Neon.Entities {
         /// <summary>
         /// Destroys the entity.
         /// </summary>
-        //void Destroy();
+        void Destroy();
 
         event Action OnShow;
         event Action OnHide;
@@ -157,6 +157,11 @@ namespace Neon.Entities {
             }
         }
 
+        private EntityManager _entityManager;
+        public void AddedToEntityManager(EntityManager entityManager) {
+            _entityManager = entityManager;
+        }
+
         /// <summary>
         /// Called *ONLY* by simulation components so that add themselves to the entity
         /// </summary>
@@ -182,13 +187,16 @@ namespace Neon.Entities {
         /// Called *ONLY* be simulation components so that they remove themselves from the entity
         /// </summary>
         public void RemoveData<T>() where T : Data {
+            RemoveData(DataMap<T>.Accessor);
+        }
+
+        public void RemoveData(DataAccessor accessor) {
             /*
             if (EntityManager.HasInstance == false) {
                 return;
             }
             */
-
-            _toRemoveStage1.Add(DataMap<T>.Accessor);
+            _toRemoveStage1.Add(accessor);
 
             DispatchModificationNotification();
             DispatchDataStateChangedNotification();
@@ -227,6 +235,10 @@ namespace Neon.Entities {
             }
         }
         */
+
+        public void Destroy() {
+            _entityManager.RemoveEntity(this);
+        }
 
         private static Swappable<T> CreateSwappable<T>(T a, T b) {
             return new Swappable<T>(a, b);
@@ -343,7 +355,7 @@ namespace Neon.Entities {
                 //Current.CopyFrom(data.Current);
 
                 // Visualize based on Modifying
-                Modifying.UpdateVisualization();
+                Modifying.DoUpdateVisualization();
 
                 // update Modifying/Current/Previous references
                 ++_swappableIndex;

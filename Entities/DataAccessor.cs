@@ -57,8 +57,8 @@ namespace Neon.Entities {
         /// <summary>
         /// Creates a new DataAccessor that accesses the specified Data type.
         /// </summary>
-        /// <param name="dataType">The type of Data to retrieve; note that this paramater must be a subtype of Data</param>
-        internal DataAccessor(Type dataType)
+        /// <param name="dataType">The type of Data to retrieve; note that this parameter must be a subtype of Data</param>
+        public DataAccessor(Type dataType)
             : this() {
             Id = DataFactory.Instance.GetId(dataType);
         }

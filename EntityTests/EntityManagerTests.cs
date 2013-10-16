@@ -25,10 +25,10 @@ namespace EntityTests {
         public void OnUpdate(IEntity entity) {
         }
 
-        public void OnGlobalPreUpdate() {
+        public void OnGlobalPreUpdate(IEntity singletonEntity) {
         }
 
-        public void OnGlobalPostUpdate() {
+        public void OnGlobalPostUpdate(IEntity singletonEntity) {
         }
 
         public Type IStructuredInputType {
@@ -38,7 +38,7 @@ namespace EntityTests {
         public void OnInput(IStructuredInput input, IEntity entity) {
         }
 
-        public void OnGlobalInput(IStructuredInput input) {
+        public void OnGlobalInput(IStructuredInput input, IEntity singletonEntity) {
         }
     }
 
@@ -55,11 +55,11 @@ namespace EntityTests {
             return new DataAccessor[] { };
         }
 
-        public void OnGlobalPreUpdate() {
+        public void OnGlobalPreUpdate(IEntity singletonEntity) {
             ++PreCount;
         }
 
-        public void OnGlobalPostUpdate() {
+        public void OnGlobalPostUpdate(IEntity singletonEntity) {
             ++PostCount;
         }
     }
@@ -95,8 +95,8 @@ namespace EntityTests {
             EntityManager em = new EntityManager();
 
             CountUpdatesTrigger updates = new CountUpdatesTrigger();
-            em.AddTrigger(updates);
-            em.AddTrigger(new AllTriggers());
+            em.AddSystem(updates);
+            em.AddSystem(new AllTriggers());
 
             em.UpdateWorld();
             Assert.AreEqual(1, updates.PreCount);

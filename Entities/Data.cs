@@ -8,10 +8,7 @@ namespace Neon.Entities {
         /// <summary>
         /// The Entity that contains this Data instance.
         /// </summary>
-        public IEntity Entity {
-            get;
-            internal set;
-        }
+        public IEntity Entity;
 
         /// <summary>
         /// Creates a copy of this instance.
@@ -23,15 +20,20 @@ namespace Neon.Entities {
         /// <summary>
         /// Optionally update any visualizations of this Data instance to the value currently stored in this instance.
         /// </summary>
-        public virtual void UpdateVisualization() {
+        public void DoUpdateVisualization() {
+            if (OnUpdateVisualization != null) {
+                OnUpdateVisualization(this);
+            }
         }
+
+        public event Action<Data> OnUpdateVisualization;
 
         /// <summary>
         /// Does this type of Data support multiple modifications; ie, two systems can modify the same data instance in the same update loop.
         /// </summary>
         /// <remarks>
         /// If this is true, then it is *CRITICAL* that *ALL* systems which modify the data do so in a relative manner; ie, the system cannot
-        /// set a particular attribue to zero, but it can reduce it by five. If this is not followed, then state desyncs will occur.
+        /// set a particular attribute to zero, but it can reduce it by five. If this is not followed, then state desyncs will occur.
         /// </remarks>
         public abstract bool SupportsMultipleModifications {
             get;
@@ -57,6 +59,7 @@ namespace Neon.Entities {
         /// <summary>
         /// A stored hash code that is used for verification purposes
         /// </summary>
+        [NonSerialized]
         public int VerificationHashCode;
 
         public override int GetHashCode() {

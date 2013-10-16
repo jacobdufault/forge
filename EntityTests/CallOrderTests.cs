@@ -48,11 +48,11 @@ namespace EntityTests {
             _events.Add(TriggerEvent.OnUpdate);
         }
 
-        public void OnGlobalPreUpdate() {
+        public void OnGlobalPreUpdate(IEntity singletonEntity) {
             _events.Add(TriggerEvent.OnGlobalPreUpdate);
         }
 
-        public void OnGlobalPostUpdate() {
+        public void OnGlobalPostUpdate(IEntity singletonEntity) {
             _events.Add(TriggerEvent.OnGlobalPostUpdate);
         }
 
@@ -64,7 +64,7 @@ namespace EntityTests {
             _events.Add(TriggerEvent.OnInput);
         }
 
-        public void OnGlobalInput(IStructuredInput input) {
+        public void OnGlobalInput(IStructuredInput input, IEntity singletonEntity) {
             _events.Add(TriggerEvent.OnGlobalInput);
         }
     }
@@ -86,6 +86,9 @@ namespace EntityTests {
         public override int HashCode {
             get { return 0; }
         }
+
+        //public override void DoUpdateVisualization() {
+        //}
     }
 
     class TestData1 : Data {
@@ -99,6 +102,9 @@ namespace EntityTests {
         public override int HashCode {
             get { return 0; }
         }
+
+        //public override void DoUpdateVisualization() {
+        //}
     }
 
     [TestClass]
@@ -107,7 +113,7 @@ namespace EntityTests {
         public void Basic() {
             EntityManager em = new EntityManager();
             TriggerEventLogger trigger = new TriggerEventLogger();
-            em.AddTrigger(trigger);
+            em.AddSystem(trigger);
             Entity entity = new Entity();
             em.AddEntity(entity);
 
@@ -152,7 +158,7 @@ namespace EntityTests {
         public void InitializeWithAddingData() {
             EntityManager em = new EntityManager();
             TriggerEventLogger trigger = new TriggerEventLogger();
-            em.AddTrigger(trigger);
+            em.AddSystem(trigger);
             Entity entity = new Entity();
             em.AddEntity(entity);
 
@@ -181,7 +187,7 @@ namespace EntityTests {
         public void EntityModifyBeforeUpdate() {
             EntityManager em = new EntityManager();
             TriggerEventLogger trigger = new TriggerEventLogger();
-            em.AddTrigger(trigger);
+            em.AddSystem(trigger);
             Entity entity = new Entity();
             TestData0 data = new TestData0();
             entity.AddData(data);
@@ -204,7 +210,7 @@ namespace EntityTests {
         public void EntityModifyAfterUpdate() {
             EntityManager em = new EntityManager();
             TriggerEventLogger trigger = new TriggerEventLoggerFilterRequiresData0();
-            em.AddTrigger(trigger);
+            em.AddSystem(trigger);
             Entity entity = new Entity();
             TestData0 data = new TestData0();
             entity.AddData(data);
@@ -251,7 +257,7 @@ namespace EntityTests {
         public void InitializeBeforeAddingDataFilter() {
             EntityManager em = new EntityManager();
             TriggerEventLogger trigger = new TriggerEventLoggerFilterRequiresData0();
-            em.AddTrigger(trigger);
+            em.AddSystem(trigger);
             Entity entity = new Entity();
             TestData0 data = new TestData0();
             entity.AddData(data);
@@ -291,7 +297,7 @@ namespace EntityTests {
         public void InitializeAfterAddingDataFilter() {
             EntityManager em = new EntityManager();
             TriggerEventLogger trigger = new TriggerEventLoggerFilterRequiresData0();
-            em.AddTrigger(trigger);
+            em.AddSystem(trigger);
             Entity entity = new Entity();
             em.AddEntity(entity);
 

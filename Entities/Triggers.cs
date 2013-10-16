@@ -73,7 +73,7 @@ namespace Neon.Entities {
         /// Called once per update loop. This is expected to use the EntityManager's
         /// singleton data.
         /// </summary>
-        void OnGlobalPreUpdate();
+        void OnGlobalPreUpdate(IEntity singletonEntity);
     }
 
     /// <summary>
@@ -84,7 +84,7 @@ namespace Neon.Entities {
         /// Called once per update loop. This is expected to use the EntityManager's
         /// singleton data.
         /// </summary>
-        void OnGlobalPostUpdate();
+        void OnGlobalPostUpdate(IEntity singletonEntity);
     }
 
     /// <summary>
@@ -92,7 +92,7 @@ namespace Neon.Entities {
     /// </summary>
     public interface ITriggerInput : ITriggerBaseFilter {
         /// <summary>
-        /// The type of structured input that the trigger is interesed in.
+        /// The type of structured input that the trigger is interested in.
         /// </summary>
         Type IStructuredInputType {
             get;
@@ -119,6 +119,6 @@ namespace Neon.Entities {
         /// <summary>
         /// Called whenever the given input type is received.
         /// </summary>
-        void OnGlobalInput(IStructuredInput input);
+        void OnGlobalInput(IStructuredInput input, IEntity singletonEntity);
     }
 }

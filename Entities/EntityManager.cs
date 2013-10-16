@@ -23,9 +23,9 @@ namespace Neon.Entities {
         }
 
         /// <summary>
-        /// Registers the given trigger with the EntityManager.
+        /// Registers the given system with the EntityManager.
         /// </summary>
-        void AddTrigger(ISystem trigger);
+        void AddSystem(ISystem system);
 
         /// <summary>
         /// Updates the world. State changes (entity add, entity remove, ...) are propogated to the different
@@ -58,6 +58,17 @@ namespace Neon.Entities {
     /// EntityManager.
     /// </summary>
     public class EntityManager : IEntityManager {
+        /// <summary>
+        /// If true, then the EntityManager will emit lots of log messages.
+        /// </summary>
+        public bool EnableLogs = false;
+
+        private void DoLog(string message, params object[] args) {
+            if (EnableLogs) {
+                Log.Info("(" + UpdateNumber + ") " + message, args);
+            }
+        }
+
         /// <summary>
         /// The list of active Entities in the world.
         /// </summary>
@@ -114,25 +125,30 @@ namespace Neon.Entities {
 
         public IEntity SingletonEntity {
             get;
-            private set;
+            set;
         }
 
-        public EntityManager() {
-            SingletonEntity = new Entity();
+        public EntityManager()
+            : this(new Entity()) {
+        }
+
+        public EntityManager(IEntity singletonEntity) {
+            SingletonEntity = singletonEntity;
         }
 
         /// <summary>
-        /// Registers the given trigger with the EntityManager.
+        /// Registers the given system with the EntityManager.
         /// </summary>
-        public void AddTrigger(ISystem trigger) {
+        public void AddSystem(ISystem baseSystem) {
             Contract.Requires(_entities.Length == 0, "Cannot add a trigger after entities have been added");
+            DoLog("Adding system {0}", baseSystem);
 
-            if (trigger is ITriggerBaseFilter) {
-                System system = new System((ITriggerBaseFilter)trigger);
+            if (baseSystem is ITriggerBaseFilter) {
+                System system = new System((ITriggerBaseFilter)baseSystem);
                 _allSystems.Add(system);
 
-                if (trigger is ITriggerLifecycle) {
-                    var lifecycle = (ITriggerLifecycle)trigger;
+                if (baseSystem is ITriggerLifecycle) {
+                    var lifecycle = (ITriggerLifecycle)baseSystem;
                     system.OnAddedToCache += entity => {
                         lifecycle.OnAdded(entity);
                     };
@@ -140,27 +156,27 @@ namespace Neon.Entities {
                         lifecycle.OnRemoved(entity);
                     };
                 }
-                if (trigger is ITriggerUpdate) {
+                if (baseSystem is ITriggerUpdate) {
                     _systemsWithUpdateTriggers.Add(system);
                 }
-                if (trigger is ITriggerModified) {
-                    var modified = (ITriggerModified)trigger;
+                if (baseSystem is ITriggerModified) {
+                    var modified = (ITriggerModified)baseSystem;
                     _modifiedTriggers.Add(new ModifiedTrigger(modified));
                 }
-                if (trigger is ITriggerInput) {
+                if (baseSystem is ITriggerInput) {
                     _systemsWithInputTriggers.Add(system);
                 }
             }
 
 
-            if (trigger is ITriggerGlobalPreUpdate) {
-                _globalPreUpdateTriggers.Add((ITriggerGlobalPreUpdate)trigger);
+            if (baseSystem is ITriggerGlobalPreUpdate) {
+                _globalPreUpdateTriggers.Add((ITriggerGlobalPreUpdate)baseSystem);
             }
-            if (trigger is ITriggerGlobalPostUpdate) {
-                _globalPostUpdateTriggers.Add((ITriggerGlobalPostUpdate)trigger);
+            if (baseSystem is ITriggerGlobalPostUpdate) {
+                _globalPostUpdateTriggers.Add((ITriggerGlobalPostUpdate)baseSystem);
             }
-            if (trigger is ITriggerGlobalInput) {
-                _globalInputTriggers.Add((ITriggerGlobalInput)trigger);
+            if (baseSystem is ITriggerGlobalInput) {
+                _globalInputTriggers.Add((ITriggerGlobalInput)baseSystem);
             }
         }
 
@@ -170,7 +186,7 @@ namespace Neon.Entities {
         }
 
         /// <summary>
-        /// Updates the world. State changes (entity add, entity remove, ...) are propogated to the different
+        /// Updates the world. State changes (entity add, entity remove, ...) are propagated to the different
         /// registered listeners. Update listeners will be called and the given commands will be executed.
         /// </summary>
         public void UpdateWorld(IEnumerable<IStructuredInput> commands) {
@@ -205,7 +221,9 @@ namespace Neon.Entities {
                 // we store which methods are relevant to the entity in the entities metadata for performance reasons
                 List<ITriggerModified> triggers = (List<ITriggerModified>)modifiedEntity.Metadata[_entityModifiedListenersKey];
                 for (int i = 0; i < _modifiedTriggers.Count; ++i) {
+                    Log.Info("Modification check to see if {0} is interested in {1}", _modifiedTriggers[i].Trigger, modifiedEntity);
                     if (_modifiedTriggers[i].Filter.ModificationCheck(modifiedEntity)) {
+                        Log.Info("Invoking {0} on {1}", _modifiedTriggers[i].Trigger, modifiedEntity);
                         _modifiedTriggers[i].Trigger.OnModified(modifiedEntity);
                     }
                 }
@@ -215,6 +233,7 @@ namespace Neon.Entities {
             // Alert the modified listeners that the entity has been modified
             List<Entity> modifiedEntities = _entitiesWithModifications.Swap();
             foreach (var modified in modifiedEntities) {
+                DoLog("Applying modifications to {0}", modified);
                 // apply the modifications to the entity; ie, dispatch changes
                 modified.ApplyModifications();
 
@@ -232,8 +251,10 @@ namespace Neon.Entities {
             foreach (var input in inputSequence) {
                 for (int i = 0; i < _globalInputTriggers.Count; ++i) {
                     var trigger = _globalInputTriggers[i];
+                    DoLog("Checking {0} for input {1}", trigger, input);
                     if (trigger.IStructuredInputType.IsInstanceOfType(input)) {
-                        trigger.OnGlobalInput(input);
+                        DoLog("Invoking {0} on input {1}", trigger, input);
+                        trigger.OnGlobalInput(input, SingletonEntity);
                     }
                 }
 
@@ -254,7 +275,7 @@ namespace Neon.Entities {
         private void InvokeUpdateMethods() {
             // Call the BeforeUpdate methods - *user code*
             for (int i = 0; i < _globalPreUpdateTriggers.Count; ++i) {
-                _globalPreUpdateTriggers[i].OnGlobalPreUpdate();
+                _globalPreUpdateTriggers[i].OnGlobalPreUpdate(SingletonEntity);
             }
 
             // Call the OnUpdate methods - *user code*
@@ -269,7 +290,7 @@ namespace Neon.Entities {
 
             // Call the AfterUpdate methods - *user code*
             for (int i = 0; i < _globalPostUpdateTriggers.Count; ++i) {
-                _globalPostUpdateTriggers[i].OnGlobalPostUpdate();
+                _globalPostUpdateTriggers[i].OnGlobalPostUpdate(SingletonEntity);
             }
         }
 
@@ -277,7 +298,11 @@ namespace Neon.Entities {
             // Add entities
             for (int i = 0; i < _entitiesToAdd.Count; ++i) {
                 Entity toAdd = _entitiesToAdd[i];
+                DoLog("Adding {0}", toAdd);
+
                 toAdd.Show();
+
+                toAdd.AddedToEntityManager(this);
 
                 // register listeners
                 toAdd.OnModified += OnEntityModified;
@@ -315,9 +340,11 @@ namespace Neon.Entities {
                 it = it.Previous;
                 var entity = curr.Value;
 
+                DoLog("Doing data state changes on {0}", entity);
                 // update data state changes and if there are no more updates needed,
                 // then remove it from the dispatch list
                 if (entity.DataStateChangeUpdate() == false) {
+                    DoLog("No more state changes requested for {0}", entity);
                     _entitiesWithStateChanges.Remove(curr);
                 }
 
@@ -332,6 +359,7 @@ namespace Neon.Entities {
 
                 // update the caches on the entity and call user code - *user code*
                 for (int i = 0; i < _allSystems.Count; ++i) {
+                    DoLog("Updating cache in {0} for {1}", _allSystems[i].Trigger, entity);
                     _allSystems[i].UpdateCache(entity);
                 }
             }
@@ -342,6 +370,8 @@ namespace Neon.Entities {
             for (int i = 0; i < _entitiesToRemove.Count; ++i) {
                 Entity toDestroy = _entitiesToRemove[i];
                 toDestroy.RemoveAllData();
+
+                DoLog("Removing {0}", toDestroy);
 
                 // remove listeners
                 toDestroy.OnModified -= OnEntityModified;
@@ -366,6 +396,7 @@ namespace Neon.Entities {
         /// </summary>
         /// <param name="instance">The instance to add</param>
         public void AddEntity(Entity instance) {
+            DoLog("AddEntity({0}) called", instance);
             _entitiesToAdd.Add(instance);
             _entitiesWithStateChanges.AddLast(instance);
             instance.Hide();
@@ -376,6 +407,7 @@ namespace Neon.Entities {
         /// </summary>
         /// <param name="instance">The entity instance to remove</param>
         public void RemoveEntity(Entity instance) {
+            DoLog("RemoveEntity({0}) called", instance);
             if (_entitiesToRemove.Contains(instance) == false) {
                 _entitiesToRemove.Add(instance);
                 instance.Hide();
@@ -386,7 +418,9 @@ namespace Neon.Entities {
         /// Called when an Entity has been modified.
         /// </summary>
         private void OnEntityModified(Entity sender) {
+            DoLog("Got modification notification for {0}... checking for duplicates", sender);
             if (_entitiesWithModifications.Get().Contains(sender) == false) {
+                DoLog("Adding {0} to modification list", sender);
                 _entitiesWithModifications.Get().Add(sender);
             }
         }
@@ -395,7 +429,9 @@ namespace Neon.Entities {
         /// Called when an entity has data state changes
         /// </summary>
         private void OnEntityDataStateChanged(Entity sender) {
+            DoLog("Got data state change for {0}... checking for duplicates", sender);
             if (_entitiesWithStateChanges.Contains(sender) == false) {
+                DoLog("Adding {0} to date state change list", sender);
                 _entitiesWithStateChanges.AddLast(sender);
             }
         }
