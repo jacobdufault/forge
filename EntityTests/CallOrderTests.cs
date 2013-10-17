@@ -111,10 +111,10 @@ namespace EntityTests {
     public class CallOrderTests {
         [TestMethod]
         public void Basic() {
-            EntityManager em = new EntityManager();
+            EntityManager em = new EntityManager(EntityFactory.Create());
             TriggerEventLogger trigger = new TriggerEventLogger();
             em.AddSystem(trigger);
-            Entity entity = new Entity();
+            IEntity entity = EntityFactory.Create(); 
             em.AddEntity(entity);
 
             em.UpdateWorld();
@@ -156,13 +156,13 @@ namespace EntityTests {
 
         [TestMethod]
         public void InitializeWithAddingData() {
-            EntityManager em = new EntityManager();
+            EntityManager em = new EntityManager(EntityFactory.Create());
             TriggerEventLogger trigger = new TriggerEventLogger();
             em.AddSystem(trigger);
-            Entity entity = new Entity();
+            IEntity entity = EntityFactory.Create();
             em.AddEntity(entity);
 
-            entity.AddData(new TestData0());
+            entity.AddData<TestData0>();
             em.UpdateWorld();
             CollectionAssert.AreEqual(new TriggerEvent[] {
                 TriggerEvent.OnAdded,
@@ -173,7 +173,7 @@ namespace EntityTests {
             trigger.ClearEvents();
 
             // adding new data shouldn't impact the filter, so it should be like a regular update
-            entity.AddData(new TestData1());
+            entity.AddData<TestData1>();
             em.UpdateWorld();
             CollectionAssert.AreEqual(new TriggerEvent[] {
                 TriggerEvent.OnGlobalPreUpdate,
@@ -185,12 +185,11 @@ namespace EntityTests {
 
         [TestMethod]
         public void EntityModifyBeforeUpdate() {
-            EntityManager em = new EntityManager();
+            EntityManager em = new EntityManager(EntityFactory.Create());
             TriggerEventLogger trigger = new TriggerEventLogger();
             em.AddSystem(trigger);
-            Entity entity = new Entity();
-            TestData0 data = new TestData0();
-            entity.AddData(data);
+            IEntity entity = EntityFactory.Create();
+            TestData0 data = entity.AddData<TestData0>();
             entity.Modify<TestData0>();
             em.AddEntity(entity);
 
@@ -208,12 +207,11 @@ namespace EntityTests {
 
         [TestMethod]
         public void EntityModifyAfterUpdate() {
-            EntityManager em = new EntityManager();
+            EntityManager em = new EntityManager(EntityFactory.Create());
             TriggerEventLogger trigger = new TriggerEventLoggerFilterRequiresData0();
             em.AddSystem(trigger);
-            Entity entity = new Entity();
-            TestData0 data = new TestData0();
-            entity.AddData(data);
+            IEntity entity = EntityFactory.Create();
+            TestData0 data = entity.AddData<TestData0>();
             em.AddEntity(entity);
 
             // do the add
@@ -232,7 +230,7 @@ namespace EntityTests {
             trigger.ClearEvents();
 
             // add a Data1 instance
-            entity.AddData(new TestData1());
+            entity.AddData<TestData1>();
             em.UpdateWorld();
             CollectionAssert.AreEqual(new TriggerEvent[] {
                 TriggerEvent.OnGlobalPreUpdate,
@@ -255,12 +253,11 @@ namespace EntityTests {
 
         [TestMethod]
         public void InitializeBeforeAddingDataFilter() {
-            EntityManager em = new EntityManager();
+            EntityManager em = new EntityManager(EntityFactory.Create());
             TriggerEventLogger trigger = new TriggerEventLoggerFilterRequiresData0();
             em.AddSystem(trigger);
-            Entity entity = new Entity();
-            TestData0 data = new TestData0();
-            entity.AddData(data);
+            IEntity entity = EntityFactory.Create();
+            TestData0 data = entity.AddData<TestData0>();
             em.AddEntity(entity);
 
             // entity now has the data
@@ -274,7 +271,7 @@ namespace EntityTests {
             trigger.ClearEvents();
 
             // adding random data should not trigger a modification notification
-            entity.AddData(new TestData1());
+            entity.AddData<TestData1>();
             em.UpdateWorld();
             CollectionAssert.AreEqual(new TriggerEvent[] {
                 TriggerEvent.OnGlobalPreUpdate,
@@ -284,7 +281,7 @@ namespace EntityTests {
             trigger.ClearEvents();
 
             // entity no longer has the data, it should get removed
-            entity.RemoveData<TestData0>();
+            ((Entity)entity).RemoveData<TestData0>();
             em.UpdateWorld();
             CollectionAssert.AreEqual(new TriggerEvent[] {
                 TriggerEvent.OnRemoved,
@@ -295,10 +292,10 @@ namespace EntityTests {
 
         [TestMethod]
         public void InitializeAfterAddingDataFilter() {
-            EntityManager em = new EntityManager();
+            EntityManager em = new EntityManager(EntityFactory.Create());
             TriggerEventLogger trigger = new TriggerEventLoggerFilterRequiresData0();
             em.AddSystem(trigger);
-            Entity entity = new Entity();
+            IEntity entity = EntityFactory.Create();
             em.AddEntity(entity);
 
             // entity doesn't have required data
@@ -310,8 +307,7 @@ namespace EntityTests {
             trigger.ClearEvents();
 
             // entity now has the data
-            TestData0 data = new TestData0();
-            entity.AddData(data);
+            TestData0 data = entity.AddData<TestData0>();
             em.UpdateWorld();
             CollectionAssert.AreEqual(new TriggerEvent[] {
                 TriggerEvent.OnAdded,
@@ -322,7 +318,7 @@ namespace EntityTests {
             trigger.ClearEvents();
 
             // adding random data should not trigger a modification notification
-            entity.AddData(new TestData1());
+            entity.AddData<TestData1>();
             em.UpdateWorld();
             CollectionAssert.AreEqual(new TriggerEvent[] {
                 TriggerEvent.OnGlobalPreUpdate,
@@ -332,7 +328,7 @@ namespace EntityTests {
             trigger.ClearEvents();
 
             // entity no longer has the data, it should get removed
-            entity.RemoveData<TestData0>();
+            ((Entity)entity).RemoveData<TestData0>();
             em.UpdateWorld();
 
             CollectionAssert.AreEqual(new TriggerEvent[] {

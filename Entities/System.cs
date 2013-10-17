@@ -31,12 +31,18 @@ namespace Neon.Entities {
             CachedEntities = new UnorderedList<IEntity>();
         }
 
+        public enum CacheChangeResult {
+            Added,
+            Removed,
+            NoChange
+        }
+
         /// <summary>
         /// Updates the status of the entity inside of the cache; ie, if the entity is now passing
         /// the filter but was not before, then it will be added to the cache.
         /// </summary>
         /// <returns>The change in cache status for the entity</returns>
-        public void UpdateCache(IEntity entity) {
+        public CacheChangeResult UpdateCache(IEntity entity) {
             // get our unordered list metadata or create it
             UnorderedListMetadata metadata = (UnorderedListMetadata)entity.Metadata[_metadataKey];
             if (metadata == null) {
@@ -53,6 +59,8 @@ namespace Neon.Entities {
                 if (OnAddedToCache != null) {
                     OnAddedToCache(entity);
                 }
+
+                return CacheChangeResult.Added;
             }
 
             // The entity is in the cache but it no longer passes the filter, so remove it
@@ -61,9 +69,12 @@ namespace Neon.Entities {
                 if (OnRemovedFromCache != null) {
                     OnRemovedFromCache(entity);
                 }
+
+                return CacheChangeResult.Removed;
             }
 
             // no change to the cache
+            return CacheChangeResult.NoChange;
         }
 
         /// <summary>

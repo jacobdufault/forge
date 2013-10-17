@@ -30,6 +30,32 @@ namespace Neon.Entities {
         event Action OnHide;
         event Action OnRemoved;
 
+        T AddData<T>() where T : Data;
+
+        /// <summary>
+        /// Add a Data instance of with the given accessor to the Entity.
+        /// </summary>
+        /// <param name="accessor"></param>
+        /// <returns></returns>
+        Data AddData(DataAccessor accessor);
+
+
+        //void RemoveData<T>() where T : Data;
+        //void RemoveData(DataAccessor accessor);
+
+        Data[] GetAllData<T>() where T : Data;
+        Data[] GetAllData(DataAccessor accessor);
+
+        /// <summary>
+        /// If Enabled is set to false, then the Entity will not be processed in any Update
+        /// or StructuredInput based systems. However, modification ripples are still
+        /// applied to the Entity until it has no more modifications.
+        /// </summary>
+        bool Enabled {
+            get;
+            set;
+        }
+
         /// <summary>
         /// Modify the given data instance. The current and previous values are still accessible.
         /// Please note that a data instance can only be modified once; an exception is thrown
@@ -115,6 +141,37 @@ namespace Neon.Entities {
     }
 
     public partial class Entity {
+        public bool Enabled {
+            get;
+            set;
+        }
+
+        public T AddData<T>() where T : Data {
+            return (T)AddData(DataMap<T>.Accessor);
+        }
+
+        public Data AddData(DataAccessor accessor) {
+            Data data = DataAllocator.Allocate(accessor);
+            data.Entity = this;
+
+            int id = accessor.Id;
+            _data[id] = new StoredData(data);
+
+            _toAddStage1.Add(new DataAccessor(id));
+
+            DispatchModificationNotification();
+            DispatchDataStateChangedNotification();
+
+            DataAllocator.NotifyAllocated(accessor, this, _data[id].Current);
+
+            // the user modifies the current state; the initialized data
+            // is copied around to other instances when _added[id] is set to true
+            // in the data state change update method
+            return _data[id].Current;
+        }
+    }
+
+    public partial class Entity {
         private static int _nextId;
         private int _uid;
 
@@ -122,8 +179,9 @@ namespace Neon.Entities {
             get { return _uid; }
         }
 
-        public Entity() {
+        internal protected Entity() {
             _uid = Interlocked.Increment(ref _nextId);
+            Enabled = true; // default to being enabled
         }
 
         public override string ToString() {
@@ -160,27 +218,6 @@ namespace Neon.Entities {
         private EntityManager _entityManager;
         public void AddedToEntityManager(EntityManager entityManager) {
             _entityManager = entityManager;
-        }
-
-        /// <summary>
-        /// Called *ONLY* by simulation components so that add themselves to the entity
-        /// </summary>
-        public void AddData(Data data) {
-            Contract.Requires(data.Entity == null, "Cannot add the same data instance to multiple entities");
-            data.Entity = this;
-
-            int id = DataFactory.Instance.GetId(data.GetType());
-            _data[id] = new StoredData(data);
-
-            _toAddStage1.Add(new DataAccessor(id));
-
-            DispatchModificationNotification();
-            DispatchDataStateChangedNotification();
-        }
-
-        public void InitializeData(Data data) {
-            // for now just readd it, it will clear out the old state with the new state
-            AddData(data);
         }
 
         /// <summary>
@@ -311,6 +348,12 @@ namespace Neon.Entities {
             private Data[] _items;
             private int _swappableIndex;
 
+            public Data[] Items {
+                get {
+                    return _items;
+                }
+            }
+
             public StoredData(Data data) {
                 _items = new Data[] { data.Duplicate(), data.Duplicate(), data.Duplicate() };
             }
@@ -391,6 +434,14 @@ namespace Neon.Entities {
             }
         }
 
+        public Data[] GetAllData<T>() where T : Data {
+            return GetAllData(DataMap<T>.Accessor);
+        }
+
+        public Data[] GetAllData(DataAccessor accessor) {
+            return _data[accessor.Id].Items;
+        }
+
 
         /// <summary>
         /// The data contained within the Entity. One item in the tuple is the current state and one item
@@ -466,6 +517,9 @@ namespace Neon.Entities {
             for (int i = 0; i < _toAddStage1.Count; ++i) {
                 int id = _toAddStage1[i].Id;
                 _added[id] = true;
+
+                // copy the initialized data into the previous data
+                _data[id].Modifying.CopyFrom(_data[id].Current);
             }
             for (int i = 0; i < _toAddStage2.Count; ++i) {
                 _added[_toAddStage2[i].Id] = false;

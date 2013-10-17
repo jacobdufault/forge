@@ -10,7 +10,7 @@ namespace EntityTests {
     public class EntityTest {
         [TestMethod]
         public void EntityCreation() {
-            Entity entity = new Entity();
+            IEntity entity = EntityFactory.Create();
         }
 
         [TestMethod]
@@ -18,7 +18,7 @@ namespace EntityTests {
             HashSet<int> ids = new HashSet<int>();
 
             for (int i = 0; i < 200; ++i) {
-                Entity entity = new Entity();
+                IEntity entity = EntityFactory.Create();
                 Assert.IsTrue(ids.Add(entity.UniqueId));
             }
         }

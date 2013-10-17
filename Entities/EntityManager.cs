@@ -37,13 +37,13 @@ namespace Neon.Entities {
         /// Registers the given entity with the world.
         /// </summary>
         /// <param name="instance">The instance to add</param>
-        void AddEntity(Entity entity);
+        void AddEntity(IEntity entity);
 
         /// <summary>
         /// Destroys the given entity.
         /// </summary>
         /// <param name="instance">The entity instance to remove</param>
-        void RemoveEntity(Entity entity);
+        void RemoveEntity(IEntity entity);
 
         /// <summary>
         /// Singleton entity that contains global data
@@ -126,10 +126,6 @@ namespace Neon.Entities {
         public IEntity SingletonEntity {
             get;
             set;
-        }
-
-        public EntityManager()
-            : this(new Entity()) {
         }
 
         public EntityManager(IEntity singletonEntity) {
@@ -263,7 +259,10 @@ namespace Neon.Entities {
                     ITriggerInput trigger = (ITriggerInput)system.Trigger;
 
                     for (int j = 0; j < system.CachedEntities.Length; ++j) {
-                        trigger.OnInput(input, system.CachedEntities[j]);
+                        IEntity entity = system.CachedEntities[j];
+                        if (entity.Enabled) {
+                            trigger.OnInput(input, entity);
+                        }
                     }
                 }
             }
@@ -284,7 +283,10 @@ namespace Neon.Entities {
                 ITriggerUpdate trigger = (ITriggerUpdate)system.Trigger;
 
                 for (int j = 0; j < system.CachedEntities.Length; ++j) {
-                    trigger.OnUpdate(system.CachedEntities[j]);
+                    IEntity entity = system.CachedEntities[j];
+                    if (entity.Enabled) {
+                        trigger.OnUpdate(entity);
+                    }
                 }
             }
 
@@ -359,8 +361,8 @@ namespace Neon.Entities {
 
                 // update the caches on the entity and call user code - *user code*
                 for (int i = 0; i < _allSystems.Count; ++i) {
-                    DoLog("Updating cache in {0} for {1}", _allSystems[i].Trigger, entity);
-                    _allSystems[i].UpdateCache(entity);
+                    var change = _allSystems[i].UpdateCache(entity);
+                    DoLog("Updated cache in {0} for {1}; change was {2}", _allSystems[i].Trigger, entity, change);
                 }
             }
         }
@@ -395,22 +397,24 @@ namespace Neon.Entities {
         /// Registers the given entity with the world.
         /// </summary>
         /// <param name="instance">The instance to add</param>
-        public void AddEntity(Entity instance) {
+        public void AddEntity(IEntity instance) {
             DoLog("AddEntity({0}) called", instance);
-            _entitiesToAdd.Add(instance);
-            _entitiesWithStateChanges.AddLast(instance);
-            instance.Hide();
+            Entity entity = (Entity)instance;
+            _entitiesToAdd.Add(entity);
+            _entitiesWithStateChanges.AddLast(entity);
+            entity.Hide();
         }
 
         /// <summary>
         /// Removes the given entity from the world.
         /// </summary>
         /// <param name="instance">The entity instance to remove</param>
-        public void RemoveEntity(Entity instance) {
+        public void RemoveEntity(IEntity instance) {
             DoLog("RemoveEntity({0}) called", instance);
-            if (_entitiesToRemove.Contains(instance) == false) {
-                _entitiesToRemove.Add(instance);
-                instance.Hide();
+            Entity entity = (Entity)instance;
+            if (_entitiesToRemove.Contains(entity) == false) {
+                _entitiesToRemove.Add(entity);
+                entity.Hide();
             }
         }
 

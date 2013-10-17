@@ -5,6 +5,22 @@ using Neon.Entities;
 using System.IO;
 
 namespace EntityTests {
+    class TestData2 : GameData<TestData2> {
+        public int Value;
+
+        public override void DoCopyFrom(TestData2 source) {
+            Value = source.Value;
+        }
+
+        public override bool SupportsMultipleModifications {
+            get { return false; }
+        }
+
+        public override int HashCode {
+            get { return Value; }
+        }
+    }
+
     class AllTriggers : ITriggerLifecycle, ITriggerModified, ITriggerUpdate, ITriggerGlobalPreUpdate, ITriggerGlobalPostUpdate, ITriggerInput, ITriggerGlobalInput {
         public DataAccessor[] ComputeEntityFilter() {
             return new DataAccessor[] { };
@@ -74,15 +90,15 @@ namespace EntityTests {
     [TestClass]
     public class EntityManagerTests {
         [TestMethod]
-        public void EntityManagerCreation() {
-            EntityManager em = new EntityManager();
+        public void Creation() {
+            EntityManager em = new EntityManager(EntityFactory.Create());
 
             Assert.IsNotNull(em.SingletonEntity);
         }
 
         [TestMethod]
-        public void EntityManagerUpdateNumber() {
-            EntityManager em = new EntityManager();
+        public void UpdateNumber() {
+            EntityManager em = new EntityManager(EntityFactory.Create());
 
             for (int i = 0; i < 50; ++i) {
                 Assert.AreEqual(em.UpdateNumber, i);
@@ -91,8 +107,8 @@ namespace EntityTests {
         }
 
         [TestMethod]
-        public void EntityManagerAddTrigger() {
-            EntityManager em = new EntityManager();
+        public void AddTrigger() {
+            EntityManager em = new EntityManager(EntityFactory.Create());
 
             CountUpdatesTrigger updates = new CountUpdatesTrigger();
             em.AddSystem(updates);
@@ -107,7 +123,7 @@ namespace EntityTests {
 
             int numEntities = 25;
             for (int i = 0; i < numEntities; ++i) {
-                Entity e = new Entity();
+                IEntity e = EntityFactory.Create(); 
                 em.AddEntity(e);
             }
 
@@ -120,11 +136,30 @@ namespace EntityTests {
         }
 
         [TestMethod]
-        public void EntityManagerAddEntity() {
-            EntityManager em = new EntityManager();
-            Entity e = new Entity();
-
+        public void AddEntity() {
+            EntityManager em = new EntityManager(EntityFactory.Create());
+            IEntity e = EntityFactory.Create();
             em.AddEntity(e);
+        }
+
+        [TestMethod]
+        public void InitializeData() {
+            EntityManager em = new EntityManager(EntityFactory.Create());
+
+            IEntity e = EntityFactory.Create();
+            em.AddEntity(e);
+
+            TestData2 data = e.AddData<TestData2>();
+            data.Value = 33;
+            
+            em.UpdateWorld();
+            Assert.AreEqual(33, e.Current<TestData2>().Value);
+
+            // by using ++ we ensure that the modify value is currently 33
+            e.Modify<TestData2>().Value++;
+            em.UpdateWorld();
+            Assert.AreEqual(33, e.Previous<TestData2>().Value);
+            Assert.AreEqual(34, e.Current<TestData2>().Value);
         }
     }
 }
