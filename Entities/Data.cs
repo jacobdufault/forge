@@ -26,6 +26,9 @@ namespace Neon.Entities {
             }
         }
 
+        /// <summary>
+        /// Called when this data has new values that the attached Entity should visualize.
+        /// </summary>
         public event Action<Data> OnUpdateVisualization;
 
         /// <summary>
@@ -35,8 +38,10 @@ namespace Neon.Entities {
         /// If this is true, then it is *CRITICAL* that *ALL* systems which modify the data do so in a relative manner; ie, the system cannot
         /// set a particular attribute to zero, but it can reduce it by five. If this is not followed, then state desyncs will occur.
         /// </remarks>
-        public abstract bool SupportsMultipleModifications {
-            get;
+        public virtual bool SupportsMultipleModifications {
+            get {
+                return false;
+            }
         }
 
         /// <summary>
