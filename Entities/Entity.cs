@@ -162,6 +162,7 @@ namespace Neon.Entities {
             DispatchModificationNotification();
             DispatchDataStateChangedNotification();
 
+            // Get our initial data from a prefab/etc
             DataAllocator.NotifyAllocated(accessor, this, _data[id].Current);
 
             // the user modifies the current state; the initialized data
@@ -520,6 +521,9 @@ namespace Neon.Entities {
 
                 // copy the initialized data into the previous data
                 _data[id].Modifying.CopyFrom(_data[id].Current);
+
+                // visualize the initial data
+                _data[id].Current.DoUpdateVisualization();
             }
             for (int i = 0; i < _toAddStage2.Count; ++i) {
                 _added[_toAddStage2[i].Id] = false;
