@@ -217,9 +217,9 @@ namespace Neon.Entities {
                 // we store which methods are relevant to the entity in the entities metadata for performance reasons
                 List<ITriggerModified> triggers = (List<ITriggerModified>)modifiedEntity.Metadata[_entityModifiedListenersKey];
                 for (int i = 0; i < _modifiedTriggers.Count; ++i) {
-                    Log.Info("Modification check to see if {0} is interested in {1}", _modifiedTriggers[i].Trigger, modifiedEntity);
+                    DoLog("Modification check to see if {0} is interested in {1}", _modifiedTriggers[i].Trigger, modifiedEntity);
                     if (_modifiedTriggers[i].Filter.ModificationCheck(modifiedEntity)) {
-                        Log.Info("Invoking {0} on {1}", _modifiedTriggers[i].Trigger, modifiedEntity);
+                        DoLog("Invoking {0} on {1}", _modifiedTriggers[i].Trigger, modifiedEntity);
                         _modifiedTriggers[i].Trigger.OnModified(modifiedEntity);
                     }
                 }

@@ -47,6 +47,14 @@ namespace Neon.Entities {
         Data[] GetAllData(DataAccessor accessor);
 
         /// <summary>
+        /// Returns the data instances that pass the predicate. The data checked are all current instances
+        /// inside of the Entity.
+        /// </summary>
+        /// <param name="predicate">The predicate used to filter the data</param>
+        /// <returns>All data instances which pass the predicate</returns>
+        IEnumerable<Data> SelectData(Predicate<Data> predicate);
+
+        /// <summary>
         /// If Enabled is set to false, then the Entity will not be processed in any Update
         /// or StructuredInput based systems. However, modification ripples are still
         /// applied to the Entity until it has no more modifications.
@@ -443,12 +451,21 @@ namespace Neon.Entities {
             return _data[accessor.Id].Items;
         }
 
+        public IEnumerable<Data> SelectData(Predicate<Data> predicate) {
+            foreach (Tuple<int, StoredData> tuple in _data) {
+                StoredData data = tuple.Item2;
+                DataAccessor accessor = new DataAccessor(DataFactory.Instance.GetId(data.Current.GetType()));
+                if (WasAdded(accessor) == false && WasRemoved(accessor) == false && predicate(data.Current)) {
+                    yield return data.Current;
+                }
+            }
+        }
 
         /// <summary>
         /// The data contained within the Entity. One item in the tuple is the current state and one item
         /// is the next state.
         /// </summary>
-        private SparseArray<StoredData> _data = new SparseArray<StoredData>();
+        private IterableSparseArray<StoredData> _data = new IterableSparseArray<StoredData>();
 
         /// <summary>
         /// Data that has been modified this frame and needs to be pushed out

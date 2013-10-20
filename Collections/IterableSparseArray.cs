@@ -7,22 +7,22 @@ namespace Neon.Collections {
     /// Stores a SparseArray that can be iterated in a time-efficient (but *not* space-efficient) manner.
     /// </summary>
     public class IterableSparseArray<T> : IEnumerable<Tuple<int, T>> where T : class {
-        private SparseArray<T> SparseArray;
-        private List<Tuple<int, T>> Items;
+        private SparseArray<T> _sparseArray;
+        private List<Tuple<int, T>> _items;
 
         public IterableSparseArray(int capacity = 8) {
-            SparseArray = new SparseArray<T>(capacity);
-            Items = new List<Tuple<int, T>>();
+            _sparseArray = new SparseArray<T>(capacity);
+            _items = new List<Tuple<int, T>>();
         }
 
         public T this[int index] {
             get {
-                return SparseArray[index];
+                return _sparseArray[index];
             }
 
             set {
-                SparseArray[index] = value;
-                Items.Add(Tuple.Create(index, value));
+                _sparseArray[index] = value;
+                _items.Add(Tuple.Create(index, value));
             }
         }
 
@@ -31,12 +31,34 @@ namespace Neon.Collections {
         }
 
         public void Clear() {
-            SparseArray.Clear();
-            Items.Clear();
+            _sparseArray.Clear();
+            _items.Clear();
+        }
+
+        /// <summary>
+        /// Removes the element at the specified index.
+        /// </summary>
+        /// <param name="index">The index to remove at.</param>
+        /// <returns>If the element was removed</returns>
+        /// <remarks>
+        /// This function has to do a linear search because of bookkeeping, unlike a SparseArray.
+        /// </remarks>
+        public bool Remove(int index) {
+            bool removed = _sparseArray.Remove(index);
+            if (removed) {
+                for (int i = 0; i < _items.Count; ++i) {
+                    if (_items[i].Item1 == index) {
+                        _items.RemoveAt(i);
+                        break;
+                    }
+                }
+            }
+
+            return removed;
         }
 
         public IEnumerator<Tuple<int, T>> GetEnumerator() {
-            return Items.GetEnumerator();
+            return _items.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator() {

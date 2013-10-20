@@ -75,6 +75,14 @@ namespace Neon.Collections {
         }
 
         /// <summary>
+        /// Clears all stored items from this instance.
+        /// </summary>
+        public void Clear() {
+            Array.Clear(_items, 0, Length);
+            Length = 0;
+        }
+
+        /// <summary>
         /// Remove the item from the bag. This is O(n) and has to scan the bag to
         /// find the item.
         /// </summary>

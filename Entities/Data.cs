@@ -51,7 +51,7 @@ namespace Neon.Entities {
         /// </summary>
         public virtual void ResolveModifications() {
             // The client code supports multiple modifications; it may also need to resolve them.
-            throw new Exception("Type allows multiple modifications but does not support resolving them; override this method");
+            throw new Exception("Type " + GetType() + " allows multiple modifications but does not support resolving them; override this method");
         }
 
         /// <summary>
