@@ -43,6 +43,10 @@ namespace Neon.Utility {
 
         public void Normalize() {
             Real length = Length();
+            if (length == 0) {
+                return;
+            }
+
             X /= length;
             Z /= length;
         }
