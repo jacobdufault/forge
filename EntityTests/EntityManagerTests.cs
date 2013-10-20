@@ -149,9 +149,11 @@ namespace EntityTests {
             IEntity e = EntityFactory.Create();
             em.AddEntity(e);
 
-            TestData2 data = e.AddData<TestData2>();
-            data.Value = 33;
-            
+            {
+                TestData2 data = e.AddData<TestData2>();
+                data.Value = 33;
+            }
+
             em.UpdateWorld();
             Assert.AreEqual(33, e.Current<TestData2>().Value);
 
@@ -161,5 +163,33 @@ namespace EntityTests {
             Assert.AreEqual(33, e.Previous<TestData2>().Value);
             Assert.AreEqual(34, e.Current<TestData2>().Value);
         }
+
+        [TestMethod]
+        public void InitializeDataViaModification() {
+            EntityManager em = new EntityManager(EntityFactory.Create());
+
+            IEntity e = EntityFactory.Create();
+            em.AddEntity(e);
+
+            // use modify, not the object we get from AddData, to initialize the data
+            {
+                TestData2 added = e.AddData<TestData2>();
+                TestData2 data = e.Modify<TestData2>();
+                added.Value = 32;
+                data.Value = 33;
+            }
+
+            em.UpdateWorld();
+            Assert.AreEqual(32, e.Previous<TestData2>().Value);
+            Assert.AreEqual(33, e.Current<TestData2>().Value);
+
+            // by using ++ we ensure that the modify value is currently 33
+            e.Modify<TestData2>().Value++;
+            em.UpdateWorld();
+            Assert.AreEqual(33, e.Previous<TestData2>().Value);
+            Assert.AreEqual(34, e.Current<TestData2>().Value);
+        }
+
+
     }
 }
