@@ -211,21 +211,6 @@ namespace Neon.Entities {
         /// Dispatches all Entity modifications and calls the relevant methods.
         /// </summary>
         private void InvokeModifications() {
-            // Call the Modified triggers that are associated with the given entity.
-            Action<Entity> invokeModifiedMethods = modifiedEntity => {
-                // call the InvokeOnModified functions - *user code*
-                // we store which methods are relevant to the entity in the entities metadata for performance reasons
-                List<ITriggerModified> triggers = (List<ITriggerModified>)modifiedEntity.Metadata[_entityModifiedListenersKey];
-                for (int i = 0; i < _modifiedTriggers.Count; ++i) {
-                    DoLog("Modification check to see if {0} is interested in {1}", _modifiedTriggers[i].Trigger, modifiedEntity);
-                    if (_modifiedTriggers[i].Filter.ModificationCheck(modifiedEntity)) {
-                        DoLog("Invoking {0} on {1}", _modifiedTriggers[i].Trigger, modifiedEntity);
-                        _modifiedTriggers[i].Trigger.OnModified(modifiedEntity);
-                    }
-                }
-            };
-
-
             // Alert the modified listeners that the entity has been modified
             List<Entity> modifiedEntities = _entitiesWithModifications.Swap();
             foreach (var modified in modifiedEntities) {
@@ -234,7 +219,15 @@ namespace Neon.Entities {
                 modified.ApplyModifications();
 
                 // call the InvokeOnModified functions - *user code*
-                invokeModifiedMethods(modified);
+                // we store which methods are relevant to the entity in the entities metadata for performance reasons
+                List<ModifiedTrigger> triggers = (List<ModifiedTrigger>)modified.Metadata[_entityModifiedListenersKey];
+                for (int i = 0; i < triggers.Count; ++i) {
+                    DoLog("Modification check to see if {0} is interested in {1}", triggers[i].Trigger, modified);
+                    if (triggers[i].Filter.ModificationCheck(modified)) {
+                        DoLog("Invoking {0} on {1}", triggers[i].Trigger, modified);
+                        triggers[i].Trigger.OnModified(modified);
+                    }
+                }
             }
             modifiedEntities.Clear();
         }
@@ -315,7 +308,7 @@ namespace Neon.Entities {
 
                 // ensure it contains metadata for our keys
                 toAdd.Metadata[_entityUnorderedListMetadataKey] = new UnorderedListMetadata();
-                toAdd.Metadata[_entityModifiedListenersKey] = new List<ITriggerModified>();
+                toAdd.Metadata[_entityModifiedListenersKey] = new List<ModifiedTrigger>();
 
                 // add it our list of active entities
                 _entities.Add(toAdd, (UnorderedListMetadata)toAdd.Metadata[_entityUnorderedListMetadataKey]);
@@ -351,11 +344,13 @@ namespace Neon.Entities {
                 }
 
                 // update the entity's internal trigger cache
-                List<ITriggerModified> triggers = (List<ITriggerModified>)entity.Metadata[_entityModifiedListenersKey];
+                List<ModifiedTrigger> triggers = (List<ModifiedTrigger>)entity.Metadata[_entityModifiedListenersKey];
                 triggers.Clear();
                 for (int i = 0; i < _modifiedTriggers.Count; ++i) {
+                    DoLog("Checking to see if modification trigger {0} is interested in {1}", _modifiedTriggers[i].Trigger, entity);
                     if (_modifiedTriggers[i].Filter.Check(entity)) {
-                        triggers.Add(_modifiedTriggers[i].Trigger);
+                        DoLog("It was; adding modified trigger {0} to entity {1}'s modification cache", _modifiedTriggers[i].Trigger, entity);
+                        triggers.Add(_modifiedTriggers[i]);
                     }
                 }
 

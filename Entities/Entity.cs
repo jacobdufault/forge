@@ -8,15 +8,15 @@ using Neon.Collections;
 namespace Neon.Entities {
     [Serializable]
     public class NoSuchDataException : Exception {
-        public NoSuchDataException(Type type)
-            : base("No such data for type=" + type) {
+        public NoSuchDataException(IEntity context, Type type)
+            : base("No such data for type=" + type + " in " + context) {
         }
     }
 
     [Serializable]
     public class RemodifiedDataException : Exception {
-        public RemodifiedDataException(Type type)
-            : base("Already modified data for type=" + type) {
+        public RemodifiedDataException(IEntity context, Type type)
+            : base("Already modified data for type=" + type + " in " + context) {
         }
     }
 
@@ -577,10 +577,10 @@ namespace Neon.Entities {
             var id = accessor.Id;
 
             if (ContainsData(accessor) == false) {
-                throw new NoSuchDataException(DataFactory.Instance.GetTypeFromAccessor(accessor));
+                throw new NoSuchDataException(this, DataFactory.Instance.GetTypeFromAccessor(accessor));
             }
             if (_modifications.Current.Contains(id) && !force && _data[id].Current.SupportsMultipleModifications == false) {
-                throw new RemodifiedDataException(DataFactory.Instance.GetTypeFromAccessor(accessor));
+                throw new RemodifiedDataException(this, DataFactory.Instance.GetTypeFromAccessor(accessor));
             }
             _modifications.Current[id] = _data[id];
 
@@ -594,7 +594,7 @@ namespace Neon.Entities {
         }
         public Data Current(DataAccessor accessor) {
             if (ContainsData(accessor) == false) {
-                throw new NoSuchDataException(DataFactory.Instance.GetTypeFromAccessor(accessor));
+                throw new NoSuchDataException(this, DataFactory.Instance.GetTypeFromAccessor(accessor));
             }
 
             return _data[accessor.Id].Current;
@@ -607,7 +607,7 @@ namespace Neon.Entities {
             var id = accessor.Id;
 
             if (_data.Contains(id) == false) {
-                throw new NoSuchDataException(DataFactory.Instance.GetTypeFromAccessor(accessor));
+                throw new NoSuchDataException(this, DataFactory.Instance.GetTypeFromAccessor(accessor));
             }
 
             return _data[accessor.Id].Previous;

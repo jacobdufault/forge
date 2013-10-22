@@ -52,10 +52,25 @@ namespace Neon.Utility {
         }
 
         public static Real Distance(Vector2r a, Vector2r b) {
-            var dx = a.X - b.X;
-            var dz = a.Z - b.Z;
+            return Distance(a.X, a.Z, b.X, b.Z);
+        }
+
+        public static Real Distance(Real x0, Real z0, Real x1, Real z1) {
+            var dx = x0 - x1;
+            var dz = z0 - z1;
 
             return Real.Sqrt(dx * dx + dz * dz);
+        }
+
+        public static Real DistanceSq(Vector2r a, Vector2r b) {
+            return DistanceSq(a.X, a.Z, b.X, b.Z);
+        }
+
+        public static Real DistanceSq(Real x0, Real z0, Real x1, Real z1) {
+            var dx = x0 - x1;
+            var dz = z0 - z1;
+
+            return dx * dx + dz * dz;
         }
 
         public static Vector2r operator -(Vector2r a, Vector2r b) {

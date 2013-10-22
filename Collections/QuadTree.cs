@@ -43,7 +43,7 @@ namespace Neon.Collections {
         private List<IQuadTreeMonitor<T>>[,] _monitors;
 
         // TODO: remove me
-        private List<IQuadTreeMonitor<T>> _allMonitors = new List<IQuadTreeMonitor<T>>();
+        //private List<IQuadTreeMonitor<T>> _allMonitors = new List<IQuadTreeMonitor<T>>();
 
         /// <summary>
         /// How big each bucket of items is, where the bucket at (x, y) is defined by Items[x, y].
@@ -80,23 +80,23 @@ namespace Neon.Collections {
         public void Update(T item, Bound previous, Bound updated) {
             var prevList = GetListsFor(_items, previous);
             var updatedList = GetListsFor(_items, updated);
-            if (prevList == updatedList) {
-                return;
-            }
 
-            foreach (var list in prevList) {
-                for (int i = 0; i < list.Count; ++i) {
-                    if (ReferenceEquals(list[i].Item1, item)) {
-                        list.RemoveAt(i);
-                        break;
+            // update the lists that the item is in
+            if (prevList != updatedList) {
+                foreach (var list in prevList) {
+                    for (int i = 0; i < list.Count; ++i) {
+                        if (ReferenceEquals(list[i].Item1, item)) {
+                            list.RemoveAt(i);
+                            break;
+                        }
                     }
                 }
-            }
-            foreach (var list in updatedList) {
-                list.Add(Tuple.Create(item, updated));
+                foreach (var list in updatedList) {
+                    list.Add(Tuple.Create(item, updated));
+                }
             }
 
-            // notify the monitors
+            // get the monitors that we might want to notify
             var previousMonitors = CollectMonitors(previous);
             var updatedMonitors = CollectMonitors(updated);
 
@@ -110,7 +110,7 @@ namespace Neon.Collections {
             }
             previousMonitors = t;
 
-            // remove all monitors from updatedMonitors that are not in previousMonitors,
+            // remove all monitors from updatedMonitors that are in previousMonitors,
             // aka, the new monitors that the object has entered
             updatedMonitors.ExceptWith(previousMonitors);
             foreach (var monitor in updatedMonitors) {
@@ -119,9 +119,40 @@ namespace Neon.Collections {
         }
 
         /// <summary>
+        /// Notify the QuadTree that the monitor has changed positions. The current position
+        /// is retrieved via calling IQuadTreeMonitor[T].Region
+        /// </summary>
+        /// <param name="monitor">The monitor to update</param>
+        /// <param name="previous">The previous position of the monitor</param>
+        public void UpdateMonitor(IQuadTreeMonitor<T> monitor, Bound previous) {
+            var prevItems = CollectHashSet(previous);
+            var updatedItems = CollectHashSet(monitor.Region);
+
+            // remove all of the items from prev that are currently in updated; aka, prev becomes
+            // the set of items that the monitor is no longer interested in
+            var t = new HashSet<T>(prevItems);
+            prevItems.ExceptWith(updatedItems);
+            foreach (var item in prevItems) {
+                monitor.OnExit(item);
+            }
+            prevItems = t;
+
+            // remove all the items from updated that were in prev; aka, updated becomes the set of
+            // items that were introduced by changing positions
+            updatedItems.ExceptWith(prevItems);
+            foreach (var item in updatedItems) {
+                monitor.OnEnter(item);
+            }
+        }
+
+        /// <summary>
         /// Returns a list of all items contained in the given area; this may return some items not actually in the area.
         /// </summary>
         public List<T> Collect(Bound area) {
+            return new List<T>(CollectHashSet(area));
+        }
+
+        private HashSet<T> CollectHashSet(Bound area) {
             int x0, z0, x1, z1;
             ConvertCoordinatesFromWorldToLocal(area, out x0, out z0, out x1, out z1, ensureValidOuterIndicies: true);
 
@@ -138,7 +169,7 @@ namespace Neon.Collections {
                 }
             }
 
-            return new List<T>(result);
+            return result;
         }
 
         /// <summary>
@@ -161,6 +192,8 @@ namespace Neon.Collections {
                 }
             }
 
+            // TODO: delete this loop and remove _allMonitors
+            /*
             foreach (var monitor in _allMonitors) {
                 if (area.Intersects(monitor.Region)) {
                     if (result.Add(monitor)) {
@@ -169,6 +202,7 @@ namespace Neon.Collections {
                     }
                 }
             }
+            */
 
             return result;
         }
@@ -186,7 +220,7 @@ namespace Neon.Collections {
                 monitor.OnEnter(entity);
             }
 
-            _allMonitors.Add(monitor);
+            //_allMonitors.Add(monitor);
         }
 
         /// <summary>
@@ -202,7 +236,7 @@ namespace Neon.Collections {
                 monitor.OnExit(entity);
             }
 
-            _allMonitors.Remove(monitor);
+            //_allMonitors.Remove(monitor);
         }
 
         /// <summary>

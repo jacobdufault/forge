@@ -17,28 +17,14 @@ namespace Neon.Utility {
         }
 
         /// <summary>
-        /// Returns true if this bound intersects with the other bound.
+        /// Returns true if this bound is either intersecting or colliding with the other bound.
         /// </summary>
         public bool Intersects(Bound other) {
-            // shortcut aliases
-            Real r0 = Radius, r1 = other.Radius;
-            Real x0 = X, x1 = other.X;
-            Real z0 = Z, z1 = other.Z;
+            // TODO: optimize this function to avoid the sqrt
+            Real centerDistances = Vector2r.Distance(X, Z, other.X, other.Z);
+            Real range = Radius + other.Radius;
 
-            //                min               inner               max
-            // equation is (R0-R1)^2 <= (x0-x1)^2 + (y0-y1)^2 <= (R0+R1)^2
-
-            Real min = (r0 - r1);
-            min *= min;
-
-            Real dx = x0 - x1;
-            Real dz = z0 - z1;
-            Real inner = dx * dx + dz * dz;
-
-            Real max = (r0 + r1);
-            max *= max;
-
-            return min <= inner && inner <= max;
+            return range >= centerDistances;
         }
 
         public override string ToString() {

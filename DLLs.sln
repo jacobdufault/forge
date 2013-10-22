@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.20827.3
+VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Utilities", "Utilities\Utilities.csproj", "{25DB9F16-ECAE-4A3F-B3C3-5794B8288587}"
 EndProject
@@ -18,6 +18,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Collections", "Collections\Collections.csproj", "{9D91D020-4291-4926-B76D-B73D138B0AEF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AllLibraries", "AllLibraries\AllLibraries.csproj", "{565BB8E0-6223-4BD2-8E2B-39E18939A69F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UtilitiesTests", "UtilitiesTests\UtilitiesTests.csproj", "{CA62937B-CF47-40E6-89A3-612AC6DDC9D0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -57,6 +59,10 @@ Global
 		{565BB8E0-6223-4BD2-8E2B-39E18939A69F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{565BB8E0-6223-4BD2-8E2B-39E18939A69F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{565BB8E0-6223-4BD2-8E2B-39E18939A69F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA62937B-CF47-40E6-89A3-612AC6DDC9D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA62937B-CF47-40E6-89A3-612AC6DDC9D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA62937B-CF47-40E6-89A3-612AC6DDC9D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA62937B-CF47-40E6-89A3-612AC6DDC9D0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

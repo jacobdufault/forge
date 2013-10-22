@@ -21,6 +21,22 @@ namespace EntityTests {
         }
     }
 
+    class TestData3 : GameData<TestData3> {
+        public int Value;
+
+        public override void DoCopyFrom(TestData3 source) {
+            Value = source.Value;
+        }
+
+        public override bool SupportsMultipleModifications {
+            get { return false; }
+        }
+
+        public override int HashCode {
+            get { return Value; }
+        }
+    }
+
     class AllTriggers : ITriggerLifecycle, ITriggerModified, ITriggerUpdate, ITriggerGlobalPreUpdate, ITriggerGlobalPostUpdate, ITriggerInput, ITriggerGlobalInput {
         public DataAccessor[] ComputeEntityFilter() {
             return new DataAccessor[] { };
@@ -77,6 +93,24 @@ namespace EntityTests {
 
         public void OnGlobalPostUpdate(IEntity singletonEntity) {
             ++PostCount;
+        }
+    }
+
+    class CountModifiesTrigger : ITriggerModified {
+        public int ModifiedCount = 0;
+
+        private DataAccessor[] _filter;
+
+        public CountModifiesTrigger(DataAccessor[] filter) {
+            _filter = filter;
+        }
+
+        public DataAccessor[] ComputeEntityFilter() {
+            return _filter;
+        }
+
+        public void OnModified(IEntity entity) {
+            ++ModifiedCount;
         }
     }
 
@@ -190,6 +224,37 @@ namespace EntityTests {
             Assert.AreEqual(34, e.Current<TestData2>().Value);
         }
 
+        [TestMethod]
+        public void SystemModificationNotificationWithoutPassingFilter() {
+            EntityManager em = new EntityManager(EntityFactory.Create());
 
+            CountModifiesTrigger system = new CountModifiesTrigger(new DataAccessor[] {
+                DataMap<TestData2>.Accessor
+            });
+            em.AddSystem(system);
+
+            IEntity e0 = EntityFactory.Create();
+            em.AddEntity(e0);
+            IEntity e1 = EntityFactory.Create();
+            em.AddEntity(e1);
+
+            e0.AddData<TestData2>();
+            e0.AddData<TestData3>();
+            e1.AddData<TestData3>();
+
+            em.UpdateWorld();
+
+            e0.Modify<TestData2>();
+            e1.Modify<TestData3>();
+            em.UpdateWorld();
+            Assert.AreEqual(1, system.ModifiedCount);
+            system.ModifiedCount = 0;
+
+            e0.Modify<TestData3>();
+            e1.Modify<TestData3>();
+            em.UpdateWorld();
+            Assert.AreEqual(0, system.ModifiedCount);
+            system.ModifiedCount = 0;
+        }
     }
 }
