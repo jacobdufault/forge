@@ -30,6 +30,10 @@ namespace Neon.Entities {
         event Action OnHide;
         event Action OnRemoved;
 
+        EventProcessor EventProcessor {
+            get;
+        }
+
         T AddData<T>() where T : Data;
 
         /// <summary>
@@ -188,9 +192,16 @@ namespace Neon.Entities {
             get { return _uid; }
         }
 
+        public EventProcessor EventProcessor {
+            get;
+            private set;
+        }
+
         internal protected Entity() {
             _uid = Interlocked.Increment(ref _nextId);
             Enabled = true; // default to being enabled
+
+            EventProcessor = new EventProcessor();
         }
 
         public override string ToString() {
@@ -205,6 +216,7 @@ namespace Neon.Entities {
         public event Action OnHide;
         public event Action OnShow;
         public event Action OnRemoved;
+
 
         public void RemovedFromEntityManager() {
             if (OnRemoved != null) {

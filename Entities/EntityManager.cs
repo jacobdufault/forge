@@ -70,6 +70,11 @@ namespace Neon.Entities {
         }
 
         /// <summary>
+        /// Event processors which need their events dispatched.
+        /// </summary>
+        private List<EventProcessor> _dirtyEventProcessors = new List<EventProcessor>();
+
+        /// <summary>
         /// The list of active Entities in the world.
         /// </summary>
         private UnorderedList<IEntity> _entities = new UnorderedList<IEntity>();
@@ -202,9 +207,20 @@ namespace Neon.Entities {
             // update the singleton data
             SingletonEntity.ApplyModifications();
 
+            // update dirty event processors
+            InvokeEventProcessors();
+
             // we destroy entities so that disappear quickly (and not waiting for the start of the next update)
             //DoDestroyEntities();
             //DoRemoveEntities();
+        }
+
+        private void InvokeEventProcessors() {
+            DoLog("Invoking event processors; numInvoking={0}", _dirtyEventProcessors.Count);
+            for (int i = 0; i < _dirtyEventProcessors.Count; ++i) {
+                _dirtyEventProcessors[i].DispatchEvents();
+            }
+            _dirtyEventProcessors.Clear();
         }
 
         /// <summary>
@@ -302,6 +318,7 @@ namespace Neon.Entities {
                 // register listeners
                 toAdd.OnModified += OnEntityModified;
                 toAdd.OnDataStateChanged += OnEntityDataStateChanged;
+                toAdd.EventProcessor.OnEventAdded += EventProcessor_OnEventAdded;
 
                 // apply initialization changes
                 toAdd.ApplyModifications();
@@ -378,7 +395,7 @@ namespace Neon.Entities {
                 for (int j = 0; j < _allSystems.Count; ++j) {
                     _allSystems[j].Remove(toDestroy);
                 }
-                List<ITriggerModified> triggers = (List<ITriggerModified>)toDestroy.Metadata[_entityModifiedListenersKey];
+                List<ModifiedTrigger> triggers = (List<ModifiedTrigger>)toDestroy.Metadata[_entityModifiedListenersKey];
                 triggers.Clear();
 
                 // remove the entity from the list of entities
@@ -433,6 +450,13 @@ namespace Neon.Entities {
                 DoLog("Adding {0} to date state change list", sender);
                 _entitiesWithStateChanges.AddLast(sender);
             }
+        }
+
+        /// <summary>
+        /// Called when an event processor has had an event added to it.
+        /// </summary>
+        private void EventProcessor_OnEventAdded(EventProcessor eventProcessor) {
+            _dirtyEventProcessors.Add(eventProcessor);
         }
     }
 }
