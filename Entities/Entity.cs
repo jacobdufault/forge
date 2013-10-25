@@ -34,6 +34,29 @@ namespace Neon.Entities {
             get;
         }
 
+        /// <summary>
+        /// Initialize data of the given type. This is equivalent to adding data of
+        /// the given type if it does not exist on the entity and returning said
+        /// instance, or modifying the data and returning the modified instances.
+        /// </summary>
+        /// <remarks>
+        /// This method is a shortcut for:
+        /// <![CDATA[
+        /// T instance;
+        /// if (entity.ContainsData<T>() == false) {
+        ///     instance = entity.AddData<T>();
+        /// }
+        /// else {
+        ///     instance = entity.Modify<T>();
+        /// }
+        ///
+        /// // use instance
+        /// ]]>
+        /// </remarks>
+        /// <typeparam name="T">The type of data modified</typeparam>
+        /// <returns>A modifiable instance of data of type T</returns>
+        T Initialize<T>() where T : Data;
+
         T AddData<T>() where T : Data;
 
         /// <summary>
@@ -574,6 +597,38 @@ namespace Neon.Entities {
             Utils.Swap(ref _toRemoveStage1, ref _toRemoveStage2);
 
             return _toAddStage2.Count > 0 || _toRemoveStage2.Count > 0;
+        }
+
+        /// <summary>
+        /// Initialize data of the given type. This is equivalent to adding data of
+        /// the given type if it does not exist on the entity and returning said
+        /// instance, or modifying the data and returning the modified instances.
+        /// </summary>
+        /// <typeparam name="T">The type of data modified</typeparam>
+        /// <returns>
+        /// A modifiable instance of data of type T
+        /// </returns>
+        /// <remarks>
+        /// This method is a shortcut for:
+        /// <![CDATA[
+        /// T instance;
+        /// if (entity.ContainsData<T>() == false) {
+        ///   instance = entity.AddData<T>();
+        /// }
+        /// else {
+        ///   instance = entity.Modify<T>();
+        /// }
+        ///
+        /// // use instance
+        /// ]]>
+        /// </remarks>
+        public T Initialize<T>() where T : Data {
+            DataAccessor accessor = DataMap<T>.Accessor;
+
+            if (ContainsData(accessor) == false) {
+                return (T)AddData(accessor);
+            }
+            return (T)Modify(accessor);
         }
 
         public T Modify<T>() where T : Data {
