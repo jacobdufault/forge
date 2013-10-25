@@ -1,41 +1,48 @@
 ﻿using Neon.Utility;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace Neon.Entities {
     /// <summary>
     /// Maps different types of Data to a sequential set of integers.
     /// </summary>
-    internal class DataFactory {
+    internal static class DataFactory {
         /// <summary>
         /// The next integer to use.
         /// </summary>
-        private int NextId = 0;
+        private static int _nextId = 0;
 
         /// <summary>
         /// The mapping from Data types to their integers
         /// </summary>
-        private Dictionary<Type, int> Ids = new Dictionary<Type, int>();
+        private static Dictionary<Type, int> _ids = new Dictionary<Type, int>();
 
         /// <summary>
         /// Returns the identifier/integer for the given type, constructing if it necessary.
         /// </summary>
         /// <param name="type">The type to get.</param>
         /// <returns>The identifier/integer</returns>
-        public int GetId(Type type) {
+        public static int GetId(Type type) {
             Contract.Requires(typeof(Data).IsAssignableFrom(type));
 
-            if (Ids.ContainsKey(type) == false) {
-                lock (Instance) {
-                    Ids[type] = NextId++;
-                }
+            if (_ids.ContainsKey(type) == false) {
+                _ids[type] = Interlocked.Increment(ref _nextId);
             }
 
-            return Ids[type];
+            return _ids[type];
         }
 
-        public Type GetTypeFromAccessor(DataAccessor accessor) {
-            foreach (var item in Ids) {
+        /// <summary>
+        /// Looks up the type of data is used for the given accessor.
+        /// </summary>
+        /// <remarks>
+        /// The current implementation of this method runs in O(n) time (instead of O(1)).
+        /// </remarks>
+        /// <param name="accessor">The data accessor.</param>
+        /// <returns>The type used for the given accessor, or an exception if there is none.</returns>
+        public static Type GetTypeFromAccessor(DataAccessor accessor) {
+            foreach (var item in _ids) {
                 if (item.Value == accessor.Id) {
                     return item.Key;
                 }
@@ -43,11 +50,6 @@ namespace Neon.Entities {
 
             throw new Exception("No such type of accessor=" + accessor.Id);
         }
-
-        /// <summary>
-        /// The static factory instance.
-        /// </summary>
-        public static DataFactory Instance = new DataFactory();
     }
 
     /// <summary>
@@ -60,7 +62,7 @@ namespace Neon.Entities {
         /// <param name="dataType">The type of Data to retrieve; note that this parameter must be a subtype of Data</param>
         public DataAccessor(Type dataType)
             : this() {
-            Id = DataFactory.Instance.GetId(dataType);
+            Id = DataFactory.GetId(dataType);
         }
 
         /// <summary>
