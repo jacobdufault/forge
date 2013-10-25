@@ -7,7 +7,7 @@ namespace Neon.Entities {
     /// <summary>
     /// Allocates instances of Data.
     /// </summary>
-    public static class DataAllocator {
+    public sealed class DataAllocator {
         /// <summary>
         /// Used to allocate types of a given object
         /// </summary>
@@ -30,7 +30,7 @@ namespace Neon.Entities {
 
             public void NotifyAllocated(IEntity context, Data allocated) {
                 if (RequireAuxiliaryAllocator && _auxiliaryAllocators.Count == 0) {
-                    Log.Error("Auxiliary data allocator required, but one was not found for allocation type {0}. Did you forget to register it?", _allocationType);
+                    Log<DataAllocator>.Error("Auxiliary data allocator required, but one was not found for allocation type {0}. Did you forget to register it?", _allocationType);
                 }
 
                 for (int i = 0; i < _auxiliaryAllocators.Count; ++i) {

@@ -7,6 +7,7 @@ namespace Neon.Utility {
         public readonly Real X;
         public readonly Real Z;
         public readonly Real Radius;
+        private readonly Real RadiusSq;
 
         public Bound(Real x, Real z, Real radius) {
             Contract.Requires(radius > 0);
@@ -14,6 +15,7 @@ namespace Neon.Utility {
             X = x;
             Z = z;
             Radius = radius;
+            RadiusSq = radius * radius;
         }
 
         /// <summary>
@@ -25,6 +27,21 @@ namespace Neon.Utility {
             Real range = Radius + other.Radius;
 
             return range >= centerDistances;
+        }
+
+        /// <summary>
+        /// Returns true if the given point is contained within this bound.
+        /// </summary>
+        public bool Contains(Vector2r point) {
+            return Contains(point.X, point.Z);
+        }
+
+        /// <summary>
+        /// Returns true if the given point is contained within this bound.
+        /// </summary>
+        public bool Contains(Real x, Real z) {
+            Real distanceSq = Vector2r.DistanceSq(X, Z, x, z);
+            return RadiusSq > distanceSq;
         }
 
         public override string ToString() {
