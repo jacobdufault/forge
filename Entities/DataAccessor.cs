@@ -9,6 +9,20 @@ namespace Neon.Entities {
     /// </summary>
     internal static class DataFactory {
         /// <summary>
+        /// Maps a set of types to their respective DataAccessors.
+        /// </summary>
+        /// <param name="types">The types to map</param>
+        /// <returns>A list of DataAccessors that have a 1 to 1 correspondence to the given types.</returns>
+        public static DataAccessor[] MapTypesToDataAccessors(Type[] types) {
+            DataAccessor[] accessors = new DataAccessor[types.Length];
+            for (int i = 0; i < types.Length; ++i) {
+                accessors[i] = new DataAccessor(types[i]);
+            }
+            return accessors;
+        }
+
+
+        /// <summary>
         /// The next integer to use.
         /// </summary>
         private static int _nextId = 0;
@@ -62,6 +76,10 @@ namespace Neon.Entities {
         /// <param name="dataType">The type of Data to retrieve; note that this parameter must be a subtype of Data</param>
         public DataAccessor(Type dataType)
             : this() {
+            if (dataType.IsSubclassOf(typeof(Data)) == false) {
+                throw new ArgumentException("Type " + dataType + " is not a subtype of " + typeof(Data));
+            }
+
             Id = DataFactory.GetId(dataType);
         }
 

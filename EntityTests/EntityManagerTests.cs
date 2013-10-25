@@ -38,8 +38,8 @@ namespace EntityTests {
     }
 
     class AllTriggers : ITriggerLifecycle, ITriggerModified, ITriggerUpdate, ITriggerGlobalPreUpdate, ITriggerGlobalPostUpdate, ITriggerInput, ITriggerGlobalInput {
-        public DataAccessor[] ComputeEntityFilter() {
-            return new DataAccessor[] { };
+        public Type[] ComputeEntityFilter() {
+            return new Type[] { };
         }
 
         public void OnAdded(IEntity entity) {
@@ -83,8 +83,8 @@ namespace EntityTests {
             ++Count;
         }
 
-        public DataAccessor[] ComputeEntityFilter() {
-            return new DataAccessor[] { };
+        public Type[] ComputeEntityFilter() {
+            return new Type[] { };
         }
 
         public void OnGlobalPreUpdate(IEntity singletonEntity) {
@@ -99,13 +99,13 @@ namespace EntityTests {
     class CountModifiesTrigger : ITriggerModified {
         public int ModifiedCount = 0;
 
-        private DataAccessor[] _filter;
+        private Type[] _filter;
 
-        public CountModifiesTrigger(DataAccessor[] filter) {
+        public CountModifiesTrigger(Type[] filter) {
             _filter = filter;
         }
 
-        public DataAccessor[] ComputeEntityFilter() {
+        public Type[] ComputeEntityFilter() {
             return _filter;
         }
 
@@ -228,8 +228,8 @@ namespace EntityTests {
         public void SystemModificationNotificationWithoutPassingFilter() {
             EntityManager em = new EntityManager(EntityFactory.Create());
 
-            CountModifiesTrigger system = new CountModifiesTrigger(new DataAccessor[] {
-                DataMap<TestData2>.Accessor
+            CountModifiesTrigger system = new CountModifiesTrigger(new Type[] {
+                typeof(TestData2)
             });
             em.AddSystem(system);
 

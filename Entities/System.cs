@@ -1,5 +1,6 @@
 ﻿using Neon.Collections;
 using Neon.Utility;
+using System;
 
 namespace Neon.Entities {
     /// <summary>
@@ -24,7 +25,7 @@ namespace Neon.Entities {
         /// pass the given filter.
         /// </summary>
         public System(ITriggerBaseFilter trigger) {
-            _filter = new Filter(trigger.ComputeEntityFilter());
+            _filter = new Filter(DataFactory.MapTypesToDataAccessors(trigger.ComputeEntityFilter()));
             _metadataKey = Entity.MetadataRegistry.GetKey();
 
             Trigger = trigger;

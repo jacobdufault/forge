@@ -98,7 +98,7 @@ namespace Neon.Entities {
 
             public ModifiedTrigger(ITriggerModified trigger) {
                 Trigger = trigger;
-                Filter = new Filter(trigger.ComputeEntityFilter());
+                Filter = new Filter(DataFactory.MapTypesToDataAccessors(trigger.ComputeEntityFilter()));
             }
         }
         private List<ModifiedTrigger> _modifiedTriggers = new List<ModifiedTrigger>();

@@ -19,7 +19,11 @@ namespace Neon.Entities {
     /// Client code should not extend this.
     /// </remarks>
     public interface ITriggerBaseFilter : ISystem {
-        DataAccessor[] ComputeEntityFilter();
+        /// <summary>
+        /// Computes the entity filter.
+        /// </summary
+        /// <returns>A list of Data types that the entity needs to have to pass the filter.</returns>
+        Type[] ComputeEntityFilter();
     }
 
     /// <summary>

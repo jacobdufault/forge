@@ -16,8 +16,8 @@ namespace EntityTests {
     }
 
     class TriggerEventLogger : ITriggerLifecycle, ITriggerModified, ITriggerUpdate, ITriggerGlobalPreUpdate, ITriggerGlobalPostUpdate, ITriggerInput, ITriggerGlobalInput {
-        public virtual DataAccessor[] ComputeEntityFilter() {
-            return new DataAccessor[] { };
+        public virtual Type[] ComputeEntityFilter() {
+            return new Type[] { };
         }
 
         public List<TriggerEvent> _events = new List<TriggerEvent>();
@@ -70,8 +70,8 @@ namespace EntityTests {
     }
 
     class TriggerEventLoggerFilterRequiresData0 : TriggerEventLogger {
-        public override DataAccessor[] ComputeEntityFilter() {
-            return new DataAccessor[] { DataMap<TestData0>.Accessor };
+        public override Type[] ComputeEntityFilter() {
+            return new [] { typeof(TestData0) };
         }
     }
 
