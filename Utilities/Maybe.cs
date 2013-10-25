@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Neon.Utility {
+namespace Neon.Utilities {
     public struct MaybeU {
         public static Maybe<T> Just<T>(T instance) {
             return new Maybe<T>(instance);

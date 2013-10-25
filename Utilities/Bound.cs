@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Neon.Utility {
+namespace Neon.Utilities {
     public struct Bound {
         public readonly Real X;
         public readonly Real Z;

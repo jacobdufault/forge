@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Neon.Utility {
+namespace Neon.Utilities {
     public static class GameRandom {
         private static System.Random _random = new System.Random(32352);
 

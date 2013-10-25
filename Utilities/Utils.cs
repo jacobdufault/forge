@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Neon.Utility {
+namespace Neon.Utilities {
     public static class Utils {
         /// <summary>
         /// Swaps two ref objects.

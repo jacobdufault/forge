@@ -1,8 +1,8 @@
-﻿using Neon.Utility;
+﻿using Neon.Utilities;
 using System;
 using System.Text;
 
-namespace Neon.Utility {
+namespace Neon.Utilities {
     /// <summary>
     /// Provides methods which format a string without garbage allocation.
     /// </summary>

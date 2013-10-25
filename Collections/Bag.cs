@@ -1,7 +1,5 @@
-﻿using Neon.Utility;
+﻿using Neon.Utilities;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 
 namespace Neon.Collections {
     /// <summary>

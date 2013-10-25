@@ -1,4 +1,4 @@
-﻿using Neon.Utility;
+﻿using Neon.Utilities;
 using System;
 using System.Collections.Generic;
 

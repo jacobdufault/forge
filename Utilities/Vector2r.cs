@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Neon.Utility {
+namespace Neon.Utilities {
     /// <summary>
     /// A Vector2r that can be serialized
     /// </summary>

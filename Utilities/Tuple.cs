@@ -1,4 +1,4 @@
-﻿namespace Neon.Utility {
+﻿namespace Neon.Utilities {
     public class Tuple<T1> {
         public Tuple(T1 item1) {
             Item1 = item1;

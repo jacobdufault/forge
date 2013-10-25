@@ -1,4 +1,4 @@
-﻿using Neon.Utility;
+﻿using Neon.Utilities;
 
 namespace Neon.Collections {
     /// <summary>

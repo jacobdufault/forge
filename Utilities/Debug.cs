@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace Neon.Utility {
+namespace Neon.Utilities {
     public class Contract {
         [Conditional("DEBUG")]
         public static void Requires(bool condition, string message = "") {

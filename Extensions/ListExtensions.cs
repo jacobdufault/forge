@@ -1,7 +1,5 @@
-﻿using System.Collections;
+﻿using Neon.Utilities;
 using System.Collections.Generic;
-using System;
-using Neon.Utility;
 
 public static class ListExtensions {
     /// <summary>

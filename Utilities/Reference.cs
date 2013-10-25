@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Neon.Utility {
+namespace Neon.Utilities {
     /// <summary>
     /// Container type that holds a reference to another object.
     /// </summary>

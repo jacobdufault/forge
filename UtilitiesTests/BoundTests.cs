@@ -1,6 +1,6 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neon.Utility;
+using Neon.Utilities;
 
 namespace UtilitiesTests {
     [TestClass]

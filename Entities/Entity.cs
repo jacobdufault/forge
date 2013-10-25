@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
-using Neon.Utility;
+using Neon.Utilities;
 using Neon.Collections;
 
 namespace Neon.Entities {
