@@ -22,5 +22,14 @@ namespace EntityTests {
                 Assert.IsTrue(ids.Add(entity.UniqueId));
             }
         }
+
+        [TestMethod]
+        [ExpectedException(typeof(AlreadyAddedDataException))]
+
+        public void CannotAddMultipleDataInstances() {
+            IEntity entity = EntityFactory.Create();
+            entity.AddData<TestData0>();
+            entity.AddData<TestData0>();
+        }
     }
 }

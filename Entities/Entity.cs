@@ -7,6 +7,13 @@ using Neon.Collections;
 
 namespace Neon.Entities {
     [Serializable]
+    public class AlreadyAddedDataException : Exception {
+        public AlreadyAddedDataException(IEntity context, Type type)
+            : base("The entity already has a data instance for type=" + type + " in " + context) {
+        }
+    }
+
+    [Serializable]
     public class NoSuchDataException : Exception {
         public NoSuchDataException(IEntity context, Type type)
             : base("No such data for type=" + type + " in " + context) {
@@ -186,6 +193,10 @@ namespace Neon.Entities {
         }
 
         public Data AddData(DataAccessor accessor) {
+            if (ContainsData(accessor)) {
+                throw new AlreadyAddedDataException(this, DataFactory.GetTypeFromAccessor(accessor));
+            }
+
             Data data = DataAllocator.Allocate(accessor);
             data.Entity = this;
 
