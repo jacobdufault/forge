@@ -379,6 +379,7 @@ namespace Neon.Entities {
                 // remove listeners
                 toDestroy.OnModified -= OnEntityModified;
                 toDestroy.OnDataStateChanged -= OnEntityDataStateChanged;
+                toDestroy.EventProcessor.OnEventAdded -= EventProcessor_OnEventAdded;
 
                 // remove the entity from caches
                 for (int j = 0; j < _allSystems.Count; ++j) {

@@ -16,6 +16,18 @@ namespace Neon.Entities {
     }
 
     /// <summary>
+    /// A event handler that has been registered.
+    /// </summary>
+    /// <remarks>
+    /// This is used internally when removing an event handler to keep track
+    /// of which handler was actually registered.
+    /// </remarks>
+    public struct RegisteredEventHandler {
+        internal Type EventType;
+        internal Action<IEvent> Handler;
+    }
+
+    /// <summary>
     /// Handles event dispatch. Events are queued up until some point in time and then they are dispatched.
     /// </summary>
     public class EventProcessor {
@@ -113,8 +125,8 @@ namespace Neon.Entities {
         /// </summary>
         /// <typeparam name="T">The type of event</typeparam>
         /// <param name="handler">The handler</param>
-        public void OnEvent<T>(Action<T> handler) where T : IEvent {
-            OnEvent(typeof(T), evnt => {
+        public RegisteredEventHandler OnEvent<T>(Action<T> handler) where T : IEvent {
+            return OnEvent(typeof(T), evnt => {
                 handler((T)evnt);
             });
         }
@@ -124,7 +136,7 @@ namespace Neon.Entities {
         /// </summary>
         /// <param name="eventType">Type of the event.</param>
         /// <param name="handler">The event handler.</param>
-        public void OnEvent(Type eventType, Action<IEvent> handler) {
+        public RegisteredEventHandler OnEvent(Type eventType, Action<IEvent> handler) {
             // get our handlers for the given type
             List<Action<IEvent>> handlers;
             if (_handlers.TryGetValue(eventType, out handlers) == false) {
@@ -134,6 +146,24 @@ namespace Neon.Entities {
 
             // add the handler to the list of handlers
             handlers.Add(handler);
+
+            return new RegisteredEventHandler() {
+                EventType = eventType,
+                Handler = handler
+            };
+        }
+
+        public void RemoveOnEvent(RegisteredEventHandler eventHandler) {
+            // get our handlers for the given type
+            List<Action<IEvent>> handlers;
+            if (_handlers.TryGetValue(eventHandler.EventType, out handlers)) {
+                // removing the handler succeeded
+                if (handlers.Remove(eventHandler.Handler)) {
+                    return;
+                }
+            }
+
+            throw new Exception("The event handler for " + eventHandler + " was not registered, or has been removed multiple times");
         }
     }
 
