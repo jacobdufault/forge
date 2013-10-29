@@ -7,7 +7,7 @@ namespace Neon.Entities {
     /// <summary>
     /// Maps different types of Data to a sequential set of integers.
     /// </summary>
-    internal static class DataFactory {
+    internal static class DataAccessorFactory {
         /// <summary>
         /// Maps a set of types to their respective DataAccessors.
         /// </summary>
@@ -80,7 +80,7 @@ namespace Neon.Entities {
                 throw new ArgumentException("Type " + dataType + " is not a subtype of " + typeof(Data));
             }
 
-            Id = DataFactory.GetId(dataType);
+            Id = DataAccessorFactory.GetId(dataType);
         }
 
         /// <summary>

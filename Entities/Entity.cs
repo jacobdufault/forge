@@ -2,7 +2,6 @@
 using Neon.Utilities;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace Neon.Entities {
     public class Entity : IEntity {
@@ -14,7 +13,7 @@ namespace Neon.Entities {
         public Data AddData(DataAccessor accessor) {
             // ensure that we have not already added a data of this type
             if (GetAddedData(accessor) != null) {
-                throw new AlreadyAddedDataException(this, DataFactory.GetTypeFromAccessor(accessor));
+                throw new AlreadyAddedDataException(this, DataAccessorFactory.GetTypeFromAccessor(accessor));
             }
 
             // add our data
@@ -198,7 +197,7 @@ namespace Neon.Entities {
             // do additions
             for (int i = 0; i < _toAdd.Count; ++i) {
                 Data added = _toAdd[i];
-                int id = DataFactory.GetId(added.GetType());
+                int id = DataAccessorFactory.GetId(added.GetType());
 
                 _data[id] = new ImmutableContainer<Data>(added);
 
@@ -222,7 +221,7 @@ namespace Neon.Entities {
             // TODO: optimize this so we don't have to search through all added data... though
             // this should actually be pretty quick
             for (int i = 0; i < _toAdd.Count; ++i) {
-                int addedId = DataFactory.GetId(_toAdd[i].GetType());
+                int addedId = DataAccessorFactory.GetId(_toAdd[i].GetType());
                 if (addedId == id) {
                     return _toAdd[i];
                 }
@@ -240,11 +239,11 @@ namespace Neon.Entities {
                     return added;
                 }
 
-                throw new NoSuchDataException(this, DataFactory.GetTypeFromAccessor(accessor));
+                throw new NoSuchDataException(this, DataAccessorFactory.GetTypeFromAccessor(accessor));
             }
 
             if (_modifications.Current.Contains(id) && !force && _data[id].Current.SupportsConcurrentModifications == false) {
-                throw new RemodifiedDataException(this, DataFactory.GetTypeFromAccessor(accessor));
+                throw new RemodifiedDataException(this, DataAccessorFactory.GetTypeFromAccessor(accessor));
             }
 
             _modifications.Current[id] = _data[id];
@@ -256,7 +255,7 @@ namespace Neon.Entities {
 
         public Data Current(DataAccessor accessor) {
             if (ContainsData(accessor) == false) {
-                throw new NoSuchDataException(this, DataFactory.GetTypeFromAccessor(accessor));
+                throw new NoSuchDataException(this, DataAccessorFactory.GetTypeFromAccessor(accessor));
             }
 
             return _data[accessor.Id].Current;
@@ -266,7 +265,7 @@ namespace Neon.Entities {
             var id = accessor.Id;
 
             if (_data.Contains(id) == false) {
-                throw new NoSuchDataException(this, DataFactory.GetTypeFromAccessor(accessor));
+                throw new NoSuchDataException(this, DataAccessorFactory.GetTypeFromAccessor(accessor));
             }
 
             return _data[accessor.Id].Previous;

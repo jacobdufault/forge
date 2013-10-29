@@ -16,7 +16,7 @@ namespace Neon.Entities {
             private List<Action<Data, IEntity>> _auxiliaryAllocators;
 
             public Allocator(DataAccessor accessor) {
-                _allocationType = DataFactory.GetTypeFromAccessor(accessor);
+                _allocationType = DataAccessorFactory.GetTypeFromAccessor(accessor);
                 _auxiliaryAllocators = new List<Action<Data, IEntity>>();
             }
 

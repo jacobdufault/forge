@@ -29,11 +29,11 @@ namespace Neon.Entities {
         public ITriggerBaseFilter Trigger;
 
         /// <summary>
-        /// Creates a new system. Entities are added to the system based on if they
-        /// pass the given filter.
+        /// Creates a new system. Entities are added to the system based on if they pass the given
+        /// filter.
         /// </summary>
         public System(ITriggerBaseFilter trigger) {
-            _filter = new Filter(DataFactory.MapTypesToDataAccessors(trigger.ComputeEntityFilter()));
+            _filter = new Filter(DataAccessorFactory.MapTypesToDataAccessors(trigger.ComputeEntityFilter()));
             _metadataKey = Entity.MetadataRegistry.GetKey();
 
             _addedTrigger = trigger as ITriggerAdded;
