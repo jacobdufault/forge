@@ -54,6 +54,57 @@ namespace Neon.Entities {
     }
 
     /// <summary>
+    /// Helper methods built on top of the core IEntity API.
+    /// </summary>
+    public static class IEntityExtensions {
+        /// <summary>
+        /// Adds the given data type, or modifies an instance of it.
+        /// </summary>
+        /// <remarks>
+        /// This is a helper method that captures a common pattern.
+        /// </remarks>
+        /// <typeparam name="T">The type of data modified</typeparam>
+        /// <returns>A modifiable instance of data of type T</returns>
+        public static T AddOrModify<T>(this IEntity entity) where T : Data {
+            DataAccessor accessor = DataMap<T>.Accessor;
+
+            if (entity.ContainsData(accessor) == false) {
+                return (T)entity.AddData(accessor);
+            }
+            return (T)entity.Modify(accessor);
+        }
+
+        public static T AddData<T>(this IEntity entity) where T : Data {
+            return (T)entity.AddData(DataMap<T>.Accessor);
+        }
+
+        public static void RemoveData<T>(this IEntity entity) where T : Data {
+            entity.RemoveData(DataMap<T>.Accessor);
+        }
+
+        public static T Modify<T>(this IEntity entity, bool force = false) where T : Data {
+            return (T)entity.Modify(DataMap<T>.Accessor, force);
+        }
+
+        public static T Current<T>(this IEntity entity) where T : Data {
+            return (T)entity.Current(DataMap<T>.Accessor);
+        }
+
+        public static T Previous<T>(this IEntity entity) where T : Data {
+            return (T)entity.Previous(DataMap<T>.Accessor);
+        }
+
+        public static bool ContainsData<T>(this IEntity entity) where T : Data {
+            return entity.ContainsData(DataMap<T>.Accessor);
+        }
+
+        public static bool WasModified<T>(this IEntity entity) where T : Data {
+            return entity.WasModified(DataMap<T>.Accessor);
+        }
+
+    }
+
+    /// <summary>
     /// An Entity contains some data.
     /// </summary>
     public interface IEntity {
@@ -82,32 +133,6 @@ namespace Neon.Entities {
         }
 
         /// <summary>
-        /// Initialize data of the given type. This is equivalent to adding data of the given type
-        /// if it does not exist on the entity and returning said instance, or modifying the data
-        /// and returning the modified instances.
-        /// </summary>
-        /// <remarks>
-        /// This method is a shortcut for: <![CDATA[ T instance; if (entity.ContainsData<T>() == false) { instance = entity.AddData<T>(); } else { instance = entity.Modify<T>(); }
-        ///
-        /// // use instance ]]>
-        /// </remarks>
-        /// <typeparam name="T">The type of data modified</typeparam>
-        /// <returns>A modifiable instance of data of type T</returns>
-        T Initialize<T>() where T : Data;
-
-        /// <summary>
-        /// Add a Data instance of with the given accessor to the Entity.
-        /// </summary>
-        /// <remarks>
-        /// The aux allocators will be called in this method, giving them a chance to populate the
-        /// data with any necessary information.
-        ///
-        /// This is a helper method for AddData(DataAccessor accessor).
-        /// </remarks>
-        /// <returns>The data instance that can be used to initialize the data</returns>
-        T AddData<T>() where T : Data;
-
-        /// <summary>
         /// Add a Data instance of with the given accessor to the Entity.
         /// </summary>
         /// <remarks>
@@ -118,8 +143,17 @@ namespace Neon.Entities {
         /// <returns>The data instance that can be used to initialize the data</returns>
         Data AddData(DataAccessor accessor);
 
-        //void RemoveData<T>() where T : Data;
-        //void RemoveData(DataAccessor accessor);
+        /// <summary>
+        /// Removes the given data type from the entity.
+        /// </summary>
+        /// <remarks>
+        /// The data instance is not removed in this frame, but in the next one. In the next frame,
+        /// Previous[T] and Modify[T] will both throw NoSuchData exceptions, but Current[T] will
+        /// return the current data instance.
+        /// </remarks>
+        /// <typeparam name="T">The type of data to remove</typeparam>
+        // TODO: add test for Remove and Modify in the same frame
+        void RemoveData(DataAccessor accessor);
 
         /// <summary>
         /// If Enabled is set to false, then the Entity will not be processed in any Update or
@@ -139,22 +173,16 @@ namespace Neon.Entities {
         /// <param name="force">If the modification should be forced; ie, if there is already a
         /// modification then it will be overwritten. This should *NEVER* be used in systems or
         /// general client code; it is available for inspector GUI changes.</param>
-        T Modify<T>(bool force = false) where T : Data;
-
         Data Modify(DataAccessor accessor, bool force = false);
 
         /// <summary>
         /// Gets the current data value for the given type.
         /// </summary>
-        T Current<T>() where T : Data;
-
         Data Current(DataAccessor accessor);
 
         /// <summary>
         /// Gets the previous data value for the data type.
         /// </summary>
-        T Previous<T>() where T : Data;
-
         Data Previous(DataAccessor accessor);
 
         /// <summary>
@@ -164,17 +192,13 @@ namespace Neon.Entities {
         /// <remarks>
         /// Interestingly, if the data has been removed, ContainsData[T] will return false but
         /// Current[T] will return an instance (though Previous[T] and Modify[T] will both throw
-        /// exceptions).
+        /// exceptions) .
         /// </remarks>
-        bool ContainsData<T>() where T : Data;
-
         bool ContainsData(DataAccessor accessor);
 
         /// <summary>
         /// Returns if the Entity was modified in the previous update.
         /// </summary>
-        bool WasModified<T>() where T : Data;
-
         bool WasModified(DataAccessor accessor);
 
         /// <summary>
@@ -419,33 +443,8 @@ namespace Neon.Entities {
         }
 
         /// <summary>
-        /// Initialize data of the given type. This is equivalent to adding data of the given type
-        /// if it does not exist on the entity and returning said instance, or modifying the data
-        /// and returning the modified instances.
-        /// </summary>
-        /// <typeparam name="T">The type of data modified</typeparam>
-        /// <returns>A modifiable instance of data of type T</returns>
-        /// <remarks>
-        /// This method is a shortcut for: <![CDATA[ T instance; if (entity.ContainsData<T>() == false) { instance = entity.AddData<T>(); } else { instance = entity.Modify<T>(); }
-        ///
-        /// // use instance ]]>
-        /// </remarks>
-        public T Initialize<T>() where T : Data {
-            DataAccessor accessor = DataMap<T>.Accessor;
-
-            if (ContainsData(accessor) == false) {
-                return (T)AddData(accessor);
-            }
-            return (T)Modify(accessor);
-        }
-
-        public T Modify<T>(bool force = false) where T : Data {
-            return (T)Modify(DataMap<T>.Accessor, force);
-        }
-
-        /// <summary>
-        /// Attempts to retrieve a data instance with the given DataAccessor from the list of
-        /// added data.
+        /// Attempts to retrieve a data instance with the given DataAccessor from the list of added
+        /// data.
         /// </summary>
         /// <param name="accessor">The DataAccessor to lookup</param>
         /// <returns>A data instance, or null if it cannot be found</returns>
@@ -486,20 +485,12 @@ namespace Neon.Entities {
             return _data[id].Modifying;
         }
 
-        public T Current<T>() where T : Data {
-            return (T)Current(DataMap<T>.Accessor);
-        }
-
         public Data Current(DataAccessor accessor) {
             if (ContainsData(accessor) == false) {
                 throw new NoSuchDataException(this, DataFactory.GetTypeFromAccessor(accessor));
             }
 
             return _data[accessor.Id].Current;
-        }
-
-        public T Previous<T>() where T : Data {
-            return (T)Previous(DataMap<T>.Accessor);
         }
 
         public Data Previous(DataAccessor accessor) {
@@ -512,17 +503,9 @@ namespace Neon.Entities {
             return _data[accessor.Id].Previous;
         }
 
-        public bool ContainsData<T>() where T : Data {
-            return ContainsData(DataMap<T>.Accessor);
-        }
-
         public bool ContainsData(DataAccessor accessor) {
             int id = accessor.Id;
             return _data.Contains(id) && _removed.Contains(id) == false;
-        }
-
-        public bool WasModified<T>() where T : Data {
-            return WasModified(DataMap<T>.Accessor);
         }
 
         public bool WasModified(DataAccessor accessor) {
