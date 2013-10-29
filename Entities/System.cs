@@ -1,6 +1,4 @@
 ﻿using Neon.Collections;
-using Neon.Utilities;
-using System;
 
 namespace Neon.Entities {
     /// <summary>
@@ -9,6 +7,16 @@ namespace Neon.Entities {
     internal class System {
         private MetadataKey _metadataKey;
         private Filter _filter;
+
+        /// <summary>
+        /// Trigger to invoke when an entity has been added to the cache.
+        /// </summary>
+        private ITriggerAdded _addedTrigger;
+
+        /// <summary>
+        /// Trigger to invoke when an entity has been removed from the cache.
+        /// </summary>
+        private ITriggerRemoved _removedTrigger;
 
         /// <summary>
         /// The list of entities which are currently in the system.
@@ -27,6 +35,9 @@ namespace Neon.Entities {
         public System(ITriggerBaseFilter trigger) {
             _filter = new Filter(DataFactory.MapTypesToDataAccessors(trigger.ComputeEntityFilter()));
             _metadataKey = Entity.MetadataRegistry.GetKey();
+
+            _addedTrigger = trigger as ITriggerAdded;
+            _removedTrigger = trigger as ITriggerRemoved;
 
             Trigger = trigger;
             CachedEntities = new UnorderedList<IEntity>();
@@ -57,8 +68,8 @@ namespace Neon.Entities {
             // The entity is not in the cache it now passes the filter, so add it to the cache
             if (contains == false && passed) {
                 CachedEntities.Add(entity, metadata);
-                if (OnAddedToCache != null) {
-                    OnAddedToCache(entity);
+                if (_addedTrigger != null) {
+                    _addedTrigger.OnAdded(entity);
                 }
 
                 return CacheChangeResult.Added;
@@ -67,8 +78,8 @@ namespace Neon.Entities {
             // The entity is in the cache but it no longer passes the filter, so remove it
             if (contains && passed == false) {
                 CachedEntities.Remove(entity, metadata);
-                if (OnRemovedFromCache != null) {
-                    OnRemovedFromCache(entity);
+                if (_removedTrigger != null) {
+                    _removedTrigger.OnRemoved(entity);
                 }
 
                 return CacheChangeResult.Removed;
@@ -83,22 +94,10 @@ namespace Neon.Entities {
         /// </summary>
         public void Remove(IEntity entity) {
             if (CachedEntities.Remove(entity, (UnorderedListMetadata)entity.Metadata[_metadataKey])) {
-                if (OnRemovedFromCache != null) {
-                    OnRemovedFromCache(entity);
+                if (_removedTrigger != null) {
+                    _removedTrigger.OnRemoved(entity);
                 }
             }
         }
-
-        public delegate void OnCacheChangeDelegate(IEntity entity);
-
-        /// <summary>
-        /// Called when the given entity has been added to the cache.
-        /// </summary>
-        public event OnCacheChangeDelegate OnAddedToCache;
-
-        /// <summary>
-        /// Called when the given entity has been removed from the cache.
-        /// </summary>
-        public event OnCacheChangeDelegate OnRemovedFromCache;
     }
 }
