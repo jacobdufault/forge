@@ -137,13 +137,16 @@ namespace Neon.Entities {
                 System system = new System((ITriggerBaseFilter)baseSystem);
                 _allSystems.Add(system);
 
-                if (baseSystem is ITriggerLifecycle) {
-                    var lifecycle = (ITriggerLifecycle)baseSystem;
+                if (baseSystem is ITriggerAdded) {
+                    var added = (ITriggerAdded)baseSystem;
                     system.OnAddedToCache += entity => {
-                        lifecycle.OnAdded(entity);
+                        added.OnAdded(entity);
                     };
+                }
+                if (baseSystem is ITriggerRemoved) {
+                    var removed = (ITriggerRemoved)baseSystem;
                     system.OnRemovedFromCache += entity => {
-                        lifecycle.OnRemoved(entity);
+                        removed.OnRemoved(entity);
                     };
                 }
                 if (baseSystem is ITriggerUpdate) {

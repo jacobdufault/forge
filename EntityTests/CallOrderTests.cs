@@ -15,7 +15,7 @@ namespace EntityTests {
         OnGlobalInput
     }
 
-    class TriggerEventLogger : ITriggerLifecycle, ITriggerModified, ITriggerUpdate, ITriggerGlobalPreUpdate, ITriggerGlobalPostUpdate, ITriggerInput, ITriggerGlobalInput {
+    class TriggerEventLogger : ITriggerAdded, ITriggerRemoved, ITriggerModified, ITriggerUpdate, ITriggerGlobalPreUpdate, ITriggerGlobalPostUpdate, ITriggerInput, ITriggerGlobalInput {
         public virtual Type[] ComputeEntityFilter() {
             return new Type[] { };
         }

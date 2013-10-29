@@ -27,21 +27,28 @@ namespace Neon.Entities {
     }
 
     /// <summary>
-    /// A trigger to track Entities throughout their lifecycle.
+    /// A trigger that is activated when an entity has passed the entity filter.
     /// </summary>
-    public interface ITriggerLifecycle : ITriggerBaseFilter {
+    public interface ITriggerAdded : ITriggerBaseFilter {
         /// <summary>
-        /// The given Entity has just passed the filter.
+        /// Called when an Entity has passed the filter.
         /// </summary>
+        /// <param name="entity">The entity that passed the filter.</param>
         void OnAdded(IEntity entity);
+    }
 
+    /// <summary>
+    /// A trigger that is activated when an entity is no longer passing the entity filter.
+    /// </summary>
+    public interface ITriggerRemoved : ITriggerBaseFilter {
         /// <summary>
-        /// The given Entity no longer passes the filter.
+        /// Called when an Entity, which was once passing the filter, is no longer doing so.
         /// </summary>
         /// <remarks>
-        /// This can occur for a number of reasons, such as a data state change or
-        /// the Entity being destroyed.
+        /// This can occur for a number of reasons, such as a data state change or the Entity
+        /// being destroyed.
         /// </remarks>
+        /// <param name="entity">The entity that is no longer passing the filter.</param>
         void OnRemoved(IEntity entity);
     }
 
