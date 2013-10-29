@@ -25,7 +25,7 @@ namespace Neon.Entities {
         /// <summary>
         /// The next integer to use.
         /// </summary>
-        private static int _nextId = 0;
+        private static UniqueIntGenerator _idGenerator = new UniqueIntGenerator();
 
         /// <summary>
         /// The mapping from Data types to their integers
@@ -41,7 +41,7 @@ namespace Neon.Entities {
             Contract.Requires(typeof(Data).IsAssignableFrom(type));
 
             if (_ids.ContainsKey(type) == false) {
-                _ids[type] = Interlocked.Increment(ref _nextId);
+                _ids[type] = _idGenerator.Next();
             }
 
             return _ids[type];

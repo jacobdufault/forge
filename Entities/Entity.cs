@@ -33,11 +33,11 @@ namespace Neon.Entities {
             return data;
         }
 
-        private static int _nextId;
-        private int _uid;
+        private static UniqueIntGenerator _idGenerator = new UniqueIntGenerator();
 
         public int UniqueId {
-            get { return _uid; }
+            get;
+            private set;
         }
 
         public EventProcessor EventProcessor {
@@ -46,7 +46,8 @@ namespace Neon.Entities {
         }
 
         protected internal Entity() {
-            _uid = Interlocked.Increment(ref _nextId);
+            UniqueId = _idGenerator.Next();
+
             Enabled = true; // default to being enabled
 
             EventProcessor = new EventProcessor();
@@ -56,7 +57,7 @@ namespace Neon.Entities {
         }
 
         public override string ToString() {
-            return string.Format("Entity [uid={0}]", _uid);
+            return string.Format("Entity [uid={0}]", UniqueId);
         }
 
         public event Action OnHide;
