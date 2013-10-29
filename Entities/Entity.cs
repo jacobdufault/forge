@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections;
+﻿using Neon.Collections;
+using Neon.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Threading;
-using Neon.Utilities;
-using Neon.Collections;
 
 namespace Neon.Entities {
     [Serializable]
@@ -27,71 +26,93 @@ namespace Neon.Entities {
         }
     }
 
+    /// <summary>
+    /// An Entity contains some data.
+    /// </summary>
     public interface IEntity {
         /// <summary>
-        /// Destroys the entity.
+        /// Destroys the entity. The entity is not destroyed immediately, but instead at the end of
+        /// the next update loop. Systems will get a chance to process the destruction of the
+        /// entity.
         /// </summary>
         void Destroy();
 
+        [Obsolete("Use EventProcessor")]
         event Action OnShow;
+
+        [Obsolete("Use EventProcessor")]
         event Action OnHide;
+
+        [Obsolete("Use EventProcessor")]
         event Action OnRemoved;
 
+        /// <summary>
+        /// Gets the event processor that Systems use to notify the external world of interesting
+        /// events.
+        /// </summary>
         EventProcessor EventProcessor {
             get;
         }
 
         /// <summary>
-        /// Initialize data of the given type. This is equivalent to adding data of
-        /// the given type if it does not exist on the entity and returning said
-        /// instance, or modifying the data and returning the modified instances.
+        /// Initialize data of the given type. This is equivalent to adding data of the given type
+        /// if it does not exist on the entity and returning said instance, or modifying the data
+        /// and returning the modified instances.
         /// </summary>
         /// <remarks>
-        /// This method is a shortcut for:
-        /// <![CDATA[
-        /// T instance;
-        /// if (entity.ContainsData<T>() == false) {
-        ///     instance = entity.AddData<T>();
-        /// }
-        /// else {
-        ///     instance = entity.Modify<T>();
-        /// }
+        /// This method is a shortcut for: <![CDATA[ T instance; if (entity.ContainsData<T>() == false) { instance = entity.AddData<T>(); } else { instance = entity.Modify<T>(); }
         ///
-        /// // use instance
-        /// ]]>
+        /// // use instance ]]>
         /// </remarks>
         /// <typeparam name="T">The type of data modified</typeparam>
         /// <returns>A modifiable instance of data of type T</returns>
         T Initialize<T>() where T : Data;
 
+        /// <summary>
+        /// Add a Data instance of with the given accessor to the Entity.
+        /// </summary>
+        /// <remarks>
+        /// The aux allocators will be called in this method, giving them a chance to populate the
+        /// data with any necessary information.
+        ///
+        /// This is a helper method for AddData(DataAccessor accessor).
+        /// </remarks>
+        /// <param name="accessor"></param>
+        /// <returns>The data instance that can be used to initialize the data</returns>
         T AddData<T>() where T : Data;
 
         /// <summary>
         /// Add a Data instance of with the given accessor to the Entity.
         /// </summary>
+        /// <remarks>
+        /// The aux allocators will be called in this method, giving them a chance to populate the
+        /// data with any necessary information.
+        /// </remarks>
         /// <param name="accessor"></param>
-        /// <returns></returns>
+        /// <returns>The data instance that can be used to initialize the data</returns>
         Data AddData(DataAccessor accessor);
-
 
         //void RemoveData<T>() where T : Data;
         //void RemoveData(DataAccessor accessor);
 
+        [Obsolete("This was a helper method used for updating visualizations; instead make visualization pushes operate on the Entity, not Data instances")]
         Data[] GetAllData<T>() where T : Data;
+
+        [Obsolete("This was a helper method used for updating visualizations; instead make visualization pushes operate on the Entity, not Data instances")]
         Data[] GetAllData(DataAccessor accessor);
 
         /// <summary>
-        /// Returns the data instances that pass the predicate. The data checked are all current instances
-        /// inside of the Entity.
+        /// Returns the data instances that pass the predicate. The data checked are all current
+        /// instances inside of the Entity. This operates on Current data instances.
         /// </summary>
         /// <param name="predicate">The predicate used to filter the data</param>
         /// <returns>All data instances which pass the predicate</returns>
         IEnumerable<Data> SelectData(Predicate<Data> predicate);
 
         /// <summary>
-        /// If Enabled is set to false, then the Entity will not be processed in any Update
-        /// or StructuredInput based systems. However, modification ripples are still
-        /// applied to the Entity until it has no more modifications.
+        /// If Enabled is set to false, then the Entity will not be processed in any Update or
+        /// StructuredInput based systems. However, modification ripples are still applied to the
+        /// Entity until it has no more modifications.
         /// </summary>
         bool Enabled {
             get;
@@ -100,66 +121,77 @@ namespace Neon.Entities {
 
         /// <summary>
         /// Modify the given data instance. The current and previous values are still accessible.
-        /// Please note that a data instance can only be modified once; an exception is thrown
-        /// if one instance is modified multiple times.
+        /// Please note that a data instance can only be modified once; an exception is thrown if
+        /// one instance is modified multiple times.
         /// </summary>
-        /// <param name="force">
-        /// If the modification should be forced; ie, if there is already a modification then it
-        /// will be overwritten. This should *NEVER* be used in systems or general client code; it
-        /// is available for inspector GUI changes.
-        /// </param>
-        T Modify<T>() where T : Data;
-        T Modify<T>(bool force) where T : Data;
-        Data Modify(DataAccessor accessor);
-        Data Modify(DataAccessor accessor, bool force);
+        /// <param name="force">If the modification should be forced; ie, if there is already a
+        /// modification then it will be overwritten. This should *NEVER* be used in systems or
+        /// general client code; it is available for inspector GUI changes.</param>
+        T Modify<T>(bool force = false) where T : Data;
+
+        Data Modify(DataAccessor accessor, bool force = false);
 
         /// <summary>
         /// Gets the current data value for the given type.
         /// </summary>
         T Current<T>() where T : Data;
+
         Data Current(DataAccessor accessor);
 
         /// <summary>
         /// Gets the previous data value for the data type.
         /// </summary>
         T Previous<T>() where T : Data;
+
         Data Previous(DataAccessor accessor);
 
         /// <summary>
         /// Checks to see if this Entity contains the given type of data. If this method returns
-        /// true, then the data can be modified. Please note, however, that Modify() may still
-        /// throw a RemodifiedDataException.
+        /// true, then the data can be modified. Please note, however, that Modify() may still throw
+        /// a RemodifiedDataException.
         /// </summary>
+        [Obsolete("Not used")]
         bool ContainsModifableData<T>() where T : Data;
+
+        [Obsolete("Not used")]
         bool ContainsModifableData(DataAccessor accessor);
 
         /// <summary>
-        /// Checks to see if this Entity contains the given type of data. Note that this
-        /// method gives no promises about if the data can be modified.
+        /// Checks to see if this Entity contains the given type of data. Note that this method
+        /// gives no promises about if the data can be modified.
         /// </summary>
         bool ContainsData<T>() where T : Data;
+
         bool ContainsData(DataAccessor accessor);
 
         /// <summary>
         /// Returns if the Entity was modified in the previous update.
         /// </summary>
         bool WasModified<T>() where T : Data;
+
         bool WasModified(DataAccessor accessor);
 
         /// <summary>
         /// Returns if the given data was added to the entity in the previous update.
         /// </summary>
+        [Obsolete("Not used")]
         bool WasAdded<T>() where T : Data;
+
+        [Obsolete("Not used")]
         bool WasAdded(DataAccessor accessor);
 
         /// <summary>
         /// Returns if the given data was removed from the entity in the previous update.
         /// </summary>
         /// <remarks>
-        /// The removed data can be accessed via GetPrevious. Please note, however, that GetCurrent and
-        /// Modify will throw NoSuchDataExceptions if they are also called with the same DataAccessor.
+        /// The removed data can be accessed via GetPrevious. Please note, however, that GetCurrent
+        /// and Modify will throw NoSuchDataExceptions if they are also called with the same
+        /// DataAccessor.
         /// </remarks>
+        [Obsolete("Not used")]
         bool WasRemoved<T>() where T : Data;
+
+        [Obsolete("Not used")]
         bool WasRemoved(DataAccessor accessor);
 
         /// <summary>
@@ -172,6 +204,7 @@ namespace Neon.Entities {
         /// <summary>
         /// Applies modifications to the entity, ie, swaps out old data with new data.
         /// </summary>
+        [Obsolete("This shouldn't be a public API")]
         void ApplyModifications();
 
         /// <summary>
@@ -183,6 +216,7 @@ namespace Neon.Entities {
     }
 
     public partial class Entity {
+
         public bool Enabled {
             get;
             set;
@@ -211,9 +245,8 @@ namespace Neon.Entities {
             // Get our initial data from a prefab/etc
             DataAllocator.NotifyAllocated(accessor, this, _data[id].Current);
 
-            // the user modifies the current state; the initialized data
-            // is copied around to other instances when _added[id] is set to true
-            // in the data state change update method
+            // the user modifies the current state; the initialized data is copied around to other
+            // instances when _added[id] is set to true in the data state change update method
             return _data[id].Current;
         }
     }
@@ -231,7 +264,7 @@ namespace Neon.Entities {
             private set;
         }
 
-        internal protected Entity() {
+        protected internal Entity() {
             _uid = Interlocked.Increment(ref _nextId);
             Enabled = true; // default to being enabled
 
@@ -248,9 +281,10 @@ namespace Neon.Entities {
     /// </summary>
     public partial class Entity : IEntity {
         public event Action OnHide;
-        public event Action OnShow;
-        public event Action OnRemoved;
 
+        public event Action OnShow;
+
+        public event Action OnRemoved;
 
         public void RemovedFromEntityManager() {
             if (OnRemoved != null) {
@@ -271,6 +305,7 @@ namespace Neon.Entities {
         }
 
         private EntityManager _entityManager;
+
         public void AddedToEntityManager(EntityManager entityManager) {
             _entityManager = entityManager;
         }
@@ -296,14 +331,12 @@ namespace Neon.Entities {
 
         /*
         /// <summary>
-        /// If this is true (which is normally should be), then the Entity will automatically
-        /// be registered into the Entity Manager, which will allow it to interact with
-        /// systems.
+        /// If this is true (which is normally should be), then the Entity will automatically be
+        /// registered into the Entity Manager, which will allow it to interact with systems.
         /// </summary>
         /// <remarks>
-        /// Having this set to false is only desirable when a singleton entity instance is
-        /// desired, ie, an Entity that every system can access and that holds global level
-        /// data.
+        /// Having this set to false is only desirable when a singleton entity instance is desired,
+        /// ie, an Entity that every system can access and that holds global level data.
         /// </remarks>
         public bool EntityManagerInjection = true;
 
@@ -337,9 +370,9 @@ namespace Neon.Entities {
         }
 
         private class Swappable<T> {
-            T _a;
-            T _b;
-            bool _current;
+            private T _a;
+            private T _b;
+            private bool _current;
 
             public Swappable(T a, T b) {
                 _a = a;
@@ -370,7 +403,9 @@ namespace Neon.Entities {
         }
 
         public event Action<Entity> OnDataStateChanged;
+
         private bool _onDataStateChangeNotificationDispatched;
+
         private void DispatchDataStateChangedNotification() {
             if (_onDataStateChangeNotificationDispatched == false) {
                 _onDataStateChangeNotificationDispatched = true;
@@ -384,7 +419,9 @@ namespace Neon.Entities {
         /// Notifies the world when a modification to the entity has been made.
         /// </summary>
         public event Action<Entity> OnModified;
+
         private bool _modificationNotificationDispatched;
+
         private void DispatchModificationNotification() {
             if (_modificationNotificationDispatched == false) {
                 _modificationNotificationDispatched = true;
@@ -395,10 +432,11 @@ namespace Neon.Entities {
         }
 
         /// <summary>
-        /// Determines which item in the tuple of simulation data is considered "active" and which is
-        /// considered "inactive" / the previous value
+        /// Determines which item in the tuple of simulation data is considered "active" and which
+        /// is considered "inactive" / the previous value
         /// </summary>
         private int _swappableIndex;
+
         private class StoredData {
             private Data[] _items;
             private int _swappableIndex;
@@ -421,29 +459,23 @@ namespace Neon.Entities {
             /// Updates Modifying/Current/Previous so that they point to the next element
             /// </summary>
             public void Increment() {
-                // If the object we modified supports multiple modifications, then we need
-                // to give it a chance to resolve those modifications so that it is in a
-                // consistent state
+                // If the object we modified supports multiple modifications, then we need to give
+                // it a chance to resolve those modifications so that it is in a consistent state
                 if (Modifying.SupportsMultipleModifications) {
                     Modifying.ResolveModifications();
                 }
 
-                // this code is tricky because we change what data.{Previous,Current,Modifying} refer to when we increment _swappableIndex below
+                // this code is tricky because we change what data.{Previous,Current,Modifying}
+                // refer to when we increment _swappableIndex below
 
-                // when we increment _swappableIndex:
-                //  modifying becomes current
-                //  current becomes previous
-                //  previous becomes modifying
+                // when we increment _swappableIndex: modifying becomes current current becomes
+                // previous previous becomes modifying
 
-                // current refers to the current _swappableIndex
-                //  current_modifying : data.Modifying
-                //  current_current : data.Current
-                //  current_previous : data.Previous
+                // current refers to the current _swappableIndex current_modifying : data.Modifying
+                // current_current : data.Current current_previous : data.Previous
 
-                // next refers to when _swappableIndex += 1
-                //  next_modifying : data.Previous
-                //  next_current : data.Modifying
-                //  next_previous : data.Current
+                // next refers to when _swappableIndex += 1 next_modifying : data.Previous
+                // next_current : data.Modifying next_previous : data.Current
 
                 // we want next_modifying to become a copy of current_modifying
                 Previous.CopyFrom(Modifying);
@@ -508,8 +540,8 @@ namespace Neon.Entities {
         }
 
         /// <summary>
-        /// The data contained within the Entity. One item in the tuple is the current state and one item
-        /// is the next state.
+        /// The data contained within the Entity. One item in the tuple is the current state and one
+        /// item is the next state.
         /// </summary>
         private IterableSparseArray<StoredData> _data = new IterableSparseArray<StoredData>();
 
@@ -523,20 +555,21 @@ namespace Neon.Entities {
         /// Items that are pending removal in the next update call
         /// </summary>
 
-        List<DataAccessor> _toAddStage1 = new List<DataAccessor>();
-        List<DataAccessor> _toAddStage2 = new List<DataAccessor>();
-        SparseArray<bool> _added = new SparseArray<bool>();
+        private List<DataAccessor> _toAddStage1 = new List<DataAccessor>();
+        private List<DataAccessor> _toAddStage2 = new List<DataAccessor>();
+        private SparseArray<bool> _added = new SparseArray<bool>();
 
-        List<DataAccessor> _toRemoveStage1 = new List<DataAccessor>();
-        List<DataAccessor> _toRemoveStage2 = new List<DataAccessor>();
-        SparseArray<Data> _removed = new SparseArray<Data>();
+        private List<DataAccessor> _toRemoveStage1 = new List<DataAccessor>();
+        private List<DataAccessor> _toRemoveStage2 = new List<DataAccessor>();
+        private SparseArray<Data> _removed = new SparseArray<Data>();
 
-        bool _removedAllData = false;
+        private bool _removedAllData = false;
 
         /// <summary>
         /// Object that is used to retrieve unordered list metadata from the entity.
         /// </summary>
         private MetadataContainer<object> _metadata = new MetadataContainer<object>();
+
         public MetadataContainer<object> Metadata {
             get {
                 return _metadata;
@@ -563,7 +596,8 @@ namespace Neon.Entities {
             _modifications.Swap();
             _modifications.Current.Clear();
 
-            // move the swappable items so that previous/current/modifying works for the next generation
+            // move the swappable items so that previous/current/modifying works for the next
+            // generation
             ++_swappableIndex;
         }
 
@@ -611,27 +645,16 @@ namespace Neon.Entities {
         }
 
         /// <summary>
-        /// Initialize data of the given type. This is equivalent to adding data of
-        /// the given type if it does not exist on the entity and returning said
-        /// instance, or modifying the data and returning the modified instances.
+        /// Initialize data of the given type. This is equivalent to adding data of the given type
+        /// if it does not exist on the entity and returning said instance, or modifying the data
+        /// and returning the modified instances.
         /// </summary>
         /// <typeparam name="T">The type of data modified</typeparam>
-        /// <returns>
-        /// A modifiable instance of data of type T
-        /// </returns>
+        /// <returns>A modifiable instance of data of type T</returns>
         /// <remarks>
-        /// This method is a shortcut for:
-        /// <![CDATA[
-        /// T instance;
-        /// if (entity.ContainsData<T>() == false) {
-        ///   instance = entity.AddData<T>();
-        /// }
-        /// else {
-        ///   instance = entity.Modify<T>();
-        /// }
+        /// This method is a shortcut for: <![CDATA[ T instance; if (entity.ContainsData<T>() == false) { instance = entity.AddData<T>(); } else { instance = entity.Modify<T>(); }
         ///
-        /// // use instance
-        /// ]]>
+        /// // use instance ]]>
         /// </remarks>
         public T Initialize<T>() where T : Data {
             DataAccessor accessor = DataMap<T>.Accessor;
@@ -642,16 +665,11 @@ namespace Neon.Entities {
             return (T)Modify(accessor);
         }
 
-        public T Modify<T>() where T : Data {
-            return (T)Modify(DataMap<T>.Accessor, false);
-        }
-        public T Modify<T>(bool force) where T : Data {
+        public T Modify<T>(bool force = false) where T : Data {
             return (T)Modify(DataMap<T>.Accessor, force);
         }
-        public Data Modify(DataAccessor accessor) {
-            return Modify(accessor, false);
-        }
-        public Data Modify(DataAccessor accessor, bool force) {
+
+        public Data Modify(DataAccessor accessor, bool force = false) {
             var id = accessor.Id;
 
             if (ContainsData(accessor) == false) {
@@ -670,6 +688,7 @@ namespace Neon.Entities {
         public T Current<T>() where T : Data {
             return (T)Current(DataMap<T>.Accessor);
         }
+
         public Data Current(DataAccessor accessor) {
             if (ContainsData(accessor) == false) {
                 throw new NoSuchDataException(this, DataFactory.GetTypeFromAccessor(accessor));
@@ -681,6 +700,7 @@ namespace Neon.Entities {
         public T Previous<T>() where T : Data {
             return (T)Previous(DataMap<T>.Accessor);
         }
+
         public Data Previous(DataAccessor accessor) {
             var id = accessor.Id;
 
@@ -694,6 +714,7 @@ namespace Neon.Entities {
         public bool ContainsModifableData<T>() where T : Data {
             return ContainsModifableData(DataMap<T>.Accessor);
         }
+
         public bool ContainsModifableData(DataAccessor accessor) {
             return _data.Contains(accessor.Id) && WasAdded(accessor) == false && WasRemoved(accessor) == false;
         }
@@ -701,6 +722,7 @@ namespace Neon.Entities {
         public bool ContainsData<T>() where T : Data {
             return ContainsData(DataMap<T>.Accessor);
         }
+
         public bool ContainsData(DataAccessor accessor) {
             int id = accessor.Id;
             return _data.Contains(id);
@@ -709,6 +731,7 @@ namespace Neon.Entities {
         public bool WasAdded<T>() where T : Data {
             return WasAdded(DataMap<T>.Accessor);
         }
+
         public bool WasAdded(DataAccessor accessor) {
             return _added[accessor.Id];
         }
@@ -716,6 +739,7 @@ namespace Neon.Entities {
         public bool WasRemoved<T>() where T : Data {
             return WasRemoved(DataMap<T>.Accessor);
         }
+
         public bool WasRemoved(DataAccessor accessor) {
             int id = accessor.Id;
             return _removed.Contains(id) || (_removedAllData && _data.Contains(id));
@@ -724,6 +748,7 @@ namespace Neon.Entities {
         public bool WasModified<T>() where T : Data {
             return WasModified(DataMap<T>.Accessor);
         }
+
         public bool WasModified(DataAccessor accessor) {
             return _modifications.Previous.Contains(accessor.Id);
         }
