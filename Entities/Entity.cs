@@ -5,9 +5,14 @@ using System.Collections.Generic;
 
 namespace Neon.Entities {
     public class Entity : IEntity {
+        private volatile bool _enabled;
         public bool Enabled {
-            get;
-            set;
+            get {
+                return _enabled;
+            }
+            set {
+                _enabled = value;
+            }
         }
 
         public Data AddData(DataAccessor accessor) {
