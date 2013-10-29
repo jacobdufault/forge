@@ -1,28 +1,17 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Threading;
+﻿using Neon.Utilities;
+using System.Runtime.CompilerServices;
 
 namespace Neon.Collections {
     /// <summary>
     /// Used to create metadata keys that can access data in MetadataContainers.
     /// </summary>
     public class MetadataRegistry {
-        private int _nextKey;
-
-        //private static Dictionary<object, MetadataKey> _keys = new Dictionary<object, MetadataKey>();
+        private UniqueIntGenerator _keyGenerator = new UniqueIntGenerator();
 
         public MetadataKey GetKey() {
-            MetadataKey key;
-            //if (_keys.TryGetValue(reference, out key)) {
-            //   return key;
-            //}
-
-            key = new MetadataKey() {
-                Index = Interlocked.Increment(ref _nextKey)
+            return new MetadataKey() {
+                Index = _keyGenerator.Next()
             };
-            //_keys.Add(reference, key);
-            return key;
         }
     }
 
@@ -38,6 +27,7 @@ namespace Neon.Collections {
         /// <summary>
         /// Returns the stored metadata value for the given key.
         /// </summary>
+        [MethodImpl(MethodImplOptions.Synchronized)]
         public T Get(MetadataKey key) {
             return _container[key.Index];
         }
@@ -45,6 +35,7 @@ namespace Neon.Collections {
         /// <summary>
         /// Updates the stored metadata value for the given key.
         /// </summary>
+        [MethodImpl(MethodImplOptions.Synchronized)]
         public void Set(MetadataKey key, T value) {
             _container[key.Index] = value;
         }
@@ -55,6 +46,7 @@ namespace Neon.Collections {
         /// <remarks>
         /// This just calls Set(key, default(T)).
         /// </remarks>
+        [MethodImpl(MethodImplOptions.Synchronized)]
         public void Remove(MetadataKey key) {
             Set(key, default(T));
         }
