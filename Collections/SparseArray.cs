@@ -68,7 +68,11 @@ namespace Neon.Collections {
         /// <param name="index">The index to check.</param>
         /// <returns>True if there is a contained element, false otherwise.</returns>
         public bool Contains(int index) {
-            return this[index] != null;
+            if (index >= Elements.Length || Elements[index].IsEmpty) {
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
