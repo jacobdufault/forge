@@ -2,11 +2,13 @@
 using Neon.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace Neon.Entities {
     public class Entity : IEntity {
+        #region Enabled
         private volatile bool _enabled;
-        public bool Enabled {
+        bool IEntity.Enabled {
             get {
                 return _enabled;
             }
@@ -14,142 +16,94 @@ namespace Neon.Entities {
                 _enabled = value;
             }
         }
+        #endregion
 
-        public Data AddData(DataAccessor accessor) {
-            // ensure that we have not already added a data of this type
-            if (GetAddedData(accessor) != null) {
-                throw new AlreadyAddedDataException(this, DataAccessorFactory.GetTypeFromAccessor(accessor));
-            }
-
-            // add our data
-            Data data = DataAllocator.Allocate(accessor);
-            data.Entity = this;
-            _toAdd.Add(data);
-
-            // notify the entity manager
-            ModificationNotifier.Notify();
-            DataStateChangeNotifier.Notify();
-
-            // populate the data instance from the prefab / etc
-            DataAllocator.NotifyAllocated(accessor, this, data);
-
-            // return the new instance
-            return data;
-        }
-
+        #region Unique ID
+        /// <summary>
+        /// Generates unique identifiers.
+        /// </summary>
         private static UniqueIntGenerator _idGenerator = new UniqueIntGenerator();
 
-        public int UniqueId {
-            get;
-            private set;
-        }
+        // thread safe because we never write
+        private int _uniqueId;
 
-        public EventProcessor EventProcessor {
-            get;
-            private set;
+        int IEntity.UniqueId {
+            get { return _uniqueId; }
         }
+        #endregion
+
+        #region Metadata
+        /// <summary>
+        /// Used to retrieve keys for storing things in instance-specific metadata containers.
+        /// </summary>
+        public static MetadataRegistry MetadataRegistry = new MetadataRegistry();
+        private MetadataContainer<object> _metadata = new MetadataContainer<object>();
+        MetadataContainer<object> IEntity.Metadata {
+            get {
+                return _metadata;
+            }
+        }
+        #endregion
+
+        #region Event Processor
+        private EventProcessor _eventProcessor;
+        EventProcessor IEntity.EventProcessor {
+            get { return _eventProcessor; }
+        }
+        #endregion
 
         protected internal Entity() {
-            UniqueId = _idGenerator.Next();
-
-            Enabled = true; // default to being enabled
-
-            EventProcessor = new EventProcessor();
+            _uniqueId = _idGenerator.Next();
+            _enabled = true; // default to being enabled
+            _eventProcessor = new EventProcessor();
 
             DataStateChangeNotifier = new Notifier<Entity>(this);
             ModificationNotifier = new Notifier<Entity>(this);
         }
 
-        public override string ToString() {
-            return string.Format("Entity [uid={0}]", UniqueId);
-        }
-
-        public event Action OnHide;
-
-        public event Action OnShow;
-
-        public event Action OnRemoved;
-
-        public void RemovedFromEntityManager() {
-            if (OnRemoved != null) {
-                OnRemoved();
-            }
-        }
-
-        public void Hide() {
-            if (OnHide != null) {
-                OnHide();
-            }
-        }
-
-        public void Show() {
-            if (OnShow != null) {
-                OnShow();
-            }
-        }
+        #region Private EntityManager only API
+        public Notifier<Entity> DataStateChangeNotifier;
+        public Notifier<Entity> ModificationNotifier;
 
         private EntityManager _entityManager;
-
         public void AddedToEntityManager(EntityManager entityManager) {
             _entityManager = entityManager;
         }
 
-        public void RemoveData(DataAccessor accessor) {
-            _toRemove.Current.Add(accessor);
-
-            ModificationNotifier.Notify();
-            DataStateChangeNotifier.Notify();
+        /// <summary>
+        /// Invokes OnHide(). This must be called on the Unity thread.
+        /// </summary>
+        public void Hide() {
+            if (_onHide != null) {
+                _onHide();
+            }
         }
-
-        public void Destroy() {
-            _entityManager.RemoveEntity(this);
+        /// <summary>
+        /// Invokes OnShow(). This must be called on the Unity thread.
+        /// </summary>
+        public void Show() {
+            if (_onShow != null) {
+                _onShow();
+            }
         }
-
-        public Notifier<Entity> DataStateChangeNotifier;
-        public Notifier<Entity> ModificationNotifier;
-
         /// <summary>
-        /// The data contained within the Entity. One item in the tuple is the current state and one
-        /// item is the next state.
+        /// Invokes OnRemoved(). This must be called on the Unity thread.
         /// </summary>
-        private IterableSparseArray<ImmutableContainer<Data>> _data = new IterableSparseArray<ImmutableContainer<Data>>();
-
-        /// <summary>
-        /// Data that has been modified this frame and needs to be pushed out
-        /// </summary>
-        private SwappableItem<IterableSparseArray<ImmutableContainer<Data>>> _modifications = new SwappableItem<IterableSparseArray<ImmutableContainer<Data>>>(
-            new IterableSparseArray<ImmutableContainer<Data>>(), new IterableSparseArray<ImmutableContainer<Data>>());
-
-        /// <summary>
-        /// Items that are pending removal in the next update call
-        /// </summary>
-
-        private List<Data> _toAdd = new List<Data>();
-
-        private SwappableItem<List<DataAccessor>> _toRemove = new SwappableItem<List<DataAccessor>>(new List<DataAccessor>(), new List<DataAccessor>());
-        private SparseArray<DataAccessor> _removed = new SparseArray<DataAccessor>();
-
-        /// <summary>
-        /// Object that is used to retrieve unordered list metadata from the entity.
-        /// </summary>
-        private MetadataContainer<object> _metadata = new MetadataContainer<object>();
-
-        public MetadataContainer<object> Metadata {
-            get {
-                return _metadata;
+        public void RemovedFromEntityManager() {
+            if (_onRemoved != null) {
+                _onRemoved();
             }
         }
 
-        public static MetadataRegistry MetadataRegistry = new MetadataRegistry();
-
         /// <summary>
-        /// Removes all data from the entity.
+        /// Removes all data instances from the Entity.
         /// </summary>
+        [MethodImpl(MethodImplOptions.Synchronized)] // TODO: shouldn't need a lock
         public void RemoveAllData() {
             // TODO: potentially optimize this method
             foreach (var tuple in _data) {
                 DataAccessor accessor = new DataAccessor(tuple.Item2.Current.GetType());
-                RemoveData(accessor);
+                RemoveData_unlocked(accessor);
             }
         }
 
@@ -169,15 +123,20 @@ namespace Neon.Entities {
             _modifications.Current.Clear();
         }
 
+        [MethodImpl(MethodImplOptions.Synchronized)] // TODO: shouldn't need a lock
         public void ApplyModifications() {
             DoModifications();
 
             ModificationNotifier.Reset();
             DataStateChangeNotifier.Reset();
-
-            //Debug.Log(_frame++ + " WasAdded: " + WasAdded<TemporaryData>() + ", WasRemoved: " + WasRemoved<TemporaryData>());
         }
 
+
+        /// <summary>
+        /// Must be invoked on the Unity thread.
+        /// </summary>
+        /// <returns>If more data state change updates are needed</returns>
+        [MethodImpl(MethodImplOptions.Synchronized)] // TODO: shouldn't need a lock
         public bool DataStateChangeUpdate() {
             // do removals
             {
@@ -214,14 +173,70 @@ namespace Neon.Entities {
             // do we still have things to remove?
             return _toRemove.Previous.Count > 0;
         }
+        #endregion
 
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        void IEntity.Destroy() {
+            _entityManager.RemoveEntity(this);
+        }
+
+        #region Events
+        private Action _onShow;
+        event Action IEntity.OnShow {
+            [MethodImpl(MethodImplOptions.Synchronized)]
+            add { Delegate.Combine(_onShow, value); }
+            [MethodImpl(MethodImplOptions.Synchronized)]
+            remove { Delegate.Remove(_onShow, value); }
+        }
+
+        private Action _onHide;
+        event Action IEntity.OnHide {
+            [MethodImpl(MethodImplOptions.Synchronized)]
+            add { Delegate.Combine(_onHide, value); }
+            [MethodImpl(MethodImplOptions.Synchronized)]
+            remove { Delegate.Remove(_onHide, value); }
+        }
+
+        private Action _onRemoved;
+        event Action IEntity.OnRemoved {
+            [MethodImpl(MethodImplOptions.Synchronized)]
+            add { Delegate.Combine(_onRemoved, value); }
+            [MethodImpl(MethodImplOptions.Synchronized)]
+            remove { Delegate.Remove(_onRemoved, value); }
+        }
+        #endregion
+
+        #region Instance data
+        /// <summary>
+        /// The data contained within the Entity. One item in the tuple is the current state and one
+        /// item is the next state.
+        /// </summary>
+        private IterableSparseArray<ImmutableContainer<Data>> _data = new IterableSparseArray<ImmutableContainer<Data>>();
+
+        /// <summary>
+        /// Data that has been modified this frame and needs to be pushed out
+        /// </summary>
+        private SwappableItem<IterableSparseArray<ImmutableContainer<Data>>> _modifications = new SwappableItem<IterableSparseArray<ImmutableContainer<Data>>>(
+            new IterableSparseArray<ImmutableContainer<Data>>(), new IterableSparseArray<ImmutableContainer<Data>>());
+
+        /// <summary>
+        /// Items that are pending removal in the next update call
+        /// </summary>
+
+        private List<Data> _toAdd = new List<Data>();
+
+        private SwappableItem<List<DataAccessor>> _toRemove = new SwappableItem<List<DataAccessor>>(new List<DataAccessor>(), new List<DataAccessor>());
+        private SparseArray<DataAccessor> _removed = new SparseArray<DataAccessor>();
+        #endregion
+
+        #region Helper Methods
         /// <summary>
         /// Attempts to retrieve a data instance with the given DataAccessor from the list of added
         /// data.
         /// </summary>
         /// <param name="accessor">The DataAccessor to lookup</param>
         /// <returns>A data instance, or null if it cannot be found</returns>
-        private Data GetAddedData(DataAccessor accessor) {
+        private Data GetAddedData_unlocked(DataAccessor accessor) {
             int id = accessor.Id;
             // TODO: optimize this so we don't have to search through all added data... though
             // this should actually be pretty quick
@@ -234,12 +249,52 @@ namespace Neon.Entities {
 
             return null;
         }
+        #endregion
 
-        public Data Modify(DataAccessor accessor, bool force = false) {
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        Data IEntity.AddData(DataAccessor accessor) {
+            // ensure that we have not already added a data of this type
+            if (GetAddedData_unlocked(accessor) != null) {
+                throw new AlreadyAddedDataException(this, DataAccessorFactory.GetTypeFromAccessor(accessor));
+            }
+
+            // add our data
+            Data data = DataAllocator.Allocate(accessor);
+            _toAdd.Add(data);
+
+            // initialize data outside of lock
+            data.Entity = this;
+
+            // notify the entity manager
+            ModificationNotifier.Notify();
+            DataStateChangeNotifier.Notify();
+
+            // populate the data instance from the prefab / etc
+            DataAllocator.NotifyAllocated(accessor, this, data);
+
+            // return the new instance
+            return data;
+        }
+
+        #region RemoveData
+        private void RemoveData_unlocked(DataAccessor accessor) {
+            _toRemove.Current.Add(accessor);
+
+            ModificationNotifier.Notify();
+            DataStateChangeNotifier.Notify();
+        }
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        void IEntity.RemoveData(DataAccessor accessor) {
+            RemoveData_unlocked(accessor);
+        }
+        #endregion
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        Data IEntity.Modify(DataAccessor accessor, bool force) {
             var id = accessor.Id;
 
-            if (ContainsData(accessor) == false) {
-                Data added = GetAddedData(accessor);
+            if (ContainsData_unlocked(accessor) == false) {
+                Data added = GetAddedData_unlocked(accessor);
                 if (added != null) {
                     return added;
                 }
@@ -258,15 +313,17 @@ namespace Neon.Entities {
             return _data[id].Modifying;
         }
 
-        public Data Current(DataAccessor accessor) {
-            if (ContainsData(accessor) == false) {
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        Data IEntity.Current(DataAccessor accessor) {
+            if (ContainsData_unlocked(accessor) == false) {
                 throw new NoSuchDataException(this, DataAccessorFactory.GetTypeFromAccessor(accessor));
             }
 
             return _data[accessor.Id].Current;
         }
 
-        public Data Previous(DataAccessor accessor) {
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        Data IEntity.Previous(DataAccessor accessor) {
             var id = accessor.Id;
 
             if (_data.Contains(id) == false) {
@@ -276,13 +333,24 @@ namespace Neon.Entities {
             return _data[accessor.Id].Previous;
         }
 
-        public bool ContainsData(DataAccessor accessor) {
+        #region ContainsData
+        private bool ContainsData_unlocked(DataAccessor accessor) {
             int id = accessor.Id;
             return _data.Contains(id) && _removed.Contains(id) == false;
         }
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        bool IEntity.ContainsData(DataAccessor accessor) {
+            return ContainsData_unlocked(accessor);
+        }
+        #endregion
 
-        public bool WasModified(DataAccessor accessor) {
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        bool IEntity.WasModified(DataAccessor accessor) {
             return _modifications.Previous.Contains(accessor.Id);
+        }
+
+        public override string ToString() {
+            return string.Format("Entity [uid={0}]", _uniqueId);
         }
     }
 }

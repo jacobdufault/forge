@@ -248,7 +248,7 @@ namespace Neon.Entities {
 
                 // call the InvokeOnModified functions - *user code*
                 // we store which methods are relevant to the entity in the entities metadata for performance reasons
-                List<ModifiedTrigger> triggers = (List<ModifiedTrigger>)modified.Metadata[_entityModifiedListenersKey];
+                List<ModifiedTrigger> triggers = (List<ModifiedTrigger>)((IEntity)modified).Metadata[_entityModifiedListenersKey];
                 for (int i = 0; i < triggers.Count; ++i) {
                     Log<EntityManager>.Info("({0}) Modification check to see if {1} is interested in {2}", UpdateNumber, triggers[i].Trigger, modified);
                     if (triggers[i].Filter.ModificationCheck(modified)) {
@@ -330,17 +330,17 @@ namespace Neon.Entities {
                 // register listeners
                 toAdd.ModificationNotifier.Listener += OnEntityModified;
                 toAdd.DataStateChangeNotifier.Listener += OnEntityDataStateChanged;
-                toAdd.EventProcessor.OnEventAdded += EventProcessor_OnEventAdded;
+                ((IEntity)toAdd).EventProcessor.OnEventAdded += EventProcessor_OnEventAdded;
 
                 // apply initialization changes
                 toAdd.ApplyModifications();
 
                 // ensure it contains metadata for our keys
-                toAdd.Metadata[_entityUnorderedListMetadataKey] = new UnorderedListMetadata();
-                toAdd.Metadata[_entityModifiedListenersKey] = new List<ModifiedTrigger>();
+                ((IEntity)toAdd).Metadata[_entityUnorderedListMetadataKey] = new UnorderedListMetadata();
+                ((IEntity)toAdd).Metadata[_entityModifiedListenersKey] = new List<ModifiedTrigger>();
 
                 // add it our list of entities
-                _entities.Add(toAdd, (UnorderedListMetadata)toAdd.Metadata[_entityUnorderedListMetadataKey]);
+                _entities.Add(toAdd, (UnorderedListMetadata)((IEntity)toAdd).Metadata[_entityUnorderedListMetadataKey]);
             }
 
             _entitiesToAdd.Clear();
@@ -367,7 +367,7 @@ namespace Neon.Entities {
                 }
 
                 // update the entity's internal trigger cache
-                List<ModifiedTrigger> triggers = (List<ModifiedTrigger>)entity.Metadata[_entityModifiedListenersKey];
+                List<ModifiedTrigger> triggers = (List<ModifiedTrigger>)((IEntity)entity).Metadata[_entityModifiedListenersKey];
                 triggers.Clear();
                 for (int i = 0; i < _modifiedTriggers.Count; ++i) {
                     Log<EntityManager>.Info("({0}) Checking to see if modification trigger {1} is interested in {2}", UpdateNumber, _modifiedTriggers[i].Trigger, entity);
@@ -396,17 +396,17 @@ namespace Neon.Entities {
                 // remove listeners
                 toDestroy.ModificationNotifier.Listener -= OnEntityModified;
                 toDestroy.DataStateChangeNotifier.Listener -= OnEntityDataStateChanged;
-                toDestroy.EventProcessor.OnEventAdded -= EventProcessor_OnEventAdded;
+                ((IEntity)toDestroy).EventProcessor.OnEventAdded -= EventProcessor_OnEventAdded;
 
                 // remove the entity from caches
                 for (int j = 0; j < _allSystems.Count; ++j) {
                     _allSystems[j].Remove(toDestroy);
                 }
-                List<ModifiedTrigger> triggers = (List<ModifiedTrigger>)toDestroy.Metadata[_entityModifiedListenersKey];
+                List<ModifiedTrigger> triggers = (List<ModifiedTrigger>)((IEntity)toDestroy).Metadata[_entityModifiedListenersKey];
                 triggers.Clear();
 
                 // remove the entity from the list of entities
-                _entities.Remove(toDestroy, (UnorderedListMetadata)toDestroy.Metadata[_entityUnorderedListMetadataKey]);
+                _entities.Remove(toDestroy, (UnorderedListMetadata)((IEntity)toDestroy).Metadata[_entityUnorderedListMetadataKey]);
                 toDestroy.RemovedFromEntityManager();
             }
             _entitiesToRemove.Clear();
