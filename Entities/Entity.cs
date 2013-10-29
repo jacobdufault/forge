@@ -5,6 +5,10 @@ using System.Collections.Generic;
 using System.Threading;
 
 namespace Neon.Entities {
+    /// <summary>
+    /// Exception thrown when a data type is added to an entity, but the entity already contains an
+    /// instance of said data type.
+    /// </summary>
     [Serializable]
     public class AlreadyAddedDataException : Exception {
         public AlreadyAddedDataException(IEntity context, Type type)
@@ -12,16 +16,29 @@ namespace Neon.Entities {
         }
     }
 
+    /// <summary>
+    /// Exception thrown when data is attempted to be retrieved from an Entity, but the entity does
+    /// not contain an instance of said data type.
+    /// </summary>
     [Serializable]
     public class NoSuchDataException : Exception {
-        public NoSuchDataException(IEntity context, Type type)
+        internal NoSuchDataException(IEntity context, Type type)
             : base("No such data for type=" + type + " in " + context) {
         }
     }
 
+    /// <summary>
+    /// An exception that is thrown when a data instance has been modified more than once in an
+    /// update loop, but that data is not allowed to be concurrently modified.
+    /// </summary>
     [Serializable]
     public class RemodifiedDataException : Exception {
-        public RemodifiedDataException(IEntity context, Type type)
+        /// <summary>
+        /// Creates the exception with the given context and data type.
+        /// </summary>
+        /// <param name="context">The entity that triggered the exception.</param>
+        /// <param name="type">The data type that was concurrently modified.</param>
+        internal RemodifiedDataException(IEntity context, Type type)
             : base("Already modified data for type=" + type + " in " + context) {
         }
     }
@@ -77,7 +94,6 @@ namespace Neon.Entities {
         ///
         /// This is a helper method for AddData(DataAccessor accessor).
         /// </remarks>
-        /// <param name="accessor"></param>
         /// <returns>The data instance that can be used to initialize the data</returns>
         T AddData<T>() where T : Data;
 
@@ -215,8 +231,7 @@ namespace Neon.Entities {
         }
     }
 
-    public partial class Entity {
-
+    public class Entity : IEntity {
         public bool Enabled {
             get;
             set;
@@ -235,7 +250,7 @@ namespace Neon.Entities {
             data.Entity = this;
 
             int id = accessor.Id;
-            _data[id] = new StoredData(data);
+            _data[id] = new ImmutableContainer<Data>(data);
 
             _toAddStage1.Add(new DataAccessor(id));
 
@@ -249,9 +264,7 @@ namespace Neon.Entities {
             // instances when _added[id] is set to true in the data state change update method
             return _data[id].Current;
         }
-    }
 
-    public partial class Entity {
         private static int _nextId;
         private int _uid;
 
@@ -274,12 +287,7 @@ namespace Neon.Entities {
         public override string ToString() {
             return string.Format("Entity [uid={0}]", _uid);
         }
-    }
 
-    /// <summary>
-    /// A Entity contains a set of SimulationData.
-    /// </summary>
-    public partial class Entity : IEntity {
         public event Action OnHide;
 
         public event Action OnShow;
@@ -431,96 +439,6 @@ namespace Neon.Entities {
             }
         }
 
-        /// <summary>
-        /// Determines which item in the tuple of simulation data is considered "active" and which
-        /// is considered "inactive" / the previous value
-        /// </summary>
-        private int _swappableIndex;
-
-        private class StoredData {
-            private Data[] _items;
-            private int _swappableIndex;
-
-            public Data[] Items {
-                get {
-                    return _items;
-                }
-            }
-
-            public StoredData(Data data) {
-                _items = new Data[] { data.Duplicate(), data.Duplicate(), data.Duplicate() };
-            }
-
-            //public void Print(string prefix) {
-            //    Log.Info("{0}update#{1} Modifying: {2} Current: {3} Previous: {4}", prefix, EntityManager.Instance.UpdateNumber, Modifying, Current, Previous);
-            //}
-
-            /// <summary>
-            /// Updates Modifying/Current/Previous so that they point to the next element
-            /// </summary>
-            public void Increment() {
-                // If the object we modified supports multiple modifications, then we need to give
-                // it a chance to resolve those modifications so that it is in a consistent state
-                if (Modifying.SupportsMultipleModifications) {
-                    Modifying.ResolveModifications();
-                }
-
-                // this code is tricky because we change what data.{Previous,Current,Modifying}
-                // refer to when we increment _swappableIndex below
-
-                // when we increment _swappableIndex: modifying becomes current current becomes
-                // previous previous becomes modifying
-
-                // current refers to the current _swappableIndex current_modifying : data.Modifying
-                // current_current : data.Current current_previous : data.Previous
-
-                // next refers to when _swappableIndex += 1 next_modifying : data.Previous
-                // next_current : data.Modifying next_previous : data.Current
-
-                // we want next_modifying to become a copy of current_modifying
-                Previous.CopyFrom(Modifying);
-                // we want next_current to become a copy of current_modifying
-                //Modifying.CopyFrom(data.Modifying);
-                // we want next_previous to become a copy of current_current
-                //Current.CopyFrom(data.Current);
-
-                // Visualize based on Modifying
-                Modifying.DoUpdateVisualization();
-
-                // update Modifying/Current/Previous references
-                ++_swappableIndex;
-
-                //Print("After application");
-            }
-
-            public Data Modifying {
-                get {
-                    return _items[(_swappableIndex + 2) % _items.Length];
-                }
-                set {
-                    _items[(_swappableIndex + 2) % _items.Length] = value;
-                }
-            }
-
-            public Data Current {
-                get {
-                    return _items[(_swappableIndex + 1) % _items.Length];
-                }
-                set {
-                    _items[(_swappableIndex + 1) % _items.Length] = value;
-                }
-            }
-
-            public Data Previous {
-                get {
-                    return _items[(_swappableIndex + 0) % _items.Length];
-                }
-                set {
-                    _items[(_swappableIndex + 0) % _items.Length] = value;
-                }
-            }
-        }
-
         public Data[] GetAllData<T>() where T : Data {
             return GetAllData(DataMap<T>.Accessor);
         }
@@ -530,8 +448,8 @@ namespace Neon.Entities {
         }
 
         public IEnumerable<Data> SelectData(Predicate<Data> predicate) {
-            foreach (Tuple<int, StoredData> tuple in _data) {
-                StoredData data = tuple.Item2;
+            foreach (Tuple<int, ImmutableContainer<Data>> tuple in _data) {
+                ImmutableContainer<Data> data = tuple.Item2;
                 DataAccessor accessor = new DataAccessor(DataFactory.GetId(data.Current.GetType()));
                 if (WasAdded(accessor) == false && WasRemoved(accessor) == false && predicate(data.Current)) {
                     yield return data.Current;
@@ -543,13 +461,13 @@ namespace Neon.Entities {
         /// The data contained within the Entity. One item in the tuple is the current state and one
         /// item is the next state.
         /// </summary>
-        private IterableSparseArray<StoredData> _data = new IterableSparseArray<StoredData>();
+        private IterableSparseArray<ImmutableContainer<Data>> _data = new IterableSparseArray<ImmutableContainer<Data>>();
 
         /// <summary>
         /// Data that has been modified this frame and needs to be pushed out
         /// </summary>
-        private Swappable<IterableSparseArray<StoredData>> _modifications = new Swappable<IterableSparseArray<StoredData>>(
-            new IterableSparseArray<StoredData>(), new IterableSparseArray<StoredData>());
+        private Swappable<IterableSparseArray<ImmutableContainer<Data>>> _modifications = new Swappable<IterableSparseArray<ImmutableContainer<Data>>>(
+            new IterableSparseArray<ImmutableContainer<Data>>(), new IterableSparseArray<ImmutableContainer<Data>>());
 
         /// <summary>
         /// Items that are pending removal in the next update call
@@ -587,7 +505,7 @@ namespace Neon.Entities {
 
         private void DoModifications() {
             // apply modifications
-            foreach (Tuple<int, StoredData> toApply in _modifications.Current) {
+            foreach (Tuple<int, ImmutableContainer<Data>> toApply in _modifications.Current) {
                 // if we removed the data, then don't bother apply/dispatching modifications on it
                 if (_data.Contains(toApply.Item1)) {
                     _data[toApply.Item1].Increment();
@@ -595,10 +513,6 @@ namespace Neon.Entities {
             }
             _modifications.Swap();
             _modifications.Current.Clear();
-
-            // move the swappable items so that previous/current/modifying works for the next
-            // generation
-            ++_swappableIndex;
         }
 
         public void ApplyModifications() {
@@ -675,7 +589,7 @@ namespace Neon.Entities {
             if (ContainsData(accessor) == false) {
                 throw new NoSuchDataException(this, DataFactory.GetTypeFromAccessor(accessor));
             }
-            if (_modifications.Current.Contains(id) && !force && _data[id].Current.SupportsMultipleModifications == false) {
+            if (_modifications.Current.Contains(id) && !force && _data[id].Current.SupportsConcurrentModifications == false) {
                 throw new RemodifiedDataException(this, DataFactory.GetTypeFromAccessor(accessor));
             }
             _modifications.Current[id] = _data[id];

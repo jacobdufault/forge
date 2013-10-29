@@ -1,10 +1,7 @@
-﻿using Neon.Utilities;
-using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System;
 
 namespace Neon.Entities {
-    public abstract class Data {
+    public abstract class Data : IImmutableData<Data> {
         /// <summary>
         /// The Entity that contains this Data instance.
         /// </summary>
@@ -18,7 +15,8 @@ namespace Neon.Entities {
         }
 
         /// <summary>
-        /// Optionally update any visualizations of this Data instance to the value currently stored in this instance.
+        /// Optionally update any visualizations of this Data instance to the value currently stored
+        /// in this instance.
         /// </summary>
         public void DoUpdateVisualization() {
             if (OnUpdateVisualization != null) {
@@ -31,25 +29,18 @@ namespace Neon.Entities {
         /// </summary>
         public event Action<Data> OnUpdateVisualization;
 
-        /// <summary>
-        /// Does this type of Data support multiple modifications; ie, two systems can modify the same data instance in the same update loop.
-        /// </summary>
-        /// <remarks>
-        /// If this is true, then it is *CRITICAL* that *ALL* systems which modify the data do so in a relative manner; ie, the system cannot
-        /// set a particular attribute to zero, but it can reduce it by five. If this is not followed, then state desyncs will occur.
-        /// </remarks>
-        public virtual bool SupportsMultipleModifications {
+        public virtual bool SupportsConcurrentModifications {
             get {
                 return false;
             }
         }
 
         /// <summary>
-        /// If SupportsMultipleModifications is true, then this method is called after all modifications
-        /// have been executed. The purpose is to allow for client code to resolve multiple modifications so that
-        /// modA(modB(entity)) == modB(modA(entity))
+        /// If SupportsMultipleModifications is true, then this method is called after all
+        /// modifications have been executed. The purpose is to allow for client code to resolve
+        /// multiple modifications so that modA(modB(entity)) == modB(modA(entity))
         /// </summary>
-        public virtual void ResolveModifications() {
+        public virtual void ResolveConcurrentModifications() {
             // The client code supports multiple modifications; it may also need to resolve them.
             throw new Exception("Type " + GetType() + " allows multiple modifications but does not support resolving them; override this method");
         }
@@ -104,8 +95,8 @@ namespace Neon.Entities {
 
         /// <summary>
         /// Modify the given data instance. The current and previous values are still accessible.
-        /// Please note that a data instance can only be modified once; an exception is thrown
-        /// if one instance is modified multiple times.
+        /// Please note that a data instance can only be modified once; an exception is thrown if
+        /// one instance is modified multiple times.
         /// </summary>
         /// <remarks>
         /// This is a shortcut method that simply forwards the call to Entity.Modify[T]()

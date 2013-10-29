@@ -12,7 +12,7 @@ namespace EntityTests {
             Value = source.Value;
         }
 
-        public override bool SupportsMultipleModifications {
+        public override bool SupportsConcurrentModifications {
             get { return false; }
         }
 
@@ -28,7 +28,7 @@ namespace EntityTests {
             Value = source.Value;
         }
 
-        public override bool SupportsMultipleModifications {
+        public override bool SupportsConcurrentModifications {
             get { return false; }
         }
 

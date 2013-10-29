@@ -76,7 +76,7 @@ namespace EntityTests {
     }
 
     class TestData0 : Data {
-        public override bool SupportsMultipleModifications {
+        public override bool SupportsConcurrentModifications {
             get { return false; }
         }
 
@@ -92,7 +92,7 @@ namespace EntityTests {
     }
 
     class TestData1 : Data {
-        public override bool SupportsMultipleModifications {
+        public override bool SupportsConcurrentModifications {
             get { return false; }
         }
 

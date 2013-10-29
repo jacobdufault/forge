@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using Neon.Utilities;
 using Neon.Collections;
+using System.Threading;
 
 namespace Neon.Entities {
     /// <summary>
@@ -53,11 +54,40 @@ namespace Neon.Entities {
         }
     }
 
+    public class MultithreadedSystem {
+        private ManualResetEvent _doneEvent;
+
+        //public void Reset() {
+        //    _doneEvent.Reset();
+        //}
+
+        public void ThreadPoolCallback(Object threadContext) {
+            int threadIndex = (int)threadContext;
+            Console.WriteLine("thread {0} started...", threadIndex);
+            //_fibOfN = Calculate(_n);
+            Console.WriteLine("thread {0} result calculated...", threadIndex);
+            _doneEvent.Set();
+        }
+    }
+
     /// <summary>
     /// The EntityManager requires an associated Entity which is not injected into the
     /// EntityManager.
     /// </summary>
     public class EntityManager : IEntityManager {
+        void test() {
+            ManualResetEvent[] doneEvents = new ManualResetEvent[32];
+
+            MultithreadedSystem sys = new MultithreadedSystem();
+            bool success = ThreadPool.QueueUserWorkItem(sys.ThreadPoolCallback);
+            Contract.Requires(success, "Unable to submit threading task to ThreadPool");
+
+            WaitHandle.WaitAll(doneEvents);
+            for (int i = 0; i < doneEvents.Length; ++i) {
+                doneEvents[i].Reset();
+            }
+        }
+
         /// <summary>
         /// Event processors which need their events dispatched.
         /// </summary>
