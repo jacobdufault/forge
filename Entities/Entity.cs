@@ -11,7 +11,12 @@ namespace Neon.Entities {
     /// </summary>
     [Serializable]
     public class AlreadyAddedDataException : Exception {
-        public AlreadyAddedDataException(IEntity context, Type type)
+        /// <summary>
+        /// Creates the exception with the given context and data type.
+        /// </summary>
+        /// <param name="context">The entity that triggered the exception.</param>
+        /// <param name="type">The data type that was already added.</param>
+        internal AlreadyAddedDataException(IEntity context, Type type)
             : base("The entity already has a data instance for type=" + type + " in " + context) {
         }
     }
@@ -22,6 +27,11 @@ namespace Neon.Entities {
     /// </summary>
     [Serializable]
     public class NoSuchDataException : Exception {
+        /// <summary>
+        /// Creates the exception with the given context and data type.
+        /// </summary>
+        /// <param name="context">The entity that triggered the exception.</param>
+        /// <param name="type">The data type that the entity lacks.</param>
         internal NoSuchDataException(IEntity context, Type type)
             : base("No such data for type=" + type + " in " + context) {
         }
@@ -110,14 +120,6 @@ namespace Neon.Entities {
 
         //void RemoveData<T>() where T : Data;
         //void RemoveData(DataAccessor accessor);
-
-        /// <summary>
-        /// Returns the data instances that pass the predicate. The data checked are all current
-        /// instances inside of the Entity. This operates on Current data instances.
-        /// </summary>
-        /// <param name="predicate">The predicate used to filter the data</param>
-        /// <returns>All data instances which pass the predicate</returns>
-        IEnumerable<Data> SelectData(Predicate<Data> predicate);
 
         /// <summary>
         /// If Enabled is set to false, then the Entity will not be processed in any Update or
@@ -373,16 +375,6 @@ namespace Neon.Entities {
 
         public Data[] GetAllData(DataAccessor accessor) {
             return _data[accessor.Id].Items;
-        }
-
-        public IEnumerable<Data> SelectData(Predicate<Data> predicate) {
-            foreach (Tuple<int, ImmutableContainer<Data>> tuple in _data) {
-                ImmutableContainer<Data> data = tuple.Item2;
-                DataAccessor accessor = new DataAccessor(DataFactory.GetId(data.Current.GetType()));
-                if (WasAdded(accessor) == false && WasRemoved(accessor) == false && predicate(data.Current)) {
-                    yield return data.Current;
-                }
-            }
         }
 
         /// <summary>
