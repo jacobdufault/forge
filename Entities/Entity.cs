@@ -111,12 +111,6 @@ namespace Neon.Entities {
         //void RemoveData<T>() where T : Data;
         //void RemoveData(DataAccessor accessor);
 
-        [Obsolete("This was a helper method used for updating visualizations; instead make visualization pushes operate on the Entity, not Data instances")]
-        Data[] GetAllData<T>() where T : Data;
-
-        [Obsolete("This was a helper method used for updating visualizations; instead make visualization pushes operate on the Entity, not Data instances")]
-        Data[] GetAllData(DataAccessor accessor);
-
         /// <summary>
         /// Returns the data instances that pass the predicate. The data checked are all current
         /// instances inside of the Entity. This operates on Current data instances.
@@ -211,17 +205,11 @@ namespace Neon.Entities {
         bool WasRemoved(DataAccessor accessor);
 
         /// <summary>
-        /// Manage the entity in unordered lists
+        /// Metadata container that allows arbitrary data to be stored within the Entity.
         /// </summary>
         MetadataContainer<object> Metadata {
             get;
         }
-
-        /// <summary>
-        /// Applies modifications to the entity, ie, swaps out old data with new data.
-        /// </summary>
-        [Obsolete("This shouldn't be a public API")]
-        void ApplyModifications();
 
         /// <summary>
         /// The unique id for the entity
@@ -329,48 +317,11 @@ namespace Neon.Entities {
         }
 
         public void RemoveData(DataAccessor accessor) {
-            /*
-            if (EntityManager.HasInstance == false) {
-                return;
-            }
-            */
             _toRemoveStage1.Add(accessor);
 
             ModificationNotifier.Notify();
             DataStateChangeNotifier.Notify();
         }
-
-        /*
-        /// <summary>
-        /// If this is true (which is normally should be), then the Entity will automatically be
-        /// registered into the Entity Manager, which will allow it to interact with systems.
-        /// </summary>
-        /// <remarks>
-        /// Having this set to false is only desirable when a singleton entity instance is desired,
-        /// ie, an Entity that every system can access and that holds global level data.
-        /// </remarks>
-        public bool EntityManagerInjection = true;
-
-        void OnEnable() {
-            if (EntityManagerInjection) {
-                EntityManager.Instance.AddEntity(this);
-            }
-        }
-
-        void OnDisable() {
-            if (EntityManagerInjection) {
-                if (EntityManager.HasInstance) {
-                    EntityManager.Instance.RemoveEntity(this);
-                }
-            }
-        }
-
-        public void Destroy() {
-            if (EntityManagerInjection) {
-                EntityManager.Instance.RemoveEntity(this);
-            }
-        }
-        */
 
         public void Destroy() {
             _entityManager.RemoveEntity(this);
@@ -486,6 +437,10 @@ namespace Neon.Entities {
                 // if we removed the data, then don't bother apply/dispatching modifications on it
                 if (_data.Contains(toApply.Item1)) {
                     _data[toApply.Item1].Increment();
+
+                    // TODO: make sure that visualization events are correctly copied when
+                    //       reproducing data
+                    _data[toApply.Item1].Current.DoUpdateVisualization();
                 }
             }
             _modifications.Swap();

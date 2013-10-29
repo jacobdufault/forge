@@ -147,13 +147,15 @@ namespace Neon.Entities {
         /// </summary>
         private static MetadataKey _entityModifiedListenersKey = Entity.MetadataRegistry.GetKey();
 
+        private Entity _singletonEntity;
         public IEntity SingletonEntity {
-            get;
-            set;
+            get {
+                return _singletonEntity;
+            }
         }
 
         public EntityManager(IEntity singletonEntity) {
-            SingletonEntity = singletonEntity;
+            _singletonEntity = (Entity)singletonEntity;
         }
 
         /// <summary>
@@ -215,7 +217,7 @@ namespace Neon.Entities {
             InvokeUpdateMethods();
 
             // update the singleton data
-            SingletonEntity.ApplyModifications();
+            _singletonEntity.ApplyModifications();
 
             // update dirty event processors
             InvokeEventProcessors();

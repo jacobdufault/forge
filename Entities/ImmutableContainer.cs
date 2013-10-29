@@ -114,10 +114,6 @@ namespace Neon.Entities {
             // we want next_previous to become a copy of current_current
             //Current.CopyFrom(data.Current);
 
-            // Visualize based on Modifying
-            // TODO: push this to Entity
-            //Modifying.DoUpdateVisualization();
-
             // update Modifying/Current/Previous references
             ++_previousIndex;
         }
