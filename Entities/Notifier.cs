@@ -1,0 +1,52 @@
+﻿using System;
+
+namespace Neon.Entities {
+    /// <summary>
+    /// Wraps the notification pattern, where something happens multiple times but the listeners
+    /// should only be notified once.
+    /// </summary>
+    /// <typeparam name="ParamType">The type of the parameter.</typeparam>
+    public class Notifier<ParamType> {
+        /// <summary>
+        /// Have we already notified the listeners?
+        /// </summary>
+        private bool _activated = false;
+
+        /// <summary>
+        /// Parameter to notify listeners with.
+        /// </summary>
+        private ParamType _notificationParam;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Notifier{ParamType}"/> class.
+        /// </summary>
+        /// <param name="param">The parameter to notify listeners with.</param>
+        public Notifier(ParamType param) {
+            _notificationParam = param;
+        }
+
+        /// <summary>
+        /// Resets this notifier so that it will notify listeners again.
+        /// </summary>
+        public void Reset() {
+            _activated = false;
+        }
+
+        /// <summary>
+        /// Notify the listeners if they have no already been notified.
+        /// </summary>
+        public void Notify() {
+            if (_activated == false) {
+                _activated = true;
+                if (Listener != null) {
+                    Listener(_notificationParam);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Allows objects to listen for notifications.
+        /// </summary>
+        public event Action<ParamType> Listener;
+    }
+}

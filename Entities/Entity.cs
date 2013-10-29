@@ -254,8 +254,8 @@ namespace Neon.Entities {
 
             _toAddStage1.Add(new DataAccessor(id));
 
-            DispatchModificationNotification();
-            DispatchDataStateChangedNotification();
+            ModificationNotifier.Notify();
+            DataStateChangeNotifier.Notify();
 
             // Get our initial data from a prefab/etc
             DataAllocator.NotifyAllocated(accessor, this, _data[id].Current);
@@ -282,6 +282,9 @@ namespace Neon.Entities {
             Enabled = true; // default to being enabled
 
             EventProcessor = new EventProcessor();
+
+            DataStateChangeNotifier = new Notifier<Entity>(this);
+            ModificationNotifier = new Notifier<Entity>(this);
         }
 
         public override string ToString() {
@@ -333,8 +336,8 @@ namespace Neon.Entities {
             */
             _toRemoveStage1.Add(accessor);
 
-            DispatchModificationNotification();
-            DispatchDataStateChangedNotification();
+            ModificationNotifier.Notify();
+            DataStateChangeNotifier.Notify();
         }
 
         /*
@@ -410,34 +413,8 @@ namespace Neon.Entities {
             }
         }
 
-        public event Action<Entity> OnDataStateChanged;
-
-        private bool _onDataStateChangeNotificationDispatched;
-
-        private void DispatchDataStateChangedNotification() {
-            if (_onDataStateChangeNotificationDispatched == false) {
-                _onDataStateChangeNotificationDispatched = true;
-                if (OnDataStateChanged != null) {
-                    OnDataStateChanged(this);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Notifies the world when a modification to the entity has been made.
-        /// </summary>
-        public event Action<Entity> OnModified;
-
-        private bool _modificationNotificationDispatched;
-
-        private void DispatchModificationNotification() {
-            if (_modificationNotificationDispatched == false) {
-                _modificationNotificationDispatched = true;
-                if (OnModified != null) {
-                    OnModified(this);
-                }
-            }
-        }
+        public Notifier<Entity> DataStateChangeNotifier;
+        public Notifier<Entity> ModificationNotifier;
 
         public Data[] GetAllData<T>() where T : Data {
             return GetAllData(DataMap<T>.Accessor);
@@ -518,8 +495,8 @@ namespace Neon.Entities {
         public void ApplyModifications() {
             DoModifications();
 
-            _modificationNotificationDispatched = false;
-            _onDataStateChangeNotificationDispatched = false;
+            ModificationNotifier.Reset();
+            DataStateChangeNotifier.Reset();
 
             //Debug.Log(_frame++ + " WasAdded: " + WasAdded<TemporaryData>() + ", WasRemoved: " + WasRemoved<TemporaryData>());
         }
@@ -594,7 +571,7 @@ namespace Neon.Entities {
             }
             _modifications.Current[id] = _data[id];
 
-            DispatchModificationNotification();
+            ModificationNotifier.Notify();
 
             return _data[id].Modifying;
         }
