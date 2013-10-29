@@ -208,13 +208,13 @@ namespace EntityTests {
             // use modify, not the object we get from AddData, to initialize the data
             {
                 TestData2 added = e.AddData<TestData2>();
-                TestData2 data = e.Modify<TestData2>();
+                TestData2 modified = e.Modify<TestData2>();
                 added.Value = 32;
-                data.Value = 33;
+                modified.Value = 33;
             }
 
             em.UpdateWorld();
-            Assert.AreEqual(32, e.Previous<TestData2>().Value);
+            Assert.AreEqual(33, e.Previous<TestData2>().Value);
             Assert.AreEqual(33, e.Current<TestData2>().Value);
 
             // by using ++ we ensure that the modify value is currently 33

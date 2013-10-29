@@ -27,7 +27,7 @@ namespace Neon.Entities {
         /// <returns>True if it passes the filter, false otherwise.</returns>
         public bool Check(IEntity entity) {
             for (int i = 0; i < _accessors.Length; ++i) {
-                if (entity.ContainsData(_accessors[i]) == false || entity.WasRemoved(_accessors[i])) {
+                if (entity.ContainsData(_accessors[i]) == false) {
                     return false;
                 }
             }

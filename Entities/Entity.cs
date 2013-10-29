@@ -158,20 +158,14 @@ namespace Neon.Entities {
         Data Previous(DataAccessor accessor);
 
         /// <summary>
-        /// Checks to see if this Entity contains the given type of data. If this method returns
-        /// true, then the data can be modified. Please note, however, that Modify() may still throw
-        /// a RemodifiedDataException.
+        /// Checks to see if this Entity contains the given type of data and if that data can be
+        /// modified.
         /// </summary>
-        [Obsolete("Not used")]
-        bool ContainsModifableData<T>() where T : Data;
-
-        [Obsolete("Not used")]
-        bool ContainsModifableData(DataAccessor accessor);
-
-        /// <summary>
-        /// Checks to see if this Entity contains the given type of data. Note that this method
-        /// gives no promises about if the data can be modified.
-        /// </summary>
+        /// <remarks>
+        /// Interestingly, if the data has been removed, ContainsData[T] will return false but
+        /// Current[T] will return an instance (though Previous[T] and Modify[T] will both throw
+        /// exceptions).
+        /// </remarks>
         bool ContainsData<T>() where T : Data;
 
         bool ContainsData(DataAccessor accessor);
@@ -182,29 +176,6 @@ namespace Neon.Entities {
         bool WasModified<T>() where T : Data;
 
         bool WasModified(DataAccessor accessor);
-
-        /// <summary>
-        /// Returns if the given data was added to the entity in the previous update.
-        /// </summary>
-        [Obsolete("Not used")]
-        bool WasAdded<T>() where T : Data;
-
-        [Obsolete("Not used")]
-        bool WasAdded(DataAccessor accessor);
-
-        /// <summary>
-        /// Returns if the given data was removed from the entity in the previous update.
-        /// </summary>
-        /// <remarks>
-        /// The removed data can be accessed via GetPrevious. Please note, however, that GetCurrent
-        /// and Modify will throw NoSuchDataExceptions if they are also called with the same
-        /// DataAccessor.
-        /// </remarks>
-        [Obsolete("Not used")]
-        bool WasRemoved<T>() where T : Data;
-
-        [Obsolete("Not used")]
-        bool WasRemoved(DataAccessor accessor);
 
         /// <summary>
         /// Metadata container that allows arbitrary data to be stored within the Entity.
@@ -232,27 +203,27 @@ namespace Neon.Entities {
         }
 
         public Data AddData(DataAccessor accessor) {
-            if (ContainsData(accessor)) {
+            // TODO: ensure that we handle when we have removed the data
+
+            // ensure that we have not already added a data of this type
+            if (GetAddedData(accessor) != null) {
                 throw new AlreadyAddedDataException(this, DataFactory.GetTypeFromAccessor(accessor));
             }
 
+            // add our data
             Data data = DataAllocator.Allocate(accessor);
             data.Entity = this;
+            _toAdd.Add(data);
 
-            int id = accessor.Id;
-            _data[id] = new ImmutableContainer<Data>(data);
-
-            _toAddStage1.Add(new DataAccessor(id));
-
+            // notify the entity manager
             ModificationNotifier.Notify();
             DataStateChangeNotifier.Notify();
 
-            // Get our initial data from a prefab/etc
-            DataAllocator.NotifyAllocated(accessor, this, _data[id].Current);
+            // populate the data instance from the prefab / etc
+            DataAllocator.NotifyAllocated(accessor, this, data);
 
-            // the user modifies the current state; the initialized data is copied around to other
-            // instances when _added[id] is set to true in the data state change update method
-            return _data[id].Current;
+            // return the new instance
+            return data;
         }
 
         private static int _nextId;
@@ -319,7 +290,7 @@ namespace Neon.Entities {
         }
 
         public void RemoveData(DataAccessor accessor) {
-            _toRemoveStage1.Add(accessor);
+            _toRemove.Current.Add(accessor);
 
             ModificationNotifier.Notify();
             DataStateChangeNotifier.Notify();
@@ -327,43 +298,6 @@ namespace Neon.Entities {
 
         public void Destroy() {
             _entityManager.RemoveEntity(this);
-        }
-
-        private static Swappable<T> CreateSwappable<T>(T a, T b) {
-            return new Swappable<T>(a, b);
-        }
-
-        private class Swappable<T> {
-            private T _a;
-            private T _b;
-            private bool _current;
-
-            public Swappable(T a, T b) {
-                _a = a;
-                _b = b;
-            }
-
-            public void Swap() {
-                _current = !_current;
-            }
-
-            public T Current {
-                get {
-                    if (_current) {
-                        return _a;
-                    }
-                    return _b;
-                }
-            }
-
-            public T Previous {
-                get {
-                    if (_current) {
-                        return _b;
-                    }
-                    return _a;
-                }
-            }
         }
 
         public Notifier<Entity> DataStateChangeNotifier;
@@ -386,22 +320,17 @@ namespace Neon.Entities {
         /// <summary>
         /// Data that has been modified this frame and needs to be pushed out
         /// </summary>
-        private Swappable<IterableSparseArray<ImmutableContainer<Data>>> _modifications = new Swappable<IterableSparseArray<ImmutableContainer<Data>>>(
+        private SwappableItem<IterableSparseArray<ImmutableContainer<Data>>> _modifications = new SwappableItem<IterableSparseArray<ImmutableContainer<Data>>>(
             new IterableSparseArray<ImmutableContainer<Data>>(), new IterableSparseArray<ImmutableContainer<Data>>());
 
         /// <summary>
         /// Items that are pending removal in the next update call
         /// </summary>
 
-        private List<DataAccessor> _toAddStage1 = new List<DataAccessor>();
-        private List<DataAccessor> _toAddStage2 = new List<DataAccessor>();
-        private SparseArray<bool> _added = new SparseArray<bool>();
+        private List<Data> _toAdd = new List<Data>();
 
-        private List<DataAccessor> _toRemoveStage1 = new List<DataAccessor>();
-        private List<DataAccessor> _toRemoveStage2 = new List<DataAccessor>();
-        private SparseArray<Data> _removed = new SparseArray<Data>();
-
-        private bool _removedAllData = false;
+        private SwappableItem<List<DataAccessor>> _toRemove = new SwappableItem<List<DataAccessor>>(new List<DataAccessor>(), new List<DataAccessor>());
+        private SparseArray<DataAccessor> _removed = new SparseArray<DataAccessor>();
 
         /// <summary>
         /// Object that is used to retrieve unordered list metadata from the entity.
@@ -420,7 +349,11 @@ namespace Neon.Entities {
         /// Removes all data from the entity.
         /// </summary>
         public void RemoveAllData() {
-            _removedAllData = true;
+            // TODO: potentially optimize this method
+            foreach (var tuple in _data) {
+                DataAccessor accessor = new DataAccessor(tuple.Item2.Current.GetType());
+                RemoveData(accessor);
+            }
         }
 
         private void DoModifications() {
@@ -449,37 +382,40 @@ namespace Neon.Entities {
         }
 
         public bool DataStateChangeUpdate() {
-            // do additions
-            for (int i = 0; i < _toAddStage1.Count; ++i) {
-                int id = _toAddStage1[i].Id;
-                _added[id] = true;
+            // do removals
+            {
+                List<DataAccessor> removedStage2 = _toRemove.Previous;
+                List<DataAccessor> removedStage1 = _toRemove.Current;
+                _toRemove.Swap();
 
-                // copy the initialized data into the previous data
-                _data[id].Modifying.CopyFrom(_data[id].Current);
+                for (int i = 0; i < removedStage1.Count; ++i) {
+                    int id = removedStage1[i].Id;
+                    _removed[id] = removedStage1[i];
+                    // _removed[id] is removed from _removed in stage2
+                }
+
+                for (int i = 0; i < removedStage2.Count; ++i) {
+                    int id = removedStage2[i].Id;
+                    _removed.Remove(id);
+                    _data.Remove(id);
+                }
+                removedStage2.Clear();
+            }
+
+            // do additions
+            for (int i = 0; i < _toAdd.Count; ++i) {
+                Data added = _toAdd[i];
+                int id = DataFactory.GetId(added.GetType());
+
+                _data[id] = new ImmutableContainer<Data>(added);
 
                 // visualize the initial data
-                _data[id].Current.DoUpdateVisualization();
+                added.DoUpdateVisualization();
             }
-            for (int i = 0; i < _toAddStage2.Count; ++i) {
-                _added[_toAddStage2[i].Id] = false;
-            }
-            _toAddStage2.Clear();
-            Utils.Swap(ref _toAddStage1, ref _toAddStage2);
+            _toAdd.Clear();
 
-            // do removals
-            for (int i = 0; i < _toRemoveStage1.Count; ++i) {
-                int id = _toRemoveStage1[i].Id;
-                _removed[id] = _data[id].Current;
-            }
-            for (int i = 0; i < _toRemoveStage2.Count; ++i) {
-                int id = _toRemoveStage2[i].Id;
-                _removed.Remove(id);
-                _data.Remove(id);
-            }
-            _toRemoveStage2.Clear();
-            Utils.Swap(ref _toRemoveStage1, ref _toRemoveStage2);
-
-            return _toAddStage2.Count > 0 || _toRemoveStage2.Count > 0;
+            // do we still have things to remove?
+            return _toRemove.Previous.Count > 0;
         }
 
         /// <summary>
@@ -507,15 +443,42 @@ namespace Neon.Entities {
             return (T)Modify(DataMap<T>.Accessor, force);
         }
 
+        /// <summary>
+        /// Attempts to retrieve a data instance with the given DataAccessor from the list of
+        /// added data.
+        /// </summary>
+        /// <param name="accessor">The DataAccessor to lookup</param>
+        /// <returns>A data instance, or null if it cannot be found</returns>
+        private Data GetAddedData(DataAccessor accessor) {
+            int id = accessor.Id;
+            // TODO: optimize this so we don't have to search through all added data... though
+            // this should actually be pretty quick
+            for (int i = 0; i < _toAdd.Count; ++i) {
+                int addedId = DataFactory.GetId(_toAdd[i].GetType());
+                if (addedId == id) {
+                    return _toAdd[i];
+                }
+            }
+
+            return null;
+        }
+
         public Data Modify(DataAccessor accessor, bool force = false) {
             var id = accessor.Id;
 
             if (ContainsData(accessor) == false) {
+                Data added = GetAddedData(accessor);
+                if (added != null) {
+                    return added;
+                }
+
                 throw new NoSuchDataException(this, DataFactory.GetTypeFromAccessor(accessor));
             }
+
             if (_modifications.Current.Contains(id) && !force && _data[id].Current.SupportsConcurrentModifications == false) {
                 throw new RemodifiedDataException(this, DataFactory.GetTypeFromAccessor(accessor));
             }
+
             _modifications.Current[id] = _data[id];
 
             ModificationNotifier.Notify();
@@ -549,38 +512,13 @@ namespace Neon.Entities {
             return _data[accessor.Id].Previous;
         }
 
-        public bool ContainsModifableData<T>() where T : Data {
-            return ContainsModifableData(DataMap<T>.Accessor);
-        }
-
-        public bool ContainsModifableData(DataAccessor accessor) {
-            return _data.Contains(accessor.Id) && WasAdded(accessor) == false && WasRemoved(accessor) == false;
-        }
-
         public bool ContainsData<T>() where T : Data {
             return ContainsData(DataMap<T>.Accessor);
         }
 
         public bool ContainsData(DataAccessor accessor) {
             int id = accessor.Id;
-            return _data.Contains(id);
-        }
-
-        public bool WasAdded<T>() where T : Data {
-            return WasAdded(DataMap<T>.Accessor);
-        }
-
-        public bool WasAdded(DataAccessor accessor) {
-            return _added[accessor.Id];
-        }
-
-        public bool WasRemoved<T>() where T : Data {
-            return WasRemoved(DataMap<T>.Accessor);
-        }
-
-        public bool WasRemoved(DataAccessor accessor) {
-            int id = accessor.Id;
-            return _removed.Contains(id) || (_removedAllData && _data.Contains(id));
+            return _data.Contains(id) && _removed.Contains(id) == false;
         }
 
         public bool WasModified<T>() where T : Data {
