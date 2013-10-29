@@ -5,8 +5,13 @@ namespace Neon.Entities {
     /// Wraps the notification pattern, where something happens multiple times but the listeners
     /// should only be notified once.
     /// </summary>
+    /// <remarks>
+    /// The Notifier API is thread-safe.
+    /// </remarks>
     /// <typeparam name="ParamType">The type of the parameter.</typeparam>
     public class Notifier<ParamType> {
+        private object _lock = new object();
+
         /// <summary>
         /// Have we already notified the listeners?
         /// </summary>
@@ -29,17 +34,21 @@ namespace Neon.Entities {
         /// Resets this notifier so that it will notify listeners again.
         /// </summary>
         public void Reset() {
-            _activated = false;
+            lock (_lock) {
+                _activated = false;
+            }
         }
 
         /// <summary>
-        /// Notify the listeners if they have no already been notified.
+        /// Notify the listeners if they have not already been notified.
         /// </summary>
         public void Notify() {
-            if (_activated == false) {
-                _activated = true;
-                if (Listener != null) {
-                    Listener(_notificationParam);
+            lock (_lock) {
+                if (_activated == false) {
+                    _activated = true;
+                    if (Listener != null) {
+                        Listener(_notificationParam);
+                    }
                 }
             }
         }
