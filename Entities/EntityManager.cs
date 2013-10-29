@@ -84,9 +84,9 @@ namespace Neon.Entities {
         private BufferedItem<List<Entity>> _entitiesWithModifications = new BufferedItem<List<Entity>>();
 
         /// <summary>
-        /// Entities which have had their states changed.
+        /// The entities that are dirty relative to system caches.
         /// </summary>
-        private LinkedList<Entity> _entitiesWithStateChanges = new LinkedList<Entity>();
+        private LinkedList<Entity> _entitiesNeedingCacheUpdates = new LinkedList<Entity>();
 
         private List<System> _allSystems = new List<System>();
         private List<System> _systemsWithUpdateTriggers = new List<System>();
@@ -307,14 +307,8 @@ namespace Neon.Entities {
                 toAdd.Metadata[_entityUnorderedListMetadataKey] = new UnorderedListMetadata();
                 toAdd.Metadata[_entityModifiedListenersKey] = new List<ModifiedTrigger>();
 
-                // add it our list of active entities
+                // add it our list of entities
                 _entities.Add(toAdd, (UnorderedListMetadata)toAdd.Metadata[_entityUnorderedListMetadataKey]);
-
-                // update optimization caches -- *USER CODE*
-                //InvokeDataStateChanges(toAdd);
-                if (_entitiesWithStateChanges.Contains(toAdd) == false) {
-                    _entitiesWithStateChanges.AddLast(toAdd);
-                }
             }
 
             _entitiesToAdd.Clear();
@@ -326,7 +320,7 @@ namespace Neon.Entities {
             // first, it needs to support the item that is being
             // iterated being removed, and secondly, it needs to
             // support more items being added to it as it iterates
-            LinkedListNode<Entity> it = _entitiesWithStateChanges.Last;
+            LinkedListNode<Entity> it = _entitiesNeedingCacheUpdates.Last;
             while (it != null) {
                 var curr = it;
                 it = it.Previous;
@@ -337,7 +331,7 @@ namespace Neon.Entities {
                 // then remove it from the dispatch list
                 if (entity.DataStateChangeUpdate() == false) {
                     Log<EntityManager>.Info("({0}) No more state changes requested for {1}", UpdateNumber, entity);
-                    _entitiesWithStateChanges.Remove(curr);
+                    _entitiesNeedingCacheUpdates.Remove(curr);
                 }
 
                 // update the entity's internal trigger cache
@@ -394,7 +388,7 @@ namespace Neon.Entities {
             Log<EntityManager>.Info("({0}) AddEntity({1}) called", UpdateNumber, instance);
             Entity entity = (Entity)instance;
             _entitiesToAdd.Add(entity);
-            _entitiesWithStateChanges.AddLast(entity);
+            _entitiesNeedingCacheUpdates.AddLast(entity);
             entity.Hide();
         }
 
@@ -427,9 +421,9 @@ namespace Neon.Entities {
         /// </summary>
         private void OnEntityDataStateChanged(Entity sender) {
             Log<EntityManager>.Info("({0}) Got data state change for {1}... checking for duplicates", UpdateNumber, sender);
-            if (_entitiesWithStateChanges.Contains(sender) == false) {
+            if (_entitiesNeedingCacheUpdates.Contains(sender) == false) {
                 Log<EntityManager>.Info("({0}) Adding {1} to date state change list", UpdateNumber, sender);
-                _entitiesWithStateChanges.AddLast(sender);
+                _entitiesNeedingCacheUpdates.AddLast(sender);
             }
         }
 
