@@ -65,10 +65,7 @@ namespace Neon.Entities {
         public Notifier<Entity> DataStateChangeNotifier;
         public Notifier<Entity> ModificationNotifier;
 
-        private EntityManager _entityManager;
-        public void AddedToEntityManager(EntityManager entityManager) {
-            _entityManager = entityManager;
-        }
+        public EntityManager EntityManager;
 
         /// <summary>
         /// Invokes OnHide(). This must be called on the Unity thread.
@@ -177,7 +174,7 @@ namespace Neon.Entities {
 
         [MethodImpl(MethodImplOptions.Synchronized)]
         void IEntity.Destroy() {
-            _entityManager.RemoveEntity(this);
+            EntityManager.RemoveEntity(this);
         }
 
         #region Events

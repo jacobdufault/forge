@@ -207,7 +207,7 @@ namespace Neon.Entities {
 
             // we add/remove entities here because an entity could be in the modified list (which is used in the CallModifiedMethods)
 
-            InvokeAddEntities();
+            DoAddEntities();
             InvokeRemoveEntities();
 
             InvokeEntityDataStateChanges();
@@ -248,7 +248,7 @@ namespace Neon.Entities {
 
                 // call the InvokeOnModified functions - *user code*
                 // we store which methods are relevant to the entity in the entities metadata for performance reasons
-                List<ModifiedTrigger> triggers = (List<ModifiedTrigger>)((IEntity)modified).Metadata[_entityModifiedListenersKey];
+                List<ModifiedTrigger> triggers = GetModifiedTriggersFromMetadata(modified);
                 for (int i = 0; i < triggers.Count; ++i) {
                     Log<EntityManager>.Info("({0}) Modification check to see if {1} is interested in {2}", UpdateNumber, triggers[i].Trigger, modified);
                     if (triggers[i].Filter.ModificationCheck(modified)) {
@@ -258,6 +258,14 @@ namespace Neon.Entities {
                 }
             }
             modifiedEntities.Clear();
+        }
+
+        private List<ModifiedTrigger> GetModifiedTriggersFromMetadata(IEntity entity) {
+            return (List<ModifiedTrigger>)entity.Metadata[_entityModifiedListenersKey];
+        }
+
+        private UnorderedListMetadata GetEntitiesListFromMetadata(IEntity entity) {
+            return (UnorderedListMetadata)entity.Metadata[_entityUnorderedListMetadataKey];
         }
 
         /// <summary>
@@ -317,15 +325,20 @@ namespace Neon.Entities {
             }
         }
 
-        private void InvokeAddEntities() {
+        /// <summary>
+        /// Updates internal entity-manager state for adding entities. This must all be done on
+        /// the primary thread.
+        /// </summary>
+        private void DoAddEntities() {
             // Add entities
             for (int i = 0; i < _entitiesToAdd.Count; ++i) {
                 Entity toAdd = _entitiesToAdd[i];
                 Log<EntityManager>.Info("({0}) Adding {1}", UpdateNumber, toAdd);
 
-                toAdd.Show();
+                toAdd.EntityManager = this;
 
-                toAdd.AddedToEntityManager(this);
+                // show the object (*single-threaded user code*)
+                toAdd.Show();
 
                 // register listeners
                 toAdd.ModificationNotifier.Listener += OnEntityModified;
@@ -340,11 +353,12 @@ namespace Neon.Entities {
                 ((IEntity)toAdd).Metadata[_entityModifiedListenersKey] = new List<ModifiedTrigger>();
 
                 // add it our list of entities
-                _entities.Add(toAdd, (UnorderedListMetadata)((IEntity)toAdd).Metadata[_entityUnorderedListMetadataKey]);
+                _entities.Add(toAdd, GetEntitiesListFromMetadata(toAdd));
             }
 
             _entitiesToAdd.Clear();
         }
+
 
         private void InvokeEntityDataStateChanges() {
             // Note that this loop is carefully constructed
@@ -367,7 +381,7 @@ namespace Neon.Entities {
                 }
 
                 // update the entity's internal trigger cache
-                List<ModifiedTrigger> triggers = (List<ModifiedTrigger>)((IEntity)entity).Metadata[_entityModifiedListenersKey];
+                List<ModifiedTrigger> triggers = GetModifiedTriggersFromMetadata(entity);
                 triggers.Clear();
                 for (int i = 0; i < _modifiedTriggers.Count; ++i) {
                     Log<EntityManager>.Info("({0}) Checking to see if modification trigger {1} is interested in {2}", UpdateNumber, _modifiedTriggers[i].Trigger, entity);
@@ -402,11 +416,11 @@ namespace Neon.Entities {
                 for (int j = 0; j < _allSystems.Count; ++j) {
                     _allSystems[j].Remove(toDestroy);
                 }
-                List<ModifiedTrigger> triggers = (List<ModifiedTrigger>)((IEntity)toDestroy).Metadata[_entityModifiedListenersKey];
+                List<ModifiedTrigger> triggers = GetModifiedTriggersFromMetadata(toDestroy);
                 triggers.Clear();
 
                 // remove the entity from the list of entities
-                _entities.Remove(toDestroy, (UnorderedListMetadata)((IEntity)toDestroy).Metadata[_entityUnorderedListMetadataKey]);
+                _entities.Remove(toDestroy, GetEntitiesListFromMetadata(toDestroy));
                 toDestroy.RemovedFromEntityManager();
             }
             _entitiesToRemove.Clear();
