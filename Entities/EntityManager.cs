@@ -330,7 +330,7 @@ namespace Neon.Entities {
                 // register listeners
                 toAdd.ModificationNotifier.Listener += OnEntityModified;
                 toAdd.DataStateChangeNotifier.Listener += OnEntityDataStateChanged;
-                ((IEntity)toAdd).EventProcessor.OnEventAdded += EventProcessor_OnEventAdded;
+                ((IEntity)toAdd).EventProcessor.EventAddedNotifier.Listener += EventProcessor_OnEventAdded;
 
                 // apply initialization changes
                 toAdd.ApplyModifications();
@@ -396,7 +396,7 @@ namespace Neon.Entities {
                 // remove listeners
                 toDestroy.ModificationNotifier.Listener -= OnEntityModified;
                 toDestroy.DataStateChangeNotifier.Listener -= OnEntityDataStateChanged;
-                ((IEntity)toDestroy).EventProcessor.OnEventAdded -= EventProcessor_OnEventAdded;
+                ((IEntity)toDestroy).EventProcessor.EventAddedNotifier.Listener -= EventProcessor_OnEventAdded;
 
                 // remove the entity from caches
                 for (int j = 0; j < _allSystems.Count; ++j) {
