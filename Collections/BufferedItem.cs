@@ -61,5 +61,15 @@ namespace Neon.Collections {
         public T Get() {
             return Items[CurrentIndex];
         }
+
+        /// <summary>
+        /// Returns an item in the rotation queue that is relative to the current item by the given
+        /// offset.
+        /// </summary>
+        /// <param name="relativeOffset">How far away from the current item</param>
+        /// <returns></returns>
+        public T Get(int relativeOffset) {
+            return Items[(CurrentIndex + relativeOffset) % Items.Length];
+        }
     }
 }

@@ -46,16 +46,33 @@ namespace Neon.Entities {
             lock (_lock) {
                 if (_activated == false) {
                     _activated = true;
-                    if (Listener != null) {
-                        Listener(_notificationParam);
+                    if (_listener != null) {
+                        _listener(_notificationParam);
                     }
                 }
             }
         }
 
+        private Action<ParamType> _listener;
+
         /// <summary>
         /// Allows objects to listen for notifications.
         /// </summary>
-        public event Action<ParamType> Listener;
+        public event Action<ParamType> Listener {
+            add {
+                lock (_lock) {
+                    _listener = (Action<ParamType>)Delegate.Combine(_listener, value);
+                    if (_activated) {
+                        value(_notificationParam);
+                    }
+                }
+            }
+
+            remove {
+                lock (_lock) {
+                    _listener = (Action<ParamType>)Delegate.Remove(_listener, value);
+                }
+            }
+        }
     }
 }

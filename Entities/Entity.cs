@@ -134,7 +134,7 @@ namespace Neon.Entities {
         /// </summary>
         /// <returns>If more data state change updates are needed</returns>
         [MethodImpl(MethodImplOptions.Synchronized)] // TODO: shouldn't need a lock
-        public bool DataStateChangeUpdate() {
+        public void DataStateChangeUpdate() {
             // do removals
             {
                 List<DataAccessor> removedStage2 = _toRemove.Previous;
@@ -166,7 +166,10 @@ namespace Neon.Entities {
                 added.DoUpdateVisualization();
             }
             _toAdd.Clear();
+        }
 
+        [MethodImpl(MethodImplOptions.Synchronized)] // TODO: shouldn't need a lock
+        public bool NeedsMoreDataStateChangeUpdates() {
             // do we still have things to remove?
             return _toRemove.Previous.Count > 0;
         }

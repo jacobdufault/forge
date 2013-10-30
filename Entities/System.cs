@@ -6,7 +6,6 @@ namespace Neon.Entities {
     /// </summary>
     internal class System {
         private MetadataKey _metadataKey;
-        private Filter _filter;
 
         /// <summary>
         /// Trigger to invoke when an entity has been added to the cache.
@@ -29,11 +28,16 @@ namespace Neon.Entities {
         public ITriggerBaseFilter Trigger;
 
         /// <summary>
+        /// The filter that the trigger is using
+        /// </summary>
+        public Filter Filter;
+
+        /// <summary>
         /// Creates a new system. Entities are added to the system based on if they pass the given
         /// filter.
         /// </summary>
         public System(ITriggerBaseFilter trigger) {
-            _filter = new Filter(DataAccessorFactory.MapTypesToDataAccessors(trigger.ComputeEntityFilter()));
+            Filter = new Filter(DataAccessorFactory.MapTypesToDataAccessors(trigger.ComputeEntityFilter()));
             _metadataKey = Entity.MetadataRegistry.GetKey();
 
             _addedTrigger = trigger as ITriggerAdded;
@@ -62,7 +66,7 @@ namespace Neon.Entities {
                 entity.Metadata[_metadataKey] = metadata;
             }
 
-            bool passed = _filter.Check(entity);
+            bool passed = Filter.Check(entity);
             bool contains = CachedEntities.Contains(entity, metadata);
 
             // The entity is not in the cache it now passes the filter, so add it to the cache
@@ -92,12 +96,16 @@ namespace Neon.Entities {
         /// <summary>
         /// Ensures that an Entity is not in the cache.
         /// </summary>
-        public void Remove(IEntity entity) {
+        /// <returns>True if the entity was previously in the cache and was removed, false if it was
+        /// not in the cache and was therefore not removed.</returns>
+        public bool Remove(IEntity entity) {
             if (CachedEntities.Remove(entity, (UnorderedListMetadata)entity.Metadata[_metadataKey])) {
                 if (_removedTrigger != null) {
                     _removedTrigger.OnRemoved(entity);
                 }
+                return true;
             }
+            return false;
         }
     }
 }
