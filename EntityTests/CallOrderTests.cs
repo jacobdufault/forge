@@ -71,7 +71,7 @@ namespace EntityTests {
 
     class TriggerEventLoggerFilterRequiresData0 : TriggerEventLogger {
         public override Type[] ComputeEntityFilter() {
-            return new [] { typeof(TestData0) };
+            return new[] { typeof(TestData0) };
         }
     }
 
@@ -114,7 +114,7 @@ namespace EntityTests {
             EntityManager em = new EntityManager(EntityFactory.Create());
             TriggerEventLogger trigger = new TriggerEventLogger();
             em.AddSystem(trigger);
-            IEntity entity = EntityFactory.Create(); 
+            IEntity entity = EntityFactory.Create();
             em.AddEntity(entity);
 
             em.UpdateWorld();
@@ -200,6 +200,54 @@ namespace EntityTests {
                 TriggerEvent.OnAdded,
                 TriggerEvent.OnGlobalPreUpdate,
                 TriggerEvent.OnUpdate,
+                TriggerEvent.OnGlobalPostUpdate,
+            }, trigger.Events);
+            trigger.ClearEvents();
+        }
+
+        [TestMethod]
+        public void EntityRemoveNothing() {
+            EntityManager em = new EntityManager(EntityFactory.Create());
+            TriggerEventLogger trigger = new TriggerEventLoggerFilterRequiresData0();
+            em.AddSystem(trigger);
+            IEntity entity = EntityFactory.Create();
+            TestData0 data = entity.AddData<TestData0>();
+            em.AddEntity(entity);
+
+            // do the add
+            em.UpdateWorld();
+            trigger.ClearEvents();
+
+            // do an update
+            entity.Modify<TestData0>();
+            em.UpdateWorld();
+            CollectionAssert.AreEqual(new TriggerEvent[] {
+                TriggerEvent.OnModified,
+                TriggerEvent.OnGlobalPreUpdate,
+                TriggerEvent.OnUpdate,
+                TriggerEvent.OnGlobalPostUpdate,
+            }, trigger.Events);
+            trigger.ClearEvents();
+
+            // remove the entity
+            entity.Modify<TestData0>();
+            entity.Destroy();
+            em.UpdateWorld();
+            CollectionAssert.AreEqual(new TriggerEvent[] {
+                TriggerEvent.OnRemoved,
+                TriggerEvent.OnGlobalPreUpdate,
+                TriggerEvent.OnGlobalPostUpdate,
+            }, trigger.Events);
+            trigger.ClearEvents();
+
+            try {
+                entity.Modify<TestData0>();
+                Assert.Fail();
+            }
+            catch (NoSuchDataException e) { }
+            em.UpdateWorld();
+            CollectionAssert.AreEqual(new TriggerEvent[] {
+                TriggerEvent.OnGlobalPreUpdate,
                 TriggerEvent.OnGlobalPostUpdate,
             }, trigger.Events);
             trigger.ClearEvents();

@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neon.Entities;
-using System.IO;
+using System;
 
 namespace EntityTests {
-    class TestData2 : GameData<TestData2> {
+    internal class TestData2 : GameData<TestData2> {
         public int Value;
 
         public override void DoCopyFrom(TestData2 source) {
@@ -21,7 +19,7 @@ namespace EntityTests {
         }
     }
 
-    class TestData3 : GameData<TestData3> {
+    internal class TestData3 : GameData<TestData3> {
         public int Value;
 
         public override void DoCopyFrom(TestData3 source) {
@@ -37,44 +35,59 @@ namespace EntityTests {
         }
     }
 
-    class AllTriggers : ITriggerAdded, ITriggerRemoved, ITriggerModified, ITriggerUpdate, ITriggerGlobalPreUpdate, ITriggerGlobalPostUpdate, ITriggerInput, ITriggerGlobalInput {
+    internal class DelegateAllTriggers : ITriggerAdded, ITriggerRemoved, ITriggerModified, ITriggerUpdate, ITriggerGlobalPreUpdate, ITriggerGlobalPostUpdate, ITriggerInput, ITriggerGlobalInput {
+        public Type[] EntityFilter = new Type[] { };
         public Type[] ComputeEntityFilter() {
-            return new Type[] { };
+            return EntityFilter;
         }
 
+        public event Action<IEntity> Added;
         public void OnAdded(IEntity entity) {
+            if (Added != null) Added(entity);
         }
 
+        public event Action<IEntity> Removed;
         public void OnRemoved(IEntity entity) {
+            if (Removed != null) Removed(entity);
         }
 
-        public void OnPassedFilter(IEntity entity) {
-        }
-
+        public event Action<IEntity> Modified;
         public void OnModified(IEntity entity) {
+            if (Modified != null) Modified(entity);
         }
 
+        public event Action<IEntity> Update;
         public void OnUpdate(IEntity entity) {
+            if (Update != null) Update(entity);
         }
 
+        public event Action<IEntity> GlobalPreUpdate;
         public void OnGlobalPreUpdate(IEntity singletonEntity) {
+            if (GlobalPreUpdate != null) GlobalPreUpdate(singletonEntity);
         }
 
+        public event Action<IEntity> GlobalPostUpdate;
         public void OnGlobalPostUpdate(IEntity singletonEntity) {
+            if (GlobalPostUpdate != null) GlobalPostUpdate(singletonEntity);
         }
 
+        public Type StructedInputType = typeof(int);
         public Type IStructuredInputType {
-            get { return typeof(int); }
+            get { return StructedInputType; }
         }
 
+        public event Action<IStructuredInput, IEntity> Input;
         public void OnInput(IStructuredInput input, IEntity entity) {
+            if (Input != null) Input(input, entity);
         }
 
+        public event Action<IStructuredInput, IEntity> GlobalInput;
         public void OnGlobalInput(IStructuredInput input, IEntity singletonEntity) {
+            if (GlobalInput != null) GlobalInput(input, singletonEntity);
         }
     }
 
-    class CountUpdatesTrigger : ITriggerUpdate, ITriggerGlobalPreUpdate, ITriggerGlobalPostUpdate {
+    internal class CountUpdatesTrigger : ITriggerUpdate, ITriggerGlobalPreUpdate, ITriggerGlobalPostUpdate {
         public int Count = 0;
         public int PreCount = 0;
         public int PostCount = 0;
@@ -96,7 +109,7 @@ namespace EntityTests {
         }
     }
 
-    class CountModifiesTrigger : ITriggerModified {
+    internal class CountModifiesTrigger : ITriggerModified {
         public int ModifiedCount = 0;
 
         private Type[] _filter;
@@ -146,7 +159,7 @@ namespace EntityTests {
 
             CountUpdatesTrigger updates = new CountUpdatesTrigger();
             em.AddSystem(updates);
-            em.AddSystem(new AllTriggers());
+            em.AddSystem(new DelegateAllTriggers());
 
             em.UpdateWorld();
             Assert.AreEqual(1, updates.PreCount);
@@ -157,7 +170,7 @@ namespace EntityTests {
 
             int numEntities = 25;
             for (int i = 0; i < numEntities; ++i) {
-                IEntity e = EntityFactory.Create(); 
+                IEntity e = EntityFactory.Create();
                 em.AddEntity(e);
             }
 
@@ -255,6 +268,145 @@ namespace EntityTests {
             em.UpdateWorld();
             Assert.AreEqual(0, system.ModifiedCount);
             system.ModifiedCount = 0;
+        }
+
+        [TestMethod]
+        public void ModifiedTrigger() {
+            EntityManager em = new EntityManager(EntityFactory.Create());
+
+            DelegateAllTriggers system = new DelegateAllTriggers();
+            em.AddSystem(system);
+
+            int modifiedCount = 0;
+            system.Modified += modified => {
+                Assert.AreEqual(modifiedCount++, modified.Current<TestData2>().Value);
+            };
+
+            IEntity entity = EntityFactory.Create();
+            entity.AddData<TestData2>();
+            em.AddEntity(entity);
+            em.UpdateWorld();
+
+            for (int i = 0; i < 20; ++i) {
+                entity.Modify<TestData2>().Value++;
+                em.UpdateWorld();
+                Assert.IsTrue(entity.WasModified<TestData2>());
+                Assert.AreEqual(entity.Previous<TestData2>().Value, i);
+                Assert.AreEqual(entity.Current<TestData2>().Value, i + 1);
+            }
+        }
+
+        [TestMethod]
+        public void AddAndRemoveInSequentialFrames() {
+            // setup
+            EntityManager em = new EntityManager(EntityFactory.Create());
+            IEntity entity = EntityFactory.Create();
+            entity.AddData<TestData2>();
+            em.AddEntity(entity);
+            em.UpdateWorld();
+
+            // remove in frame 1
+            entity.RemoveData<TestData2>();
+            em.UpdateWorld();
+
+            // add in next frame
+            entity.AddData<TestData2>();
+            em.UpdateWorld();
+
+            // make sure it stays true
+            for (int i = 0; i < 10; ++i) {
+                Assert.IsTrue(entity.ContainsData<TestData2>());
+                entity.Current<TestData2>();
+                entity.Modify<TestData2>();
+                em.UpdateWorld();
+            }
+        }
+
+        // TODO: renable this test
+        //[TestMethod]
+        public void RemoveAndModifySameFrame() {
+            // setup
+            EntityManager em = new EntityManager(EntityFactory.Create());
+            IEntity entity = EntityFactory.Create();
+            entity.AddData<TestData2>();
+            em.AddEntity(entity);
+            em.UpdateWorld();
+
+            // modify & remove in the same frame
+            entity.RemoveData<TestData2>();
+            entity.Modify<TestData2>().Value = 2;
+            em.UpdateWorld();
+
+            // make sure the modification didn't apply itself
+            Assert.AreEqual(0, entity.Current<TestData2>().Value);
+        }
+
+        [TestMethod]
+        public void UpdateTriggerCalled() {
+            // setup
+            EntityManager em = new EntityManager(EntityFactory.Create());
+
+            DelegateAllTriggers system = new DelegateAllTriggers();
+            system.EntityFilter = new[] { typeof(TestData2) };
+            int updateCount = 0;
+            system.Update += e => {
+                ++updateCount;
+            };
+            em.AddSystem(system);
+
+            IEntity entity = EntityFactory.Create();
+            entity.AddData<TestData2>();
+            em.AddEntity(entity);
+
+            for (int i = 0; i < 20; ++i) {
+                Assert.AreEqual(i, updateCount);
+                em.UpdateWorld();
+            }
+        }
+
+        [TestMethod]
+        public void DelayedAddToSystem() {
+             // setup
+            EntityManager em = new EntityManager(EntityFactory.Create());
+
+            DelegateAllTriggers system = new DelegateAllTriggers();
+            system.EntityFilter = new[] { typeof(TestData2) };
+            int addedCount = 0;
+            system.Added += e => ++addedCount;
+            int modifiedCount = 0;
+            system.Modified += e => ++modifiedCount;
+            em.AddSystem(system);
+
+            IEntity entity = EntityFactory.Create();
+            em.AddEntity(entity);
+            entity.AddData<TestData0>();
+
+            // update the world a couple of times
+            for (int i = 0; i < 20; ++i) {
+                em.UpdateWorld();                
+            }
+
+            DataAllocator.AddAuxiliaryAllocator<TestData2>((data, ent) => {
+                try {
+                    ent.AddData<TestData2>();
+                    Assert.Fail();
+                }
+                catch (AlreadyAddedDataException) {}
+            });
+            entity.AddData<TestData2>();
+            Assert.AreEqual(0, addedCount);
+
+            for (int i = 0; i < 20; ++i) {
+                em.UpdateWorld();
+                Assert.AreEqual(1, addedCount);
+            }
+
+            // make sure modification dispatch works
+            Assert.AreEqual(0, modifiedCount);
+            entity.Modify<TestData2>();
+            Assert.AreEqual(0, modifiedCount);
+            em.UpdateWorld();
+            Assert.AreEqual(1, modifiedCount);
         }
     }
 }

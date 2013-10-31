@@ -3,21 +3,8 @@
     /// Helper methods built on top of the core IEntity API.
     /// </summary>
     public static class IEntityExtensions {
-        /// <summary>
-        /// Adds the given data type, or modifies an instance of it.
-        /// </summary>
-        /// <remarks>
-        /// This is a helper method that captures a common pattern.
-        /// </remarks>
-        /// <typeparam name="T">The type of data modified</typeparam>
-        /// <returns>A modifiable instance of data of type T</returns>
         public static T AddOrModify<T>(this IEntity entity) where T : Data {
-            DataAccessor accessor = DataMap<T>.Accessor;
-
-            if (entity.ContainsData(accessor) == false) {
-                return (T)entity.AddData(accessor);
-            }
-            return (T)entity.Modify(accessor);
+            return (T)entity.AddOrModify(DataMap<T>.Accessor);
         }
 
         public static T AddData<T>(this IEntity entity) where T : Data {

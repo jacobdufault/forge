@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Neon.Utilities;
+using System;
 
 namespace Neon.Entities {
     public abstract class Data : IImmutableData<Data> {
@@ -10,7 +11,7 @@ namespace Neon.Entities {
         /// <summary>
         /// Creates a copy of this instance.
         /// </summary>
-        public Data Duplicate() {
+        public virtual Data Duplicate() {
             return (Data)MemberwiseClone();
         }
 
@@ -78,7 +79,7 @@ namespace Neon.Entities {
     /// </summary>
     /// <typeparam name="T">The type of data we are implementing</typeparam>
     public abstract class GameData<T> : Data where T : GameData<T> {
-        public sealed override void CopyFrom(Data source) {
+        public override sealed void CopyFrom(Data source) {
             if (ReferenceEquals(this, source)) {
                 return;
             }

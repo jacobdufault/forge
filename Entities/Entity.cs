@@ -252,7 +252,19 @@ namespace Neon.Entities {
         #endregion
 
         [MethodImpl(MethodImplOptions.Synchronized)]
-        Data IEntity.AddData(DataAccessor accessor) {
+        Data IEntity.AddOrModify(DataAccessor accessor) {
+            if (ContainsData_unlocked(accessor) == false) {
+                Data added = GetAddedData_unlocked(accessor);
+                if (added == null) {
+                    return AddData_unlocked(accessor);
+                }
+            }
+
+            return Modify_unlocked(accessor);
+        }
+
+        #region AddData
+        private Data AddData_unlocked(DataAccessor accessor) {
             // ensure that we have not already added a data of this type
             if (GetAddedData_unlocked(accessor) != null) {
                 throw new AlreadyAddedDataException(this, DataAccessorFactory.GetTypeFromAccessor(accessor));
@@ -275,6 +287,11 @@ namespace Neon.Entities {
             // return the new instance
             return data;
         }
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        Data IEntity.AddData(DataAccessor accessor) {
+            return AddData_unlocked(accessor);
+        }
+        #endregion
 
         #region RemoveData
         private void RemoveData_unlocked(DataAccessor accessor) {
@@ -289,8 +306,8 @@ namespace Neon.Entities {
         }
         #endregion
 
-        [MethodImpl(MethodImplOptions.Synchronized)]
-        Data IEntity.Modify(DataAccessor accessor, bool force) {
+        #region Modify
+        private Data Modify_unlocked(DataAccessor accessor, bool force = false) {
             var id = accessor.Id;
 
             if (ContainsData_unlocked(accessor) == false) {
@@ -312,10 +329,15 @@ namespace Neon.Entities {
 
             return _data[id].Modifying;
         }
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        Data IEntity.Modify(DataAccessor accessor, bool force) {
+            return Modify_unlocked(accessor, force);
+        }
+        #endregion
 
         [MethodImpl(MethodImplOptions.Synchronized)]
         Data IEntity.Current(DataAccessor accessor) {
-            if (ContainsData_unlocked(accessor) == false) {
+            if (_data.Contains(accessor.Id) == false) { 
                 throw new NoSuchDataException(this, DataAccessorFactory.GetTypeFromAccessor(accessor));
             }
 
@@ -324,9 +346,7 @@ namespace Neon.Entities {
 
         [MethodImpl(MethodImplOptions.Synchronized)]
         Data IEntity.Previous(DataAccessor accessor) {
-            var id = accessor.Id;
-
-            if (_data.Contains(id) == false) {
+            if (ContainsData_unlocked(accessor) == false) {
                 throw new NoSuchDataException(this, DataAccessorFactory.GetTypeFromAccessor(accessor));
             }
 

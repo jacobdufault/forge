@@ -50,10 +50,12 @@ namespace Neon.Entities {
         /// </summary>
         IEntity SingletonEntity {
             get;
+            set;
         }
     }
 
     internal interface MultithreadedSystemSharedContext {
+        IEntity SingletonEntity { get; }
         int ModifiedIndex { get; }
         List<Entity> AddedEntities { get; }
         List<Entity> RemovedEntities { get; }
@@ -68,6 +70,11 @@ namespace Neon.Entities {
         private MultithreadedSystemSharedContext _context;
         private System _system;
         private ITriggerModified _modifiedTrigger;
+
+        private ITriggerGlobalPreUpdate _globalPreUpdateTrigger;
+        private ITriggerUpdate _updateTrigger;
+        private ITriggerGlobalPostUpdate _globalPostUpdateTrigger;
+
         /// <summary>
         /// Reset event used to notify the primary thread when this system is done processing
         /// </summary>
@@ -78,65 +85,110 @@ namespace Neon.Entities {
 
             _system = system;
             _modifiedTrigger = system.Trigger as ITriggerModified;
+            _globalPreUpdateTrigger = system.Trigger as ITriggerGlobalPreUpdate;
+            _updateTrigger = system.Trigger as ITriggerUpdate;
+            _globalPostUpdateTrigger = system.Trigger as ITriggerGlobalPostUpdate;
 
             _doneEvent = doneEvent;
         }
 
         private void DoAdd(IEntity added) {
-            if (_system.UpdateCache(added) == System.CacheChangeResult.Added) {
-                if (_modifiedTrigger != null) {
-                    ((Entity)added).ModificationNotifier.Listener += ModificationNotifier_Listener;
-                }
+            Log<MultithreadedSystem>.Info("Adding {0} to the cache in {1}", added, _system.Trigger.GetType());
+            if (_modifiedTrigger != null) {
+                ((Entity)added).ModificationNotifier.Listener += ModificationNotifier_Listener;
             }
         }
 
         private void DoRemove(IEntity removed) {
-            if (_system.Remove(removed)) {
-                if (_modifiedTrigger != null) {
-                    List<IEntity> mutableModified = MutableModifiedList();
-                    lock (mutableModified) {
-                        mutableModified.Remove(removed);
-                    }
+            // if we removed an entity from the cache, then we don't want to hear of any more
+            // modification events
+            if (_modifiedTrigger != null) {
+                ((Entity)removed).ModificationNotifier.Listener -= ModificationNotifier_Listener;
+
+                ImmutableModifiedList().Remove(removed);
+
+                List<IEntity> mutableModified = MutableModifiedList();
+                lock (mutableModified) {
+                    mutableModified.Remove(removed);
                 }
             }
         }
 
         public void RunSystem(Object threadContext) {
-            // process entities that were added to the system
-            for (int i = 0; i < _context.AddedEntities.Count; ++i) {
-                DoAdd(_context.AddedEntities[i]);
-            }
+            try {
+                Log<MultithreadedSystem>.Info("Running on thread {0} for {1}", Thread.CurrentThread.ManagedThreadId, _system.Trigger.GetType());
 
-            // process entities that were removed from the system
-            for (int i = 0; i < _context.RemovedEntities.Count; ++i) {
-                DoRemove(_context.RemovedEntities[i]);
-            }
-
-            // process state changes
-            for (int i = 0; i < _context.StateChangedEntities.Count; ++i) {
-                IEntity stateChanged = _context.StateChangedEntities[i];
-                System.CacheChangeResult change = _system.UpdateCache(stateChanged);
-                if (change == System.CacheChangeResult.Added) {
-                    DoAdd(stateChanged);
-                }
-                else if (change == System.CacheChangeResult.Removed) {
-                    DoRemove(stateChanged);
-                }
-            }
-
-            // process modifications
-            if (_modifiedTrigger != null) {
-                List<IEntity> immutableModified = ImmutableModifiedList();
-                for (int i = 0; i < immutableModified.Count; ++i) {
-                    IEntity entity = immutableModified[i];
-                    if (_system.Filter.ModificationCheck(entity)) {
-                        _modifiedTrigger.OnModified(immutableModified[i]);
+                // process entities that were added to the system
+                for (int i = 0; i < _context.AddedEntities.Count; ++i) {
+                    IEntity added = _context.AddedEntities[i];
+                    if (_system.UpdateCache(added) == System.CacheChangeResult.Added) {
+                        DoAdd(added);
                     }
                 }
-                immutableModified.Clear();
-            }
 
-            _doneEvent.Set();
+                // process entities that were removed from the system
+                for (int i = 0; i < _context.RemovedEntities.Count; ++i) {
+                    IEntity removed = _context.RemovedEntities[i];
+                    if (_system.Remove(removed)) {
+                        DoRemove(removed);
+                    }
+                }
+
+                // process state changes
+                for (int i = 0; i < _context.StateChangedEntities.Count; ++i) {
+                    IEntity stateChanged = _context.StateChangedEntities[i];
+                    System.CacheChangeResult change = _system.UpdateCache(stateChanged);
+                    if (change == System.CacheChangeResult.Added) {
+                        DoAdd(stateChanged);
+                    }
+                    else if (change == System.CacheChangeResult.Removed) {
+                        DoRemove(stateChanged);
+                    }
+                }
+
+                // process modifications
+                if (_modifiedTrigger != null) {
+                    List<IEntity> immutableModified = ImmutableModifiedList();
+                    for (int i = 0; i < immutableModified.Count; ++i) {
+                        IEntity entity = immutableModified[i];
+                        if (_system.Filter.ModificationCheck(entity)) {
+                            Log<MultithreadedSystem>.Info("Dispatched modification notification for {0} in {1}", entity, _system.Trigger.GetType());
+                            _modifiedTrigger.OnModified(immutableModified[i]);
+                        }
+                        else {
+                            Log<MultithreadedSystem>.Info("Did not dispatch modification notification for {0} in {1}", entity, _system.Trigger.GetType());
+                        }
+                    }
+                    immutableModified.Clear();
+                }
+
+                // run update methods
+                // Call the BeforeUpdate methods - *user code*
+                if (_globalPreUpdateTrigger != null) {
+                    _globalPreUpdateTrigger.OnGlobalPreUpdate(_context.SingletonEntity);
+                }
+
+                if (_updateTrigger != null) {
+                    for (int i = 0; i < _system.CachedEntities.Length; ++i) {
+                        IEntity updated = _system.CachedEntities[i];
+                        Log<MultithreadedSystem>.Info("Dispatched update notification for {0} in {1}", updated, _system.Trigger.GetType());
+                        _updateTrigger.OnUpdate(updated);
+                    }
+                }
+                else {
+                    Log<MultithreadedSystem>.Info("Did not dispatch update notifications for {0}", _system.Trigger.GetType());
+
+                }
+
+                if (_globalPostUpdateTrigger != null) {
+                    _globalPostUpdateTrigger.OnGlobalPostUpdate(_context.SingletonEntity);
+                }
+
+                ImmutableModifiedList().Clear();
+            }
+            finally {
+                _doneEvent.Set();
+            }
         }
 
         private void ConcurrentRemove(IEntity item, List<IEntity> list) {
@@ -209,13 +261,8 @@ namespace Neon.Entities {
         /// <summary>
         /// The entities that are dirty relative to system caches.
         /// </summary>
-        private BufferedItem<List<Entity>> _entitiesNeedingCacheUpdates = new BufferedItem<List<Entity>>();
-        private List<Entity> CacheUpdateImmutable() {
-            return _entitiesNeedingCacheUpdates.Get(0);
-        }
-        private List<Entity> CacheUpdateMutable() {
-            return _entitiesNeedingCacheUpdates.Get(1);
-        }
+        private List<Entity> _cacheUpdateCurrent = new List<Entity>();
+        private List<Entity> _cacheUpdatePending = new List<Entity>();
 
         private List<System> _allSystems = new List<System>();
         private List<System> _systemsWithUpdateTriggers = new List<System>();
@@ -255,6 +302,9 @@ namespace Neon.Entities {
         public IEntity SingletonEntity {
             get {
                 return _singletonEntity;
+            }
+            set {
+                _singletonEntity = (Entity)value;
             }
         }
 
@@ -304,7 +354,9 @@ namespace Neon.Entities {
         private void SinglethreadFrameBegin() {
             _entitiesToAdd.Swap();
             _entitiesToRemove.Swap();
-            _entitiesNeedingCacheUpdates.Swap();
+
+            _cacheUpdateCurrent.AddRange(_cacheUpdatePending);
+            _cacheUpdatePending.Clear();
 
             ++UpdateNumber;
 
@@ -336,12 +388,15 @@ namespace Neon.Entities {
             List<Entity> removeImmutable = RemoveImmutable();
             for (int i = 0; i < removeImmutable.Count; ++i) {
                 Entity toDestroy = removeImmutable[i];
-                toDestroy.RemoveAllData();
-
+                
                 // remove listeners
                 toDestroy.ModificationNotifier.Listener -= OnEntityModified;
                 toDestroy.DataStateChangeNotifier.Listener -= OnEntityDataStateChanged;
                 ((IEntity)toDestroy).EventProcessor.EventAddedNotifier.Listener -= EventProcessor_OnEventAdded;
+
+                // remove all data from the entity and then push said changes out
+                toDestroy.RemoveAllData();
+                toDestroy.DataStateChangeUpdate();
 
                 // remove the entity from the list of entities
                 _entities.Remove(toDestroy, GetEntitiesListFromMetadata(toDestroy));
@@ -352,14 +407,15 @@ namespace Neon.Entities {
             // Note that this loop is carefully constructed It has to handle a couple of (difficult)
             // things; first, it needs to support the item that is being iterated being removed, and
             // secondly, it needs to support more items being added to it as it iterates
-            List<Entity> cacheUpdateImmutable = CacheUpdateImmutable();
-            for (int i = 0; i < cacheUpdateImmutable.Count; ++i) {
-                Entity entity = cacheUpdateImmutable[i];
+            for (int i = 0; i < _cacheUpdateCurrent.Count; ++i) {
+                Entity entity = _cacheUpdateCurrent[i];
+                Log<EntityManager>.Info("{0}: Apply data state change update to {1}", UpdateNumber, entity);
                 entity.DataStateChangeUpdate();
             }
 
             // apply the modifications to the modified entities
             foreach (var modified in _entitiesWithModifications) {
+                Log<EntityManager>.Info("{0}: Applying modifications to {1}", UpdateNumber, modified);
                 modified.ApplyModifications();
             }
             _entitiesWithModifications.Clear(); // this is not shared so we can clear it
@@ -369,8 +425,10 @@ namespace Neon.Entities {
             // run all systems
             for (int i = 0; i < _multithreadedSystems.Count; ++i) {
                 _resetEvents[i].Reset();
-                bool success = ThreadPool.QueueUserWorkItem(_multithreadedSystems[i].RunSystem);
-                Contract.Requires(success, "Unable to submit threading task to ThreadPool");
+
+                _multithreadedSystems[i].RunSystem(null);
+                //bool success = ThreadPool.QueueUserWorkItem(_multithreadedSystems[i].RunSystem);
+                //Contract.Requires(success, "Unable to submit threading task to ThreadPool");
             }
 
             // block until the systems are done
@@ -385,21 +443,17 @@ namespace Neon.Entities {
             RemoveImmutable().Clear();
 
             // update immutable/mutable states for cache updates
-            List<Entity> cacheUpdateImmutable = CacheUpdateImmutable();
             {
                 int i = 0;
-                while (i < cacheUpdateImmutable.Count) {
-                    if (cacheUpdateImmutable[i].NeedsMoreDataStateChangeUpdates() == false) {
-                        cacheUpdateImmutable.RemoveAt(i);
+                while (i < _cacheUpdateCurrent.Count) {
+                    if (_cacheUpdateCurrent[i].NeedsMoreDataStateChangeUpdates() == false) {
+                        _cacheUpdateCurrent.RemoveAt(i);
                     }
                     else {
                         ++i;
                     }
                 }
             }
-
-            cacheUpdateImmutable.AddRange(CacheUpdateMutable());
-            CacheUpdateMutable().Clear();
         }
 
         /// <summary>
@@ -413,7 +467,6 @@ namespace Neon.Entities {
             SinglethreadFrameEnd();
 
             InvokeOnCommandMethods(commands);
-            InvokeUpdateMethods();
 
             // update the singleton data
             _singletonEntity.ApplyModifications();
@@ -463,33 +516,6 @@ namespace Neon.Entities {
             }
         }
 
-        /// <summary>
-        /// Calls all [InvokeBeforeUpdate], [InvokeOnUpdate], and [InvokeAfterUpdate] methods.
-        /// </summary>
-        private void InvokeUpdateMethods() {
-            // Call the BeforeUpdate methods - *user code*
-            for (int i = 0; i < _globalPreUpdateTriggers.Count; ++i) {
-                _globalPreUpdateTriggers[i].OnGlobalPreUpdate(SingletonEntity);
-            }
-
-            // Call the OnUpdate methods - *user code*
-            for (int i = 0; i < _systemsWithUpdateTriggers.Count; ++i) {
-                System system = _systemsWithUpdateTriggers[i];
-                ITriggerUpdate trigger = (ITriggerUpdate)system.Trigger;
-
-                for (int j = 0; j < system.CachedEntities.Length; ++j) {
-                    IEntity entity = system.CachedEntities[j];
-                    if (entity.Enabled) {
-                        trigger.OnUpdate(entity);
-                    }
-                }
-            }
-
-            // Call the AfterUpdate methods - *user code*
-            for (int i = 0; i < _globalPostUpdateTriggers.Count; ++i) {
-                _globalPostUpdateTriggers[i].OnGlobalPostUpdate(SingletonEntity);
-            }
-        }
 
         /// <summary>
         /// Registers the given entity with the world.
@@ -499,7 +525,7 @@ namespace Neon.Entities {
             Log<EntityManager>.Info("({0}) AddEntity({1}) called", UpdateNumber, instance);
             Entity entity = (Entity)instance;
             AddMutable().Add(entity);
-            CacheUpdateMutable().Add(entity);
+            _cacheUpdatePending.Add(entity);
             entity.Hide();
         }
 
@@ -527,7 +553,7 @@ namespace Neon.Entities {
         /// Called when an entity has data state changes
         /// </summary>
         private void OnEntityDataStateChanged(Entity sender) {
-            CacheUpdateMutable().Add(sender);
+            _cacheUpdatePending.Add(sender);
         }
 
         /// <summary>
@@ -550,7 +576,7 @@ namespace Neon.Entities {
         }
 
         List<Entity> MultithreadedSystemSharedContext.StateChangedEntities {
-            get { return CacheUpdateImmutable(); }
+            get { return _cacheUpdateCurrent; }
         }
     }
 }

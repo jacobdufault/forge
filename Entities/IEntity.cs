@@ -31,6 +31,12 @@ namespace Neon.Entities {
         }
 
         /// <summary>
+        /// Adds the given data type, or modifies an instance of it.
+        /// </summary>
+        /// <returns>A modifiable instance of data of type T</returns>
+        Data AddOrModify(DataAccessor accessor);
+
+        /// <summary>
         /// Add a Data instance of with the given accessor to the Entity.
         /// </summary>
         /// <remarks>
@@ -39,7 +45,6 @@ namespace Neon.Entities {
         /// </remarks>
         /// <param name="accessor"></param>
         /// <returns>The data instance that can be used to initialize the data</returns>
-        // TODO: add a test for Remove and Add in sequential frames
         Data AddData(DataAccessor accessor);
 
         /// <summary>
@@ -51,7 +56,6 @@ namespace Neon.Entities {
         /// current data instance.
         /// </remarks>
         /// <typeparam name="T">The type of data to remove</typeparam>
-        // TODO: add test for Remove and Modify in the same frame
         void RemoveData(DataAccessor accessor);
 
         /// <summary>

@@ -31,5 +31,52 @@ namespace EntityTests {
             entity.AddData<TestData0>();
             entity.AddData<TestData0>();
         }
+
+        [TestMethod]
+        public void InitializingReturnsOneConstantInstance() {
+            IEntity entity = EntityFactory.Create();
+            TestData0 data0 = entity.AddData<TestData0>();
+            TestData0 data1 = entity.AddOrModify<TestData0>();
+            TestData0 data2 = entity.Modify<TestData0>();
+
+            Assert.AreEqual(data0, data1);
+            Assert.AreEqual(data0, data2);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(NoSuchDataException))]
+        public void AddedDataIsNotContained() {
+            IEntity entity = EntityFactory.Create();
+            entity.AddData<TestData0>();
+
+            Assert.IsFalse(entity.ContainsData<TestData0>());
+            entity.Current<TestData0>();
+        }
+
+        [TestMethod]
+        public void RemovedDataIsAccessibleThroughCurrent() {
+            IEntity entity = EntityFactory.Create();
+            entity.AddData<TestData0>();
+
+            ((Entity)entity).DataStateChangeUpdate();
+            Assert.IsTrue(entity.ContainsData<TestData0>());
+
+            entity.RemoveData<TestData0>();
+            ((Entity)entity).DataStateChangeUpdate();
+
+            entity.Current<TestData0>(); // ensure we can access the current data
+            Assert.IsFalse(entity.ContainsData<TestData0>());
+            try {
+                entity.Previous<TestData0>();
+                Assert.Fail();
+            }
+            catch (NoSuchDataException) { }
+            try {
+                entity.Modify<TestData0>();
+                Assert.Fail();
+            }
+            catch (NoSuchDataException) { }
+
+        }
     }
 }
