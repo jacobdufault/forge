@@ -12,20 +12,15 @@ namespace EntityTests {
     [TestClass]
     public class EventProcessorTests {
         [TestMethod]
-        public void CreateProcessor() {
-            EventProcessor processor = new EventProcessor();
-        }
-
-        [TestMethod]
         public void NewEntityCreatesEventProcessor() {
-            IEntity e = EntityFactory.Create();
+            IEntity e = new Entity();
             Assert.IsNotNull(e.EventProcessor);
         }
 
         [TestMethod]
         public void EntityManagerIntegration() {
-            EntityManager em = new EntityManager(EntityFactory.Create());
-            IEntity e = EntityFactory.Create();
+            EntityManager em = new EntityManager(new Entity());
+            IEntity e = new Entity();
             em.AddEntity(e);
             em.UpdateWorld();
 
@@ -41,7 +36,7 @@ namespace EntityTests {
                 called1++;
             });
 
-            e.EventProcessor.Dispatch(new TestEvent0());
+            e.EventProcessor.Submit(new TestEvent0());
 
             Assert.AreEqual(0, called0);
             Assert.AreEqual(0, called1);

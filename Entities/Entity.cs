@@ -52,7 +52,7 @@ namespace Neon.Entities {
         }
         #endregion
 
-        protected internal Entity() {
+        public Entity() {
             _uniqueId = _idGenerator.Next();
             _enabled = true; // default to being enabled
             _eventProcessor = new EventProcessor();
@@ -68,31 +68,6 @@ namespace Neon.Entities {
         public EntityManager EntityManager;
 
         /// <summary>
-        /// Invokes OnHide(). This must be called on the Unity thread.
-        /// </summary>
-        public void Hide() {
-            if (_onHide != null) {
-                _onHide();
-            }
-        }
-        /// <summary>
-        /// Invokes OnShow(). This must be called on the Unity thread.
-        /// </summary>
-        public void Show() {
-            if (_onShow != null) {
-                _onShow();
-            }
-        }
-        /// <summary>
-        /// Invokes OnRemoved(). This must be called on the Unity thread.
-        /// </summary>
-        public void RemovedFromEntityManager() {
-            if (_onRemoved != null) {
-                _onRemoved();
-            }
-        }
-
-        /// <summary>
         /// Removes all data instances from the Entity.
         /// </summary>
         [MethodImpl(MethodImplOptions.Synchronized)] // TODO: shouldn't need a lock
@@ -106,7 +81,7 @@ namespace Neon.Entities {
 
         private void DoModifications() {
             // apply modifications
-            foreach (Tuple<int, ImmutableContainer<Data>> toApply in _modifications.Current) {
+            foreach (Pair<int, ImmutableContainer<Data>> toApply in _modifications.Current) {
                 // if we removed the data, then don't bother apply/dispatching modifications on it
                 if (_data.Contains(toApply.Item1)) {
                     _data[toApply.Item1].Increment();
@@ -145,6 +120,8 @@ namespace Neon.Entities {
                     int id = removedStage1[i].Id;
                     _removed[id] = removedStage1[i];
                     // _removed[id] is removed from _removed in stage2
+
+                    ((this as IEntity)).EventProcessor.Submit(new RemovedDataEvent(_data[id].Current.GetType()));
                 }
 
                 for (int i = 0; i < removedStage2.Count; ++i) {
@@ -158,8 +135,9 @@ namespace Neon.Entities {
             // do additions
             for (int i = 0; i < _toAdd.Count; ++i) {
                 Data added = _toAdd[i];
-                int id = DataAccessorFactory.GetId(added.GetType());
+                ((this as IEntity)).EventProcessor.Submit(new AddedDataEvent(added.GetType()));
 
+                int id = DataAccessorFactory.GetId(added.GetType());
                 _data[id] = new ImmutableContainer<Data>(added);
 
                 // visualize the initial data
@@ -179,32 +157,6 @@ namespace Neon.Entities {
         void IEntity.Destroy() {
             EntityManager.RemoveEntity(this);
         }
-
-        #region Events
-        private Action _onShow;
-        event Action IEntity.OnShow {
-            [MethodImpl(MethodImplOptions.Synchronized)]
-            add { Delegate.Combine(_onShow, value); }
-            [MethodImpl(MethodImplOptions.Synchronized)]
-            remove { Delegate.Remove(_onShow, value); }
-        }
-
-        private Action _onHide;
-        event Action IEntity.OnHide {
-            [MethodImpl(MethodImplOptions.Synchronized)]
-            add { Delegate.Combine(_onHide, value); }
-            [MethodImpl(MethodImplOptions.Synchronized)]
-            remove { Delegate.Remove(_onHide, value); }
-        }
-
-        private Action _onRemoved;
-        event Action IEntity.OnRemoved {
-            [MethodImpl(MethodImplOptions.Synchronized)]
-            add { Delegate.Combine(_onRemoved, value); }
-            [MethodImpl(MethodImplOptions.Synchronized)]
-            remove { Delegate.Remove(_onRemoved, value); }
-        }
-        #endregion
 
         #region Instance data
         /// <summary>
@@ -261,6 +213,22 @@ namespace Neon.Entities {
             }
 
             return Modify_unlocked(accessor);
+        }
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        ICollection<Data> IEntity.SelectCurrentData(Predicate<Data> filter, ICollection<Data> storage) {
+            if (storage == null) {
+                storage = new List<Data>();
+            }
+
+            foreach (var tuple in _data) {
+                Data data = tuple.Item2.Current;
+                if (filter(data)) {
+                    storage.Add(data);
+                }
+            }
+
+            return storage;
         }
 
         #region AddData

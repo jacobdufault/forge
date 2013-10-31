@@ -3,16 +3,26 @@ using System.Collections;
 using System.Collections.Generic;
 
 namespace Neon.Collections {
+    public struct Pair<A, B> {
+        public A Item1;
+        public B Item2;
+
+        public Pair(A item1, B item2) {
+            Item1 = item1;
+            Item2 = item2;
+        }
+    }
+
     /// <summary>
     /// Stores a SparseArray that can be iterated in a time-efficient (but *not* space-efficient) manner.
     /// </summary>
-    public class IterableSparseArray<T> : IEnumerable<Tuple<int, T>> where T : class {
+    public class IterableSparseArray<T> : IEnumerable<Pair<int, T>> where T : class {
         private SparseArray<T> _sparseArray;
-        private List<Tuple<int, T>> _items;
+        private List<Pair<int, T>> _items;
 
         public IterableSparseArray(int capacity = 8) {
             _sparseArray = new SparseArray<T>(capacity);
-            _items = new List<Tuple<int, T>>();
+            _items = new List<Pair<int, T>>();
         }
 
         public T this[int index] {
@@ -22,7 +32,7 @@ namespace Neon.Collections {
 
             set {
                 _sparseArray[index] = value;
-                _items.Add(Tuple.Create(index, value));
+                _items.Add(new Pair<int, T>(index, value));
             }
         }
 
@@ -57,7 +67,7 @@ namespace Neon.Collections {
             return removed;
         }
 
-        public IEnumerator<Tuple<int, T>> GetEnumerator() {
+        public IEnumerator<Pair<int, T>> GetEnumerator() {
             return _items.GetEnumerator();
         }
 

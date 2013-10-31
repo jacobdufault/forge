@@ -61,7 +61,7 @@ namespace Neon.Entities {
         /// <summary>
         /// Initializes a new instance of the EventProcessor class.
         /// </summary>
-        public EventProcessor() {
+        internal EventProcessor() {
             EventAddedNotifier = new Notifier<EventProcessor>(this);
         }
 
@@ -104,7 +104,7 @@ namespace Neon.Entities {
         /// time.
         /// </summary>
         /// <param name="eventInstance">The event instance to dispatch</param>
-        public void Dispatch(IEvent eventInstance) {
+        public void Submit(IEvent eventInstance) {
             if (_eventDispatchAllowed == false) {
                 throw new InvalidOperationException("Cannot dispatch new events to the EventDispatcher from an event handler");
             }

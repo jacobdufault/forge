@@ -10,7 +10,7 @@ namespace EntityTests {
     public class EntityTest {
         [TestMethod]
         public void EntityCreation() {
-            IEntity entity = EntityFactory.Create();
+            IEntity entity = new Entity();
         }
 
         [TestMethod]
@@ -18,7 +18,7 @@ namespace EntityTests {
             HashSet<int> ids = new HashSet<int>();
 
             for (int i = 0; i < 200; ++i) {
-                IEntity entity = EntityFactory.Create();
+                IEntity entity = new Entity();
                 Assert.IsTrue(ids.Add(entity.UniqueId));
             }
         }
@@ -27,14 +27,14 @@ namespace EntityTests {
         [ExpectedException(typeof(AlreadyAddedDataException))]
 
         public void CannotAddMultipleDataInstances() {
-            IEntity entity = EntityFactory.Create();
+            IEntity entity = new Entity();
             entity.AddData<TestData0>();
             entity.AddData<TestData0>();
         }
 
         [TestMethod]
         public void InitializingReturnsOneConstantInstance() {
-            IEntity entity = EntityFactory.Create();
+            IEntity entity = new Entity();
             TestData0 data0 = entity.AddData<TestData0>();
             TestData0 data1 = entity.AddOrModify<TestData0>();
             TestData0 data2 = entity.Modify<TestData0>();
@@ -46,7 +46,7 @@ namespace EntityTests {
         [TestMethod]
         [ExpectedException(typeof(NoSuchDataException))]
         public void AddedDataIsNotContained() {
-            IEntity entity = EntityFactory.Create();
+            IEntity entity = new Entity();
             entity.AddData<TestData0>();
 
             Assert.IsFalse(entity.ContainsData<TestData0>());
@@ -55,7 +55,7 @@ namespace EntityTests {
 
         [TestMethod]
         public void RemovedDataIsAccessibleThroughCurrent() {
-            IEntity entity = EntityFactory.Create();
+            IEntity entity = new Entity();
             entity.AddData<TestData0>();
 
             ((Entity)entity).DataStateChangeUpdate();

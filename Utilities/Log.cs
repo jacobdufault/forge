@@ -79,34 +79,41 @@ namespace Neon.Utilities {
 
         #region Info
         public static void Info(object message) {
+            return;
             _log.Info(message);
         }
         public static void Info<T0>(string format, T0 arg0) {
+            return;
             if (_log.IsInfoEnabled) {
                 _log.Info(FastStringFormat.Format(format, arg0));
             }
         }
         public static void Info<T0, T1>(string format, T0 arg0, T1 arg1) {
+            return;
             if (_log.IsInfoEnabled) {
                 _log.Info(FastStringFormat.Format(format, arg0, arg1));
             }
         }
         public static void Info<T0, T1, T2>(string format, T0 arg0, T1 arg1, T2 arg2) {
+            return;
             if (_log.IsInfoEnabled) {
                 _log.Info(FastStringFormat.Format(format, arg0, arg1, arg2));
             }
         }
         public static void Info<T0, T1, T2, T3>(string format, T0 arg0, T1 arg1, T2 arg2, T3 arg3) {
+            return;
             if (_log.IsInfoEnabled) {
                 _log.Info(FastStringFormat.Format(format, arg0, arg1, arg2, arg3));
             }
         }
         public static void Info<T0, T1, T2, T3, T4>(string format, T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4) {
+            return;
             if (_log.IsInfoEnabled) {
                 _log.Info(FastStringFormat.Format(format, arg0, arg1, arg2, arg3, arg4));
             }
         }
         public static void Info<T0, T1, T2, T3, T4, T5>(string format, T0 arg0, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5) {
+            return;
             if (_log.IsInfoEnabled) {
                 _log.Info(FastStringFormat.Format(format, arg0, arg1, arg2, arg3, arg4, arg5));
             }

@@ -111,10 +111,10 @@ namespace EntityTests {
     public class CallOrderTests {
         [TestMethod]
         public void Basic() {
-            EntityManager em = new EntityManager(EntityFactory.Create());
+            EntityManager em = new EntityManager(new Entity());
             TriggerEventLogger trigger = new TriggerEventLogger();
             em.AddSystem(trigger);
-            IEntity entity = EntityFactory.Create();
+            IEntity entity = new Entity();
             em.AddEntity(entity);
 
             em.UpdateWorld();
@@ -156,10 +156,10 @@ namespace EntityTests {
 
         [TestMethod]
         public void InitializeWithAddingData() {
-            EntityManager em = new EntityManager(EntityFactory.Create());
+            EntityManager em = new EntityManager(new Entity());
             TriggerEventLogger trigger = new TriggerEventLogger();
             em.AddSystem(trigger);
-            IEntity entity = EntityFactory.Create();
+            IEntity entity = new Entity();
             em.AddEntity(entity);
 
             entity.AddData<TestData0>();
@@ -185,10 +185,10 @@ namespace EntityTests {
 
         [TestMethod]
         public void EntityModifyBeforeUpdate() {
-            EntityManager em = new EntityManager(EntityFactory.Create());
+            EntityManager em = new EntityManager(new Entity());
             TriggerEventLogger trigger = new TriggerEventLogger();
             em.AddSystem(trigger);
-            IEntity entity = EntityFactory.Create();
+            IEntity entity = new Entity();
             TestData0 data = entity.AddData<TestData0>();
             entity.Modify<TestData0>();
             em.AddEntity(entity);
@@ -207,10 +207,10 @@ namespace EntityTests {
 
         [TestMethod]
         public void EntityRemoveNothing() {
-            EntityManager em = new EntityManager(EntityFactory.Create());
+            EntityManager em = new EntityManager(new Entity());
             TriggerEventLogger trigger = new TriggerEventLoggerFilterRequiresData0();
             em.AddSystem(trigger);
-            IEntity entity = EntityFactory.Create();
+            IEntity entity = new Entity();
             TestData0 data = entity.AddData<TestData0>();
             em.AddEntity(entity);
 
@@ -255,10 +255,10 @@ namespace EntityTests {
 
         [TestMethod]
         public void EntityModifyAfterUpdate() {
-            EntityManager em = new EntityManager(EntityFactory.Create());
+            EntityManager em = new EntityManager(new Entity());
             TriggerEventLogger trigger = new TriggerEventLoggerFilterRequiresData0();
             em.AddSystem(trigger);
-            IEntity entity = EntityFactory.Create();
+            IEntity entity = new Entity();
             TestData0 data = entity.AddData<TestData0>();
             em.AddEntity(entity);
 
@@ -301,10 +301,10 @@ namespace EntityTests {
 
         [TestMethod]
         public void InitializeBeforeAddingDataFilter() {
-            EntityManager em = new EntityManager(EntityFactory.Create());
+            EntityManager em = new EntityManager(new Entity());
             TriggerEventLogger trigger = new TriggerEventLoggerFilterRequiresData0();
             em.AddSystem(trigger);
-            IEntity entity = EntityFactory.Create();
+            IEntity entity = new Entity();
             TestData0 data = entity.AddData<TestData0>();
             em.AddEntity(entity);
 
@@ -340,10 +340,10 @@ namespace EntityTests {
 
         [TestMethod]
         public void InitializeAfterAddingDataFilter() {
-            EntityManager em = new EntityManager(EntityFactory.Create());
+            EntityManager em = new EntityManager(new Entity());
             TriggerEventLogger trigger = new TriggerEventLoggerFilterRequiresData0();
             em.AddSystem(trigger);
-            IEntity entity = EntityFactory.Create();
+            IEntity entity = new Entity();
             em.AddEntity(entity);
 
             // entity doesn't have required data

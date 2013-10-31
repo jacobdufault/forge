@@ -138,14 +138,14 @@ namespace EntityTests {
     public class EntityManagerTests {
         [TestMethod]
         public void Creation() {
-            EntityManager em = new EntityManager(EntityFactory.Create());
+            EntityManager em = new EntityManager(new Entity());
 
             Assert.IsNotNull(em.SingletonEntity);
         }
 
         [TestMethod]
         public void UpdateNumber() {
-            EntityManager em = new EntityManager(EntityFactory.Create());
+            EntityManager em = new EntityManager(new Entity());
 
             for (int i = 0; i < 50; ++i) {
                 Assert.AreEqual(em.UpdateNumber, i);
@@ -155,7 +155,7 @@ namespace EntityTests {
 
         [TestMethod]
         public void AddTrigger() {
-            EntityManager em = new EntityManager(EntityFactory.Create());
+            EntityManager em = new EntityManager(new Entity());
 
             CountUpdatesTrigger updates = new CountUpdatesTrigger();
             em.AddSystem(updates);
@@ -170,7 +170,7 @@ namespace EntityTests {
 
             int numEntities = 25;
             for (int i = 0; i < numEntities; ++i) {
-                IEntity e = EntityFactory.Create();
+                IEntity e = new Entity();
                 em.AddEntity(e);
             }
 
@@ -184,16 +184,16 @@ namespace EntityTests {
 
         [TestMethod]
         public void AddEntity() {
-            EntityManager em = new EntityManager(EntityFactory.Create());
-            IEntity e = EntityFactory.Create();
+            EntityManager em = new EntityManager(new Entity());
+            IEntity e = new Entity();
             em.AddEntity(e);
         }
 
         [TestMethod]
         public void InitializeData() {
-            EntityManager em = new EntityManager(EntityFactory.Create());
+            EntityManager em = new EntityManager(new Entity());
 
-            IEntity e = EntityFactory.Create();
+            IEntity e = new Entity();
             em.AddEntity(e);
 
             {
@@ -213,9 +213,9 @@ namespace EntityTests {
 
         [TestMethod]
         public void InitializeDataViaModification() {
-            EntityManager em = new EntityManager(EntityFactory.Create());
+            EntityManager em = new EntityManager(new Entity());
 
-            IEntity e = EntityFactory.Create();
+            IEntity e = new Entity();
             em.AddEntity(e);
 
             // use modify, not the object we get from AddData, to initialize the data
@@ -239,16 +239,16 @@ namespace EntityTests {
 
         [TestMethod]
         public void SystemModificationNotificationWithoutPassingFilter() {
-            EntityManager em = new EntityManager(EntityFactory.Create());
+            EntityManager em = new EntityManager(new Entity());
 
             CountModifiesTrigger system = new CountModifiesTrigger(new Type[] {
                 typeof(TestData2)
             });
             em.AddSystem(system);
 
-            IEntity e0 = EntityFactory.Create();
+            IEntity e0 = new Entity();
             em.AddEntity(e0);
-            IEntity e1 = EntityFactory.Create();
+            IEntity e1 = new Entity();
             em.AddEntity(e1);
 
             e0.AddData<TestData2>();
@@ -272,7 +272,7 @@ namespace EntityTests {
 
         [TestMethod]
         public void ModifiedTrigger() {
-            EntityManager em = new EntityManager(EntityFactory.Create());
+            EntityManager em = new EntityManager(new Entity());
 
             DelegateAllTriggers system = new DelegateAllTriggers();
             em.AddSystem(system);
@@ -282,7 +282,7 @@ namespace EntityTests {
                 Assert.AreEqual(modifiedCount++, modified.Current<TestData2>().Value);
             };
 
-            IEntity entity = EntityFactory.Create();
+            IEntity entity = new Entity();
             entity.AddData<TestData2>();
             em.AddEntity(entity);
             em.UpdateWorld();
@@ -299,8 +299,8 @@ namespace EntityTests {
         [TestMethod]
         public void AddAndRemoveInSequentialFrames() {
             // setup
-            EntityManager em = new EntityManager(EntityFactory.Create());
-            IEntity entity = EntityFactory.Create();
+            EntityManager em = new EntityManager(new Entity());
+            IEntity entity = new Entity();
             entity.AddData<TestData2>();
             em.AddEntity(entity);
             em.UpdateWorld();
@@ -326,8 +326,8 @@ namespace EntityTests {
         //[TestMethod]
         public void RemoveAndModifySameFrame() {
             // setup
-            EntityManager em = new EntityManager(EntityFactory.Create());
-            IEntity entity = EntityFactory.Create();
+            EntityManager em = new EntityManager(new Entity());
+            IEntity entity = new Entity();
             entity.AddData<TestData2>();
             em.AddEntity(entity);
             em.UpdateWorld();
@@ -344,7 +344,7 @@ namespace EntityTests {
         [TestMethod]
         public void UpdateTriggerCalled() {
             // setup
-            EntityManager em = new EntityManager(EntityFactory.Create());
+            EntityManager em = new EntityManager(new Entity());
 
             DelegateAllTriggers system = new DelegateAllTriggers();
             system.EntityFilter = new[] { typeof(TestData2) };
@@ -354,7 +354,7 @@ namespace EntityTests {
             };
             em.AddSystem(system);
 
-            IEntity entity = EntityFactory.Create();
+            IEntity entity = new Entity();
             entity.AddData<TestData2>();
             em.AddEntity(entity);
 
@@ -367,7 +367,7 @@ namespace EntityTests {
         [TestMethod]
         public void DelayedAddToSystem() {
              // setup
-            EntityManager em = new EntityManager(EntityFactory.Create());
+            EntityManager em = new EntityManager(new Entity());
 
             DelegateAllTriggers system = new DelegateAllTriggers();
             system.EntityFilter = new[] { typeof(TestData2) };
@@ -377,7 +377,7 @@ namespace EntityTests {
             system.Modified += e => ++modifiedCount;
             em.AddSystem(system);
 
-            IEntity entity = EntityFactory.Create();
+            IEntity entity = new Entity();
             em.AddEntity(entity);
             entity.AddData<TestData0>();
 

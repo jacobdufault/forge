@@ -60,6 +60,16 @@ namespace Neon.Entities {
         List<Entity> AddedEntities { get; }
         List<Entity> RemovedEntities { get; }
         List<Entity> StateChangedEntities { get; }
+
+        ValueToReferenceWrapper<long> MultithreadingIndex { get; }
+    }
+
+    public class ValueToReferenceWrapper<T> {
+        public T Value;
+        
+        public ValueToReferenceWrapper(T value) {
+            Value = value;
+        }
     }
 
     internal class MultithreadedSystem {
@@ -186,7 +196,7 @@ namespace Neon.Entities {
                 ImmutableModifiedList().Clear();
             }
             finally {
-                _doneEvent.Set();
+                Interlocked.Increment(ref _context.MultithreadingIndex.Value);
             }
         }
 
@@ -307,8 +317,11 @@ namespace Neon.Entities {
             }
         }
 
+        public ValueToReferenceWrapper<long> MultithreadingIndex { get; private set; }
+
         public EntityManager(IEntity singletonEntity) {
             _singletonEntity = (Entity)singletonEntity;
+            MultithreadingIndex = new ValueToReferenceWrapper<long>(0);
         }
 
         /// <summary>
@@ -365,7 +378,7 @@ namespace Neon.Entities {
                 Entity toAdd = addImmutable[i];
 
                 toAdd.EntityManager = this;
-                toAdd.Show();
+                ((IEntity)toAdd).EventProcessor.Submit(ShowEntityEvent.Instance);
 
                 // register listeners
                 toAdd.ModificationNotifier.Listener += OnEntityModified;
@@ -399,7 +412,7 @@ namespace Neon.Entities {
 
                 // remove the entity from the list of entities
                 _entities.Remove(toDestroy, GetEntitiesListFromMetadata(toDestroy));
-                toDestroy.RemovedFromEntityManager();
+                ((IEntity)toDestroy).EventProcessor.Submit(DestroyedEntityEvent.Instance);
             }
             // can't clear b/c it is shared
 
@@ -420,20 +433,32 @@ namespace Neon.Entities {
             _entitiesWithModifications.Clear(); // this is not shared so we can clear it
         }
 
+        public static bool EnableMultithreading = true;
+
         private void MultithreadRunSystems() {
+            MultithreadingIndex.Value = 0;
+            int multithreadingIndexTarget = _multithreadedSystems.Count;
+
             // run all systems
             for (int i = 0; i < _multithreadedSystems.Count; ++i) {
-                _resetEvents[i].Reset();
+                //_resetEvents[i].Reset();
 
-                _multithreadedSystems[i].RunSystem(null);
-                //bool success = ThreadPool.QueueUserWorkItem(_multithreadedSystems[i].RunSystem);
-                //Contract.Requires(success, "Unable to submit threading task to ThreadPool");
+                if (EnableMultithreading) {
+                    bool success = ThreadPool.QueueUserWorkItem(_multithreadedSystems[i].RunSystem);
+                    Contract.Requires(success, "Unable to submit threading task to ThreadPool");
+                }
+                else {
+                    _multithreadedSystems[i].RunSystem(null);
+                }
             }
 
             // block until the systems are done
-            for (int i = 0; i < _resetEvents.Count; ++i) {
-                _resetEvents[i].WaitOne();
+            while (Interlocked.Read(ref MultithreadingIndex.Value) != multithreadingIndexTarget) {
             }
+
+            //for (int i = 0; i < _resetEvents.Count; ++i) {
+            //    _resetEvents[i].WaitOne();
+            //}
         }
 
         private void SinglethreadFrameEnd() {
@@ -470,7 +495,7 @@ namespace Neon.Entities {
             // update the singleton data
             _singletonEntity.ApplyModifications();
 
-            // update dirty event processors
+            // update dirty event processors (this has to be done on the main thread)
             InvokeEventProcessors();
         }
 
@@ -524,7 +549,7 @@ namespace Neon.Entities {
             Entity entity = (Entity)instance;
             AddMutable().Add(entity);
             _cacheUpdatePending.Add(entity);
-            entity.Hide();
+            ((IEntity)instance).EventProcessor.Submit(HideEntityEvent.Instance);
         }
 
         /// <summary>
@@ -537,7 +562,7 @@ namespace Neon.Entities {
 
             Entity entity = (Entity)instance;
             RemoveMutable().Add(entity);
-            entity.Hide();
+            ((IEntity)instance).EventProcessor.Submit(HideEntityEvent.Instance);
         }
 
         /// <summary>

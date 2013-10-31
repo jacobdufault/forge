@@ -1,5 +1,6 @@
 ﻿using Neon.Collections;
 using System;
+using System.Collections.Generic;
 
 namespace Neon.Entities {
     /// <summary>
@@ -7,20 +8,21 @@ namespace Neon.Entities {
     /// </summary>
     public interface IEntity {
         /// <summary>
+        /// Selects that data inside of the entity that passes the given filter.
+        /// </summary>
+        /// <param name="filter">The predicate to check items to see if they should be contained
+        /// inside of the result.</param>
+        /// <param name="storage">An optional collection to append result to, instead of creating a
+        /// new one. The collection will *not* be cleared by this method.</param>
+        /// <returns>A list of data instances that pass the filter.</returns>
+        ICollection<Data> SelectCurrentData(Predicate<Data> filter, ICollection<Data> storage = null);
+
+        /// <summary>
         /// Destroys the entity. The entity is not destroyed immediately, but instead at the end of
         /// the next update loop. Systems will get a chance to process the destruction of the
         /// entity.
         /// </summary>
         void Destroy();
-
-        [Obsolete("Use EventProcessor")]
-        event Action OnShow;
-
-        [Obsolete("Use EventProcessor")]
-        event Action OnHide;
-
-        [Obsolete("Use EventProcessor")]
-        event Action OnRemoved;
 
         /// <summary>
         /// Gets the event processor that Systems use to notify the external world of interesting
