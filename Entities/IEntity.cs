@@ -55,7 +55,6 @@ namespace Neon.Entities {
         /// Previous and Modify will both throw NoSuchData exceptions, but Current will return the
         /// current data instance.
         /// </remarks>
-        /// <typeparam name="T">The type of data to remove</typeparam>
         void RemoveData(DataAccessor accessor);
 
         /// <summary>
@@ -73,6 +72,7 @@ namespace Neon.Entities {
         /// Please note that a data instance can only be modified once; an exception is thrown if
         /// one instance is modified multiple times.
         /// </summary>
+        /// <param name="accessor">The data type to modify.</param>
         /// <param name="force">If the modification should be forced; ie, if there is already a
         /// modification then it will be overwritten. This should *NEVER* be used in systems or
         /// general client code; it is available for inspector GUI changes.</param>

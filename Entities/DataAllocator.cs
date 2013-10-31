@@ -60,7 +60,6 @@ namespace Neon.Entities {
         /// Allocate data of a given type with a context of the given entity.
         /// </summary>
         /// <param name="accessor">The type of data to allocate</param>
-        /// <param name="context">Where the data is going to be used</param>
         /// <returns></returns>
         public static Data Allocate(DataAccessor accessor) {
             return GetOrCreate(accessor).Allocate();
@@ -81,7 +80,7 @@ namespace Neon.Entities {
         }
 
         /// <summary>
-        /// Calls AllocateWith(DataMap<T>.Accessor, allocator)
+        /// Calls AllocateWith(DataMap[T].Accessor, allocator)
         /// </summary>
         public static void AddAuxiliaryAllocator<T>(Action<Data, IEntity> allocator) where T : Data {
             AddAuxiliaryAllocator(DataMap<T>.Accessor, allocator);

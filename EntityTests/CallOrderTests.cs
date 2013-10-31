@@ -244,7 +244,7 @@ namespace EntityTests {
                 entity.Modify<TestData0>();
                 Assert.Fail();
             }
-            catch (NoSuchDataException e) { }
+            catch (NoSuchDataException) { }
             em.UpdateWorld();
             CollectionAssert.AreEqual(new TriggerEvent[] {
                 TriggerEvent.OnGlobalPreUpdate,

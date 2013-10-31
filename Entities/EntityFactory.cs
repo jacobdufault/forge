@@ -10,22 +10,34 @@ namespace Neon.Entities {
         /// </summary>
         public static Func<IEntity> Generator;
 
-        /// <summary>
-        /// Used when an IEntity instance is requested that is a clone of the given Prefab.
-        /// </summary>
-        public static Func<IEntityPrefab, IEntity> GeneratorPrefab;
-
         static EntityFactory() {
             Generator = () => new Entity();
-            GeneratorPrefab = prefab => new Entity();
         }
 
+        /// <summary>
+        /// Creates a new data instance by using the given entity generator.
+        /// </summary>
+        /// <returns>A new entity instance.</returns>
         public static IEntity Create() {
             return Generator();
         }
 
-        public static IEntity Create(IEntityPrefab prefab) {
-            return GeneratorPrefab(prefab);
+        /// <summary>
+        /// Creates a new entity from the given template.
+        /// </summary>
+        /// <param name="template">The template to create an entity from.</param>
+        /// <returns>An entity instance</returns>
+        public static IEntity Create(EntityTemplate template) {
+            // create a blank entity
+            IEntity entity = Create();
+
+            // copy all of the data from the template into the entity
+            foreach (var dataInstance in template) {
+                Data added = entity.AddData(new DataAccessor(dataInstance.GetType()));
+                added.CopyFrom(dataInstance);
+            }
+
+            return entity;
         }
     }
 }

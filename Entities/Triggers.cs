@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace Neon.Entities {
     /// <summary>
@@ -12,8 +11,8 @@ namespace Neon.Entities {
     }
 
     /// <summary>
-    /// Base filter for triggers which require a filter.
-    /// as it does not provide any trigger APIs by itself.
+    /// Base filter for triggers which require a filter. as it does not provide any trigger APIs by
+    /// itself.
     /// </summary>
     /// <remarks>
     /// Client code should not extend this.
@@ -21,8 +20,9 @@ namespace Neon.Entities {
     public interface ITriggerBaseFilter : ISystem {
         /// <summary>
         /// Computes the entity filter.
-        /// </summary
-        /// <returns>A list of Data types that the entity needs to have to pass the filter.</returns>
+        /// </summary>
+        /// <returns>A list of Data types that the entity needs to have to pass the
+        /// filter.</returns>
         Type[] ComputeEntityFilter();
     }
 
@@ -45,8 +45,8 @@ namespace Neon.Entities {
         /// Called when an Entity, which was once passing the filter, is no longer doing so.
         /// </summary>
         /// <remarks>
-        /// This can occur for a number of reasons, such as a data state change or the Entity
-        /// being destroyed.
+        /// This can occur for a number of reasons, such as a data state change or the Entity being
+        /// destroyed.
         /// </remarks>
         /// <param name="entity">The entity that is no longer passing the filter.</param>
         void OnRemoved(IEntity entity);
@@ -70,8 +70,8 @@ namespace Neon.Entities {
         /// This is called every update frame for all entities which pass the filter.
         /// </summary>
         /// <remarks>
-        /// If you need to know when the entities are added or are no longer going to be
-        /// updated, also implement ILifecycleTrigger.
+        /// If you need to know when the entities are added or are no longer going to be updated,
+        /// also implement ILifecycleTrigger.
         /// </remarks>
         void OnUpdate(IEntity entity);
     }
@@ -81,8 +81,7 @@ namespace Neon.Entities {
     /// </summary>
     public interface ITriggerGlobalPreUpdate : ISystem {
         /// <summary>
-        /// Called once per update loop. This is expected to use the EntityManager's
-        /// singleton data.
+        /// Called once per update loop. This is expected to use the EntityManager's singleton data.
         /// </summary>
         void OnGlobalPreUpdate(IEntity singletonEntity);
     }
@@ -92,8 +91,7 @@ namespace Neon.Entities {
     /// </summary>
     public interface ITriggerGlobalPostUpdate : ISystem {
         /// <summary>
-        /// Called once per update loop. This is expected to use the EntityManager's
-        /// singleton data.
+        /// Called once per update loop. This is expected to use the EntityManager's singleton data.
         /// </summary>
         void OnGlobalPostUpdate(IEntity singletonEntity);
     }
@@ -116,8 +114,8 @@ namespace Neon.Entities {
     }
 
     /// <summary>
-    /// A trigger that globally reacts to input and is expected to use
-    /// the EntityManager's singleton data.
+    /// A trigger that globally reacts to input and is expected to use the EntityManager's singleton
+    /// data.
     /// </summary>
     public interface ITriggerGlobalInput : ISystem {
         /// <summary>

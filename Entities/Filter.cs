@@ -1,10 +1,8 @@
-﻿using Neon.Utilities;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
-
+﻿
 namespace Neon.Entities {
+    /// <summary>
+    /// A filter ensures that an entity contains a set of data types.
+    /// </summary>
     public class Filter {
         /// <summary>
         /// The list of Data types that the filter has to have.
@@ -12,10 +10,10 @@ namespace Neon.Entities {
         private DataAccessor[] _accessors;
 
         /// <summary>
-        /// Creates a new filter from a set of predicates. For the filter to
-        /// be true, every single predicate must also be true.
+        /// Creates a new filter that has to contain a given set of DataAccessors.
         /// </summary>
-        /// <param name="predicates">The predicates</param>
+        /// <param name="accessors">The required data types that an entity must contain to pass the
+        /// filter.</param>
         public Filter(params DataAccessor[] accessors) {
             _accessors = accessors;
         }

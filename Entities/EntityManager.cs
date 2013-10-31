@@ -27,7 +27,7 @@ namespace Neon.Entities {
         void AddSystem(ISystem system);
 
         /// <summary>
-        /// Updates the world. State changes (entity add, entity remove, ...) are propogated to the
+        /// Updates the world. State changes (entity add, entity remove, ...) are propagated to the
         /// different registered listeners. Update listeners will be called and the given commands
         /// will be executed.
         /// </summary>
@@ -36,13 +36,13 @@ namespace Neon.Entities {
         /// <summary>
         /// Registers the given entity with the world.
         /// </summary>
-        /// <param name="instance">The instance to add</param>
+        /// <param name="entity">The instance to add</param>
         void AddEntity(IEntity entity);
 
         /// <summary>
         /// Destroys the given entity.
         /// </summary>
-        /// <param name="instance">The entity instance to remove</param>
+        /// <param name="entity">The entity instance to remove</param>
         void RemoveEntity(IEntity entity);
 
         /// <summary>
@@ -162,8 +162,7 @@ namespace Neon.Entities {
                     immutableModified.Clear();
                 }
 
-                // run update methods
-                // Call the BeforeUpdate methods - *user code*
+                // run update methods Call the BeforeUpdate methods - *user code*
                 if (_globalPreUpdateTrigger != null) {
                     _globalPreUpdateTrigger.OnGlobalPreUpdate(_context.SingletonEntity);
                 }
@@ -388,7 +387,7 @@ namespace Neon.Entities {
             List<Entity> removeImmutable = RemoveImmutable();
             for (int i = 0; i < removeImmutable.Count; ++i) {
                 Entity toDestroy = removeImmutable[i];
-                
+
                 // remove listeners
                 toDestroy.ModificationNotifier.Listener -= OnEntityModified;
                 toDestroy.DataStateChangeNotifier.Listener -= OnEntityDataStateChanged;
@@ -515,7 +514,6 @@ namespace Neon.Entities {
                 }
             }
         }
-
 
         /// <summary>
         /// Registers the given entity with the world.
