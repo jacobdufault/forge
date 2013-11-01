@@ -1,4 +1,6 @@
 ﻿
+using Neon.Utilities;
+using System.Threading;
 namespace Neon.Entities {
     /// <summary>
     /// Interface for immutable data types that exposes methods necessary for swapping between
@@ -51,11 +53,18 @@ namespace Neon.Entities {
         private int _previousIndex;
 
         /// <summary>
+        /// Used by the Entity to determine if the data inside of this container has already been
+        /// modified.
+        /// </summary>
+        public AtomicActivation MotificationActivation;
+
+        /// <summary>
         /// Initializes a new instance of the ImmutableContainer class.
         /// </summary>
         /// <param name="data">The initial data instance.</param>
         public ImmutableContainer(DataType data) {
             Items = new DataType[] { data.Duplicate(), data.Duplicate(), data.Duplicate() };
+            MotificationActivation = new AtomicActivation();
         }
 
         /// <summary>

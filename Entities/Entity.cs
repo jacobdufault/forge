@@ -3,6 +3,7 @@ using Neon.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace Neon.Entities {
     public class Entity : IEntity {
@@ -79,19 +80,24 @@ namespace Neon.Entities {
         }
 
         private void DoModifications() {
+            _modifiedLastFrame.Clear();
+
             // apply modifications
-            foreach (Pair<int, ImmutableContainer<Data>> toApply in _modifications.Current) {
+            _concurrentModifications.IterateAndClear(dataAccessor => {
+                int id = dataAccessor.Id;
+
                 // if we removed the data, then don't bother apply/dispatching modifications on it
-                if (_data.Contains(toApply.Item1)) {
-                    _data[toApply.Item1].Increment();
+                if (_data.Contains(id)) {
+                    _data[id].MotificationActivation.Reset();
+                    _data[id].Increment();
+
+                    _modifiedLastFrame[id] = _data[id];
 
                     // TODO: make sure that visualization events are correctly copied when
                     //       reproducing data
-                    _data[toApply.Item1].Current.DoUpdateVisualization();
+                    _data[id].Current.DoUpdateVisualization();
                 }
-            }
-            _modifications.Swap();
-            _modifications.Current.Clear();
+            });
         }
 
         internal void ApplyModifications() {
@@ -167,8 +173,8 @@ namespace Neon.Entities {
         /// <summary>
         /// Data that has been modified this frame and needs to be pushed out
         /// </summary>
-        private SwappableItem<IterableSparseArray<ImmutableContainer<Data>>> _modifications = new SwappableItem<IterableSparseArray<ImmutableContainer<Data>>>(
-            new IterableSparseArray<ImmutableContainer<Data>>(), new IterableSparseArray<ImmutableContainer<Data>>());
+        private SparseArray<ImmutableContainer<Data>> _modifiedLastFrame = new SparseArray<ImmutableContainer<Data>>();
+        private ConcurrentWriterBag<DataAccessor> _concurrentModifications = new ConcurrentWriterBag<DataAccessor>();
 
         /// <summary>
         /// Items that are pending removal in the next update call
@@ -288,14 +294,13 @@ namespace Neon.Entities {
                 throw new NoSuchDataException(this, DataAccessorFactory.GetTypeFromAccessor(accessor));
             }
 
-            lock (_modifications.Current) {
-                if (_modifications.Current.Contains(id) && !force && _data[id].Current.SupportsConcurrentModifications == false) {
-                    throw new RemodifiedDataException(this, DataAccessorFactory.GetTypeFromAccessor(accessor));
-                }
-                _modifications.Current[id] = _data[id];
+            if (_data[id].MotificationActivation.TryActivate()) {
+                _concurrentModifications.Add(accessor);
+                ModificationNotifier.Notify();
             }
-
-            ModificationNotifier.Notify();
+            else if (!force && _data[id].Current.SupportsConcurrentModifications == false) {
+                throw new RemodifiedDataException(this, DataAccessorFactory.GetTypeFromAccessor(accessor));                
+            }
 
             return _data[id].Modifying;
         }
@@ -325,7 +330,7 @@ namespace Neon.Entities {
         #endregion
 
         bool IEntity.WasModified(DataAccessor accessor) {
-            return _modifications.Previous.Contains(accessor.Id);
+            return _modifiedLastFrame.Contains(accessor.Id);
         }
 
         public override string ToString() {

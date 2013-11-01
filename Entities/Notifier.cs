@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Neon.Utilities;
+using System;
 
 namespace Neon.Entities {
     /// <summary>
@@ -10,12 +11,10 @@ namespace Neon.Entities {
     /// </remarks>
     /// <typeparam name="ParamType">The type of the parameter.</typeparam>
     public class Notifier<ParamType> {
-        private object _lock = new object();
-
         /// <summary>
         /// Have we already notified the listeners?
         /// </summary>
-        private bool _activated = false;
+        private AtomicActivation _activated;
 
         /// <summary>
         /// Parameter to notify listeners with.
@@ -28,27 +27,23 @@ namespace Neon.Entities {
         /// <param name="param">The parameter to notify listeners with.</param>
         public Notifier(ParamType param) {
             _notificationParam = param;
+            _activated = new AtomicActivation();
         }
 
         /// <summary>
         /// Resets this notifier so that it will notify listeners again.
         /// </summary>
         public void Reset() {
-            lock (_lock) {
-                _activated = false;
-            }
+            _activated.Reset();
         }
 
         /// <summary>
         /// Notify the listeners if they have not already been notified.
         /// </summary>
         public void Notify() {
-            lock (_lock) {
-                if (_activated == false) {
-                    _activated = true;
-                    if (_listener != null) {
-                        _listener(_notificationParam);
-                    }
+            if (_activated.TryActivate()) {
+                if (_listener != null) {
+                    _listener(_notificationParam);
                 }
             }
         }
@@ -60,16 +55,17 @@ namespace Neon.Entities {
         /// </summary>
         public event Action<ParamType> Listener {
             add {
-                lock (_lock) {
+                lock (this) {
                     _listener = (Action<ParamType>)Delegate.Combine(_listener, value);
-                    if (_activated) {
-                        value(_notificationParam);
-                    }
+                }
+
+                if (_activated.IsActivated) {
+                    value(_notificationParam);
                 }
             }
 
             remove {
-                lock (_lock) {
+                lock (this) {
                     _listener = (Action<ParamType>)Delegate.Remove(_listener, value);
                 }
             }
