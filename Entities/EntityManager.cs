@@ -1,10 +1,54 @@
 ﻿using Neon.Collections;
 using Neon.Utilities;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Neon.Entities {
+    public class SimpleThreadPool {
+        private Thread[] _threads;
+        private ConcurrentBag<Action> _tasks;
+
+        public SimpleThreadPool(int threads) {
+            _tasks = new ConcurrentBag<Action>();
+
+            _threads = new Thread[threads];
+            for (int i = 0; i < _threads.Length; ++i) {
+                _threads[i] = new Thread(ThreadStart);
+                _threads[i].Start();
+            }
+        }
+
+        ~SimpleThreadPool() {
+            foreach (var thread in _threads) {
+                thread.Abort();
+            }
+        }
+
+        public void Push(Action task) {
+            _tasks.Add(task);
+        }
+
+        private void ThreadStart() {
+            try {
+                while (true) {
+                    Action task = null;
+                    if (_tasks.TryTake(out task)) {
+                        task();
+                    }
+                }
+            }
+            catch (ThreadAbortException) { }
+        }
+
+
+    }
+
     /// <summary>
     /// A set of operations that are used for managing entities.
     /// </summary>
@@ -66,7 +110,7 @@ namespace Neon.Entities {
 
     public class ValueToReferenceWrapper<T> {
         public T Value;
-        
+
         public ValueToReferenceWrapper(T value) {
             Value = value;
         }
@@ -74,23 +118,30 @@ namespace Neon.Entities {
 
     internal class MultithreadedSystem {
         /// <summary>
-        /// The list of entities that are a) in this system and b) have been modified
+        /// Entities which were modified last update
         /// </summary>
-        private List<IEntity>[] _modifiedEntities = new[] { new List<IEntity>(), new List<IEntity>() };
+        private Bag<IEntity> _modifiedEntities = new Bag<IEntity>();
+
+        /// <summary>
+        /// Entities which need to be removed from _nextModifiedEntities
+        /// </summary>
+        private List<IEntity> _removedMutableEntities = new List<IEntity>();
+
+        /// <summary>
+        /// Entities that have been modified as this system is updating
+        /// </summary>
+        private Bag<IEntity> _nextModifiedEntities = new Bag<IEntity>();
+
+
         private MultithreadedSystemSharedContext _context;
-        private System _system;
+        public System _system;
         private ITriggerModified _modifiedTrigger;
 
         private ITriggerGlobalPreUpdate _globalPreUpdateTrigger;
         private ITriggerUpdate _updateTrigger;
         private ITriggerGlobalPostUpdate _globalPostUpdateTrigger;
 
-        /// <summary>
-        /// Reset event used to notify the primary thread when this system is done processing
-        /// </summary>
-        private ManualResetEvent _doneEvent;
-
-        internal MultithreadedSystem(MultithreadedSystemSharedContext context, System system, ManualResetEvent doneEvent) {
+        internal MultithreadedSystem(MultithreadedSystemSharedContext context, System system) {
             _context = context;
 
             _system = system;
@@ -98,12 +149,9 @@ namespace Neon.Entities {
             _globalPreUpdateTrigger = system.Trigger as ITriggerGlobalPreUpdate;
             _updateTrigger = system.Trigger as ITriggerUpdate;
             _globalPostUpdateTrigger = system.Trigger as ITriggerGlobalPostUpdate;
-
-            _doneEvent = doneEvent;
         }
 
         private void DoAdd(IEntity added) {
-            Log<MultithreadedSystem>.Info("Adding {0} to the cache in {1}", added, _system.Trigger.GetType());
             if (_modifiedTrigger != null) {
                 ((Entity)added).ModificationNotifier.Listener += ModificationNotifier_Listener;
             }
@@ -115,34 +163,81 @@ namespace Neon.Entities {
             if (_modifiedTrigger != null) {
                 ((Entity)removed).ModificationNotifier.Listener -= ModificationNotifier_Listener;
 
-                ImmutableModifiedList().Remove(removed);
-
-                List<IEntity> mutableModified = MutableModifiedList();
-                lock (mutableModified) {
-                    mutableModified.Remove(removed);
-                }
+                _modifiedEntities.Remove(removed);
+                _removedMutableEntities.Add(removed);
             }
         }
 
         public void RunSystem(Object threadContext) {
-            try {
-                Log<MultithreadedSystem>.Info("Running on thread {0} for {1}", Thread.CurrentThread.ManagedThreadId, _system.Trigger.GetType());
+            RunSystem();
+        }
+        public void BookkeepingAfterAllSystemsHaveRun() {
+            BookkeepingAfterAllSystemsHaveRun(null);
+        }
 
+        public void BookkeepingAfterAllSystemsHaveRun(Object threadContext) {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            try {
+                _modifiedEntities.Clear();
+
+                // copy everything from _nextModifiedEntities into _modifiedEntities, except those
+                // items which have been removed
+                for (int i = 0; i < _nextModifiedEntities.Length; ++i) {
+                    IEntity entity = _nextModifiedEntities[i];
+                    if (_removedMutableEntities.Contains(entity) == false) {
+                        _modifiedEntities.Append(entity);
+                    }
+                }
+
+                _nextModifiedEntities.Clear();
+                _removedMutableEntities.Clear();
+
+                //Log<EntityManager>.Info("[BEF] Running bookkeeping on {0} took {1} ticks", _system.Trigger.GetType(), stopwatch.ElapsedTicks);
+            }
+            finally {
+                Interlocked.Increment(ref _context.MultithreadingIndex.Value);
+
+                BookkeepingTicks = stopwatch.ElapsedTicks;
+                //stopwatch.Stop();
+                //Log<EntityManager>.Info("[AFT] Running bookkeeping on {0} took {1} ticks", _system.Trigger.GetType(), stopwatch.ElapsedTicks);
+            }
+        }
+
+        public long RunSystemTicks;
+        public long BookkeepingTicks;
+
+        public long AddedTicks;
+        public long RemovedTicks;
+        public long StateChangeTicks;
+        public long ModificationTicks;
+        public long UpdateTicks;
+
+        public void RunSystem() {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            try {
                 // process entities that were added to the system
-                for (int i = 0; i < _context.AddedEntities.Count; ++i) {
+                int addedCount = _context.AddedEntities.Count;
+                for (int i = 0; i < addedCount; ++i) {
                     IEntity added = _context.AddedEntities[i];
                     if (_system.UpdateCache(added) == System.CacheChangeResult.Added) {
                         DoAdd(added);
                     }
                 }
+                AddedTicks = stopwatch.ElapsedTicks;
 
                 // process entities that were removed from the system
-                for (int i = 0; i < _context.RemovedEntities.Count; ++i) {
+                int removedCount = _context.RemovedEntities.Count;
+                for (int i = 0; i < removedCount; ++i) {
                     IEntity removed = _context.RemovedEntities[i];
                     if (_system.Remove(removed)) {
                         DoRemove(removed);
                     }
                 }
+                RemovedTicks = stopwatch.ElapsedTicks - AddedTicks;
 
                 // process state changes
                 for (int i = 0; i < _context.StateChangedEntities.Count; ++i) {
@@ -155,22 +250,18 @@ namespace Neon.Entities {
                         DoRemove(stateChanged);
                     }
                 }
+                StateChangeTicks = stopwatch.ElapsedTicks - RemovedTicks - AddedTicks;
 
                 // process modifications
                 if (_modifiedTrigger != null) {
-                    List<IEntity> immutableModified = ImmutableModifiedList();
-                    for (int i = 0; i < immutableModified.Count; ++i) {
-                        IEntity entity = immutableModified[i];
+                    for (int i = 0; i < _modifiedEntities.Length; ++i) {
+                        IEntity entity = _modifiedEntities[i];
                         if (_system.Filter.ModificationCheck(entity)) {
-                            Log<MultithreadedSystem>.Info("Dispatched modification notification for {0} in {1}", entity, _system.Trigger.GetType());
-                            _modifiedTrigger.OnModified(immutableModified[i]);
-                        }
-                        else {
-                            Log<MultithreadedSystem>.Info("Did not dispatch modification notification for {0} in {1}", entity, _system.Trigger.GetType());
+                            _modifiedTrigger.OnModified(entity);
                         }
                     }
-                    immutableModified.Clear();
                 }
+                ModificationTicks = stopwatch.ElapsedTicks - StateChangeTicks - RemovedTicks - AddedTicks;
 
                 // run update methods Call the BeforeUpdate methods - *user code*
                 if (_globalPreUpdateTrigger != null) {
@@ -180,46 +271,25 @@ namespace Neon.Entities {
                 if (_updateTrigger != null) {
                     for (int i = 0; i < _system.CachedEntities.Length; ++i) {
                         IEntity updated = _system.CachedEntities[i];
-                        Log<MultithreadedSystem>.Info("Dispatched update notification for {0} in {1}", updated, _system.Trigger.GetType());
                         _updateTrigger.OnUpdate(updated);
                     }
                 }
-                else {
-                    Log<MultithreadedSystem>.Info("Did not dispatch update notifications for {0}", _system.Trigger.GetType());
-
-                }
+                UpdateTicks = stopwatch.ElapsedTicks - ModificationTicks - StateChangeTicks - RemovedTicks - AddedTicks;
 
                 if (_globalPostUpdateTrigger != null) {
                     _globalPostUpdateTrigger.OnGlobalPostUpdate(_context.SingletonEntity);
                 }
 
-                ImmutableModifiedList().Clear();
             }
             finally {
                 Interlocked.Increment(ref _context.MultithreadingIndex.Value);
+                RunSystemTicks = stopwatch.ElapsedTicks;
             }
-        }
-
-        private void ConcurrentRemove(IEntity item, List<IEntity> list) {
-            int length = list.Count;
-            for (int i = 0; i < length; ++i) {
-                if (item == list[i]) {
-                    list[i] = null;
-                }
-            }
-        }
-
-        private List<IEntity> ImmutableModifiedList() {
-            return _modifiedEntities[(_context.ModifiedIndex) % 2];
-        }
-        private List<IEntity> MutableModifiedList() {
-            return _modifiedEntities[(_context.ModifiedIndex + 1) % 2];
         }
 
         private void ModificationNotifier_Listener(Entity entity) {
-            List<IEntity> list = MutableModifiedList();
-            lock (list) {
-                list.Add(entity);
+            lock (_nextModifiedEntities) {
+                _nextModifiedEntities.Append(entity);
             }
         }
 
@@ -277,7 +347,6 @@ namespace Neon.Entities {
         private List<System> _systemsWithUpdateTriggers = new List<System>();
         private List<System> _systemsWithInputTriggers = new List<System>();
 
-        private List<ManualResetEvent> _resetEvents = new List<ManualResetEvent>();
         private List<MultithreadedSystem> _multithreadedSystems = new List<MultithreadedSystem>();
 
         /*
@@ -329,7 +398,6 @@ namespace Neon.Entities {
         /// </summary>
         public void AddSystem(ISystem baseSystem) {
             Contract.Requires(_entities.Length == 0, "Cannot add a trigger after entities have been added");
-            Log<EntityManager>.Info("({0}) Adding system {1}", UpdateNumber, baseSystem);
 
             if (baseSystem is ITriggerBaseFilter) {
                 System system = new System((ITriggerBaseFilter)baseSystem);
@@ -342,9 +410,7 @@ namespace Neon.Entities {
                     _systemsWithInputTriggers.Add(system);
                 }
 
-                ManualResetEvent doneEvent = new ManualResetEvent(false);
-                _resetEvents.Add(doneEvent);
-                _multithreadedSystems.Add(new MultithreadedSystem(this, system, doneEvent));
+                _multithreadedSystems.Add(new MultithreadedSystem(this, system));
             }
 
             if (baseSystem is ITriggerGlobalPreUpdate) {
@@ -421,40 +487,76 @@ namespace Neon.Entities {
             // secondly, it needs to support more items being added to it as it iterates
             for (int i = 0; i < _cacheUpdateCurrent.Count; ++i) {
                 Entity entity = _cacheUpdateCurrent[i];
-                Log<EntityManager>.Info("{0}: Apply data state change update to {1}", UpdateNumber, entity);
                 entity.DataStateChangeUpdate();
             }
 
             // apply the modifications to the modified entities
             foreach (var modified in _entitiesWithModifications) {
-                Log<EntityManager>.Info("{0}: Applying modifications to {1}", UpdateNumber, modified);
                 modified.ApplyModifications();
             }
             _entitiesWithModifications.Clear(); // this is not shared so we can clear it
         }
 
-        public static bool EnableMultithreading = true;
+        public static bool EnableMultithreading = false;
+
+        //private SimpleThreadPool pool = new SimpleThreadPool(1);
 
         private void MultithreadRunSystems() {
-            MultithreadingIndex.Value = 0;
-            int multithreadingIndexTarget = _multithreadedSystems.Count;
+            // run all bookkeeping
+            {
+                // TODO: use a countdown event
+                //CountdownEvent countdown = new CountdownEvent();
+                //countdown.Reset(32);
 
-            // run all systems
-            for (int i = 0; i < _multithreadedSystems.Count; ++i) {
-                //_resetEvents[i].Reset();
+                MultithreadingIndex.Value = 0;
+                int multithreadingIndexTarget = _multithreadedSystems.Count;
 
-                if (EnableMultithreading) {
-                    bool success = ThreadPool.QueueUserWorkItem(_multithreadedSystems[i].RunSystem);
-                    Contract.Requires(success, "Unable to submit threading task to ThreadPool");
+                // run all systems
+                for (int i = 0; i < _multithreadedSystems.Count; ++i) {
+                    if (EnableMultithreading) {
+                        Task.Factory.StartNew(_multithreadedSystems[i].BookkeepingAfterAllSystemsHaveRun, null);
+                        //bool success = ThreadPool.UnsafeQueueUserWorkItem(_multithreadedSystems[i].BookkeepingAfterAllSystemsHaveRun, null);
+                        //Contract.Requires(success, "Unable to submit threading task to ThreadPool");
+                        //pool.Push(_multithreadedSystems[i].BookkeepingAfterAllSystemsHaveRun);
+                    }
+                    else {
+                        _multithreadedSystems[i].BookkeepingAfterAllSystemsHaveRun();
+                    }
                 }
-                else {
-                    _multithreadedSystems[i].RunSystem(null);
+
+                // block until the systems are done
+                while (Interlocked.Read(ref MultithreadingIndex.Value) != multithreadingIndexTarget) {
+                }
+
+                //countdown.Wait();
+            }
+
+
+
+            {
+                MultithreadingIndex.Value = 0;
+                int multithreadingIndexTarget = _multithreadedSystems.Count;
+
+                // run all systems
+                for (int i = 0; i < _multithreadedSystems.Count; ++i) {
+                    //_resetEvents[i].Reset();
+
+                    if (EnableMultithreading) {
+                        Task.Factory.StartNew(_multithreadedSystems[i].RunSystem, null);
+                        //bool success = ThreadPool.UnsafeQueueUserWorkItem(_multithreadedSystems[i].RunSystem, null);
+                        //Contract.Requires(success, "Unable to submit threading task to ThreadPool");
+                        //pool.Push(_multithreadedSystems[i].RunSystem);
+                    }
+                    else {
+                        _multithreadedSystems[i].RunSystem();
+                    }
+                }
+
+                // block until the systems are done
+                while (Interlocked.Read(ref MultithreadingIndex.Value) != multithreadingIndexTarget) {
                 }
             }
 
-            // block until the systems are done
-            while (Interlocked.Read(ref MultithreadingIndex.Value) != multithreadingIndexTarget) {
-            }
 
             //for (int i = 0; i < _resetEvents.Count; ++i) {
             //    _resetEvents[i].WaitOne();
@@ -486,9 +588,58 @@ namespace Neon.Entities {
         /// will be executed.
         /// </summary>
         public void UpdateWorld(IEnumerable<IStructuredInput> commands) {
+            string stats = string.Format("cacheUpdateCurrent.Count={0} cacheUpdatePending={1} dirtyEventProcessors={2} entitiesToAdd(0)={3} entitiesToAdd(1)={4} entitiesToRemove(0)={4} entitiesToRemove(1)={5} entitiesWithModifications={6}",
+                this._cacheUpdateCurrent.Count,
+                this._cacheUpdatePending.Count,
+                this._dirtyEventProcessors.Count,
+                this._entitiesToAdd.Get(0).Count,
+                this._entitiesToAdd.Get(1).Count,
+                this._entitiesToRemove.Get(0).Count,
+                this._entitiesToRemove.Get(1).Count,
+                this._entitiesWithModifications.Count);
+
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+
             SinglethreadFrameBegin();
+            long frameBegin = stopwatch.ElapsedTicks;
+
             MultithreadRunSystems();
+            long multithreadEnd = stopwatch.ElapsedTicks;
+
             SinglethreadFrameEnd();
+            long frameEnd = stopwatch.ElapsedTicks;
+
+            stopwatch.Stop();
+
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine();
+
+
+            builder.AppendFormat("Frame updating took {0} (before {1}, concurrent {2}, after {3}) ticks with info {4}", stopwatch.ElapsedTicks, frameBegin, multithreadEnd - frameBegin, frameEnd - multithreadEnd, stats);
+
+            for (int i = 0; i < _multithreadedSystems.Count; ++i) {
+                builder.AppendLine();
+                builder.AppendFormat(@"  {1}/{2} ({3}|{4}|{5}|{6}|{7}) ticks for system {0}",
+                    _multithreadedSystems[i]._system.Trigger.GetType(),
+
+                    _multithreadedSystems[i].BookkeepingTicks,
+                    _multithreadedSystems[i].RunSystemTicks,
+
+                    _multithreadedSystems[i].AddedTicks,
+                    _multithreadedSystems[i].RemovedTicks,
+                    _multithreadedSystems[i].StateChangeTicks,
+                    _multithreadedSystems[i].ModificationTicks,
+                    _multithreadedSystems[i].UpdateTicks);
+
+            }
+            Log<EntityManager>.Info(builder.ToString());
+            Log<EntityManager>.Info("------------------");
+            Log<EntityManager>.Info("------------------");
+            Log<EntityManager>.Info("------------------");
+            Log<EntityManager>.Info("------------------");
+            Log<EntityManager>.Info("------------------");
+            Log<EntityManager>.Info("------------------");
 
             InvokeOnCommandMethods(commands);
 
@@ -500,7 +651,6 @@ namespace Neon.Entities {
         }
 
         private void InvokeEventProcessors() {
-            Log<EntityManager>.Info("({0}) Invoking event processors; numInvoking={1}", UpdateNumber, _dirtyEventProcessors.Count);
             for (int i = 0; i < _dirtyEventProcessors.Count; ++i) {
                 _dirtyEventProcessors[i].DispatchEvents();
             }
@@ -519,9 +669,7 @@ namespace Neon.Entities {
             foreach (var input in inputSequence) {
                 for (int i = 0; i < _globalInputTriggers.Count; ++i) {
                     var trigger = _globalInputTriggers[i];
-                    Log<EntityManager>.Info("({0}) Checking {1} for input {2}", UpdateNumber, trigger, input);
                     if (trigger.IStructuredInputType.IsInstanceOfType(input)) {
-                        Log<EntityManager>.Info("({0}) Invoking {1} on input {2}", UpdateNumber, trigger, input);
                         trigger.OnGlobalInput(input, SingletonEntity);
                     }
                 }
@@ -545,11 +693,12 @@ namespace Neon.Entities {
         /// </summary>
         /// <param name="instance">The instance to add</param>
         public void AddEntity(IEntity instance) {
-            Log<EntityManager>.Info("({0}) AddEntity({1}) called", UpdateNumber, instance);
-            Entity entity = (Entity)instance;
-            AddMutable().Add(entity);
-            _cacheUpdatePending.Add(entity);
-            ((IEntity)instance).EventProcessor.Submit(HideEntityEvent.Instance);
+            lock (this) {
+                Entity entity = (Entity)instance;
+                AddMutable().Add(entity);
+                _cacheUpdatePending.Add(entity);
+                ((IEntity)instance).EventProcessor.Submit(HideEntityEvent.Instance);
+            }
         }
 
         /// <summary>
@@ -558,32 +707,38 @@ namespace Neon.Entities {
         /// <param name="instance">The entity instance to remove</param>
         // TODO: make this internal
         public void RemoveEntity(IEntity instance) {
-            Log<EntityManager>.Info("({0}) RemoveEntity({1}) called", UpdateNumber, instance);
-
-            Entity entity = (Entity)instance;
-            RemoveMutable().Add(entity);
-            ((IEntity)instance).EventProcessor.Submit(HideEntityEvent.Instance);
+            lock (this) {
+                Entity entity = (Entity)instance;
+                RemoveMutable().Add(entity);
+                ((IEntity)instance).EventProcessor.Submit(HideEntityEvent.Instance);
+            }
         }
 
         /// <summary>
         /// Called when an Entity has been modified.
         /// </summary>
         private void OnEntityModified(Entity sender) {
-            _entitiesWithModifications.Add(sender);
+            lock (this) {
+                _entitiesWithModifications.Add(sender);
+            }
         }
 
         /// <summary>
         /// Called when an entity has data state changes
         /// </summary>
         private void OnEntityDataStateChanged(Entity sender) {
-            _cacheUpdatePending.Add(sender);
+            lock (this) {
+                _cacheUpdatePending.Add(sender);
+            }
         }
 
         /// <summary>
         /// Called when an event processor has had an event added to it.
         /// </summary>
         private void EventProcessor_OnEventAdded(EventProcessor eventProcessor) {
-            _dirtyEventProcessors.Add(eventProcessor);
+            lock (this) {
+                _dirtyEventProcessors.Add(eventProcessor);
+            }
         }
 
         int MultithreadedSystemSharedContext.ModifiedIndex {

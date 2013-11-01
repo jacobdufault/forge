@@ -27,17 +27,19 @@ namespace Neon.Collections {
         /// <summary>
         /// Returns the stored metadata value for the given key.
         /// </summary>
-        [MethodImpl(MethodImplOptions.Synchronized)]
         public T Get(MetadataKey key) {
-            return _container[key.Index];
+            //lock (this) {
+                return _container[key.Index];
+            //}
         }
 
         /// <summary>
         /// Updates the stored metadata value for the given key.
         /// </summary>
-        [MethodImpl(MethodImplOptions.Synchronized)]
         public void Set(MetadataKey key, T value) {
-            _container[key.Index] = value;
+            //lock (this) {
+                _container[key.Index] = value;
+            //}
         }
 
         /// <summary>
@@ -46,7 +48,6 @@ namespace Neon.Collections {
         /// <remarks>
         /// This just calls Set(key, default(T)).
         /// </remarks>
-        [MethodImpl(MethodImplOptions.Synchronized)]
         public void Remove(MetadataKey key) {
             Set(key, default(T));
         }

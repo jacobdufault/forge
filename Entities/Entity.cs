@@ -70,12 +70,11 @@ namespace Neon.Entities {
         /// <summary>
         /// Removes all data instances from the Entity.
         /// </summary>
-        [MethodImpl(MethodImplOptions.Synchronized)] // TODO: shouldn't need a lock
-        public void RemoveAllData() {
+        internal void RemoveAllData() {
             // TODO: potentially optimize this method
             foreach (var tuple in _data) {
                 DataAccessor accessor = new DataAccessor(tuple.Item2.Current.GetType());
-                RemoveData_unlocked(accessor);
+                ((IEntity)this).RemoveData(accessor);
             }
         }
 
@@ -95,8 +94,7 @@ namespace Neon.Entities {
             _modifications.Current.Clear();
         }
 
-        [MethodImpl(MethodImplOptions.Synchronized)] // TODO: shouldn't need a lock
-        public void ApplyModifications() {
+        internal void ApplyModifications() {
             DoModifications();
 
             ModificationNotifier.Reset();
@@ -108,8 +106,7 @@ namespace Neon.Entities {
         /// Must be invoked on the Unity thread.
         /// </summary>
         /// <returns>If more data state change updates are needed</returns>
-        [MethodImpl(MethodImplOptions.Synchronized)] // TODO: shouldn't need a lock
-        public void DataStateChangeUpdate() {
+        internal void DataStateChangeUpdate() {
             // do removals
             {
                 List<DataAccessor> removedStage2 = _toRemove.Previous;
@@ -146,15 +143,14 @@ namespace Neon.Entities {
             _toAdd.Clear();
         }
 
-        [MethodImpl(MethodImplOptions.Synchronized)] // TODO: shouldn't need a lock
-        public bool NeedsMoreDataStateChangeUpdates() {
+        internal bool NeedsMoreDataStateChangeUpdates() {
             // do we still have things to remove?
             return _toRemove.Previous.Count > 0;
         }
         #endregion
 
-        [MethodImpl(MethodImplOptions.Synchronized)]
         void IEntity.Destroy() {
+            // EntityManager.RemoveEntity is synchronized
             EntityManager.RemoveEntity(this);
         }
 
@@ -163,6 +159,9 @@ namespace Neon.Entities {
         /// The data contained within the Entity. One item in the tuple is the current state and one
         /// item is the next state.
         /// </summary>
+        /// <remarks>
+        /// Only the entity manager calls entity APIs that write to this; it is single-threaded only.
+        /// </remarks>
         private IterableSparseArray<ImmutableContainer<Data>> _data = new IterableSparseArray<ImmutableContainer<Data>>();
 
         /// <summary>
@@ -198,24 +197,26 @@ namespace Neon.Entities {
                     return _toAdd[i];
                 }
             }
-
+            
             return null;
         }
         #endregion
 
-        [MethodImpl(MethodImplOptions.Synchronized)]
         Data IEntity.AddOrModify(DataAccessor accessor) {
-            if (ContainsData_unlocked(accessor) == false) {
-                Data added = GetAddedData_unlocked(accessor);
-                if (added == null) {
-                    return AddData_unlocked(accessor);
+            if (((IEntity)this).ContainsData(accessor) == false) {
+                lock (_toAdd) {
+                    Data added = GetAddedData_unlocked(accessor);
+                    if (added == null) {
+                        added = AddData_unlocked(accessor);
+                    }
+
+                    return added;
                 }
             }
 
-            return Modify_unlocked(accessor);
+            return ((IEntity)this).Modify(accessor);
         }
 
-        [MethodImpl(MethodImplOptions.Synchronized)]
         ICollection<Data> IEntity.SelectCurrentData(Predicate<Data> filter, ICollection<Data> storage) {
             if (storage == null) {
                 storage = new List<Data>();
@@ -255,30 +256,30 @@ namespace Neon.Entities {
             // return the new instance
             return data;
         }
-        [MethodImpl(MethodImplOptions.Synchronized)]
+
         Data IEntity.AddData(DataAccessor accessor) {
-            return AddData_unlocked(accessor);
+            lock (_toAdd) {
+                return AddData_unlocked(accessor);
+            }
         }
         #endregion
 
         #region RemoveData
-        private void RemoveData_unlocked(DataAccessor accessor) {
-            _toRemove.Current.Add(accessor);
+        void IEntity.RemoveData(DataAccessor accessor) {
+            lock (_toRemove.Current) {
+                _toRemove.Current.Add(accessor);
+            }
 
             ModificationNotifier.Notify();
             DataStateChangeNotifier.Notify();
         }
-        [MethodImpl(MethodImplOptions.Synchronized)]
-        void IEntity.RemoveData(DataAccessor accessor) {
-            RemoveData_unlocked(accessor);
-        }
         #endregion
 
         #region Modify
-        private Data Modify_unlocked(DataAccessor accessor, bool force = false) {
+        Data IEntity.Modify(DataAccessor accessor, bool force) {
             var id = accessor.Id;
 
-            if (ContainsData_unlocked(accessor) == false) {
+            if (((IEntity)this).ContainsData(accessor) == false) {
                 Data added = GetAddedData_unlocked(accessor);
                 if (added != null) {
                     return added;
@@ -287,34 +288,29 @@ namespace Neon.Entities {
                 throw new NoSuchDataException(this, DataAccessorFactory.GetTypeFromAccessor(accessor));
             }
 
-            if (_modifications.Current.Contains(id) && !force && _data[id].Current.SupportsConcurrentModifications == false) {
-                throw new RemodifiedDataException(this, DataAccessorFactory.GetTypeFromAccessor(accessor));
+            lock (_modifications.Current) {
+                if (_modifications.Current.Contains(id) && !force && _data[id].Current.SupportsConcurrentModifications == false) {
+                    throw new RemodifiedDataException(this, DataAccessorFactory.GetTypeFromAccessor(accessor));
+                }
+                _modifications.Current[id] = _data[id];
             }
-
-            _modifications.Current[id] = _data[id];
 
             ModificationNotifier.Notify();
 
             return _data[id].Modifying;
         }
-        [MethodImpl(MethodImplOptions.Synchronized)]
-        Data IEntity.Modify(DataAccessor accessor, bool force) {
-            return Modify_unlocked(accessor, force);
-        }
         #endregion
 
-        [MethodImpl(MethodImplOptions.Synchronized)]
         Data IEntity.Current(DataAccessor accessor) {
-            if (_data.Contains(accessor.Id) == false) { 
+            if (_data.Contains(accessor.Id) == false) {
                 throw new NoSuchDataException(this, DataAccessorFactory.GetTypeFromAccessor(accessor));
             }
 
             return _data[accessor.Id].Current;
         }
 
-        [MethodImpl(MethodImplOptions.Synchronized)]
         Data IEntity.Previous(DataAccessor accessor) {
-            if (ContainsData_unlocked(accessor) == false) {
+            if (((IEntity)this).ContainsData(accessor) == false) {
                 throw new NoSuchDataException(this, DataAccessorFactory.GetTypeFromAccessor(accessor));
             }
 
@@ -322,17 +318,12 @@ namespace Neon.Entities {
         }
 
         #region ContainsData
-        private bool ContainsData_unlocked(DataAccessor accessor) {
+        bool IEntity.ContainsData(DataAccessor accessor) {
             int id = accessor.Id;
             return _data.Contains(id) && _removed.Contains(id) == false;
         }
-        [MethodImpl(MethodImplOptions.Synchronized)]
-        bool IEntity.ContainsData(DataAccessor accessor) {
-            return ContainsData_unlocked(accessor);
-        }
         #endregion
 
-        [MethodImpl(MethodImplOptions.Synchronized)]
         bool IEntity.WasModified(DataAccessor accessor) {
             return _modifications.Previous.Contains(accessor.Id);
         }

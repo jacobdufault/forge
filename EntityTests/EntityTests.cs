@@ -53,6 +53,7 @@ namespace EntityTests {
             entity.Current<TestData0>();
         }
 
+        /*
         [TestMethod]
         public void RemovedDataIsAccessibleThroughCurrent() {
             IEntity entity = new Entity();
@@ -78,5 +79,6 @@ namespace EntityTests {
             catch (NoSuchDataException) { }
 
         }
+        */
     }
 }
