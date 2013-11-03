@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neon.Entities;
 using System;
+using System.Collections.Generic;
 
 namespace EntityTests {
     internal class TestData2 : GameData<TestData2> {
@@ -160,7 +161,7 @@ namespace EntityTests {
 
     public static class EntityManagerExtensions {
         public static void UpdateWorld(this EntityManager em) {
-            IStructuredInput[] commands = new IStructuredInput[0];
+            List<IStructuredInput> commands = new List<IStructuredInput>();
             em.UpdateWorld(commands);
         }
     }
