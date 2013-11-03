@@ -10,65 +10,20 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace Neon.Entities {
-    public class SimpleThreadPool {
-        private Thread[] _threads;
-        private ConcurrentBag<Action> _tasks;
-
-        public SimpleThreadPool(int threads) {
-            _tasks = new ConcurrentBag<Action>();
-
-            _threads = new Thread[threads];
-            for (int i = 0; i < _threads.Length; ++i) {
-                _threads[i] = new Thread(ThreadStart);
-                _threads[i].Start();
-            }
-        }
-
-        ~SimpleThreadPool() {
-            foreach (var thread in _threads) {
-                thread.Abort();
-            }
-        }
-
-        public void Push(Action task) {
-            _tasks.Add(task);
-        }
-
-        private void ThreadStart() {
-            try {
-                while (true) {
-                    Action task = null;
-                    if (_tasks.TryTake(out task)) {
-                        task();
-                    }
-                }
-            }
-            catch (ThreadAbortException) { }
-        }
-
-
-    }
-
     /// <summary>
     /// A set of operations that are used for managing entities.
     /// </summary>
     public interface IEntityManager {
         /// <summary>
-        /// Code to call when we do our next update.
-        /// </summary>
-        //event Action OnNextUpdate;
-
-        /// <summary>
-        /// Our current update number. Useful for debugging purposes.
+        /// The current update number that the entity manager is on.
         /// </summary>
         int UpdateNumber {
             get;
         }
 
         /// <summary>
-        /// Updates the world. State changes (entity add, entity remove, ...) are propagated to the
-        /// different registered listeners. Update listeners will be called and the given commands
-        /// will be executed.
+        /// Updates the world. Systems have their respective triggers activated. The structured
+        /// input commands are dispatched to systems which are interested.
         /// </summary>
         void UpdateWorld(IEnumerable<IStructuredInput> commands);
 
@@ -77,12 +32,6 @@ namespace Neon.Entities {
         /// </summary>
         /// <param name="entity">The instance to add</param>
         void AddEntity(IEntity entity);
-
-        /// <summary>
-        /// Destroys the given entity.
-        /// </summary>
-        /// <param name="entity">The entity instance to remove</param>
-        void RemoveEntity(IEntity entity);
 
         /// <summary>
         /// Singleton entity that contains global data
@@ -100,15 +49,7 @@ namespace Neon.Entities {
         List<Entity> RemovedEntities { get; }
         List<Entity> StateChangedEntities { get; }
 
-        ValueToReferenceWrapper<long> MultithreadingIndex { get; }
-    }
-
-    public class ValueToReferenceWrapper<T> {
-        public T Value;
-
-        public ValueToReferenceWrapper(T value) {
-            Value = value;
-        }
+        CountdownEvent SystemDoneEvent { get; }
     }
 
     internal class MultithreadedSystem {
@@ -178,11 +119,8 @@ namespace Neon.Entities {
         public void RunSystem(Object threadContext) {
             RunSystem();
         }
-        public void BookkeepingAfterAllSystemsHaveRun() {
-            BookkeepingAfterAllSystemsHaveRun(null);
-        }
 
-        public void BookkeepingAfterAllSystemsHaveRun(Object threadContext) {
+        public void BookkeepingBeforeRunningSystems() {
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
@@ -204,7 +142,7 @@ namespace Neon.Entities {
                 //Log<EntityManager>.Info("[BEF] Running bookkeeping on {0} took {1} ticks", _system.Trigger.GetType(), stopwatch.ElapsedTicks);
             }
             finally {
-                Interlocked.Increment(ref _context.MultithreadingIndex.Value);
+                _context.SystemDoneEvent.Signal();
 
                 BookkeepingTicks = stopwatch.ElapsedTicks;
                 //stopwatch.Stop();
@@ -289,7 +227,7 @@ namespace Neon.Entities {
 
             }
             finally {
-                Interlocked.Increment(ref _context.MultithreadingIndex.Value);
+                _context.SystemDoneEvent.Signal();
                 RunSystemTicks = stopwatch.ElapsedTicks;
             }
         }
@@ -376,11 +314,11 @@ namespace Neon.Entities {
             }
         }
 
-        public ValueToReferenceWrapper<long> MultithreadingIndex { get; private set; }
+        public CountdownEvent SystemDoneEvent { get; private set; }
 
         public EntityManager(IEntity singletonEntity) {
             _singletonEntity = (Entity)singletonEntity;
-            MultithreadingIndex = new ValueToReferenceWrapper<long>(0);
+            SystemDoneEvent = new CountdownEvent(0);
         }
 
         public class RestoredEntity {
@@ -394,7 +332,7 @@ namespace Neon.Entities {
         }
 
         internal EntityManager(int updateNumber, IEntity singletonEntity, List<RestoredEntity> restoredEntities, List<ISystem> systems) {
-            MultithreadingIndex = new ValueToReferenceWrapper<long>(0);
+            SystemDoneEvent = new CountdownEvent(0);
             
             UpdateNumber = updateNumber;
             SingletonEntity = singletonEntity;
@@ -554,48 +492,35 @@ namespace Neon.Entities {
         private void MultithreadRunSystems() {
             // run all bookkeeping
             {
-                // TODO: use a countdown event
-                //CountdownEvent countdown = new CountdownEvent();
-                //countdown.Reset(32);
-
-                MultithreadingIndex.Value = 0;
-                int multithreadingIndexTarget = _multithreadedSystems.Count;
+                SystemDoneEvent.Reset(_multithreadedSystems.Count);
 
                 // run all systems
                 for (int i = 0; i < _multithreadedSystems.Count; ++i) {
                     if (EnableMultithreading) {
-                        Task.Factory.StartNew(_multithreadedSystems[i].BookkeepingAfterAllSystemsHaveRun, null);
+                        Task.Factory.StartNew(_multithreadedSystems[i].BookkeepingBeforeRunningSystems);
                         //bool success = ThreadPool.UnsafeQueueUserWorkItem(_multithreadedSystems[i].BookkeepingAfterAllSystemsHaveRun, null);
                         //Contract.Requires(success, "Unable to submit threading task to ThreadPool");
-                        //pool.Push(_multithreadedSystems[i].BookkeepingAfterAllSystemsHaveRun);
                     }
                     else {
-                        _multithreadedSystems[i].BookkeepingAfterAllSystemsHaveRun();
+                        _multithreadedSystems[i].BookkeepingBeforeRunningSystems();
                     }
                 }
 
                 // block until the systems are done
-                while (Interlocked.Read(ref MultithreadingIndex.Value) != multithreadingIndexTarget) {
-                }
-
-                //countdown.Wait();
+                SystemDoneEvent.Wait();
             }
 
 
 
             {
-                MultithreadingIndex.Value = 0;
-                int multithreadingIndexTarget = _multithreadedSystems.Count;
+                SystemDoneEvent.Reset(_multithreadedSystems.Count);
 
                 // run all systems
                 for (int i = 0; i < _multithreadedSystems.Count; ++i) {
-                    //_resetEvents[i].Reset();
-
                     if (EnableMultithreading) {
-                        Task.Factory.StartNew(_multithreadedSystems[i].RunSystem, null);
+                        Task.Factory.StartNew(_multithreadedSystems[i].RunSystem);
                         //bool success = ThreadPool.UnsafeQueueUserWorkItem(_multithreadedSystems[i].RunSystem, null);
                         //Contract.Requires(success, "Unable to submit threading task to ThreadPool");
-                        //pool.Push(_multithreadedSystems[i].RunSystem);
                     }
                     else {
                         _multithreadedSystems[i].RunSystem();
@@ -603,14 +528,8 @@ namespace Neon.Entities {
                 }
 
                 // block until the systems are done
-                while (Interlocked.Read(ref MultithreadingIndex.Value) != multithreadingIndexTarget) {
-                }
+                SystemDoneEvent.Wait();
             }
-
-
-            //for (int i = 0; i < _resetEvents.Count; ++i) {
-            //    _resetEvents[i].WaitOne();
-            //}
         }
 
         private void SinglethreadFrameEnd() {
@@ -684,12 +603,6 @@ namespace Neon.Entities {
 
             }
             Log<EntityManager>.Info(builder.ToString());
-            Log<EntityManager>.Info("------------------");
-            Log<EntityManager>.Info("------------------");
-            Log<EntityManager>.Info("------------------");
-            Log<EntityManager>.Info("------------------");
-            Log<EntityManager>.Info("------------------");
-            Log<EntityManager>.Info("------------------");
 
             InvokeOnCommandMethods(commands);
 
