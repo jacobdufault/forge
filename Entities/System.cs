@@ -134,7 +134,7 @@ namespace Neon.Entities {
         /// </summary>
         public long UpdateTicks;
 
-        internal MultithreadedSystem(MultithreadedSystemSharedContext sharedData, ITriggerBaseFilter trigger, List<Entity> entitiesWithModifications) {
+        internal MultithreadedSystem(MultithreadedSystemSharedContext sharedData, ITriggerBaseFilter trigger) {
             _shared = sharedData;
 
             _filter = new Filter(DataAccessorFactory.MapTypesToDataAccessors(trigger.ComputeEntityFilter()));
@@ -149,12 +149,6 @@ namespace Neon.Entities {
             _triggerGlobalPostUpdate = trigger as ITriggerGlobalPostUpdate;
             _triggerInput = trigger as ITriggerInput;
             _triggerGlobalInput = trigger as ITriggerGlobalInput;
-
-            foreach (var entity in entitiesWithModifications) {
-                if (_filter.Check(entity)) {
-                    _notifiedModifiedEntities.Add(entity);
-                }
-            }
         }
 
 

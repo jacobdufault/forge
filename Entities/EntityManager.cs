@@ -83,8 +83,7 @@ namespace Neon.Entities {
         /// <summary>
         /// A list of Entities that have been modified.
         /// </summary>
-        // TODO: concurrent writer
-        private List<Entity> _entitiesWithModifications = new List<Entity>();
+        private ConcurrentWriterBag<Entity> _notifiedModifiedEntities = new ConcurrentWriterBag<Entity>();
 
         /// <summary>
         /// The entities that are dirty relative to system caches.
@@ -191,7 +190,7 @@ namespace Neon.Entities {
         /// </summary>
         public void AddSystem(ISystem baseSystem) {
             if (baseSystem is ITriggerBaseFilter) {
-                MultithreadedSystem multithreadingSystem = new MultithreadedSystem(this, (ITriggerBaseFilter)baseSystem, _entitiesWithModifications);
+                MultithreadedSystem multithreadingSystem = new MultithreadedSystem(this, (ITriggerBaseFilter)baseSystem);
                 foreach (var entity in _entities) {
                     multithreadingSystem.Restore(entity);
                 }
@@ -271,10 +270,10 @@ namespace Neon.Entities {
             }
 
             // apply the modifications to the modified entities
-            foreach (var modified in _entitiesWithModifications) {
+            // this data is not shared, so we can clear it
+            _notifiedModifiedEntities.IterateAndClear(modified => {
                 modified.ApplyModifications();
-            }
-            _entitiesWithModifications.Clear(); // this is not shared so we can clear it
+            });
         }
 
         public static bool EnableMultithreading = false;
@@ -343,11 +342,6 @@ namespace Neon.Entities {
         public void RunUpdateWorld(object commandsObject) {
             List<IStructuredInput> commands = (List<IStructuredInput>)commandsObject;
 
-            string stats = string.Format("cacheUpdateCurrent.Count={0} cacheUpdatePending={1} entitiesWithModifications={2}",
-                this._cacheUpdateCurrent.Count,
-                this._cacheUpdatePending.Count,
-                this._entitiesWithModifications.Count);
-
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
@@ -365,7 +359,7 @@ namespace Neon.Entities {
             StringBuilder builder = new StringBuilder();
             builder.AppendLine();
 
-            builder.AppendFormat("Frame updating took {0} (before {1}, concurrent {2}, after {3}) ticks with info {4}", stopwatch.ElapsedTicks, frameBegin, multithreadEnd - frameBegin, frameEnd - multithreadEnd, stats);
+            builder.AppendFormat("Frame updating took {0} ticks (before {1}, concurrent {2}, after {3})", stopwatch.ElapsedTicks, frameBegin, multithreadEnd - frameBegin, frameEnd - multithreadEnd);
 
             for (int i = 0; i < _multithreadedSystems.Count; ++i) {
                 builder.AppendLine();
@@ -443,9 +437,7 @@ namespace Neon.Entities {
         /// Called when an Entity has been modified.
         /// </summary>
         private void OnEntityModified(Entity sender) {
-            lock (this) {
-                _entitiesWithModifications.Add(sender);
-            }
+            _notifiedModifiedEntities.Add(sender);
         }
 
         /// <summary>
