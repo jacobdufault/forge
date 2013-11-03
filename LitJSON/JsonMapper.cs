@@ -239,6 +239,19 @@ namespace LitJson {
             }
         }
 
+        private static bool UserDisallowsSerialization(MethodInfo method) {
+            return UserDisallowsSerialization(method.GetCustomAttributes(true));
+        }
+        private static bool UserDisallowsSerialization(object[] properties) {
+            foreach (var property in properties) {
+                if (property is NonSerializedAttribute) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private static void AddTypeProperties(Type type) {
             if (type_properties.ContainsKey(type))
                 return;
@@ -246,16 +259,28 @@ namespace LitJson {
             IList<PropertyMetadata> props = new List<PropertyMetadata>();
 
             foreach (PropertyInfo p_info in type.GetProperties()) {
-                if (p_info.Name == "Item")
+                // ???
+                if (p_info.Name == "Item") {
+                    Console.WriteLine("Found item");
                     continue;
+                }
+                // require that we can both read and write to the property to serialize it
+                if ((p_info.CanRead && p_info.CanWrite) == false) {
+                    continue;
+                }
 
                 PropertyMetadata p_data = new PropertyMetadata();
                 p_data.Info = p_info;
                 p_data.IsField = false;
+
                 props.Add(p_data);
             }
 
             foreach (FieldInfo f_info in type.GetFields()) {
+                if (UserDisallowsSerialization(f_info.GetCustomAttributes(true))) {
+                    continue;
+                }
+
                 PropertyMetadata p_data = new PropertyMetadata();
                 p_data.Info = f_info;
                 p_data.IsField = true;

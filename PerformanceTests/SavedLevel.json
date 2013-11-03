@@ -23,20 +23,12 @@
                     "IsAdding": false,
                     "IsRemoving": false,
                     "PreviousState": {
-                        "HashCode": 0,
-                        "SupportsConcurrentModifications": false,
                         "Speed": 5,
-                        "Variance": 2,
-                        "Entity": null,
-                        "VerificationHashCode": 0
+                        "Variance": 2
                     },
                     "CurrentState": {
-                        "HashCode": 0,
-                        "SupportsConcurrentModifications": false,
                         "Speed": 10,
-                        "Variance": 10,
-                        "Entity": null,
-                        "VerificationHashCode": 0
+                        "Variance": 10
                     }
                 },
                 {
@@ -45,20 +37,12 @@
                     "IsAdding": false,
                     "IsRemoving": false,
                     "PreviousState": {
-                        "HashCode": 0,
-                        "SupportsConcurrentModifications": false,
-                        "X": 6,
-                        "Z": 6,
-                        "Entity": null,
-                        "VerificationHashCode": 0
+                        "X": 1,
+                        "Z": 0
                     },
                     "CurrentState": {
-                        "HashCode": 0,
-                        "SupportsConcurrentModifications": false,
-                        "X": 7,
-                        "Z": 6,
-                        "Entity": null,
-                        "VerificationHashCode": 0
+                        "X": 2,
+                        "Z": 0
                     }
                 }
             ],

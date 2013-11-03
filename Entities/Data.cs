@@ -6,6 +6,7 @@ namespace Neon.Entities {
         /// <summary>
         /// The Entity that contains this Data instance.
         /// </summary>
+        [NonSerialized]
         public IEntity Entity;
 
         /// <summary>

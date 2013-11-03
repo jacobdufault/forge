@@ -51,16 +51,16 @@
                 },
                 {
                     "DataType": "PerformanceTests.MyPositionData",
-                    "WasModified": true,
+                    "WasModified": false,
                     "IsAdding": false,
                     "IsRemoving": false,
                     "PreviousState": {
-                        "X": 3,
-                        "Z": 4
+                        "X": 0,
+                        "Z": 0
                     },
                     "CurrentState": {
-                        "X": 5,
-                        "Z": 6
+                        "X": 0,
+                        "Z": 0
                     }
                 }
             ]
