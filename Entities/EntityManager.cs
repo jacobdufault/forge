@@ -73,8 +73,9 @@ namespace Neon.Entities {
         private ConcurrentWriterBag<Entity> _notifiedAddingEntities = new ConcurrentWriterBag<Entity>();
 
         /// <summary>
-        /// A list of Entities that were removed from the EntityManager in the last update loop. This
-        /// means that they are now ready to actually be removed from the EntityManager in this update.
+        /// A list of Entities that were removed from the EntityManager in the last update loop.
+        /// This means that they are now ready to actually be removed from the EntityManager in this
+        /// update.
         /// </summary>
         private List<Entity> _removedEntities = new List<Entity>();
 
@@ -139,9 +140,7 @@ namespace Neon.Entities {
         /// <summary>
         /// Gets the update number.
         /// </summary>
-        /// <value>
-        /// The update number.
-        /// </value>
+        /// <value>The update number.</value>
         public int UpdateNumber {
             get;
             private set;
@@ -162,11 +161,10 @@ namespace Neon.Entities {
             public Entity Entity;
         }
 
-        internal EntityManager(int updateNumber, IEntity singletonEntity, List<RestoredEntity> restoredEntities, List<ISystem> systems) {
-            SystemDoneEvent = new CountdownEvent(0);
+        internal EntityManager(int updateNumber, IEntity singletonEntity, List<RestoredEntity> restoredEntities, List<ISystem> systems)
+            : this(singletonEntity) {
 
             UpdateNumber = updateNumber;
-            SingletonEntity = singletonEntity;
 
             foreach (var restoredEntity in restoredEntities) {
                 if (restoredEntity.IsAdding) {
@@ -175,35 +173,16 @@ namespace Neon.Entities {
 
                 else {
                     // add the entity
-                    {
-                        Entity toAdd = restoredEntity.Entity;
+                    InternalAddEntity(restoredEntity.Entity);
 
-                        toAdd.EntityManager = this;
-                        ((IEntity)toAdd).EventProcessor.Submit(ShowEntityEvent.Instance);
-
-                        // register listeners
-                        toAdd.ModificationNotifier.Listener += OnEntityModified;
-                        toAdd.DataStateChangeNotifier.Listener += OnEntityDataStateChanged;
-                        _eventProcessors.BeginMonitoring(((IEntity)toAdd).EventProcessor);
-
-                        // apply initialization changes
-                        toAdd.ApplyModifications();
-
-                        // ensure it contains metadata for our keys
-                        ((IEntity)toAdd).Metadata[_entityUnorderedListMetadataKey] = new UnorderedListMetadata();
-
-                        // add it our list of entities
-                        _entities.Add(toAdd, GetEntitiesListFromMetadata(toAdd));
-                    }
-
-                    Console.WriteLine("Entity " + restoredEntity.Entity + " has modification? " + restoredEntity.HasModification);
                     if (restoredEntity.HasModification) {
                         restoredEntity.Entity.ModificationNotifier.Notify();
                     }
 
-                    if (restoredEntity.HasStateChange) {
-                        restoredEntity.Entity.DataStateChangeNotifier.Notify();
-                    }
+                    // done via InternalAddEntity
+                    //if (restoredEntity.HasStateChange) {
+                    //    restoredEntity.Entity.DataStateChangeNotifier.Notify();
+                    //}
                 }
 
                 if (restoredEntity.IsRemoving) {
@@ -233,6 +212,30 @@ namespace Neon.Entities {
             }
         }
 
+        /// <summary>
+        /// Internal method to add an entity to the entity manager and register it with all
+        /// associated systems. This executes the add immediately.
+        /// </summary>
+        /// <param name="toAdd">The entity to add.</param>
+        private void InternalAddEntity(Entity toAdd) {
+            toAdd.EntityManager = this;
+            ((IEntity)toAdd).EventProcessor.Submit(ShowEntityEvent.Instance);
+
+            // register listeners
+            toAdd.ModificationNotifier.Listener += OnEntityModified;
+            toAdd.DataStateChangeNotifier.Listener += OnEntityDataStateChanged;
+            _eventProcessors.BeginMonitoring(((IEntity)toAdd).EventProcessor);
+
+            // notify ourselves of data state changes so that it the entity is pushed to systems
+            toAdd.DataStateChangeNotifier.Notify();
+
+            // ensure it contains metadata for our keys
+            ((IEntity)toAdd).Metadata[_entityUnorderedListMetadataKey] = new UnorderedListMetadata();
+
+            // add it our list of entities
+            _entities.Add(toAdd, GetEntitiesListFromMetadata(toAdd));
+        }
+
         private void SinglethreadFrameBegin() {
             _addedEntities.Clear();
             _notifiedAddingEntities.CopyIntoAndClear(_addedEntities);
@@ -246,31 +249,15 @@ namespace Neon.Entities {
             for (int i = 0; i < _addedEntities.Count; ++i) {
                 Entity toAdd = _addedEntities[i];
 
-                toAdd.EntityManager = this;
-                ((IEntity)toAdd).EventProcessor.Submit(ShowEntityEvent.Instance);
-
-                // register listeners
-                toAdd.ModificationNotifier.Listener += OnEntityModified;
-                toAdd.DataStateChangeNotifier.Listener += OnEntityDataStateChanged;
-                _eventProcessors.BeginMonitoring(((IEntity)toAdd).EventProcessor);
-
-                // notify ourselves of data state changes so that it the entity is pushed to systems
-                toAdd.DataStateChangeNotifier.Notify();
+                InternalAddEntity(toAdd);
 
                 // apply initialization changes
                 toAdd.ApplyModifications();
-
-                // ensure it contains metadata for our keys
-                ((IEntity)toAdd).Metadata[_entityUnorderedListMetadataKey] = new UnorderedListMetadata();
-
-                // add it our list of entities
-                _entities.Add(toAdd, GetEntitiesListFromMetadata(toAdd));
             }
             // can't clear b/c it is shared
 
-            // copy our state change entities
-            // notice that we do this after adding entities, because adding entities triggers the
-            // data state change notifier
+            // copy our state change entities notice that we do this after adding entities, because
+            // adding entities triggers the data state change notifier
             _notifiedStateChangeEntities.CopyIntoAndClear(_stateChangeEntities);
 
             // Remove entities
@@ -308,8 +295,8 @@ namespace Neon.Entities {
                 }
             }
 
-            // apply the modifications to the modified entities
-            // this data is not shared, so we can clear it
+            // apply the modifications to the modified entities this data is not shared, so we can
+            // clear it
             _notifiedModifiedEntities.IterateAndClear(modified => {
                 modified.ApplyModifications();
             });

@@ -94,8 +94,25 @@ namespace Neon.Entities {
                     int id = DataAccessorFactory.GetId(data.Current.GetType());
                     _data[id] = new ImmutableContainer<Data>(data.Previous, data.Current, data.Current.Duplicate());
 
+                    // There is going to be an ApplyModification call before systems actually view
+                    // this Entity instance. With that in mind, we can treat our data initialization
+                    // as if if were operating on the previous frame.
+
+                    if (data.WasModified) {
+                        // This is kind of an ugly hack, because to get the correct Previous/Current
+                        // data we need to move Previous into Current so that Previous will reflect
+                        // the true Previous value, not the Current one.
+
+                        // Internal signal that a modification is going to take place
+                        ((IEntity)this).Modify(new DataAccessor(id));
+
+                        // Move Previous into Current, so that after the ApplyModification we have
+                        // the correct data values
+                        _data[id].Current.CopyFrom(_data[id].Previous);
+                    }
+
                     if (data.IsRemoving) {
-                        _toRemove.Previous.Add(new DataAccessor(id));
+                        ((IEntity)this).RemoveData(new DataAccessor(id));
                     }
                 }
             }
