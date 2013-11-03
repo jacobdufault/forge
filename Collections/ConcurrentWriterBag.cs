@@ -51,11 +51,27 @@ namespace Neon.Collections {
         /// </remarks>
         /// <param name="iterator">The function to invoke on the items.</param>
         public void IterateAndClear(Action<T> iterator) {
-
             for (int i = 0; i < _allCollections.Count; ++i) {
                 Bag<T> collection = _allCollections[i];
                 for (int j = 0; j < collection.Length; ++j) {
                     iterator(collection[j]);
+                }
+                collection.Clear();
+            }
+        }
+
+        /// <summary>
+        /// Adds all of the elements inside of this bag into the given destination collection.
+        /// </summary>
+        /// <remarks>
+        /// This method is **NOT** thread-safe; do NOT call Add before this method has returned.
+        /// </remarks>
+        /// <param name="destination">The collection to copy items into.</param>
+        public void CopyIntoAndClear(ICollection<T> destination) {
+            for (int i = 0; i < _allCollections.Count; ++i) {
+                Bag<T> collection = _allCollections[i];
+                for (int j = 0; j < collection.Length; ++j) {
+                    destination.Add(collection[j]);
                 }
                 collection.Clear();
             }

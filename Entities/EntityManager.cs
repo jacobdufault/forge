@@ -56,15 +56,19 @@ namespace Neon.Entities {
         private UnorderedList<IEntity> _entities = new UnorderedList<IEntity>();
 
         /// <summary>
-        /// A list of Entities that need to be added to the world.
+        /// A list of Entities that were added to the EntityManager in the last update loop. This
+        /// means that they are now ready to actually be added to the world in this update.
         /// </summary>
-        private BufferedItem<List<Entity>> _entitiesToAdd = new BufferedItem<List<Entity>>();
-        private List<Entity> AddImmutable() {
-            return _entitiesToAdd.Get(0);
-        }
-        private List<Entity> AddMutable() {
-            return _entitiesToAdd.Get(1);
-        }
+        private List<Entity> _addedEntities = new List<Entity>();
+
+        /// <summary>
+        /// The entities which are added to the EntityManager in this frame. This is concurrently
+        /// written to as Systems create new Entities.
+        /// </summary>
+        private ConcurrentWriterBag<Entity> _notifiedAddingEntities = new ConcurrentWriterBag<Entity>();
+
+
+        // TODO: update _entitiesToRemove
 
         /// <summary>
         /// A list of Entities that need to be removed from the world.
@@ -78,13 +82,15 @@ namespace Neon.Entities {
         }
 
         /// <summary>
-        /// A double buffered list of Entities that have been modified.
+        /// A list of Entities that have been modified.
         /// </summary>
+        // TODO: concurrent writer
         private List<Entity> _entitiesWithModifications = new List<Entity>();
 
         /// <summary>
         /// The entities that are dirty relative to system caches.
         /// </summary>
+        // TODO: replace this
         private List<Entity> _cacheUpdateCurrent = new List<Entity>();
         private List<Entity> _cacheUpdatePending = new List<Entity>();
 
@@ -204,7 +210,9 @@ namespace Neon.Entities {
         }
 
         private void SinglethreadFrameBegin() {
-            _entitiesToAdd.Swap();
+            _addedEntities.Clear();
+            _notifiedAddingEntities.CopyIntoAndClear(_addedEntities);
+
             _entitiesToRemove.Swap();
 
             _cacheUpdateCurrent.AddRange(_cacheUpdatePending);
@@ -213,9 +221,8 @@ namespace Neon.Entities {
             ++UpdateNumber;
 
             // Add entities
-            List<Entity> addImmutable = AddImmutable();
-            for (int i = 0; i < addImmutable.Count; ++i) {
-                Entity toAdd = addImmutable[i];
+            for (int i = 0; i < _addedEntities.Count; ++i) {
+                Entity toAdd = _addedEntities[i];
 
                 toAdd.EntityManager = this;
                 ((IEntity)toAdd).EventProcessor.Submit(ShowEntityEvent.Instance);
@@ -318,7 +325,6 @@ namespace Neon.Entities {
 
         private void SinglethreadFrameEnd() {
             // clear out immutable states
-            AddImmutable().Clear();
             RemoveImmutable().Clear();
 
             // update immutable/mutable states for cache updates
@@ -341,11 +347,9 @@ namespace Neon.Entities {
         public void RunUpdateWorld(object commandsObject) {
             List<IStructuredInput> commands = (List<IStructuredInput>)commandsObject;
 
-            string stats = string.Format("cacheUpdateCurrent.Count={0} cacheUpdatePending={1} entitiesToAdd(0)={3} entitiesToAdd(1)={4} entitiesToRemove(0)={4} entitiesToRemove(1)={5} entitiesWithModifications={6}",
+            string stats = string.Format("cacheUpdateCurrent.Count={0} cacheUpdatePending={1} entitiesToRemove(0)={2} entitiesToRemove(1)={3} entitiesWithModifications={4}",
                 this._cacheUpdateCurrent.Count,
                 this._cacheUpdatePending.Count,
-                this._entitiesToAdd.Get(0).Count,
-                this._entitiesToAdd.Get(1).Count,
                 this._entitiesToRemove.Get(0).Count,
                 this._entitiesToRemove.Get(1).Count,
                 this._entitiesWithModifications.Count);
@@ -421,12 +425,14 @@ namespace Neon.Entities {
         /// </summary>
         /// <param name="instance">The instance to add</param>
         public void AddEntity(IEntity instance) {
+            Entity entity = (Entity)instance;
+            _notifiedAddingEntities.Add(entity);
+
             lock (this) {
-                Entity entity = (Entity)instance;
-                AddMutable().Add(entity);
                 _cacheUpdatePending.Add(entity);
-                ((IEntity)instance).EventProcessor.Submit(HideEntityEvent.Instance);
             }
+
+            ((IEntity)instance).EventProcessor.Submit(HideEntityEvent.Instance);
         }
 
         /// <summary>
@@ -435,11 +441,13 @@ namespace Neon.Entities {
         /// <param name="instance">The entity instance to remove</param>
         // TODO: make this internal
         public void RemoveEntity(IEntity instance) {
+            Entity entity = (Entity)instance;
+
             lock (this) {
-                Entity entity = (Entity)instance;
                 RemoveMutable().Add(entity);
-                ((IEntity)instance).EventProcessor.Submit(HideEntityEvent.Instance);
             }
+
+            ((IEntity)instance).EventProcessor.Submit(HideEntityEvent.Instance);
         }
 
         /// <summary>
@@ -461,7 +469,7 @@ namespace Neon.Entities {
         }
 
         List<Entity> MultithreadedSystemSharedContext.AddedEntities {
-            get { return AddImmutable(); }
+            get { return _addedEntities; }
         }
 
         List<Entity> MultithreadedSystemSharedContext.RemovedEntities {
