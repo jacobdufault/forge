@@ -57,29 +57,28 @@ namespace Neon.Entities {
 
         /// <summary>
         /// A list of Entities that were added to the EntityManager in the last update loop. This
-        /// means that they are now ready to actually be added to the world in this update.
+        /// means that they are now ready to actually be added to the EntityManager in this update.
         /// </summary>
         private List<Entity> _addedEntities = new List<Entity>();
 
         /// <summary>
         /// The entities which are added to the EntityManager in this frame. This is concurrently
-        /// written to as Systems create new Entities.
+        /// written to as systems create new entities.
         /// </summary>
         private ConcurrentWriterBag<Entity> _notifiedAddingEntities = new ConcurrentWriterBag<Entity>();
 
 
-        // TODO: update _entitiesToRemove
+        /// <summary>
+        /// A list of Entities that were removed from the EntityManager in the last update loop. This
+        /// means that they are now ready to actually be removed from the EntityManager in this update.
+        /// </summary>
+        private List<Entity> _removedEntities = new List<Entity>();
 
         /// <summary>
-        /// A list of Entities that need to be removed from the world.
+        /// The entities which are removed to the EntityManager in this frame. This is concurrently
+        /// written to as systems remove entities.
         /// </summary>
-        private BufferedItem<List<Entity>> _entitiesToRemove = new BufferedItem<List<Entity>>();
-        private List<Entity> RemoveImmutable() {
-            return _entitiesToRemove.Get(0);
-        }
-        private List<Entity> RemoveMutable() {
-            return _entitiesToRemove.Get(1);
-        }
+        private ConcurrentWriterBag<Entity> _notifiedRemovedEntities = new ConcurrentWriterBag<Entity>();
 
         /// <summary>
         /// A list of Entities that have been modified.
@@ -213,7 +212,8 @@ namespace Neon.Entities {
             _addedEntities.Clear();
             _notifiedAddingEntities.CopyIntoAndClear(_addedEntities);
 
-            _entitiesToRemove.Swap();
+            _removedEntities.Clear();
+            _notifiedRemovedEntities.CopyIntoAndClear(_removedEntities);
 
             _cacheUpdateCurrent.AddRange(_cacheUpdatePending);
             _cacheUpdatePending.Clear();
@@ -244,22 +244,21 @@ namespace Neon.Entities {
             // can't clear b/c it is shared
 
             // Remove entities
-            List<Entity> removeImmutable = RemoveImmutable();
-            for (int i = 0; i < removeImmutable.Count; ++i) {
-                Entity toDestroy = removeImmutable[i];
+            for (int i = 0; i < _removedEntities.Count; ++i) {
+                Entity toRemove = _removedEntities[i];
 
                 // remove listeners
-                toDestroy.ModificationNotifier.Listener -= OnEntityModified;
-                toDestroy.DataStateChangeNotifier.Listener -= OnEntityDataStateChanged;
-                _eventProcessors.StopMonitoring(((IEntity)toDestroy).EventProcessor);
+                toRemove.ModificationNotifier.Listener -= OnEntityModified;
+                toRemove.DataStateChangeNotifier.Listener -= OnEntityDataStateChanged;
+                _eventProcessors.StopMonitoring(((IEntity)toRemove).EventProcessor);
 
                 // remove all data from the entity and then push said changes out
-                toDestroy.RemoveAllData();
-                toDestroy.DataStateChangeUpdate();
+                toRemove.RemoveAllData();
+                toRemove.DataStateChangeUpdate();
 
                 // remove the entity from the list of entities
-                _entities.Remove(toDestroy, GetEntitiesListFromMetadata(toDestroy));
-                ((IEntity)toDestroy).EventProcessor.Submit(DestroyedEntityEvent.Instance);
+                _entities.Remove(toRemove, GetEntitiesListFromMetadata(toRemove));
+                ((IEntity)toRemove).EventProcessor.Submit(DestroyedEntityEvent.Instance);
             }
             // can't clear b/c it is shared
 
@@ -324,9 +323,6 @@ namespace Neon.Entities {
         }
 
         private void SinglethreadFrameEnd() {
-            // clear out immutable states
-            RemoveImmutable().Clear();
-
             // update immutable/mutable states for cache updates
             {
                 int i = 0;
@@ -347,11 +343,9 @@ namespace Neon.Entities {
         public void RunUpdateWorld(object commandsObject) {
             List<IStructuredInput> commands = (List<IStructuredInput>)commandsObject;
 
-            string stats = string.Format("cacheUpdateCurrent.Count={0} cacheUpdatePending={1} entitiesToRemove(0)={2} entitiesToRemove(1)={3} entitiesWithModifications={4}",
+            string stats = string.Format("cacheUpdateCurrent.Count={0} cacheUpdatePending={1} entitiesWithModifications={2}",
                 this._cacheUpdateCurrent.Count,
                 this._cacheUpdatePending.Count,
-                this._entitiesToRemove.Get(0).Count,
-                this._entitiesToRemove.Get(1).Count,
                 this._entitiesWithModifications.Count);
 
             Stopwatch stopwatch = new Stopwatch();
@@ -432,7 +426,7 @@ namespace Neon.Entities {
                 _cacheUpdatePending.Add(entity);
             }
 
-            ((IEntity)instance).EventProcessor.Submit(HideEntityEvent.Instance);
+            instance.EventProcessor.Submit(HideEntityEvent.Instance);
         }
 
         /// <summary>
@@ -441,13 +435,8 @@ namespace Neon.Entities {
         /// <param name="instance">The entity instance to remove</param>
         // TODO: make this internal
         public void RemoveEntity(IEntity instance) {
-            Entity entity = (Entity)instance;
-
-            lock (this) {
-                RemoveMutable().Add(entity);
-            }
-
-            ((IEntity)instance).EventProcessor.Submit(HideEntityEvent.Instance);
+            _notifiedRemovedEntities.Add((Entity)instance);
+            instance.EventProcessor.Submit(HideEntityEvent.Instance);
         }
 
         /// <summary>
@@ -473,7 +462,7 @@ namespace Neon.Entities {
         }
 
         List<Entity> MultithreadedSystemSharedContext.RemovedEntities {
-            get { return RemoveImmutable(); }
+            get { return _removedEntities; }
         }
 
         List<Entity> MultithreadedSystemSharedContext.StateChangedEntities {

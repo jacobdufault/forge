@@ -61,7 +61,7 @@ namespace Neon.Entities {
         /// <remarks>
         /// This is populated in the bookkeeping phase and is not touched during execution.
         /// </remarks>
-        private Bag<IEntity> _dispatchModified = new Bag<IEntity>();
+        private List<IEntity> _dispatchModified = new List<IEntity>();
 
         /// <summary>
         /// Entities that have been modified since bookkeeping last ran.
@@ -214,9 +214,7 @@ namespace Neon.Entities {
                 // _dispatchModified and not _notifiedModifiedEntities
                 if (_triggerModified != null) {
                     _dispatchModified.Clear();
-                    _notifiedModifiedEntities.IterateAndClear(modified => {
-                        _dispatchModified.Append(modified);
-                    });
+                    _notifiedModifiedEntities.CopyIntoAndClear(_dispatchModified);
                 }
 
                 // process entities that were added to the system
@@ -296,7 +294,7 @@ namespace Neon.Entities {
 
                 // dispatch all modified entities
                 if (_triggerModified != null) {
-                    for (int i = 0; i < _dispatchModified.Length; ++i) {
+                    for (int i = 0; i < _dispatchModified.Count; ++i) {
                         IEntity entity = _dispatchModified[i];
                         if (_filter.ModificationCheck(entity)) {
                             _triggerModified.OnModified(entity);
