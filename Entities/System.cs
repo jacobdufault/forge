@@ -86,6 +86,7 @@ namespace Neon.Entities {
         private ITriggerUpdate _triggerUpdate;
         private ITriggerGlobalPostUpdate _triggerGlobalPostUpdate;
         private ITriggerInput _triggerInput;
+        private ITriggerGlobalInput _triggerGlobalInput;
 
         /// <summary>
         /// Filter we use for filtering entities
@@ -97,29 +98,6 @@ namespace Neon.Entities {
         /// version of this).
         /// </summary>
         public ITriggerBaseFilter Trigger;
-
-        internal MultithreadedSystem(MultithreadedSystemSharedContext sharedData, ITriggerBaseFilter trigger, List<Entity> entitiesWithModifications) {
-            _shared = sharedData;
-
-            _filter = new Filter(DataAccessorFactory.MapTypesToDataAccessors(trigger.ComputeEntityFilter()));
-            _entityCache = new EntityCache(_filter);
-
-            Trigger = trigger;
-            _triggerAdded = trigger as ITriggerAdded;
-            _triggerRemoved = trigger as ITriggerRemoved;
-            _triggerModified = trigger as ITriggerModified;
-            _triggerGlobalPreUpdate = trigger as ITriggerGlobalPreUpdate;
-            _triggerUpdate = trigger as ITriggerUpdate;
-            _triggerGlobalPostUpdate = trigger as ITriggerGlobalPostUpdate;
-            _triggerInput = trigger as ITriggerInput;
-
-            foreach (var entity in entitiesWithModifications) {
-                if (_filter.Check(entity)) {
-                    _notifiedModifiedEntities.Add(entity);
-                }
-            }
-        }
-
 
         /// <summary>
         /// Total number of ticks running the system required.
@@ -156,10 +134,50 @@ namespace Neon.Entities {
         /// </summary>
         public long UpdateTicks;
 
+        internal MultithreadedSystem(MultithreadedSystemSharedContext sharedData, ITriggerBaseFilter trigger, List<Entity> entitiesWithModifications) {
+            _shared = sharedData;
+
+            _filter = new Filter(DataAccessorFactory.MapTypesToDataAccessors(trigger.ComputeEntityFilter()));
+            _entityCache = new EntityCache(_filter);
+
+            Trigger = trigger;
+            _triggerAdded = trigger as ITriggerAdded;
+            _triggerRemoved = trigger as ITriggerRemoved;
+            _triggerModified = trigger as ITriggerModified;
+            _triggerGlobalPreUpdate = trigger as ITriggerGlobalPreUpdate;
+            _triggerUpdate = trigger as ITriggerUpdate;
+            _triggerGlobalPostUpdate = trigger as ITriggerGlobalPostUpdate;
+            _triggerInput = trigger as ITriggerInput;
+            _triggerGlobalInput = trigger as ITriggerGlobalInput;
+
+            foreach (var entity in entitiesWithModifications) {
+                if (_filter.Check(entity)) {
+                    _notifiedModifiedEntities.Add(entity);
+                }
+            }
+        }
+
+
         public void Restore(IEntity entity) {
             if (_entityCache.UpdateCache(entity) == EntityCache.CacheChangeResult.Added) {
                 DoAdd(entity);
             }
+        }
+
+        /// <summary>
+        /// Called when an entity that is contained within the cache has been modified.
+        /// </summary>
+        /// <remarks>
+        /// This function is only called if we have a modification trigger to invoke.
+        /// </remarks>
+        private void ModificationNotifier_Listener(Entity entity) {
+            // Notice that we cannot check to see if the entity passes the modification filter here,
+            // because this callback is just informing us that the entity has been modified; it does
+            // not mean that the entity is done being modified.
+            //
+            // In other words, the entity may fail the modification filter check now, but at a later
+            // point in time the check may succeed.
+            _notifiedModifiedEntities.Add(entity);
         }
 
         private void DoAdd(IEntity added) {
@@ -174,11 +192,18 @@ namespace Neon.Entities {
             if (_triggerModified != null) {
                 ((Entity)removed).ModificationNotifier.Listener -= ModificationNotifier_Listener;
 
+                // We have to remove the entity from our list of entities to dispatch, as during
+                // the frame when OnRemoved is called OnModified (and also OnUpdate) will not be
+                // invoked.
                 _dispatchModified.Remove(removed);
             }
         }
 
-
+        /// <summary>
+        /// Runs bookkeeping on the system. All systems concurrently run this function. This
+        /// function makes an *extremely* important guarantee that there will be no external
+        /// API calls made that can modify the state of other systems that are currently executing.
+        /// </summary>
         public void BookkeepingBeforeRunningSystems() {
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -187,10 +212,12 @@ namespace Neon.Entities {
                 // copy our modified entities into our dispatch modified list
                 // we do this before state changes so that we only have to remove from
                 // _dispatchModified and not _notifiedModifiedEntities
-                _dispatchModified.Clear();
-                _notifiedModifiedEntities.IterateAndClear(modified => {
-                    _dispatchModified.Append(modified);
-                });
+                if (_triggerModified != null) {
+                    _dispatchModified.Clear();
+                    _notifiedModifiedEntities.IterateAndClear(modified => {
+                        _dispatchModified.Append(modified);
+                    });
+                }
 
                 // process entities that were added to the system
                 int addedCount = _shared.AddedEntities.Count; // immutable
@@ -228,15 +255,10 @@ namespace Neon.Entities {
                     }
                 }
                 StateChangeTicks = stopwatch.ElapsedTicks - RemovedTicks - AddedTicks;
-
-                //Log<EntityManager>.Info("[BEF] Running bookkeeping on {0} took {1} ticks", _system.Trigger.GetType(), stopwatch.ElapsedTicks);
             }
             finally {
                 _shared.SystemDoneEvent.Signal();
-
                 BookkeepingTicks = stopwatch.ElapsedTicks;
-                //stopwatch.Stop();
-                //Log<EntityManager>.Info("[AFT] Running bookkeeping on {0} took {1} ticks", _system.Trigger.GetType(), stopwatch.ElapsedTicks);
             }
         }
 
@@ -244,6 +266,13 @@ namespace Neon.Entities {
             RunSystem((List<IStructuredInput>)input);
         }
 
+        /// <summary>
+        /// Dispatches notifications to the system. All MultithreadedSystems run this function in
+        /// parallel. There are no guarantees as to the state of the external world when this
+        /// function is executing, as client code is being called.
+        /// </summary>
+        /// <param name="input">The structured input that should be delivered to the client
+        /// system.</param>
         public void RunSystem(List<IStructuredInput> input) {
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -276,11 +305,12 @@ namespace Neon.Entities {
                 }
                 ModificationTicks = stopwatch.ElapsedTicks - StateChangeTicks - RemovedTicks - AddedTicks;
 
-                // run update methods Call the BeforeUpdate methods - *user code*
+                // call the global pre-update method, if applicable
                 if (_triggerGlobalPreUpdate != null) {
                     _triggerGlobalPreUpdate.OnGlobalPreUpdate(_shared.SingletonEntity);
                 }
 
+                // call the update method, if applicable
                 if (_triggerUpdate != null) {
                     for (int i = 0; i < _entityCache.CachedEntities.Length; ++i) {
                         IEntity updated = _entityCache.CachedEntities[i];
@@ -289,11 +319,12 @@ namespace Neon.Entities {
                 }
                 UpdateTicks = stopwatch.ElapsedTicks - ModificationTicks - StateChangeTicks - RemovedTicks - AddedTicks;
 
+                // call the global post-update method, if applicable
                 if (_triggerGlobalPostUpdate != null) {
                     _triggerGlobalPostUpdate.OnGlobalPostUpdate(_shared.SingletonEntity);
                 }
 
-                // process input
+                // call input methods, if applicable
                 if (_triggerInput != null) {
                     for (int i = 0; i < input.Count; ++i) {
                         if (_triggerInput.IStructuredInputType.IsInstanceOfType(input[i])) {
@@ -306,15 +337,20 @@ namespace Neon.Entities {
                         }
                     }
                 }
+
+                // call global input, if applicable
+                if (_triggerGlobalInput != null) {
+                    for (int i = 0; i < input.Count; ++i) {
+                        if (_triggerGlobalInput.IStructuredInputType.IsInstanceOfType(input[i])) {
+                            _triggerGlobalInput.OnGlobalInput(input[i], _shared.SingletonEntity);
+                        }
+                    }
+                }
             }
             finally {
                 _shared.SystemDoneEvent.Signal();
                 RunSystemTicks = stopwatch.ElapsedTicks;
             }
-        }
-
-        private void ModificationNotifier_Listener(Entity entity) {
-            _notifiedModifiedEntities.Add(entity);
         }
 
         /// <summary>

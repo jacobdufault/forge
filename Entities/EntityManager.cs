@@ -92,8 +92,6 @@ namespace Neon.Entities {
 
         private List<MultithreadedSystem> _multithreadedSystems = new List<MultithreadedSystem>();
 
-        private List<ITriggerGlobalInput> _globalInputTriggers = new List<ITriggerGlobalInput>();
-
         /// <summary>
         /// The key we use to access unordered list metadata from the entity.
         /// </summary>
@@ -197,14 +195,9 @@ namespace Neon.Entities {
 
                 _multithreadedSystems.Add(multithreadingSystem);
             }
-            else if (baseSystem is ITriggerGlobalPostUpdate || baseSystem is ITriggerGlobalPreUpdate) {
+            else {
                 throw new NotImplementedException();
             }
-
-            if (baseSystem is ITriggerGlobalInput) {
-                _globalInputTriggers.Add((ITriggerGlobalInput)baseSystem);
-            }
-
         }
 
         public int UpdateNumber {
@@ -399,10 +392,9 @@ namespace Neon.Entities {
             }
             Log<EntityManager>.Info(builder.ToString());
 
-            InvokeOnCommandMethods(commands);
-
             // update the singleton data
             _singletonEntity.ApplyModifications();
+            _singletonEntity.DataStateChangeUpdate();
 
             // update dirty event processors (this has to be done on the main thread)
             InvokeEventProcessors();
@@ -419,22 +411,7 @@ namespace Neon.Entities {
             return (UnorderedListMetadata)entity.Metadata[_entityUnorderedListMetadataKey];
         }
 
-        /// <summary>
-        /// Dispatches the set of commands to all [InvokeOnCommand] methods.
-        /// </summary>
-        private void InvokeOnCommandMethods(IEnumerable<IStructuredInput> inputSequence) {
-            // Call the OnCommand methods - *user code*
-            foreach (var input in inputSequence) {
-                for (int i = 0; i < _globalInputTriggers.Count; ++i) {
-                    var trigger = _globalInputTriggers[i];
-                    if (trigger.IStructuredInputType.IsInstanceOfType(input)) {
-                        trigger.OnGlobalInput(input, SingletonEntity);
-                    }
-                }
-            }
-        }
-
-        /// <summary>
+         /// <summary>
         /// Registers the given entity with the world.
         /// </summary>
         /// <param name="instance">The instance to add</param>

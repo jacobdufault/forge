@@ -157,8 +157,12 @@ namespace Neon.Entities {
 
 
         /// <summary>
-        /// Must be invoked on the Unity thread.
+        /// Applies data state changes to the entity.
         /// </summary>
+        /// <remarks>
+        /// This function is not thread-safe; no other API calls can be made to the Entity while
+        /// this function is being executed.
+        /// </remarks>
         /// <returns>If more data state change updates are needed</returns>
         internal void DataStateChangeUpdate() {
             // do removals
