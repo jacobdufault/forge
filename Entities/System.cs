@@ -43,7 +43,7 @@ namespace Neon.Entities {
         /// Entities which were modified last update. When the system does bookkeeping work, this
         /// will be swapped with _nextModifiedEntities.
         /// </summary>
-        private Bag<IEntity> _modifiedEntities = new Bag<IEntity>();
+        private Bag<IEntity> _dispatchModified = new Bag<IEntity>();
 
         /// <summary>
         /// Entities which need to be removed from _nextModifiedEntities
@@ -101,64 +101,6 @@ namespace Neon.Entities {
             }
         }
 
-        public void Restore(IEntity entity) {
-            if (_entityCache.UpdateCache(entity) == EntityCache.CacheChangeResult.Added) {
-                DoAdd(entity);
-            }
-        }
-
-        private void DoAdd(IEntity added) {
-            if (_triggerModified != null) {
-                ((Entity)added).ModificationNotifier.Listener += ModificationNotifier_Listener;
-            }
-            if (_triggerAdded != null) {
-                _triggerAdded.OnAdded(added);
-            }
-        }
-
-        private void DoRemove(IEntity removed) {
-            // if we removed an entity from the cache, then we don't want to hear of any more
-            // modification events
-            if (_triggerModified != null) {
-                ((Entity)removed).ModificationNotifier.Listener -= ModificationNotifier_Listener;
-
-                _modifiedEntities.Remove(removed);
-                _removedMutableEntities.Add(removed);
-            }
-            if (_triggerRemoved != null) {
-                _triggerRemoved.OnRemoved(removed);
-            }
-        }
-
-        public void BookkeepingBeforeRunningSystems() {
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.Start();
-
-            try {
-                _modifiedEntities.Clear();
-
-                // copy everything from _nextModifiedEntities into _modifiedEntities, except those
-                // items which have been removed
-                for (int i = 0; i < _nextModifiedEntities.Length; ++i) {
-                    IEntity entity = _nextModifiedEntities[i];
-                    if (_removedMutableEntities.Contains(entity) == false) {
-                        _modifiedEntities.Append(entity);
-                    }
-                }
-
-                _nextModifiedEntities.Clear();
-                _removedMutableEntities.Clear();
-
-                //Log<EntityManager>.Info("[BEF] Running bookkeeping on {0} took {1} ticks", _system.Trigger.GetType(), stopwatch.ElapsedTicks);
-            }
-            finally {
-                _shared.SystemDoneEvent.Signal();
-
-                BookkeepingTicks = stopwatch.ElapsedTicks;
-                //stopwatch.Stop();
-                //Log<EntityManager>.Info("[AFT] Running bookkeeping on {0} took {1} ticks", _system.Trigger.GetType(), stopwatch.ElapsedTicks);
-            }
-        }
 
         /// <summary>
         /// Total number of ticks running the system required.
@@ -195,11 +137,34 @@ namespace Neon.Entities {
         /// </summary>
         public long UpdateTicks;
 
-        public void RunSystem(object input) {
-            RunSystem((List<IStructuredInput>)input);
+        public void Restore(IEntity entity) {
+            if (_entityCache.UpdateCache(entity) == EntityCache.CacheChangeResult.Added) {
+                DoAdd(entity);
+            }
         }
 
-        public void RunSystem(List<IStructuredInput> input) {
+        private void DoAdd(IEntity added) {
+            if (_triggerModified != null) {
+                ((Entity)added).ModificationNotifier.Listener += ModificationNotifier_Listener;
+            }
+        }
+
+        private void DoRemove(IEntity removed) {
+            // if we removed an entity from the cache, then we don't want to hear of any more
+            // modification events
+            if (_triggerModified != null) {
+                ((Entity)removed).ModificationNotifier.Listener -= ModificationNotifier_Listener;
+
+                _dispatchModified.Remove(removed);
+                _removedMutableEntities.Add(removed);
+            }
+        }
+
+
+        private List<IEntity> _dispatchAdded = new List<IEntity>();
+        private List<IEntity> _dispatchRemoved = new List<IEntity>();
+
+        public void BookkeepingBeforeRunningSystems() {
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
@@ -210,6 +175,7 @@ namespace Neon.Entities {
                     IEntity added = _shared.AddedEntities[i];
                     if (_entityCache.UpdateCache(added) == EntityCache.CacheChangeResult.Added) {
                         DoAdd(added);
+                        _dispatchAdded.Add(added);
                     }
                 }
                 AddedTicks = stopwatch.ElapsedTicks;
@@ -220,6 +186,7 @@ namespace Neon.Entities {
                     IEntity removed = _shared.RemovedEntities[i];
                     if (_entityCache.Remove(removed)) {
                         DoRemove(removed);
+                        _dispatchRemoved.Add(removed);
                     }
                 }
                 RemovedTicks = stopwatch.ElapsedTicks - AddedTicks;
@@ -230,17 +197,73 @@ namespace Neon.Entities {
                     EntityCache.CacheChangeResult change = _entityCache.UpdateCache(stateChanged);
                     if (change == EntityCache.CacheChangeResult.Added) {
                         DoAdd(stateChanged);
+                        _dispatchAdded.Add(stateChanged);
                     }
                     else if (change == EntityCache.CacheChangeResult.Removed) {
                         DoRemove(stateChanged);
+                        _dispatchRemoved.Add(stateChanged);
                     }
                 }
                 StateChangeTicks = stopwatch.ElapsedTicks - RemovedTicks - AddedTicks;
 
-                // process modifications
+
+
+
+
+                _dispatchModified.Clear();
+
+                // copy everything from _nextModifiedEntities into _modifiedEntities, except those
+                // items which have been removed
+                for (int i = 0; i < _nextModifiedEntities.Length; ++i) {
+                    IEntity entity = _nextModifiedEntities[i];
+                    if (_removedMutableEntities.Contains(entity) == false) {
+                        _dispatchModified.Append(entity);
+                    }
+                }
+
+                _nextModifiedEntities.Clear();
+                _removedMutableEntities.Clear();
+
+                //Log<EntityManager>.Info("[BEF] Running bookkeeping on {0} took {1} ticks", _system.Trigger.GetType(), stopwatch.ElapsedTicks);
+            }
+            finally {
+                _shared.SystemDoneEvent.Signal();
+
+                BookkeepingTicks = stopwatch.ElapsedTicks;
+                //stopwatch.Stop();
+                //Log<EntityManager>.Info("[AFT] Running bookkeeping on {0} took {1} ticks", _system.Trigger.GetType(), stopwatch.ElapsedTicks);
+            }
+        }
+
+        public void RunSystem(object input) {
+            RunSystem((List<IStructuredInput>)input);
+        }
+
+        public void RunSystem(List<IStructuredInput> input) {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            try {
+                // dispatch all added entities
+                if (_triggerAdded != null) {
+                    for (int i = 0; i < _dispatchAdded.Count; ++i) {
+                        _triggerAdded.OnAdded(_dispatchAdded[i]);
+                    }
+                }
+                _dispatchAdded.Clear();
+
+                // dispatch all removed entities
+                if (_triggerRemoved != null) {
+                    for (int i = 0; i < _dispatchRemoved.Count; ++i) {
+                        _triggerRemoved.OnRemoved(_dispatchRemoved[i]);
+                    }
+                }
+                _dispatchRemoved.Clear();
+
+                // dispatch all modified entities
                 if (_triggerModified != null) {
-                    for (int i = 0; i < _modifiedEntities.Length; ++i) {
-                        IEntity entity = _modifiedEntities[i];
+                    for (int i = 0; i < _dispatchModified.Length; ++i) {
+                        IEntity entity = _dispatchModified[i];
                         if (_filter.ModificationCheck(entity)) {
                             _triggerModified.OnModified(entity);
                         }
