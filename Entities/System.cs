@@ -36,14 +36,14 @@ namespace Neon.Entities {
         private MultithreadedSystemSharedContext _context;
         private EntityCache _entityCache;
 
-
-        private ITriggerModified _modifiedTrigger;
-        private ITriggerGlobalPreUpdate _globalPreUpdateTrigger;
-        private ITriggerUpdate _updateTrigger;
-        private ITriggerGlobalPostUpdate _globalPostUpdateTrigger;
-        private ITriggerInput _inputTrigger;
-        private ITriggerAdded _addedTrigger;
-        private ITriggerRemoved _removedTrigger;
+        // Cached triggers
+        private ITriggerAdded _triggerAdded;
+        private ITriggerRemoved _triggerRemoved;
+        private ITriggerModified _triggerModified;
+        private ITriggerGlobalPreUpdate _triggerGlobalPreUpdate;
+        private ITriggerUpdate _triggerUpdate;
+        private ITriggerGlobalPostUpdate _triggerGlobalPostUpdate;
+        private ITriggerInput _triggerInput;
 
         public ITriggerBaseFilter Trigger;
 
@@ -57,13 +57,13 @@ namespace Neon.Entities {
             _filter = new Filter(DataAccessorFactory.MapTypesToDataAccessors(trigger.ComputeEntityFilter()));
             _entityCache = new EntityCache(_filter);
 
-            _modifiedTrigger = trigger as ITriggerModified;
-            _globalPreUpdateTrigger = trigger as ITriggerGlobalPreUpdate;
-            _updateTrigger = trigger as ITriggerUpdate;
-            _globalPostUpdateTrigger = trigger as ITriggerGlobalPostUpdate;
-            _inputTrigger = trigger as ITriggerInput;
-            _addedTrigger = trigger as ITriggerAdded;
-            _removedTrigger = trigger as ITriggerRemoved;
+            _triggerAdded = trigger as ITriggerAdded;
+            _triggerRemoved = trigger as ITriggerRemoved;
+            _triggerModified = trigger as ITriggerModified;
+            _triggerGlobalPreUpdate = trigger as ITriggerGlobalPreUpdate;
+            _triggerUpdate = trigger as ITriggerUpdate;
+            _triggerGlobalPostUpdate = trigger as ITriggerGlobalPostUpdate;
+            _triggerInput = trigger as ITriggerInput;
 
             foreach (var entity in entitiesWithModifications) {
                 if (_filter.Check(entity)) {
@@ -79,25 +79,25 @@ namespace Neon.Entities {
         }
 
         private void DoAdd(IEntity added) {
-            if (_modifiedTrigger != null) {
+            if (_triggerModified != null) {
                 ((Entity)added).ModificationNotifier.Listener += ModificationNotifier_Listener;
             }
-            if (_addedTrigger != null) {
-                _addedTrigger.OnAdded(added);
+            if (_triggerAdded != null) {
+                _triggerAdded.OnAdded(added);
             }
         }
 
         private void DoRemove(IEntity removed) {
             // if we removed an entity from the cache, then we don't want to hear of any more
             // modification events
-            if (_modifiedTrigger != null) {
+            if (_triggerModified != null) {
                 ((Entity)removed).ModificationNotifier.Listener -= ModificationNotifier_Listener;
 
                 _modifiedEntities.Remove(removed);
                 _removedMutableEntities.Add(removed);
             }
-            if (_removedTrigger != null) {
-                _removedTrigger.OnRemoved(removed);
+            if (_triggerRemoved != null) {
+                _triggerRemoved.OnRemoved(removed);
             }
         }
 
@@ -131,13 +131,39 @@ namespace Neon.Entities {
             }
         }
 
+        /// <summary>
+        /// Total number of ticks running the system required.
+        /// </summary>
         public long RunSystemTicks;
+
+        /// <summary>
+        /// Total number of bookkeeping ticks required.
+        /// </summary>
         public long BookkeepingTicks;
 
+        /// <summary>
+        /// Ticks required for adding entities when running the system.
+        /// </summary>
         public long AddedTicks;
+
+        /// <summary>
+        /// Ticks required for removing entities when running the system.
+        /// </summary>
         public long RemovedTicks;
+
+        /// <summary>
+        /// Ticks required for state change operations when running the system.
+        /// </summary>
         public long StateChangeTicks;
+
+        /// <summary>
+        /// Ticks required for modification operations when running the system.
+        /// </summary>
         public long ModificationTicks;
+
+        /// <summary>
+        /// Ticks required for updating the system.
+        /// </summary>
         public long UpdateTicks;
 
         public void RunSystem(object input) {
@@ -183,41 +209,41 @@ namespace Neon.Entities {
                 StateChangeTicks = stopwatch.ElapsedTicks - RemovedTicks - AddedTicks;
 
                 // process modifications
-                if (_modifiedTrigger != null) {
+                if (_triggerModified != null) {
                     for (int i = 0; i < _modifiedEntities.Length; ++i) {
                         IEntity entity = _modifiedEntities[i];
                         if (_filter.ModificationCheck(entity)) {
-                            _modifiedTrigger.OnModified(entity);
+                            _triggerModified.OnModified(entity);
                         }
                     }
                 }
                 ModificationTicks = stopwatch.ElapsedTicks - StateChangeTicks - RemovedTicks - AddedTicks;
 
                 // run update methods Call the BeforeUpdate methods - *user code*
-                if (_globalPreUpdateTrigger != null) {
-                    _globalPreUpdateTrigger.OnGlobalPreUpdate(_context.SingletonEntity);
+                if (_triggerGlobalPreUpdate != null) {
+                    _triggerGlobalPreUpdate.OnGlobalPreUpdate(_context.SingletonEntity);
                 }
 
-                if (_updateTrigger != null) {
+                if (_triggerUpdate != null) {
                     for (int i = 0; i < _entityCache.CachedEntities.Length; ++i) {
                         IEntity updated = _entityCache.CachedEntities[i];
-                        _updateTrigger.OnUpdate(updated);
+                        _triggerUpdate.OnUpdate(updated);
                     }
                 }
                 UpdateTicks = stopwatch.ElapsedTicks - ModificationTicks - StateChangeTicks - RemovedTicks - AddedTicks;
 
-                if (_globalPostUpdateTrigger != null) {
-                    _globalPostUpdateTrigger.OnGlobalPostUpdate(_context.SingletonEntity);
+                if (_triggerGlobalPostUpdate != null) {
+                    _triggerGlobalPostUpdate.OnGlobalPostUpdate(_context.SingletonEntity);
                 }
 
                 // process input
-                if (_inputTrigger != null) {
+                if (_triggerInput != null) {
                     for (int i = 0; i < input.Count; ++i) {
-                        if (_inputTrigger.IStructuredInputType.IsInstanceOfType(input[i])) {
+                        if (_triggerInput.IStructuredInputType.IsInstanceOfType(input[i])) {
                             for (int j = 0; j < _entityCache.CachedEntities.Length; ++j) {
                                 IEntity entity = _entityCache.CachedEntities[j];
                                 if (entity.Enabled) {
-                                    _inputTrigger.OnInput(input[i], entity);
+                                    _triggerInput.OnInput(input[i], entity);
                                 }
                             }
                         }
