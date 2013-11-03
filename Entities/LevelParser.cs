@@ -369,8 +369,6 @@ namespace Neon.Entities {
 
             JsonWriter writer = new JsonWriter();
             writer.PrettyPrint = true;
-            //writer.Validate = false;
-            Console.WriteLine(level.Entities[0].Data[0].CurrentState);
             JsonMapper.ToJson(level, writer);
             
             return writer.ToString();
