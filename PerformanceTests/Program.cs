@@ -136,7 +136,7 @@ namespace PerformanceTests {
             //stopwatch.Start();
             List<IStructuredInput> input = new List<IStructuredInput>();
             for (int i = 0; i < 1000; ++i) {
-                entityManager.UpdateWorld(input);
+                entityManager.UpdateWorld(input).Wait();
             }
             //stopwatch.Stop();
             //Console.WriteLine(stopwatch.ElapsedMilliseconds);
@@ -164,7 +164,7 @@ namespace PerformanceTests {
                 Console.WriteLine();
                 Console.WriteLine();
                 Console.WriteLine();
-                em.UpdateWorld(new List<IStructuredInput>());
+                em.UpdateWorld(new List<IStructuredInput>()).Wait();
             }
 
             //JsonData o = JsonMapper.ToObject(reader);

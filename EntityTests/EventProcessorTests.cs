@@ -41,7 +41,7 @@ namespace EntityTests {
             Assert.AreEqual(0, called0);
             Assert.AreEqual(0, called1);
 
-            em.UpdateWorld();
+            em.RunEventProcessors();
 
             Assert.AreEqual(1, called0);
             Assert.AreEqual(0, called1);

@@ -1,10 +1,8 @@
 ﻿using Neon.Collections;
 using Neon.Utilities;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,23 +13,23 @@ namespace Neon.Entities {
     /// </summary>
     public interface IEntityManager {
         /// <summary>
-        /// The current update number that the entity manager is on.
+        /// Updates the world on another thread. Systems have their respective triggers activated.
+        /// The structured input commands are dispatched to systems which are interested. Make sure
+        /// that this method is not invoked before the returned Task is completed.
         /// </summary>
-        int UpdateNumber {
-            get;
-        }
+        Task UpdateWorld(List<IStructuredInput> commands);
 
         /// <summary>
-        /// Updates the world. Systems have their respective triggers activated. The structured
-        /// input commands are dispatched to systems which are interested.
-        /// </summary>
-        void UpdateWorld(List<IStructuredInput> commands);
-
-        /// <summary>
-        /// Registers the given entity with the world.
+        /// Adds the given entity to the EntityManager.
         /// </summary>
         /// <param name="entity">The instance to add</param>
         void AddEntity(IEntity entity);
+
+        /// <summary>
+        /// Runs all of the dirty event processors. The events for the event processors will be
+        /// dispatched on the same thread that calls this method.
+        /// </summary>
+        void RunEventProcessors();
 
         /// <summary>
         /// Singleton entity that contains global data
@@ -48,9 +46,9 @@ namespace Neon.Entities {
     /// </summary>
     public class EntityManager : IEntityManager, MultithreadedSystemSharedContext {
         /// <summary>
-        /// Event processors which need their events dispatched.
+        /// Manages all of the event processors.
         /// </summary>
-        private List<EventProcessor> _dirtyEventProcessors = new List<EventProcessor>();
+        private EventProcessorManager _eventProcessors = new EventProcessorManager();
 
         /// <summary>
         /// The list of active Entities in the world.
@@ -131,7 +129,7 @@ namespace Neon.Entities {
 
         internal EntityManager(int updateNumber, IEntity singletonEntity, List<RestoredEntity> restoredEntities, List<ISystem> systems) {
             SystemDoneEvent = new CountdownEvent(0);
-            
+
             UpdateNumber = updateNumber;
             SingletonEntity = singletonEntity;
 
@@ -151,7 +149,7 @@ namespace Neon.Entities {
                         // register listeners
                         toAdd.ModificationNotifier.Listener += OnEntityModified;
                         toAdd.DataStateChangeNotifier.Listener += OnEntityDataStateChanged;
-                        ((IEntity)toAdd).EventProcessor.EventAddedNotifier.Listener += EventProcessor_OnEventAdded;
+                        _eventProcessors.BeginMonitoring(((IEntity)toAdd).EventProcessor);
 
                         // apply initialization changes
                         toAdd.ApplyModifications();
@@ -225,7 +223,7 @@ namespace Neon.Entities {
                 // register listeners
                 toAdd.ModificationNotifier.Listener += OnEntityModified;
                 toAdd.DataStateChangeNotifier.Listener += OnEntityDataStateChanged;
-                ((IEntity)toAdd).EventProcessor.EventAddedNotifier.Listener += EventProcessor_OnEventAdded;
+                _eventProcessors.BeginMonitoring(((IEntity)toAdd).EventProcessor);
 
                 // apply initialization changes
                 toAdd.ApplyModifications();
@@ -246,7 +244,7 @@ namespace Neon.Entities {
                 // remove listeners
                 toDestroy.ModificationNotifier.Listener -= OnEntityModified;
                 toDestroy.DataStateChangeNotifier.Listener -= OnEntityDataStateChanged;
-                ((IEntity)toDestroy).EventProcessor.EventAddedNotifier.Listener -= EventProcessor_OnEventAdded;
+                _eventProcessors.StopMonitoring(((IEntity)toDestroy).EventProcessor);
 
                 // remove all data from the entity and then push said changes out
                 toDestroy.RemoveAllData();
@@ -298,8 +296,6 @@ namespace Neon.Entities {
                 SystemDoneEvent.Wait();
             }
 
-
-
             {
                 SystemDoneEvent.Reset(_multithreadedSystems.Count);
 
@@ -339,16 +335,15 @@ namespace Neon.Entities {
             }
         }
 
-        /// <summary>
-        /// Updates the world. State changes (entity add, entity remove, ...) are propagated to the
-        /// different registered listeners. Update listeners will be called and the given commands
-        /// will be executed.
-        /// </summary>
-        public void UpdateWorld(List<IStructuredInput> commands) {
-            string stats = string.Format("cacheUpdateCurrent.Count={0} cacheUpdatePending={1} dirtyEventProcessors={2} entitiesToAdd(0)={3} entitiesToAdd(1)={4} entitiesToRemove(0)={4} entitiesToRemove(1)={5} entitiesWithModifications={6}",
+        private object _updateTaskLock = new object();
+        private Task _updateTask;
+
+        public void RunUpdateWorld(object commandsObject) {
+            List<IStructuredInput> commands = (List<IStructuredInput>)commandsObject;
+
+            string stats = string.Format("cacheUpdateCurrent.Count={0} cacheUpdatePending={1} entitiesToAdd(0)={3} entitiesToAdd(1)={4} entitiesToRemove(0)={4} entitiesToRemove(1)={5} entitiesWithModifications={6}",
                 this._cacheUpdateCurrent.Count,
                 this._cacheUpdatePending.Count,
-                this._dirtyEventProcessors.Count,
                 this._entitiesToAdd.Get(0).Count,
                 this._entitiesToAdd.Get(1).Count,
                 this._entitiesToRemove.Get(0).Count,
@@ -372,7 +367,6 @@ namespace Neon.Entities {
             StringBuilder builder = new StringBuilder();
             builder.AppendLine();
 
-
             builder.AppendFormat("Frame updating took {0} (before {1}, concurrent {2}, after {3}) ticks with info {4}", stopwatch.ElapsedTicks, frameBegin, multithreadEnd - frameBegin, frameEnd - multithreadEnd, stats);
 
             for (int i = 0; i < _multithreadedSystems.Count; ++i) {
@@ -395,23 +389,34 @@ namespace Neon.Entities {
             // update the singleton data
             _singletonEntity.ApplyModifications();
             _singletonEntity.DataStateChangeUpdate();
-
-            // update dirty event processors (this has to be done on the main thread)
-            InvokeEventProcessors();
         }
 
-        private void InvokeEventProcessors() {
-            for (int i = 0; i < _dirtyEventProcessors.Count; ++i) {
-                _dirtyEventProcessors[i].DispatchEvents();
+        public Task UpdateWorld(List<IStructuredInput> commands) {
+            lock (_updateTaskLock) {
+                if (_updateTask != null) {
+                    throw new InvalidOperationException("Cannot call UpdateWorld before the returned task has completed.");
+                }
+
+                Task updateTask = Task.Factory.StartNew(RunUpdateWorld, commands);
+                _updateTask = updateTask.ContinueWith((t) => {
+                    lock (_updateTaskLock) {
+                        _updateTask = null;
+                    }
+                });
+
+                return _updateTask;
             }
-            _dirtyEventProcessors.Clear();
+        }
+
+        public void RunEventProcessors() {
+            _eventProcessors.DispatchEvents();
         }
 
         private UnorderedListMetadata GetEntitiesListFromMetadata(IEntity entity) {
             return (UnorderedListMetadata)entity.Metadata[_entityUnorderedListMetadataKey];
         }
 
-         /// <summary>
+        /// <summary>
         /// Registers the given entity with the world.
         /// </summary>
         /// <param name="instance">The instance to add</param>
@@ -452,15 +457,6 @@ namespace Neon.Entities {
         private void OnEntityDataStateChanged(Entity sender) {
             lock (this) {
                 _cacheUpdatePending.Add(sender);
-            }
-        }
-
-        /// <summary>
-        /// Called when an event processor has had an event added to it.
-        /// </summary>
-        private void EventProcessor_OnEventAdded(EventProcessor eventProcessor) {
-            lock (this) {
-                _dirtyEventProcessors.Add(eventProcessor);
             }
         }
 

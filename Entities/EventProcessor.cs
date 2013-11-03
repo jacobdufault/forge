@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Neon.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
@@ -39,19 +40,15 @@ namespace Neon.Entities {
         private Dictionary<Type, List<Action<IEvent>>> _handlers = new Dictionary<Type, List<Action<IEvent>>>();
 
         /// <summary>
-        /// The queued set of events that have occurred.
+        /// The queued set of events that have occurred; any thread can write to this list.
         /// </summary>
         private List<IEvent> _events = new List<IEvent>();
 
         /// <summary>
-        /// Are we currently allowed to dispatch events?
+        /// Events that are currently being dispatched. This is only read from (its values are
+        /// retrieved from _events).
         /// </summary>
-        /// <remarks>
-        /// This is set to false when we are dispatching events to handlers. We do this instead of
-        /// use a buffered collection because handlers should never dispatch events back to the
-        /// handler. That destroys the purpose of the event handler.
-        /// </remarks>
-        private bool _eventDispatchAllowed = true;
+        private List<IEvent> _dispatchingEvents = new List<IEvent>();
 
         /// <summary>
         /// Called when an event has been dispatched to this event processor.
@@ -86,17 +83,17 @@ namespace Neon.Entities {
         /// being dispatched.
         /// </remarks>
         internal void DispatchEvents() {
-            _eventDispatchAllowed = false;
-
+            // swap _events and _dispatchingEvents
             lock (this) {
-                for (int i = 0; i < _events.Count; ++i) {
-                    CallEventHandlers(_events[i]);
-                }
-                _events.Clear();
+                Utils.Swap(ref _events, ref _dispatchingEvents);
             }
-
-            _eventDispatchAllowed = true;
             EventAddedNotifier.Reset();
+
+            // dispatch all events in _dispatchingEvents
+            for (int i = 0; i < _dispatchingEvents.Count; ++i) {
+                CallEventHandlers(_dispatchingEvents[i]);
+            }
+            _dispatchingEvents.Clear();
         }
 
         /// <summary>
@@ -105,10 +102,6 @@ namespace Neon.Entities {
         /// </summary>
         /// <param name="eventInstance">The event instance to dispatch</param>
         public void Submit(IEvent eventInstance) {
-            if (_eventDispatchAllowed == false) {
-                throw new InvalidOperationException("Cannot dispatch new events to the EventDispatcher from an event handler");
-            }
-
             lock (this) {
                 _events.Add(eventInstance);
             }
@@ -167,6 +160,62 @@ namespace Neon.Entities {
 
                 throw new Exception("The event handler for " + eventHandler + " was not registered, or has been removed multiple times");
             }
+        }
+    }
+
+    /// <summary>
+    /// Manages a collection of EventProcessors by allowing for convenient, thread-safe dispatch.
+    /// </summary>
+    internal class EventProcessorManager {
+        /// <summary>
+        /// The list of event processors which are need notifications. This can be written to by any
+        /// number of threads, so locks are applied when writing.
+        /// </summary>
+        private List<EventProcessor> _dirtyEventProcessors = new List<EventProcessor>();
+
+        /// <summary>
+        /// The list of event processors that we are currently dispatching. This should be empty
+        /// except when we are dispatching. It is read-only (it gets values from
+        /// _dirtyEventProcessors).
+        /// </summary>
+        private List<EventProcessor> _dispatchingEventProcessors = new List<EventProcessor>();
+
+        private void EventAddedNotifier_Listener(EventProcessor eventProcessor) {
+            lock (this) {
+                _dirtyEventProcessors.Add(eventProcessor);
+            }
+        }
+
+        /// <summary>
+        /// Begin to monitor an event processor for dispatch notifications.
+        /// </summary>
+        public void BeginMonitoring(EventProcessor processor) {
+            processor.EventAddedNotifier.Listener += EventAddedNotifier_Listener;
+        }
+
+        /// <summary>
+        /// Stops monitoring an event processor.
+        /// </summary>
+        public void StopMonitoring(EventProcessor processor) {
+            processor.EventAddedNotifier.Listener -= EventAddedNotifier_Listener;
+
+            lock (this) {
+                _dirtyEventProcessors.Remove(processor);
+            }
+        }
+
+        /// <summary>
+        /// Dispatches all event processors which have events.
+        /// </summary>
+        public void DispatchEvents() {
+            lock (this) {
+                Utils.Swap(ref _dirtyEventProcessors, ref _dispatchingEventProcessors);
+            }
+
+            for (int i = 0; i < _dispatchingEventProcessors.Count; ++i) {
+                _dispatchingEventProcessors[i].DispatchEvents();
+            }
+            _dispatchingEventProcessors.Clear();
         }
     }
 }

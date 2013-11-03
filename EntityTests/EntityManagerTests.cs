@@ -162,7 +162,7 @@ namespace EntityTests {
     public static class EntityManagerExtensions {
         public static void UpdateWorld(this EntityManager em) {
             List<IStructuredInput> commands = new List<IStructuredInput>();
-            em.UpdateWorld(commands);
+            em.UpdateWorld(commands).Wait();
         }
     }
 
