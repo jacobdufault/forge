@@ -16,5 +16,15 @@ namespace Neon.Utilities {
         public int Next() {
             return Interlocked.Increment(ref _next);
         }
+
+        /// <summary>
+        /// Notifies that UniqueIdGenerator that the given ID has already
+        /// been consumed. Please note that this API is not thread-safe.
+        /// </summary>
+        public void Consume(int value) {
+            if (value >= _next) {
+                _next = value + 1;
+            }
+        }
     }
 }

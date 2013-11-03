@@ -54,17 +54,37 @@ namespace Neon.Entities {
         }
 
         /// <summary>
-        /// Updates the status of the entity inside of the cache; ie, if the entity is now passing
-        /// the filter but was not before, then it will be added to the cache.
+        /// Adds the entity to the list of cached entities if it passes the trigger without invoking triggers.
         /// </summary>
-        /// <returns>The change in cache status for the entity</returns>
-        public CacheChangeResult UpdateCache(IEntity entity) {
+        /// <param name="entity">The entity to attempt to add to the cache.</param>
+        /// <returns>True if the entity was added to the cache; false otherwise.</returns>
+        public bool Restore(IEntity entity) {
+            if (Filter.Check(entity)) {
+                CachedEntities.Add(entity, GetMetadata(entity));
+                return true;
+            }
+
+            return false;
+        }
+
+        private UnorderedListMetadata GetMetadata(IEntity entity) {
             // get our unordered list metadata or create it
             UnorderedListMetadata metadata = (UnorderedListMetadata)entity.Metadata[_metadataKey];
             if (metadata == null) {
                 metadata = new UnorderedListMetadata();
                 entity.Metadata[_metadataKey] = metadata;
             }
+
+            return metadata;
+        }
+
+        /// <summary>
+        /// Updates the status of the entity inside of the cache; ie, if the entity is now passing
+        /// the filter but was not before, then it will be added to the cache.
+        /// </summary>
+        /// <returns>The change in cache status for the entity</returns>
+        public CacheChangeResult UpdateCache(IEntity entity) {
+            UnorderedListMetadata metadata = GetMetadata(entity);
 
             bool passed = Filter.Check(entity);
             bool contains = CachedEntities.Contains(entity, metadata);

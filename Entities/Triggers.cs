@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LitJson;
+using System;
 
 namespace Neon.Entities {
     /// <summary>
@@ -8,6 +9,25 @@ namespace Neon.Entities {
     /// Client code should not directly extend this, as it does not give any behavior by itself.
     /// </remarks>
     public interface ISystem {
+        /// <summary>
+        /// Returns the GUID for this system. This is used to identify what JSON data to
+        /// use when restoring the system.
+        /// </summary>
+        string RestorationGUID {
+            get;
+        }
+
+        /// <summary>
+        /// Save any auxiliary data to the given data output.
+        /// </summary>
+        /// <param name="data">The JSON container to write saved data to.</param>
+        void Save(JsonData data);
+
+        /// <summary>
+        /// Restore the system from the given data.
+        /// </summary>
+        /// <param name="data">The data to restore the system from.</param>
+        void Restore(JsonData data);
     }
 
     /// <summary>

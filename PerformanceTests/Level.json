@@ -1,0 +1,88 @@
+﻿{
+    "ConfigurationPath": "../../Configuration.json",
+    "Systems": [],
+//    "Templates": [
+//        {
+//            "PrettyName": "My first template",
+//            "UniqueId": 3,
+//            "Data": {
+//                "DataType": "PerformanceTests.MyLocomotionData",
+//                "State": {
+//                    "Speed": 10,
+//                    "Variance": 3
+//                }
+//            }
+//        },
+//    ],
+    
+    "CurrentUpdateNumber": 0,
+    
+    "SingletonEntity": {
+        "PrettyName": "Global Entity",
+        "UniqueId": 0,
+        "IsAdding": true,
+        "IsRemoving": false,
+        "Data": []
+    },
+    
+    "Entities": [
+        {
+            "PrettyName": "Entity1",
+            "UniqueId": 1,
+            "IsAdding": false,
+            "IsRemoving": false,
+            "Data": [
+                {
+                    "DataType": "PerformanceTests.MyLocomotionData",
+                    "WasModified": false,
+                    "IsAdding": false,
+                    "IsRemoving": false,
+                    "PreviousState": {
+                        "Speed": 5,
+                        "Variance": 2
+                    },
+                    "CurrentState": {
+                        "Speed": 10,
+                        "Variance": 10
+                    }
+                },
+                {
+                    "DataType": "PerformanceTests.MyPositionData",
+                    "WasModified": true,
+                    "IsAdding": false,
+                    "IsRemoving": false,
+                    "PreviousState": {
+                        "X": 3,
+                        "Z": 4
+                    },
+                    "CurrentState": {
+                        "X": 5,
+                        "Z": 6
+                    }
+                }
+            ]
+        },
+        {
+            "PrettyName": "Wave 1 Spawner",
+            "UniqueId": 2,
+            "IsAdding": true,
+            "IsRemoving": false,
+            "Data": [
+                {
+                    "DataType": "PerformanceTests.MyPositionData",
+                    "WasModified": false,
+                    "IsAdding": false,
+                    "IsRemoving": false,
+                    "PreviousState": {
+                        "X": 1,
+                        "Z": 2
+                    },
+                    "CurrentState": {
+                        "X": 3,
+                        "Z": 4
+                    }
+                }
+            ]
+        }
+    ]
+}

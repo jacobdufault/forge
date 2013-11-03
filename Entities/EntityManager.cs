@@ -66,11 +66,6 @@ namespace Neon.Entities {
         }
 
         /// <summary>
-        /// Registers the given system with the EntityManager.
-        /// </summary>
-        void AddSystem(ISystem system);
-
-        /// <summary>
         /// Updates the world. State changes (entity add, entity remove, ...) are propagated to the
         /// different registered listeners. Update listeners will be called and the given commands
         /// will be executed.
@@ -141,7 +136,7 @@ namespace Neon.Entities {
         private ITriggerUpdate _updateTrigger;
         private ITriggerGlobalPostUpdate _globalPostUpdateTrigger;
 
-        internal MultithreadedSystem(MultithreadedSystemSharedContext context, System system) {
+        internal MultithreadedSystem(MultithreadedSystemSharedContext context, System system, List<Entity> entitiesWithModifications) {
             _context = context;
 
             _system = system;
@@ -149,6 +144,18 @@ namespace Neon.Entities {
             _globalPreUpdateTrigger = system.Trigger as ITriggerGlobalPreUpdate;
             _updateTrigger = system.Trigger as ITriggerUpdate;
             _globalPostUpdateTrigger = system.Trigger as ITriggerGlobalPostUpdate;
+
+            foreach (var entity in entitiesWithModifications) {
+                if (_system.Filter.Check(entity)) {
+                    _nextModifiedEntities.Append(entity);
+                }
+            }
+        }
+
+        public void Restore(IEntity entity) {
+            if (_system.Restore(entity)) {
+                DoAdd(entity);
+            }
         }
 
         private void DoAdd(IEntity added) {
@@ -343,27 +350,10 @@ namespace Neon.Entities {
         private List<Entity> _cacheUpdateCurrent = new List<Entity>();
         private List<Entity> _cacheUpdatePending = new List<Entity>();
 
-        private List<System> _allSystems = new List<System>();
-        private List<System> _systemsWithUpdateTriggers = new List<System>();
         private List<System> _systemsWithInputTriggers = new List<System>();
 
         private List<MultithreadedSystem> _multithreadedSystems = new List<MultithreadedSystem>();
 
-        /*
-        private class ModifiedTrigger {
-            public ITriggerModified Trigger;
-            public Filter Filter;
-
-            public ModifiedTrigger(ITriggerModified trigger) {
-                Trigger = trigger;
-                Filter = new Filter(DataAccessorFactory.MapTypesToDataAccessors(trigger.ComputeEntityFilter()));
-            }
-        }
-        private List<ModifiedTrigger> _modifiedTriggers = new List<ModifiedTrigger>();
-        */
-
-        private List<ITriggerGlobalPreUpdate> _globalPreUpdateTriggers = new List<ITriggerGlobalPreUpdate>();
-        private List<ITriggerGlobalPostUpdate> _globalPostUpdateTriggers = new List<ITriggerGlobalPostUpdate>();
         private List<ITriggerGlobalInput> _globalInputTriggers = new List<ITriggerGlobalInput>();
 
         /// <summary>
@@ -393,35 +383,95 @@ namespace Neon.Entities {
             MultithreadingIndex = new ValueToReferenceWrapper<long>(0);
         }
 
+        public class RestoredEntity {
+            public bool HasModification;
+            public bool HasStateChange;
+
+            public bool IsAdding;
+            public bool IsRemoving;
+
+            public Entity Entity;
+        }
+
+        internal EntityManager(int updateNumber, IEntity singletonEntity, List<RestoredEntity> restoredEntities, List<ISystem> systems) {
+            MultithreadingIndex = new ValueToReferenceWrapper<long>(0);
+            
+            UpdateNumber = updateNumber;
+            SingletonEntity = singletonEntity;
+
+            foreach (var restoredEntity in restoredEntities) {
+                if (restoredEntity.IsAdding) {
+                    AddEntity(restoredEntity.Entity);
+                }
+
+                else {
+                    // add the entity
+                    {
+                        Entity toAdd = restoredEntity.Entity;
+
+                        toAdd.EntityManager = this;
+                        ((IEntity)toAdd).EventProcessor.Submit(ShowEntityEvent.Instance);
+
+                        // register listeners
+                        toAdd.ModificationNotifier.Listener += OnEntityModified;
+                        toAdd.DataStateChangeNotifier.Listener += OnEntityDataStateChanged;
+                        ((IEntity)toAdd).EventProcessor.EventAddedNotifier.Listener += EventProcessor_OnEventAdded;
+
+                        // apply initialization changes
+                        toAdd.ApplyModifications();
+
+                        // ensure it contains metadata for our keys
+                        ((IEntity)toAdd).Metadata[_entityUnorderedListMetadataKey] = new UnorderedListMetadata();
+
+                        // add it our list of entities
+                        _entities.Add(toAdd, GetEntitiesListFromMetadata(toAdd));
+                    }
+
+                    Console.WriteLine("Entity " + restoredEntity.Entity + " has modification? " + restoredEntity.HasModification);
+                    if (restoredEntity.HasModification) {
+                        restoredEntity.Entity.ModificationNotifier.Notify();
+                    }
+
+                    if (restoredEntity.HasStateChange) {
+                        restoredEntity.Entity.DataStateChangeNotifier.Notify();
+                    }
+                }
+
+                if (restoredEntity.IsRemoving) {
+                    RemoveEntity(restoredEntity.Entity);
+                }
+            }
+
+            foreach (var system in systems) {
+                AddSystem(system);
+            }
+        }
+
         /// <summary>
         /// Registers the given system with the EntityManager.
         /// </summary>
         public void AddSystem(ISystem baseSystem) {
-            Contract.Requires(_entities.Length == 0, "Cannot add a trigger after entities have been added");
-
             if (baseSystem is ITriggerBaseFilter) {
                 System system = new System((ITriggerBaseFilter)baseSystem);
-                _allSystems.Add(system);
-
-                if (baseSystem is ITriggerUpdate) {
-                    _systemsWithUpdateTriggers.Add(system);
+                MultithreadedSystem multithreadingSystem = new MultithreadedSystem(this, system, _entitiesWithModifications);
+                foreach (var entity in _entities) {
+                    multithreadingSystem.Restore(entity);
                 }
+
+                _multithreadedSystems.Add(multithreadingSystem);
+
                 if (baseSystem is ITriggerInput) {
                     _systemsWithInputTriggers.Add(system);
                 }
-
-                _multithreadedSystems.Add(new MultithreadedSystem(this, system));
+            }
+            else if (baseSystem is ITriggerGlobalPostUpdate || baseSystem is ITriggerGlobalPreUpdate) {
+                throw new NotImplementedException();
             }
 
-            if (baseSystem is ITriggerGlobalPreUpdate) {
-                _globalPreUpdateTriggers.Add((ITriggerGlobalPreUpdate)baseSystem);
-            }
-            if (baseSystem is ITriggerGlobalPostUpdate) {
-                _globalPostUpdateTriggers.Add((ITriggerGlobalPostUpdate)baseSystem);
-            }
             if (baseSystem is ITriggerGlobalInput) {
                 _globalInputTriggers.Add((ITriggerGlobalInput)baseSystem);
             }
+
         }
 
         public int UpdateNumber {

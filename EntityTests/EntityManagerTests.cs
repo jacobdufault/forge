@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using LitJson;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neon.Entities;
 using System;
 
@@ -85,6 +86,16 @@ namespace EntityTests {
         public void OnGlobalInput(IStructuredInput input, IEntity singletonEntity) {
             if (GlobalInput != null) GlobalInput(input, singletonEntity);
         }
+
+        public string RestorationGUID {
+            get { return "fbaaedd2c5b94a9d919bf3c72f035641"; }
+        }
+
+        public void Save(JsonData data) {
+        }
+
+        public void Restore(JsonData data) {
+        }
     }
 
     internal class CountUpdatesTrigger : ITriggerUpdate, ITriggerGlobalPreUpdate, ITriggerGlobalPostUpdate {
@@ -107,6 +118,16 @@ namespace EntityTests {
         public void OnGlobalPostUpdate(IEntity singletonEntity) {
             ++PostCount;
         }
+
+        public string RestorationGUID {
+            get { return "ecbdc58543cf4d44923e7706a933aab1"; }
+        }
+
+        public void Save(JsonData data) {
+        }
+
+        public void Restore(JsonData data) {
+        }
     }
 
     internal class CountModifiesTrigger : ITriggerModified {
@@ -124,6 +145,16 @@ namespace EntityTests {
 
         public void OnModified(IEntity entity) {
             ++ModifiedCount;
+        }
+
+        public string RestorationGUID {
+            get { return "6b901ea1c9ce4e7a9a8d32ca25e383d8"; }
+        }
+
+        public void Save(JsonData data) {
+        }
+
+        public void Restore(JsonData data) {
         }
     }
 

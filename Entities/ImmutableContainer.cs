@@ -61,9 +61,8 @@ namespace Neon.Entities {
         /// <summary>
         /// Initializes a new instance of the ImmutableContainer class.
         /// </summary>
-        /// <param name="data">The initial data instance.</param>
-        public ImmutableContainer(DataType data) {
-            Items = new DataType[] { data.Duplicate(), data.Duplicate(), data.Duplicate() };
+        public ImmutableContainer(DataType previous, DataType current, DataType modified) {
+            Items = new DataType[] { previous, current, modified };
             MotificationActivation = new AtomicActivation();
         }
 

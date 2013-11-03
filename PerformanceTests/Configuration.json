@@ -1,0 +1,12 @@
+{
+    "EnableMultithreading": true,
+
+    "DllInjections": [
+//        "Neon.Positional.dll",
+//        "CoreTech.Systems.dll"
+    ],
+
+    "SystemProviders": [
+        "PerformanceTests.SystemProvider"
+    ]
+}

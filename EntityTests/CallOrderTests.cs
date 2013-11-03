@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using LitJson;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neon.Entities;
 using System;
 using System.Collections.Generic;
@@ -66,6 +67,16 @@ namespace EntityTests {
 
         public void OnGlobalInput(IStructuredInput input, IEntity singletonEntity) {
             _events.Add(TriggerEvent.OnGlobalInput);
+        }
+
+        public string RestorationGUID {
+            get { return "7597cdc69f7b4ca58f52822edc9fb1aa"; }
+        }
+
+        public void Save(JsonData data) {
+        }
+
+        public void Restore(JsonData data) {
         }
     }
 

@@ -6,6 +6,23 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace Neon.Entities {
+    public class SerializedEntityData {
+        public bool WasModified;
+        public bool IsAdding;
+        public bool IsRemoving;
+
+        public Data Previous;
+        public Data Current;
+
+        public SerializedEntityData(bool wasModifying, bool isAdding, bool isRemoving, Data previous, Data current) {
+            WasModified = wasModifying;
+            IsAdding = isAdding;
+            IsRemoving = isRemoving;
+            Previous = previous;
+            Current = current;
+        }
+    }
+
     public class Entity : IEntity {
         #region Enabled
         private volatile bool _enabled;
@@ -52,6 +69,37 @@ namespace Neon.Entities {
             get { return _eventProcessor; }
         }
         #endregion
+
+        /// <summary>
+        /// Reconstructs an entity with the given unique id and the set of restored data instances.
+        /// </summary>
+        /// <remarks>
+        /// Notice, however, that this function does *NOT* notify the EntityManager if a data instance has been restored which has a modification or a state change.
+        /// </remarks>
+        internal Entity(int uniqueId, List<SerializedEntityData> restoredData) {
+            _uniqueId = uniqueId;
+            _idGenerator.Consume(uniqueId);
+            _enabled = true;
+            _eventProcessor = new EventProcessor();
+
+            DataStateChangeNotifier = new Notifier<Entity>(this);
+            ModificationNotifier = new Notifier<Entity>(this);
+
+            foreach (var data in restoredData) {
+                if (data.IsAdding) {
+                    _toAdd.Add(data.Current);
+                }
+
+                else {
+                    int id = DataAccessorFactory.GetId(data.Current.GetType());
+                    _data[id] = new ImmutableContainer<Data>(data.Previous, data.Current, data.Current.Duplicate());
+
+                    if (data.IsRemoving) {
+                        _toRemove.Previous.Add(new DataAccessor(id));
+                    }
+                }
+            }
+        }
 
         public Entity() {
             _uniqueId = _idGenerator.Next();
@@ -141,7 +189,7 @@ namespace Neon.Entities {
                 ((this as IEntity)).EventProcessor.Submit(new AddedDataEvent(added.GetType()));
 
                 int id = DataAccessorFactory.GetId(added.GetType());
-                _data[id] = new ImmutableContainer<Data>(added);
+                _data[id] = new ImmutableContainer<Data>(added.Duplicate(), added.Duplicate(), added.Duplicate());
 
                 // visualize the initial data
                 added.DoUpdateVisualization();
@@ -203,7 +251,7 @@ namespace Neon.Entities {
                     return _toAdd[i];
                 }
             }
-            
+
             return null;
         }
         #endregion
@@ -299,7 +347,7 @@ namespace Neon.Entities {
                 ModificationNotifier.Notify();
             }
             else if (!force && _data[id].Current.SupportsConcurrentModifications == false) {
-                throw new RemodifiedDataException(this, DataAccessorFactory.GetTypeFromAccessor(accessor));                
+                throw new RemodifiedDataException(this, DataAccessorFactory.GetTypeFromAccessor(accessor));
             }
 
             return _data[id].Modifying;
