@@ -487,10 +487,6 @@ namespace Neon.Entities {
             }
         }
 
-        int MultithreadedSystemSharedContext.ModifiedIndex {
-            get { return UpdateNumber; }
-        }
-
         List<Entity> MultithreadedSystemSharedContext.AddedEntities {
             get { return AddImmutable(); }
         }

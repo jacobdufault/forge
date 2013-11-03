@@ -5,20 +5,43 @@ using System.Diagnostics;
 using System.Threading;
 
 namespace Neon.Entities {
+    /// <summary>
+    /// Shared state between all multithreaded systems.
+    /// </summary>
     internal interface MultithreadedSystemSharedContext {
+        /// <summary>
+        /// Global singleton entity.
+        /// </summary>
         IEntity SingletonEntity { get; }
-        int ModifiedIndex { get; }
+
+        /// <summary>
+        /// Entities which have been added.
+        /// </summary>
         List<Entity> AddedEntities { get; }
+
+        /// <summary>
+        /// Entities which have been removed.
+        /// </summary>
         List<Entity> RemovedEntities { get; }
+
+        /// <summary>
+        /// Entities which have state changes.
+        /// </summary>
         List<Entity> StateChangedEntities { get; }
 
+        /// <summary>
+        /// Event the system uses to notify the primary thread that it is done processing.
+        /// </summary>
         CountdownEvent SystemDoneEvent { get; }
     }
 
-
+    /// <summary>
+    /// Runs an ISystem in another thread.
+    /// </summary>
     internal class MultithreadedSystem {
         /// <summary>
-        /// Entities which were modified last update
+        /// Entities which were modified last update. When the system does bookkeeping work, this
+        /// will be swapped with _nextModifiedEntities.
         /// </summary>
         private Bag<IEntity> _modifiedEntities = new Bag<IEntity>();
 
@@ -32,9 +55,15 @@ namespace Neon.Entities {
         /// </summary>
         private Bag<IEntity> _nextModifiedEntities = new Bag<IEntity>();
 
-
-        private MultithreadedSystemSharedContext _context;
+        /// <summary>
+        /// A cache of all entities which have passed the entity filter.
+        /// </summary>
         private EntityCache _entityCache;
+
+        /// <summary>
+        /// Our shared context.
+        /// </summary>
+        private MultithreadedSystemSharedContext _shared;
 
         // Cached triggers
         private ITriggerAdded _triggerAdded;
@@ -49,10 +78,10 @@ namespace Neon.Entities {
 
         private Filter _filter;
 
-        internal MultithreadedSystem(MultithreadedSystemSharedContext context, ITriggerBaseFilter trigger, List<Entity> entitiesWithModifications) {
+        internal MultithreadedSystem(MultithreadedSystemSharedContext sharedData, ITriggerBaseFilter trigger, List<Entity> entitiesWithModifications) {
             Trigger = trigger;
 
-            _context = context;
+            _shared = sharedData;
 
             _filter = new Filter(DataAccessorFactory.MapTypesToDataAccessors(trigger.ComputeEntityFilter()));
             _entityCache = new EntityCache(_filter);
@@ -123,7 +152,7 @@ namespace Neon.Entities {
                 //Log<EntityManager>.Info("[BEF] Running bookkeeping on {0} took {1} ticks", _system.Trigger.GetType(), stopwatch.ElapsedTicks);
             }
             finally {
-                _context.SystemDoneEvent.Signal();
+                _shared.SystemDoneEvent.Signal();
 
                 BookkeepingTicks = stopwatch.ElapsedTicks;
                 //stopwatch.Stop();
@@ -176,9 +205,9 @@ namespace Neon.Entities {
 
             try {
                 // process entities that were added to the system
-                int addedCount = _context.AddedEntities.Count;
+                int addedCount = _shared.AddedEntities.Count; // immutable
                 for (int i = 0; i < addedCount; ++i) {
-                    IEntity added = _context.AddedEntities[i];
+                    IEntity added = _shared.AddedEntities[i];
                     if (_entityCache.UpdateCache(added) == EntityCache.CacheChangeResult.Added) {
                         DoAdd(added);
                     }
@@ -186,9 +215,9 @@ namespace Neon.Entities {
                 AddedTicks = stopwatch.ElapsedTicks;
 
                 // process entities that were removed from the system
-                int removedCount = _context.RemovedEntities.Count;
+                int removedCount = _shared.RemovedEntities.Count; // immutable
                 for (int i = 0; i < removedCount; ++i) {
-                    IEntity removed = _context.RemovedEntities[i];
+                    IEntity removed = _shared.RemovedEntities[i];
                     if (_entityCache.Remove(removed)) {
                         DoRemove(removed);
                     }
@@ -196,8 +225,8 @@ namespace Neon.Entities {
                 RemovedTicks = stopwatch.ElapsedTicks - AddedTicks;
 
                 // process state changes
-                for (int i = 0; i < _context.StateChangedEntities.Count; ++i) {
-                    IEntity stateChanged = _context.StateChangedEntities[i];
+                for (int i = 0; i < _shared.StateChangedEntities.Count; ++i) { // immutable
+                    IEntity stateChanged = _shared.StateChangedEntities[i];
                     EntityCache.CacheChangeResult change = _entityCache.UpdateCache(stateChanged);
                     if (change == EntityCache.CacheChangeResult.Added) {
                         DoAdd(stateChanged);
@@ -221,7 +250,7 @@ namespace Neon.Entities {
 
                 // run update methods Call the BeforeUpdate methods - *user code*
                 if (_triggerGlobalPreUpdate != null) {
-                    _triggerGlobalPreUpdate.OnGlobalPreUpdate(_context.SingletonEntity);
+                    _triggerGlobalPreUpdate.OnGlobalPreUpdate(_shared.SingletonEntity);
                 }
 
                 if (_triggerUpdate != null) {
@@ -233,7 +262,7 @@ namespace Neon.Entities {
                 UpdateTicks = stopwatch.ElapsedTicks - ModificationTicks - StateChangeTicks - RemovedTicks - AddedTicks;
 
                 if (_triggerGlobalPostUpdate != null) {
-                    _triggerGlobalPostUpdate.OnGlobalPostUpdate(_context.SingletonEntity);
+                    _triggerGlobalPostUpdate.OnGlobalPostUpdate(_shared.SingletonEntity);
                 }
 
                 // process input
@@ -251,7 +280,7 @@ namespace Neon.Entities {
                 }
             }
             finally {
-                _context.SystemDoneEvent.Signal();
+                _shared.SystemDoneEvent.Signal();
                 RunSystemTicks = stopwatch.ElapsedTicks;
             }
         }
