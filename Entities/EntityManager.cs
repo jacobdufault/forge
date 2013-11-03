@@ -32,7 +32,7 @@ namespace Neon.Entities {
         void RunEventProcessors();
 
         /// <summary>
-        /// Singleton entity that contains global data
+        /// Singleton entity that contains global data.
         /// </summary>
         IEntity SingletonEntity {
             get;
@@ -72,7 +72,6 @@ namespace Neon.Entities {
         /// </summary>
         private ConcurrentWriterBag<Entity> _notifiedAddingEntities = new ConcurrentWriterBag<Entity>();
 
-
         /// <summary>
         /// A list of Entities that were removed from the EntityManager in the last update loop. This
         /// means that they are now ready to actually be removed from the EntityManager in this update.
@@ -88,6 +87,11 @@ namespace Neon.Entities {
         /// <summary>
         /// A list of Entities that have been modified.
         /// </summary>
+        /// <remarks>
+        /// If you look at other local variables, this one does not follow a common pattern of also
+        /// storing the previous update's results. This is because this data is not shared with
+        /// systems.
+        /// </remarks>
         private ConcurrentWriterBag<Entity> _notifiedModifiedEntities = new ConcurrentWriterBag<Entity>();
 
         /// <summary>
@@ -109,29 +113,42 @@ namespace Neon.Entities {
         private List<MultithreadedSystem> _multithreadedSystems = new List<MultithreadedSystem>();
 
         /// <summary>
+        /// Lock used when modifying _updateTask.
+        /// </summary>
+        private object _updateTaskLock = new object();
+
+        /// <summary>
+        /// The task that represents our current Update method. This is not used internally except
+        /// to notify the user that they cannot have concurrent Update calls running.
+        /// </summary>
+        private Task _updateTask;
+
+        /// <summary>
         /// The key we use to access unordered list metadata from the entity.
         /// </summary>
         private static MetadataKey _entityUnorderedListMetadataKey = Entity.MetadataRegistry.GetKey();
 
         /// <summary>
-        /// The key we use to access our modified listeners for the entity
+        /// Singleton entity that contains global data.
         /// </summary>
-        private static MetadataKey _entityModifiedListenersKey = Entity.MetadataRegistry.GetKey();
-
-        private Entity _singletonEntity;
         public IEntity SingletonEntity {
-            get {
-                return _singletonEntity;
-            }
-            set {
-                _singletonEntity = (Entity)value;
-            }
+            get;
+            set;
         }
 
-        public CountdownEvent SystemDoneEvent { get; private set; }
+        /// <summary>
+        /// Gets the update number.
+        /// </summary>
+        /// <value>
+        /// The update number.
+        /// </value>
+        public int UpdateNumber {
+            get;
+            private set;
+        }
 
         public EntityManager(IEntity singletonEntity) {
-            _singletonEntity = (Entity)singletonEntity;
+            SingletonEntity = (Entity)singletonEntity;
             SystemDoneEvent = new CountdownEvent(0);
         }
 
@@ -214,11 +231,6 @@ namespace Neon.Entities {
             else {
                 throw new NotImplementedException();
             }
-        }
-
-        public int UpdateNumber {
-            get;
-            private set;
         }
 
         private void SinglethreadFrameBegin() {
@@ -324,10 +336,10 @@ namespace Neon.Entities {
                 SystemDoneEvent.Wait();
             }
 
+            // run all systems
             {
                 SystemDoneEvent.Reset(_multithreadedSystems.Count);
 
-                // run all systems
                 for (int i = 0; i < _multithreadedSystems.Count; ++i) {
                     if (EnableMultithreading) {
                         Task.Factory.StartNew(_multithreadedSystems[i].RunSystem, input);
@@ -343,9 +355,6 @@ namespace Neon.Entities {
                 SystemDoneEvent.Wait();
             }
         }
-
-        private object _updateTaskLock = new object();
-        private Task _updateTask;
 
         public void RunUpdateWorld(object commandsObject) {
             List<IStructuredInput> commands = (List<IStructuredInput>)commandsObject;
@@ -384,8 +393,9 @@ namespace Neon.Entities {
             Log<EntityManager>.Info(builder.ToString());
 
             // update the singleton data
-            _singletonEntity.ApplyModifications();
-            _singletonEntity.DataStateChangeUpdate();
+            Entity singletonEntity = (Entity)SingletonEntity;
+            singletonEntity.ApplyModifications();
+            singletonEntity.DataStateChangeUpdate();
         }
 
         public Task UpdateWorld(List<IStructuredInput> commands) {
@@ -405,12 +415,12 @@ namespace Neon.Entities {
             }
         }
 
+        /// <summary>
+        /// Runs all of the dirty event processors. The events for the event processors will be
+        /// dispatched on the same thread that calls this method.
+        /// </summary>
         public void RunEventProcessors() {
             _eventProcessors.DispatchEvents();
-        }
-
-        private UnorderedListMetadata GetEntitiesListFromMetadata(IEntity entity) {
-            return (UnorderedListMetadata)entity.Metadata[_entityUnorderedListMetadataKey];
         }
 
         /// <summary>
@@ -436,6 +446,13 @@ namespace Neon.Entities {
         }
 
         /// <summary>
+        /// Helper method that returns the _entities unordered list metadata.
+        /// </summary>
+        private UnorderedListMetadata GetEntitiesListFromMetadata(IEntity entity) {
+            return (UnorderedListMetadata)entity.Metadata[_entityUnorderedListMetadataKey];
+        }
+
+        /// <summary>
         /// Called when an Entity has been modified.
         /// </summary>
         private void OnEntityModified(Entity sender) {
@@ -449,6 +466,7 @@ namespace Neon.Entities {
             _notifiedStateChangeEntities.Add(sender);
         }
 
+        #region MultithreadedSystemSharedContext Implementation
         List<Entity> MultithreadedSystemSharedContext.AddedEntities {
             get { return _addedEntities; }
         }
@@ -460,5 +478,11 @@ namespace Neon.Entities {
         List<Entity> MultithreadedSystemSharedContext.StateChangedEntities {
             get { return _stateChangeEntities; }
         }
+
+        /// <summary>
+        /// Event the system uses to notify the primary thread that it is done processing.
+        /// </summary>
+        public CountdownEvent SystemDoneEvent { get; private set; }
+        #endregion
     }
 }
