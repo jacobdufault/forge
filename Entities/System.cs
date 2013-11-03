@@ -34,7 +34,7 @@ namespace Neon.Entities {
 
 
         private MultithreadedSystemSharedContext _context;
-        private EntityCache _system;
+        private EntityCache _entityCache;
 
 
         private ITriggerModified _modifiedTrigger;
@@ -42,6 +42,8 @@ namespace Neon.Entities {
         private ITriggerUpdate _updateTrigger;
         private ITriggerGlobalPostUpdate _globalPostUpdateTrigger;
         private ITriggerInput _inputTrigger;
+        private ITriggerAdded _addedTrigger;
+        private ITriggerRemoved _removedTrigger;
 
         public ITriggerBaseFilter Trigger;
 
@@ -53,13 +55,15 @@ namespace Neon.Entities {
             _context = context;
 
             _filter = new Filter(DataAccessorFactory.MapTypesToDataAccessors(trigger.ComputeEntityFilter()));
-            _system = new EntityCache(trigger, _filter);
+            _entityCache = new EntityCache(_filter);
 
             _modifiedTrigger = trigger as ITriggerModified;
             _globalPreUpdateTrigger = trigger as ITriggerGlobalPreUpdate;
             _updateTrigger = trigger as ITriggerUpdate;
             _globalPostUpdateTrigger = trigger as ITriggerGlobalPostUpdate;
             _inputTrigger = trigger as ITriggerInput;
+            _addedTrigger = trigger as ITriggerAdded;
+            _removedTrigger = trigger as ITriggerRemoved;
 
             foreach (var entity in entitiesWithModifications) {
                 if (_filter.Check(entity)) {
@@ -69,7 +73,7 @@ namespace Neon.Entities {
         }
 
         public void Restore(IEntity entity) {
-            if (_system.Restore(entity)) {
+            if (_entityCache.UpdateCache(entity) == EntityCache.CacheChangeResult.Added) {
                 DoAdd(entity);
             }
         }
@@ -77,6 +81,9 @@ namespace Neon.Entities {
         private void DoAdd(IEntity added) {
             if (_modifiedTrigger != null) {
                 ((Entity)added).ModificationNotifier.Listener += ModificationNotifier_Listener;
+            }
+            if (_addedTrigger != null) {
+                _addedTrigger.OnAdded(added);
             }
         }
 
@@ -88,6 +95,9 @@ namespace Neon.Entities {
 
                 _modifiedEntities.Remove(removed);
                 _removedMutableEntities.Add(removed);
+            }
+            if (_removedTrigger != null) {
+                _removedTrigger.OnRemoved(removed);
             }
         }
 
@@ -143,7 +153,7 @@ namespace Neon.Entities {
                 int addedCount = _context.AddedEntities.Count;
                 for (int i = 0; i < addedCount; ++i) {
                     IEntity added = _context.AddedEntities[i];
-                    if (_system.UpdateCache(added) == EntityCache.CacheChangeResult.Added) {
+                    if (_entityCache.UpdateCache(added) == EntityCache.CacheChangeResult.Added) {
                         DoAdd(added);
                     }
                 }
@@ -153,7 +163,7 @@ namespace Neon.Entities {
                 int removedCount = _context.RemovedEntities.Count;
                 for (int i = 0; i < removedCount; ++i) {
                     IEntity removed = _context.RemovedEntities[i];
-                    if (_system.Remove(removed)) {
+                    if (_entityCache.Remove(removed)) {
                         DoRemove(removed);
                     }
                 }
@@ -162,7 +172,7 @@ namespace Neon.Entities {
                 // process state changes
                 for (int i = 0; i < _context.StateChangedEntities.Count; ++i) {
                     IEntity stateChanged = _context.StateChangedEntities[i];
-                    EntityCache.CacheChangeResult change = _system.UpdateCache(stateChanged);
+                    EntityCache.CacheChangeResult change = _entityCache.UpdateCache(stateChanged);
                     if (change == EntityCache.CacheChangeResult.Added) {
                         DoAdd(stateChanged);
                     }
@@ -189,8 +199,8 @@ namespace Neon.Entities {
                 }
 
                 if (_updateTrigger != null) {
-                    for (int i = 0; i < _system.CachedEntities.Length; ++i) {
-                        IEntity updated = _system.CachedEntities[i];
+                    for (int i = 0; i < _entityCache.CachedEntities.Length; ++i) {
+                        IEntity updated = _entityCache.CachedEntities[i];
                         _updateTrigger.OnUpdate(updated);
                     }
                 }
@@ -204,8 +214,8 @@ namespace Neon.Entities {
                 if (_inputTrigger != null) {
                     for (int i = 0; i < input.Count; ++i) {
                         if (_inputTrigger.IStructuredInputType.IsInstanceOfType(input[i])) {
-                            for (int j = 0; j < _system.CachedEntities.Length; ++j) {
-                                IEntity entity = _system.CachedEntities[j];
+                            for (int j = 0; j < _entityCache.CachedEntities.Length; ++j) {
+                                IEntity entity = _entityCache.CachedEntities[j];
                                 if (entity.Enabled) {
                                     _inputTrigger.OnInput(input[i], entity);
                                 }
@@ -228,25 +238,13 @@ namespace Neon.Entities {
 
 
         /// <summary>
-        /// Internal storage format for ISystems that perform better with caching.
+        /// Caches entities which pass a filter inside of an unordered list.
         /// </summary>
         private class EntityCache {
+            /// <summary>
+            /// Key used for retrieving metadata to store items in CachedEntities
+            /// </summary>
             private MetadataKey _metadataKey;
-
-            /// <summary>
-            /// Trigger to invoke when an entity has been added to the cache.
-            /// </summary>
-            private ITriggerAdded _addedTrigger;
-
-            /// <summary>
-            /// Trigger to invoke when an entity has been removed from the cache.
-            /// </summary>
-            private ITriggerRemoved _removedTrigger;
-
-            /// <summary>
-            /// The list of entities which are currently in the system.
-            /// </summary>
-            public UnorderedList<IEntity> CachedEntities;
 
             /// <summary>
             /// The filter that the trigger is using
@@ -254,48 +252,28 @@ namespace Neon.Entities {
             private Filter _filter;
 
             /// <summary>
+            /// The list of entities which are currently in the system.
+            /// </summary>
+            public UnorderedList<IEntity> CachedEntities;
+
+            /// <summary>
             /// Creates a new system. Entities are added to the system based on if they pass the given
             /// filter.
             /// </summary>
-            public EntityCache(ITriggerBaseFilter trigger, Filter filter) {
+            public EntityCache(Filter filter) {
                 _filter = filter;
                 _metadataKey = Entity.MetadataRegistry.GetKey();
-
-                _addedTrigger = trigger as ITriggerAdded;
-                _removedTrigger = trigger as ITriggerRemoved;
 
                 CachedEntities = new UnorderedList<IEntity>();
             }
 
+            /// <summary>
+            /// The result of an UpdateCache operation.
+            /// </summary>
             public enum CacheChangeResult {
                 Added,
                 Removed,
                 NoChange
-            }
-
-            /// <summary>
-            /// Adds the entity to the list of cached entities if it passes the trigger without invoking triggers.
-            /// </summary>
-            /// <param name="entity">The entity to attempt to add to the cache.</param>
-            /// <returns>True if the entity was added to the cache; false otherwise.</returns>
-            public bool Restore(IEntity entity) {
-                if (_filter.Check(entity)) {
-                    CachedEntities.Add(entity, GetMetadata(entity));
-                    return true;
-                }
-
-                return false;
-            }
-
-            private UnorderedListMetadata GetMetadata(IEntity entity) {
-                // get our unordered list metadata or create it
-                UnorderedListMetadata metadata = (UnorderedListMetadata)entity.Metadata[_metadataKey];
-                if (metadata == null) {
-                    metadata = new UnorderedListMetadata();
-                    entity.Metadata[_metadataKey] = metadata;
-                }
-
-                return metadata;
             }
 
             /// <summary>
@@ -312,20 +290,12 @@ namespace Neon.Entities {
                 // The entity is not in the cache it now passes the filter, so add it to the cache
                 if (contains == false && passed) {
                     CachedEntities.Add(entity, metadata);
-                    if (_addedTrigger != null) {
-                        _addedTrigger.OnAdded(entity);
-                    }
-
                     return CacheChangeResult.Added;
                 }
 
                 // The entity is in the cache but it no longer passes the filter, so remove it
                 if (contains && passed == false) {
                     CachedEntities.Remove(entity, metadata);
-                    if (_removedTrigger != null) {
-                        _removedTrigger.OnRemoved(entity);
-                    }
-
                     return CacheChangeResult.Removed;
                 }
 
@@ -336,16 +306,27 @@ namespace Neon.Entities {
             /// <summary>
             /// Ensures that an Entity is not in the cache.
             /// </summary>
-            /// <returns>True if the entity was previously in the cache and was removed, false if it was
-            /// not in the cache and was therefore not removed.</returns>
+            /// <returns>True if the entity was previously in the cache and was removed, false if it
+            /// was not in the cache and was therefore not removed.</returns>
             public bool Remove(IEntity entity) {
                 if (CachedEntities.Remove(entity, (UnorderedListMetadata)entity.Metadata[_metadataKey])) {
-                    if (_removedTrigger != null) {
-                        _removedTrigger.OnRemoved(entity);
-                    }
                     return true;
                 }
                 return false;
+            }
+
+            /// <summary>
+            /// Returns the CachedEntities metadata for the given entity.
+            /// </summary>
+            private UnorderedListMetadata GetMetadata(IEntity entity) {
+                // get our unordered list metadata or create it
+                UnorderedListMetadata metadata = (UnorderedListMetadata)entity.Metadata[_metadataKey];
+                if (metadata == null) {
+                    metadata = new UnorderedListMetadata();
+                    entity.Metadata[_metadataKey] = metadata;
+                }
+
+                return metadata;
             }
         }
 
