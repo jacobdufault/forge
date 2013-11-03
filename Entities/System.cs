@@ -46,11 +46,6 @@ namespace Neon.Entities {
         private Bag<IEntity> _dispatchModified = new Bag<IEntity>();
 
         /// <summary>
-        /// Entities which need to be removed from _nextModifiedEntities
-        /// </summary>
-        private List<IEntity> _removedMutableEntities = new List<IEntity>();
-
-        /// <summary>
         /// Entities that have been modified as this system is updating
         /// </summary>
         private Bag<IEntity> _nextModifiedEntities = new Bag<IEntity>();
@@ -156,7 +151,7 @@ namespace Neon.Entities {
                 ((Entity)removed).ModificationNotifier.Listener -= ModificationNotifier_Listener;
 
                 _dispatchModified.Remove(removed);
-                _removedMutableEntities.Add(removed);
+                _nextModifiedEntities.Remove(removed);
             }
         }
 
@@ -216,13 +211,10 @@ namespace Neon.Entities {
                 // items which have been removed
                 for (int i = 0; i < _nextModifiedEntities.Length; ++i) {
                     IEntity entity = _nextModifiedEntities[i];
-                    if (_removedMutableEntities.Contains(entity) == false) {
-                        _dispatchModified.Append(entity);
-                    }
+                    _dispatchModified.Append(entity);
                 }
 
                 _nextModifiedEntities.Clear();
-                _removedMutableEntities.Clear();
 
                 //Log<EntityManager>.Info("[BEF] Running bookkeeping on {0} took {1} ticks", _system.Trigger.GetType(), stopwatch.ElapsedTicks);
             }
