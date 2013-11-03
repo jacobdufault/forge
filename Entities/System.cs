@@ -40,15 +40,33 @@ namespace Neon.Entities {
     /// </summary>
     internal class MultithreadedSystem {
         /// <summary>
-        /// Entities which were modified last update. When the system does bookkeeping work, this
-        /// will be swapped with _nextModifiedEntities.
+        /// Entities that were added to the system that need to be dispatched to the system.
         /// </summary>
+        /// <remarks>
+        /// This is populated in the bookkeeping phase and is not touched during execution.
+        /// </remarks>
+        private List<IEntity> _dispatchAdded = new List<IEntity>();
+
+        /// <summary>
+        /// Entities that were removed from the system that need to be dispatched to the system.
+        /// </summary>
+        /// <remarks>
+        /// This is populated in the bookkeeping phase and is not touched during execution.
+        /// </remarks>
+        private List<IEntity> _dispatchRemoved = new List<IEntity>();
+
+        /// <summary>
+        /// Entities that were modified in the last update that need to be dispatched to the system.
+        /// </summary>
+        /// <remarks>
+        /// This is populated in the bookkeeping phase and is not touched during execution.
+        /// </remarks>
         private Bag<IEntity> _dispatchModified = new Bag<IEntity>();
 
         /// <summary>
-        /// Entities that have been modified as this system is updating
+        /// Entities that have been modified since bookkeeping last ran.
         /// </summary>
-        private Bag<IEntity> _nextModifiedEntities = new Bag<IEntity>();
+        private ConcurrentWriterBag<IEntity> _notifiedModifiedEntities = new ConcurrentWriterBag<IEntity>();
 
         /// <summary>
         /// A cache of all entities which have passed the entity filter.
@@ -69,18 +87,24 @@ namespace Neon.Entities {
         private ITriggerGlobalPostUpdate _triggerGlobalPostUpdate;
         private ITriggerInput _triggerInput;
 
-        public ITriggerBaseFilter Trigger;
-
+        /// <summary>
+        /// Filter we use for filtering entities
+        /// </summary>
         private Filter _filter;
 
-        internal MultithreadedSystem(MultithreadedSystemSharedContext sharedData, ITriggerBaseFilter trigger, List<Entity> entitiesWithModifications) {
-            Trigger = trigger;
+        /// <summary>
+        /// The trigger that this system uses for filtering entities (_filter is the compiled
+        /// version of this).
+        /// </summary>
+        public ITriggerBaseFilter Trigger;
 
+        internal MultithreadedSystem(MultithreadedSystemSharedContext sharedData, ITriggerBaseFilter trigger, List<Entity> entitiesWithModifications) {
             _shared = sharedData;
 
             _filter = new Filter(DataAccessorFactory.MapTypesToDataAccessors(trigger.ComputeEntityFilter()));
             _entityCache = new EntityCache(_filter);
 
+            Trigger = trigger;
             _triggerAdded = trigger as ITriggerAdded;
             _triggerRemoved = trigger as ITriggerRemoved;
             _triggerModified = trigger as ITriggerModified;
@@ -91,7 +115,7 @@ namespace Neon.Entities {
 
             foreach (var entity in entitiesWithModifications) {
                 if (_filter.Check(entity)) {
-                    _nextModifiedEntities.Append(entity);
+                    _notifiedModifiedEntities.Add(entity);
                 }
             }
         }
@@ -151,19 +175,23 @@ namespace Neon.Entities {
                 ((Entity)removed).ModificationNotifier.Listener -= ModificationNotifier_Listener;
 
                 _dispatchModified.Remove(removed);
-                _nextModifiedEntities.Remove(removed);
             }
         }
 
-
-        private List<IEntity> _dispatchAdded = new List<IEntity>();
-        private List<IEntity> _dispatchRemoved = new List<IEntity>();
 
         public void BookkeepingBeforeRunningSystems() {
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
             try {
+                // copy our modified entities into our dispatch modified list
+                // we do this before state changes so that we only have to remove from
+                // _dispatchModified and not _notifiedModifiedEntities
+                _dispatchModified.Clear();
+                _notifiedModifiedEntities.IterateAndClear(modified => {
+                    _dispatchModified.Append(modified);
+                });
+
                 // process entities that were added to the system
                 int addedCount = _shared.AddedEntities.Count; // immutable
                 for (int i = 0; i < addedCount; ++i) {
@@ -200,21 +228,6 @@ namespace Neon.Entities {
                     }
                 }
                 StateChangeTicks = stopwatch.ElapsedTicks - RemovedTicks - AddedTicks;
-
-
-
-
-
-                _dispatchModified.Clear();
-
-                // copy everything from _nextModifiedEntities into _modifiedEntities, except those
-                // items which have been removed
-                for (int i = 0; i < _nextModifiedEntities.Length; ++i) {
-                    IEntity entity = _nextModifiedEntities[i];
-                    _dispatchModified.Append(entity);
-                }
-
-                _nextModifiedEntities.Clear();
 
                 //Log<EntityManager>.Info("[BEF] Running bookkeeping on {0} took {1} ticks", _system.Trigger.GetType(), stopwatch.ElapsedTicks);
             }
@@ -301,11 +314,8 @@ namespace Neon.Entities {
         }
 
         private void ModificationNotifier_Listener(Entity entity) {
-            lock (_nextModifiedEntities) {
-                _nextModifiedEntities.Append(entity);
-            }
+            _notifiedModifiedEntities.Add(entity);
         }
-
 
         /// <summary>
         /// Caches entities which pass a filter inside of an unordered list.
