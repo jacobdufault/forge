@@ -985,6 +985,11 @@ namespace LitJson {
             return ReadValue(factory, reader);
         }
 
+        public static JsonData ToJsonData(object obj) {
+            WrapperFactory wrapper = () => new JsonData();
+            return (JsonData)ToWrapper(wrapper, ToJson(obj));
+        }
+
         public static void RegisterExporter<T>(ExporterFunc<T> exporter) {
             ExporterFunc exporter_wrapper =
                 delegate(object obj, JsonWriter writer) {

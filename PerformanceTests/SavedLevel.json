@@ -1,0 +1,71 @@
+
+{
+    "ConfigurationPath": "../../Configuration.json",
+    "CurrentUpdateNumber": 3,
+    "Templates": [
+    ],
+    "SingletonEntity": {
+        "PrettyName": "TODO nyi",
+        "UniqueId": 0,
+        "Data": [
+        ],
+        "IsAdding": false,
+        "IsRemoving": false
+    },
+    "Entities": [
+        {
+            "PrettyName": "TODO nyi",
+            "UniqueId": 1,
+            "Data": [
+                {
+                    "DataType": "PerformanceTests.MyLocomotionData",
+                    "WasModified": false,
+                    "IsAdding": false,
+                    "IsRemoving": false,
+                    "PreviousState": {
+                        "HashCode": 0,
+                        "SupportsConcurrentModifications": false,
+                        "Speed": 5,
+                        "Variance": 2,
+                        "Entity": null,
+                        "VerificationHashCode": 0
+                    },
+                    "CurrentState": {
+                        "HashCode": 0,
+                        "SupportsConcurrentModifications": false,
+                        "Speed": 10,
+                        "Variance": 10,
+                        "Entity": null,
+                        "VerificationHashCode": 0
+                    }
+                },
+                {
+                    "DataType": "PerformanceTests.MyPositionData",
+                    "WasModified": true,
+                    "IsAdding": false,
+                    "IsRemoving": false,
+                    "PreviousState": {
+                        "HashCode": 0,
+                        "SupportsConcurrentModifications": false,
+                        "X": 6,
+                        "Z": 6,
+                        "Entity": null,
+                        "VerificationHashCode": 0
+                    },
+                    "CurrentState": {
+                        "HashCode": 0,
+                        "SupportsConcurrentModifications": false,
+                        "X": 7,
+                        "Z": 6,
+                        "Entity": null,
+                        "VerificationHashCode": 0
+                    }
+                }
+            ],
+            "IsAdding": false,
+            "IsRemoving": false
+        }
+    ],
+    "Systems": [
+    ]
+}

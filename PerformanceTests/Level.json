@@ -25,6 +25,9 @@
         "Data": []
     },
     
+    "Templates": [
+    ],
+    
     "Entities": [
         {
             "PrettyName": "Entity1",
@@ -61,28 +64,30 @@
                     }
                 }
             ]
-        },
-        {
-            "PrettyName": "Wave 1 Spawner",
-            "UniqueId": 2,
-            "IsAdding": true,
-            "IsRemoving": false,
-            "Data": [
-                {
-                    "DataType": "PerformanceTests.MyPositionData",
-                    "WasModified": false,
-                    "IsAdding": false,
-                    "IsRemoving": false,
-                    "PreviousState": {
-                        "X": 1,
-                        "Z": 2
-                    },
-                    "CurrentState": {
-                        "X": 3,
-                        "Z": 4
-                    }
-                }
-            ]
         }
+        
+//        ,
+//        {
+//            "PrettyName": "Wave 1 Spawner",
+//            "UniqueId": 2,
+//            "IsAdding": true,
+//            "IsRemoving": false,
+//            "Data": [
+//                {
+//                    "DataType": "PerformanceTests.MyPositionData",
+//                    "WasModified": false,
+//                    "IsAdding": false,
+//                    "IsRemoving": false,
+//                    "PreviousState": {
+//                        "X": 1,
+//                        "Z": 2
+//                    },
+//                    "CurrentState": {
+//                        "X": 3,
+//                        "Z": 4
+//                    }
+//                }
+//            ]
+//        }
     ]
 }

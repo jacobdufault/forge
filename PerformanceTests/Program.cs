@@ -5,6 +5,7 @@ using log4net.Config;
 using log4net.Layout;
 using log4net.Repository.Hierarchy;
 using Neon.Entities;
+using Neon.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -71,7 +72,8 @@ namespace PerformanceTests {
             get { return "0ec7763b6a614026a3fc080c7ecfbbf3"; }
         }
 
-        public void Save(JsonData data) {
+        public JsonData Save() {
+            return new JsonData();
         }
 
         public void Restore(JsonData data) {
@@ -93,8 +95,10 @@ namespace PerformanceTests {
             get { return "c919bfe5d1b447bc8f45fdc087a5c38b"; }
         }
 
-        public void Save(JsonData data) {
+        public JsonData Save() {
+            return new JsonData();
         }
+
 
         public void Restore(JsonData data) {
         }
@@ -104,7 +108,7 @@ namespace PerformanceTests {
         public ISystem[] GetSystems() {
             return new ISystem[] {
                 new MovementSystem1(),
-                new MovementSystem2()
+                //new MovementSystem2()
             };
         }
     }
@@ -144,41 +148,23 @@ namespace PerformanceTests {
         }
 
         static void Main(string[] args) {
-            string fileText = File.ReadAllText("../../Level.json");
-            //try {
-            //LevelParser parser = new LevelParser();
-            //parser.Parse(new StringReader(fileText));
 
-            //Initialization init = JsonMapper.ToObject<Initialization>(fileText);
-            //foreach (string dll in init.InjectedDlls) {
-            //    Console.WriteLine("Found dll to load: " + dll);
-            //}
-
-            JsonReader reader = new JsonReader(fileText);
-            reader.SkipNonMembers = false;
-            reader.AllowComments = true;
-
-            LevelJson level = JsonMapper.ToObject<LevelJson>(reader);
-            EntityManager em = level.Restore();
+            Tuple<EntityManager, LevelMetadata> loadedLevel = Loader.LoadEntityManager("../../Level.json");
+            EntityManager entityManager = loadedLevel.Item1;
             for (int i = 0; i < 3; ++i) {
                 Console.WriteLine();
                 Console.WriteLine();
                 Console.WriteLine();
-                em.UpdateWorld(new List<IStructuredInput>()).Wait();
+                entityManager.UpdateWorld(new List<IStructuredInput>()).Wait();
             }
 
-            //JsonData o = JsonMapper.ToObject(reader);
-            //foreach (KeyValuePair<string, JsonData> entry in o) {
-            //    Console.WriteLine(entry.Key + " => " + entry.Value);
-            //}
-            //Console.WriteLine(o);
 
-            //}
-            //catch (Exception e) {
-            //    Console.WriteLine(e);
-            //}
+            string saved = Loader.SaveEntityManager(loadedLevel.Item1, loadedLevel.Item2);
+            File.WriteAllText("../../SavedLevel.json", saved);
+
             Console.ReadLine();
             return;
+
 
             // file configuration failed; fall back to hard-coded backup; setup the default configuration
             Hierarchy hierarchy = (Hierarchy)LogManager.GetRepository();

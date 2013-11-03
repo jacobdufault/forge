@@ -21,7 +21,7 @@ namespace Neon.Entities {
         /// Save any auxiliary data to the given data output.
         /// </summary>
         /// <param name="data">The JSON container to write saved data to.</param>
-        void Save(JsonData data);
+        JsonData Save();
 
         /// <summary>
         /// Restore the system from the given data.

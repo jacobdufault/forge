@@ -66,18 +66,14 @@ namespace Neon.Entities {
         /// </summary>
         public JsonData CurrentState;
 
-        public Data DeserializedPreviousState {
-            get {
-                object deserialized = JsonMapper.ReadValue(DeserializedType, PreviousState);
-                return (Data)deserialized;
-            }
+        public Data GetDeserializedPreviousState() {
+            object deserialized = JsonMapper.ReadValue(DeserializedType, PreviousState);
+            return (Data)deserialized;
         }
 
-        public Data DeserializedCurrentState {
-            get {
-                object deserialized = JsonMapper.ReadValue(DeserializedType, CurrentState);
-                return (Data)deserialized;
-            }
+        public Data GetDeserializedCurrentState() {
+            object deserialized = JsonMapper.ReadValue(DeserializedType, CurrentState);
+            return (Data)deserialized;
         }
 
         private Type DeserializedType {
@@ -92,8 +88,8 @@ namespace Neon.Entities {
             Console.WriteLine("\t\tWasModified = " + WasModified);
             Console.WriteLine("\t\tIsAdding = " + IsAdding);
             Console.WriteLine("\t\tIsRemoving = " + IsRemoving);
-            Console.WriteLine("\t\tPreviousState = " + DeserializedPreviousState);
-            Console.WriteLine("\t\tCurrentState = " + DeserializedCurrentState);
+            Console.WriteLine("\t\tPreviousState = " + GetDeserializedPreviousState());
+            Console.WriteLine("\t\tCurrentState = " + GetDeserializedCurrentState());
         }
     }
 
@@ -128,8 +124,8 @@ namespace Neon.Entities {
                     wasModifying: dataJson.WasModified,
                     isAdding: dataJson.IsAdding,
                     isRemoving: dataJson.IsRemoving,
-                    previous: dataJson.DeserializedPreviousState,
-                    current: dataJson.DeserializedCurrentState
+                    previous: dataJson.GetDeserializedPreviousState(),
+                    current: dataJson.GetDeserializedCurrentState()
                 );
                 restoredData.Add(data);
             }
@@ -165,7 +161,7 @@ namespace Neon.Entities {
             }
         }
 
-        public EntityManager Restore() {
+        public Tuple<EntityManager, LevelMetadata> Restore() {
             // get configuration
             ConfigurationJson config = ConfigurationJson;
             config.Restore();
@@ -212,7 +208,14 @@ namespace Neon.Entities {
                 }
             }
 
-            return new EntityManager(CurrentUpdateNumber, singleton, restoredEntities, systems);
+            EntityManager entityManager = new EntityManager(CurrentUpdateNumber, singleton, restoredEntities, systems);
+
+            LevelMetadata metadata = new LevelMetadata();
+            metadata.ConfigurationPath = ConfigurationPath;
+            metadata.Systems = systems;
+            metadata.Templates = Templates;
+
+            return Tuple.Create(entityManager, metadata);
         }
 
         public void Print() {
@@ -270,6 +273,108 @@ namespace Neon.Entities {
     public class SystemJson {
         public string RestorationGUID;
         public JsonData SavedState;
+    }
+
+    public class LevelMetadata {
+        public string ConfigurationPath;
+        public List<ISystem> Systems;
+        public List<TemplateJson> Templates;
+    }
+
+    public static class Loader {
+        public static Tuple<EntityManager, LevelMetadata> LoadEntityManager(string levelPath) {
+            String fileText = File.ReadAllText(levelPath);
+
+            JsonReader reader = new JsonReader(fileText);
+            reader.SkipNonMembers = false;
+            reader.AllowComments = true;
+
+            LevelJson level = JsonMapper.ToObject<LevelJson>(reader);
+            return level.Restore();
+        }
+
+        private static EntityJson SerializeEntity(IEntity entity, EntityManager entityManager) {
+            List<DataJson> dataJsonList = new List<DataJson>();
+            ICollection<Data> containedData = entity.SelectCurrentData(data => true);
+            foreach (var dataInstance in containedData) {
+                DataAccessor accessor = new DataAccessor(dataInstance.GetType());
+
+
+                DataJson dataJson = new DataJson() {
+                    DataType = dataInstance.GetType().ToString(),
+                    WasModified = entity.WasModified(accessor),
+                };
+
+                Data addedData = ((Entity)entity).GetAdding(accessor);
+                if (addedData != null) {
+                    dataJson.IsAdding = true;
+                    dataJson.IsRemoving = false;
+                    dataJson.PreviousState = JsonMapper.ToJsonData(addedData);
+                    dataJson.CurrentState = JsonMapper.ToJsonData(addedData);
+                }
+
+                else {
+                    dataJson.IsAdding = false;
+                    dataJson.PreviousState = JsonMapper.ToJsonData(entity.Previous(accessor));
+                    dataJson.CurrentState = JsonMapper.ToJsonData(entity.Current(accessor));
+                }
+
+                if (((Entity)entity).IsRemoving(accessor)) {
+                    dataJson.IsRemoving = true;
+                }
+
+                dataJsonList.Add(dataJson);
+            }
+
+            EntityJson entityJson = new EntityJson() {
+                PrettyName = "TODO nyi",
+                UniqueId = entity.UniqueId,
+                Data = dataJsonList,
+                IsAdding = entityManager.AddedEntities.Contains((Entity)entity),
+                IsRemoving = entityManager.RemovedEntities.Contains((Entity)entity)
+            };
+            return entityJson;
+        }
+
+        public static string SaveEntityManager(EntityManager entityManager, LevelMetadata metadata) {
+            LevelJson level = new LevelJson();
+
+            level.ConfigurationPath = metadata.ConfigurationPath;
+
+            level.CurrentUpdateNumber = entityManager.UpdateNumber;
+
+            // Serialize systems
+            level.Systems = new List<SystemJson>();
+            foreach (var system in metadata.Systems) {
+                JsonData savedState = system.Save();
+                if (savedState.GetJsonType() != JsonType.None) {
+                    SystemJson systemJson = new SystemJson() {
+                        RestorationGUID = system.RestorationGUID,
+                        SavedState = savedState
+                    };
+
+                    level.Systems.Add(systemJson);
+                }
+            }
+
+            // Serialize entities
+            level.SingletonEntity = SerializeEntity(entityManager.SingletonEntity, entityManager);
+
+            level.Entities = new List<EntityJson>();
+            foreach (var entity in entityManager.Entities) {
+                level.Entities.Add(SerializeEntity(entity, entityManager));
+            }
+
+            level.Templates = metadata.Templates;
+
+            JsonWriter writer = new JsonWriter();
+            writer.PrettyPrint = true;
+            //writer.Validate = false;
+            Console.WriteLine(level.Entities[0].Data[0].CurrentState);
+            JsonMapper.ToJson(level, writer);
+            
+            return writer.ToString();
+        }
     }
 
     /// <summary>

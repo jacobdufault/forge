@@ -258,9 +258,8 @@ namespace Neon.Entities {
         private ConcurrentWriterBag<DataAccessor> _concurrentModifications = new ConcurrentWriterBag<DataAccessor>();
 
         /// <summary>
-        /// Items that are pending removal in the next update call
+        /// Items that are pending addition in the next update call
         /// </summary>
-
         private List<Data> _toAdd = new List<Data>();
 
         private SwappableItem<List<DataAccessor>> _toRemove = new SwappableItem<List<DataAccessor>>(new List<DataAccessor>(), new List<DataAccessor>());
@@ -414,6 +413,22 @@ namespace Neon.Entities {
             return _modifiedLastFrame.Contains(accessor.Id);
         }
 
+        /// <summary>
+        /// Returns an instance of Data that is being added for the given accessor, iff that data
+        /// is being added. Otherwise returns null.
+        /// </summary>
+        public Data GetAdding(DataAccessor accessor) {
+            return GetAddedData_unlocked(accessor);
+        }
+
+        /// <summary>
+        /// Returns true if, a) there is data for the given accessor, and b) if the data is slated
+        /// for removal in the next data state update.
+        /// </summary>
+        public bool IsRemoving(DataAccessor accessor) {
+            return _toRemove.Current.Contains(accessor);
+        }
+        
         public override string ToString() {
             return string.Format("Entity [uid={0}]", _uniqueId);
         }

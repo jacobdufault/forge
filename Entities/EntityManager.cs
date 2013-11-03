@@ -32,6 +32,13 @@ namespace Neon.Entities {
         void RunEventProcessors();
 
         /// <summary>
+        /// All entities that are currently in the EntityManager.
+        /// </summary>
+        IEnumerable<IEntity> Entities {
+            get;
+        }
+
+        /// <summary>
         /// Singleton entity that contains global data.
         /// </summary>
         IEntity SingletonEntity {
@@ -135,6 +142,15 @@ namespace Neon.Entities {
         public IEntity SingletonEntity {
             get;
             set;
+        }
+
+        /// <summary>
+        /// All entities that are currently in the EntityManager.
+        /// </summary>
+        public IEnumerable<IEntity> Entities {
+            get {
+                return _entities;
+            }
         }
 
         /// <summary>
@@ -454,11 +470,11 @@ namespace Neon.Entities {
         }
 
         #region MultithreadedSystemSharedContext Implementation
-        List<Entity> MultithreadedSystemSharedContext.AddedEntities {
+        public List<Entity> AddedEntities {
             get { return _addedEntities; }
         }
 
-        List<Entity> MultithreadedSystemSharedContext.RemovedEntities {
+        public List<Entity> RemovedEntities {
             get { return _removedEntities; }
         }
 

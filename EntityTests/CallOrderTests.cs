@@ -73,8 +73,10 @@ namespace EntityTests {
             get { return "7597cdc69f7b4ca58f52822edc9fb1aa"; }
         }
 
-        public void Save(JsonData data) {
+        public JsonData Save() {
+            return new JsonData();
         }
+
 
         public void Restore(JsonData data) {
         }

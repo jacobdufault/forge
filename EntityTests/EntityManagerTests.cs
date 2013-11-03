@@ -92,8 +92,10 @@ namespace EntityTests {
             get { return "fbaaedd2c5b94a9d919bf3c72f035641"; }
         }
 
-        public void Save(JsonData data) {
+        public JsonData Save() {
+            return new JsonData();
         }
+
 
         public void Restore(JsonData data) {
         }
@@ -124,7 +126,8 @@ namespace EntityTests {
             get { return "ecbdc58543cf4d44923e7706a933aab1"; }
         }
 
-        public void Save(JsonData data) {
+        public JsonData Save() {
+            return new JsonData();
         }
 
         public void Restore(JsonData data) {
@@ -152,8 +155,10 @@ namespace EntityTests {
             get { return "6b901ea1c9ce4e7a9a8d32ca25e383d8"; }
         }
 
-        public void Save(JsonData data) {
+        public JsonData Save() {
+            return new JsonData();
         }
+
 
         public void Restore(JsonData data) {
         }
