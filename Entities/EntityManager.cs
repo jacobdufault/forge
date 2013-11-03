@@ -46,6 +46,11 @@ namespace Neon.Entities {
     /// </summary>
     public class EntityManager : IEntityManager, MultithreadedSystemSharedContext {
         /// <summary>
+        /// Should the EntityManager execute systems in separate threads?
+        /// </summary>
+        public static bool EnableMultithreading = true;
+
+        /// <summary>
         /// Manages all of the event processors.
         /// </summary>
         private EventProcessorManager _eventProcessors = new EventProcessorManager();
@@ -86,12 +91,21 @@ namespace Neon.Entities {
         private ConcurrentWriterBag<Entity> _notifiedModifiedEntities = new ConcurrentWriterBag<Entity>();
 
         /// <summary>
-        /// The entities that are dirty relative to system caches.
+        /// Entities that have state changes. Entities can have state changes for multiple frames,
+        /// so the entities inside of this list can be from any update before the current one.
         /// </summary>
-        // TODO: replace this
-        private List<Entity> _cacheUpdateCurrent = new List<Entity>();
-        private List<Entity> _cacheUpdatePending = new List<Entity>();
+        // TODO: convert this to a bag if performance is a problem
+        private List<Entity> _stateChangeEntities = new List<Entity>();
 
+        /// <summary>
+        /// Entities which have state changes in this frame. This collection will be added to
+        /// _stateChangeEntities during the next update.
+        /// </summary>
+        private ConcurrentWriterBag<Entity> _notifiedStateChangeEntities = new ConcurrentWriterBag<Entity>();
+
+        /// <summary>
+        /// All of the multithreaded systems.
+        /// </summary>
         private List<MultithreadedSystem> _multithreadedSystems = new List<MultithreadedSystem>();
 
         /// <summary>
@@ -214,9 +228,6 @@ namespace Neon.Entities {
             _removedEntities.Clear();
             _notifiedRemovedEntities.CopyIntoAndClear(_removedEntities);
 
-            _cacheUpdateCurrent.AddRange(_cacheUpdatePending);
-            _cacheUpdatePending.Clear();
-
             ++UpdateNumber;
 
             // Add entities
@@ -231,6 +242,9 @@ namespace Neon.Entities {
                 toAdd.DataStateChangeNotifier.Listener += OnEntityDataStateChanged;
                 _eventProcessors.BeginMonitoring(((IEntity)toAdd).EventProcessor);
 
+                // notify ourselves of data state changes so that it the entity is pushed to systems
+                toAdd.DataStateChangeNotifier.Notify();
+
                 // apply initialization changes
                 toAdd.ApplyModifications();
 
@@ -241,6 +255,11 @@ namespace Neon.Entities {
                 _entities.Add(toAdd, GetEntitiesListFromMetadata(toAdd));
             }
             // can't clear b/c it is shared
+
+            // copy our state change entities
+            // notice that we do this after adding entities, because adding entities triggers the
+            // data state change notifier
+            _notifiedStateChangeEntities.CopyIntoAndClear(_stateChangeEntities);
 
             // Remove entities
             for (int i = 0; i < _removedEntities.Count; ++i) {
@@ -261,12 +280,20 @@ namespace Neon.Entities {
             }
             // can't clear b/c it is shared
 
-            // Note that this loop is carefully constructed It has to handle a couple of (difficult)
-            // things; first, it needs to support the item that is being iterated being removed, and
-            // secondly, it needs to support more items being added to it as it iterates
-            for (int i = 0; i < _cacheUpdateCurrent.Count; ++i) {
-                Entity entity = _cacheUpdateCurrent[i];
-                entity.DataStateChangeUpdate();
+            // Do a data state change on the given items.
+            {
+                int i = 0;
+                while (i < _stateChangeEntities.Count) {
+                    if (_stateChangeEntities[i].NeedsMoreDataStateChangeUpdates() == false) {
+                        // reset the notifier so it can be added to the _stateChangeEntities again
+                        _stateChangeEntities[i].DataStateChangeNotifier.Reset();
+                        _stateChangeEntities.RemoveAt(i);
+                    }
+                    else {
+                        _stateChangeEntities[i].DataStateChangeUpdate();
+                        ++i;
+                    }
+                }
             }
 
             // apply the modifications to the modified entities
@@ -275,10 +302,6 @@ namespace Neon.Entities {
                 modified.ApplyModifications();
             });
         }
-
-        public static bool EnableMultithreading = false;
-
-        //private SimpleThreadPool pool = new SimpleThreadPool(1);
 
         private void MultithreadRunSystems(List<IStructuredInput> input) {
             // run all bookkeeping
@@ -321,21 +344,6 @@ namespace Neon.Entities {
             }
         }
 
-        private void SinglethreadFrameEnd() {
-            // update immutable/mutable states for cache updates
-            {
-                int i = 0;
-                while (i < _cacheUpdateCurrent.Count) {
-                    if (_cacheUpdateCurrent[i].NeedsMoreDataStateChangeUpdates() == false) {
-                        _cacheUpdateCurrent.RemoveAt(i);
-                    }
-                    else {
-                        ++i;
-                    }
-                }
-            }
-        }
-
         private object _updateTaskLock = new object();
         private Task _updateTask;
 
@@ -351,15 +359,12 @@ namespace Neon.Entities {
             MultithreadRunSystems(commands);
             long multithreadEnd = stopwatch.ElapsedTicks;
 
-            SinglethreadFrameEnd();
-            long frameEnd = stopwatch.ElapsedTicks;
-
             stopwatch.Stop();
 
             StringBuilder builder = new StringBuilder();
             builder.AppendLine();
 
-            builder.AppendFormat("Frame updating took {0} ticks (before {1}, concurrent {2}, after {3})", stopwatch.ElapsedTicks, frameBegin, multithreadEnd - frameBegin, frameEnd - multithreadEnd);
+            builder.AppendFormat("Frame updating took {0} ticks (before {1}, concurrent {2})", stopwatch.ElapsedTicks, frameBegin, multithreadEnd - frameBegin);
 
             for (int i = 0; i < _multithreadedSystems.Count; ++i) {
                 builder.AppendLine();
@@ -414,11 +419,8 @@ namespace Neon.Entities {
         /// <param name="instance">The instance to add</param>
         public void AddEntity(IEntity instance) {
             Entity entity = (Entity)instance;
-            _notifiedAddingEntities.Add(entity);
 
-            lock (this) {
-                _cacheUpdatePending.Add(entity);
-            }
+            _notifiedAddingEntities.Add(entity);
 
             instance.EventProcessor.Submit(HideEntityEvent.Instance);
         }
@@ -444,9 +446,7 @@ namespace Neon.Entities {
         /// Called when an entity has data state changes
         /// </summary>
         private void OnEntityDataStateChanged(Entity sender) {
-            lock (this) {
-                _cacheUpdatePending.Add(sender);
-            }
+            _notifiedStateChangeEntities.Add(sender);
         }
 
         List<Entity> MultithreadedSystemSharedContext.AddedEntities {
@@ -458,7 +458,7 @@ namespace Neon.Entities {
         }
 
         List<Entity> MultithreadedSystemSharedContext.StateChangedEntities {
-            get { return _cacheUpdateCurrent; }
+            get { return _stateChangeEntities; }
         }
     }
 }

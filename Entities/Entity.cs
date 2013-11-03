@@ -152,7 +152,19 @@ namespace Neon.Entities {
             DoModifications();
 
             ModificationNotifier.Reset();
-            DataStateChangeNotifier.Reset();
+
+            // We do *not* reset the DataStateChangeNotifier here.
+            // This may seem unusual, but the reason is for efficiency. This implementation is
+            // tightly coupled with the EntityManager. The EntityManager contains a list of Entities
+            // with data state changes (that systems use to check to see if an entity needs to be
+            // contained within it). Because data state changes run for multiple updates, that list
+            // can contain an Entity even if a modification has been applied. Activating the
+            // notifier inserts the Entity into the list. Reseting it effectively says that the
+            // Entity is no longer in the data state change list. Therefore, the EntityManager knows
+            // best when the entity is not in the list and is therefore responsible for reseting
+            // the notifier.
+
+            // DataStateChangeNotifier.Reset(); do not uncomment me; see above
         }
 
 
@@ -202,8 +214,8 @@ namespace Neon.Entities {
         }
 
         internal bool NeedsMoreDataStateChangeUpdates() {
-            // do we still have things to remove?
-            return _toRemove.Previous.Count > 0;
+            // do we still have things to remove or to add?
+            return _toRemove.Previous.Count > 0 || _toRemove.Current.Count > 0 || _toAdd.Count > 0;
         }
         #endregion
 
