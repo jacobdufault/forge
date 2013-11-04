@@ -1,7 +1,6 @@
-﻿using Neon.Utilities;
-using System;
+﻿using System;
 
-namespace Neon.Entities {
+namespace Neon.Utilities {
     /// <summary>
     /// Wraps the notification pattern, where something happens multiple times but the listeners
     /// should only be notified once.
