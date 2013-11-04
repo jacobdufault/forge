@@ -99,6 +99,19 @@ namespace Neon.Entities {
             get;
             private set;
         }
+
+        public override bool Equals(Object obj) {
+            return obj is DataAccessor && this == (DataAccessor)obj;
+        }
+        public override int GetHashCode() {
+            return Id.GetHashCode();
+        }
+        public static bool operator ==(DataAccessor x, DataAccessor y) {
+            return x.Id == y.Id;
+        }
+        public static bool operator !=(DataAccessor x, DataAccessor y) {
+            return !(x == y);
+        }
     }
 
     /// <summary>

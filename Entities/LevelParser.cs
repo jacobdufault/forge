@@ -96,12 +96,59 @@ namespace Neon.Entities {
     public class TemplateDataJson {
         public string DataType;
         public JsonData State;
+
+        /// <summary>
+        /// Deserializes the TemplateDataJson into a Data instance.
+        /// </summary>
+        public Data GetDataInstance() {
+            Type dataType = TypeCache.FindType(DataType);
+            object deserialized = JsonMapper.ReadValue(dataType, State);
+            return (Data)deserialized;
+        }
     }
 
     public class TemplateJson {
         public string PrettyName;
-        public int UniqueId;
+        public int TemplateId;
         public List<TemplateDataJson> Data;
+
+        public static void ClearCache() {
+            _foundTemplates.Clear();
+        }
+
+        public static void LoadTemplates(IEnumerable<TemplateJson> templates) {
+            foreach (var templateJson in templates) {
+                EntityTemplate template = new EntityTemplate(templateJson.TemplateId);
+
+                foreach (var dataJson in templateJson.Data) {
+                    template.AddDefaultData(dataJson.GetDataInstance());
+                }
+
+                _foundTemplates[templateJson.TemplateId] = template;
+            }
+        }
+
+        private static Dictionary<int, EntityTemplate> _foundTemplates = new Dictionary<int, EntityTemplate>();
+
+        static TemplateJson() {
+            JsonMapper.RegisterExporter<EntityTemplate>((template, writer) => {
+                writer.Write(template.TemplateId);
+            });
+
+            JsonMapper.RegisterObjectImporter(typeof(EntityTemplate), jsonData => {
+                EntityTemplate template;
+
+                if (jsonData.IsInt) {
+                    if (_foundTemplates.TryGetValue((int)jsonData, out template)) {
+                        return template;
+                    }
+
+                    throw new Exception("No such template with id=" + (int)jsonData);
+                }
+
+                throw new Exception("Inline template definitions are not supported; must load template by referencing its TemplateId");
+            });
+        }
     }
 
     public class EntityJson {
@@ -130,7 +177,7 @@ namespace Neon.Entities {
                 restoredData.Add(data);
             }
 
-            return new Entity(UniqueId, restoredData);
+            return new Entity(PrettyName ?? "", UniqueId, restoredData);
         }
 
         public void Print() {
@@ -162,11 +209,17 @@ namespace Neon.Entities {
         }
 
         public Tuple<EntityManager, LevelMetadata> Restore() {
+
             // get configuration
             ConfigurationJson config = ConfigurationJson;
             config.Restore();
 
 
+            // load our template cache
+            TemplateJson.ClearCache();
+            TemplateJson.LoadTemplates(Templates);
+
+            // restore entities
             bool hasStateChange;
             bool hasModification;
 
@@ -189,7 +242,10 @@ namespace Neon.Entities {
             // create all of our systems
             List<ISystem> systems = new List<ISystem>();
             foreach (var provider in config.Providers) {
-                systems.AddRange(provider.GetSystems());
+                foreach (var system in provider.GetSystems()) {
+                    Console.WriteLine("Adding system " + system);
+                    systems.Add(system);
+                }
             }
 
             // restore them
@@ -209,6 +265,7 @@ namespace Neon.Entities {
             }
 
             EntityManager entityManager = new EntityManager(CurrentUpdateNumber, singleton, restoredEntities, systems);
+            EntityTemplate.EntityManager = entityManager;
 
             LevelMetadata metadata = new LevelMetadata();
             metadata.ConfigurationPath = ConfigurationPath;
@@ -293,49 +350,6 @@ namespace Neon.Entities {
             return level.Restore();
         }
 
-        private static EntityJson SerializeEntity(IEntity entity, EntityManager entityManager) {
-            List<DataJson> dataJsonList = new List<DataJson>();
-            ICollection<Data> containedData = entity.SelectCurrentData(data => true);
-            foreach (var dataInstance in containedData) {
-                DataAccessor accessor = new DataAccessor(dataInstance.GetType());
-
-
-                DataJson dataJson = new DataJson() {
-                    DataType = dataInstance.GetType().ToString(),
-                    WasModified = entity.WasModified(accessor),
-                };
-
-                Data addedData = ((Entity)entity).GetAdding(accessor);
-                if (addedData != null) {
-                    dataJson.IsAdding = true;
-                    dataJson.IsRemoving = false;
-                    dataJson.PreviousState = JsonMapper.ToJsonData(addedData);
-                    dataJson.CurrentState = JsonMapper.ToJsonData(addedData);
-                }
-
-                else {
-                    dataJson.IsAdding = false;
-                    dataJson.PreviousState = JsonMapper.ToJsonData(entity.Previous(accessor));
-                    dataJson.CurrentState = JsonMapper.ToJsonData(entity.Current(accessor));
-                }
-
-                if (((Entity)entity).IsRemoving(accessor)) {
-                    dataJson.IsRemoving = true;
-                }
-
-                dataJsonList.Add(dataJson);
-            }
-
-            EntityJson entityJson = new EntityJson() {
-                PrettyName = "TODO nyi",
-                UniqueId = entity.UniqueId,
-                Data = dataJsonList,
-                IsAdding = entityManager.AddedEntities.Contains((Entity)entity),
-                IsRemoving = entityManager.RemovedEntities.Contains((Entity)entity)
-            };
-            return entityJson;
-        }
-
         public static string SaveEntityManager(EntityManager entityManager, LevelMetadata metadata) {
             LevelJson level = new LevelJson();
 
@@ -358,11 +372,18 @@ namespace Neon.Entities {
             }
 
             // Serialize entities
-            level.SingletonEntity = SerializeEntity(entityManager.SingletonEntity, entityManager);
+            level.SingletonEntity = ((Entity)entityManager.SingletonEntity).ToJson(false, false);
+
+            List<Entity> removing = entityManager.GetEntitiesToRemove();
 
             level.Entities = new List<EntityJson>();
             foreach (var entity in entityManager.Entities) {
-                level.Entities.Add(SerializeEntity(entity, entityManager));
+                level.Entities.Add(((Entity)entity).ToJson(entityIsAdding: false, entityIsRemoving: removing.Contains(((Entity)entity))));
+            }
+
+            List<Entity> adding = entityManager.GetEntitiesToAdd();
+            foreach (var entity in adding) {
+                level.Entities.Add(((Entity)entity).ToJson(entityIsAdding: true, entityIsRemoving: false));
             }
 
             level.Templates = metadata.Templates;
@@ -370,7 +391,7 @@ namespace Neon.Entities {
             JsonWriter writer = new JsonWriter();
             writer.PrettyPrint = true;
             JsonMapper.ToJson(level, writer);
-            
+
             return writer.ToString();
         }
     }

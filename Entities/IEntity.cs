@@ -60,16 +60,6 @@ namespace Neon.Entities {
         void RemoveData(DataAccessor accessor);
 
         /// <summary>
-        /// If Enabled is set to false, then the Entity will not be processed in any Update or
-        /// StructuredInput based systems. However, modification ripples are still applied to the
-        /// Entity until it has no more modifications.
-        /// </summary>
-        bool Enabled {
-            get;
-            set;
-        }
-
-        /// <summary>
         /// Modify the given data instance. The current and previous values are still accessible.
         /// Please note that a data instance can only be modified once; an exception is thrown if
         /// one instance is modified multiple times.
@@ -117,6 +107,14 @@ namespace Neon.Entities {
         /// The unique id for the entity
         /// </summary>
         int UniqueId {
+            get;
+        }
+
+        /// <summary>
+        /// A non-unique string that represents a "human readable" name for the entity. This carries
+        /// no weight in the simulation, and is only meant for diagnostics.
+        /// </summary>
+        string PrettyName {
             get;
         }
     }

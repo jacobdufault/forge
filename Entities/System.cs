@@ -322,9 +322,7 @@ namespace Neon.Entities {
                         if (_triggerInput.IStructuredInputType.IsInstanceOfType(input[i])) {
                             for (int j = 0; j < _entityCache.CachedEntities.Length; ++j) {
                                 IEntity entity = _entityCache.CachedEntities[j];
-                                if (entity.Enabled) {
-                                    _triggerInput.OnInput(input[i], entity);
-                                }
+                                _triggerInput.OnInput(input[i], entity);
                             }
                         }
                     }

@@ -92,6 +92,7 @@ namespace LitJson {
 
     public delegate IJsonWrapper WrapperFactory();
 
+    public delegate object CustomObjectImporter(JsonData input);
 
     public class JsonMapper {
         #region Fields
@@ -99,8 +100,10 @@ namespace LitJson {
 
         private static IFormatProvider datetime_format;
 
-        private static IDictionary<Type, ExporterFunc> base_exporters_table;
-        private static IDictionary<Type, ExporterFunc> custom_exporters_table;
+        private static IDictionary<Type, CustomObjectImporter> custom_object_importers = new Dictionary<Type, CustomObjectImporter>();
+
+        private static IDictionary<Type, ExporterFunc> base_exporters_table = new Dictionary<Type, ExporterFunc>();
+        private static IDictionary<Type, ExporterFunc> custom_exporters_table = new Dictionary<Type, ExporterFunc>();
 
         private static IDictionary<Type,
                 IDictionary<Type, ImporterFunc>> base_importers_table;
@@ -139,9 +142,6 @@ namespace LitJson {
             static_writer = new JsonWriter();
 
             datetime_format = DateTimeFormatInfo.InvariantInfo;
-
-            base_exporters_table = new Dictionary<Type, ExporterFunc>();
-            custom_exporters_table = new Dictionary<Type, ExporterFunc>();
 
             base_importers_table = new Dictionary<Type,
                                  IDictionary<Type, ImporterFunc>>();
@@ -323,6 +323,11 @@ namespace LitJson {
         }
 
         public static object ReadValue(Type inst_type, JsonData reader, bool skipNonMembers = false) {
+            // If there's a custom reader, use it instead
+            if (custom_object_importers.ContainsKey(inst_type)) {
+                return custom_object_importers[inst_type](reader);
+            }
+
             if (reader.IsDouble) return (double)reader;
             else if (reader.IsInt) return (int)reader;
             else if (reader.IsLong) return (long)reader;
@@ -817,6 +822,13 @@ namespace LitJson {
                                    "trying to export from type {0}",
                                    obj.GetType()));
 
+            // If there's a custom exporter, use it instead
+            if (custom_exporters_table.ContainsKey(obj.GetType())) {
+                ExporterFunc exporter = custom_exporters_table[obj.GetType()];
+                exporter(obj, writer);
+                return;
+            }
+
             if (obj == null) {
                 writer.Write(null);
                 return;
@@ -1033,6 +1045,10 @@ namespace LitJson {
 
             RegisterImporter(custom_importers_table, typeof(TJson),
                               typeof(TValue), importer_wrapper);
+        }
+
+        public static void RegisterObjectImporter(Type type, CustomObjectImporter importer) {
+            custom_object_importers.Add(type, importer);
         }
 
         public static void UnregisterExporters() {

@@ -23,7 +23,7 @@ namespace Neon.Utilities {
         /// </summary>
         public void Consume(int value) {
             if (value >= _next) {
-                _next = value + 1;
+                _next = value;
             }
         }
     }

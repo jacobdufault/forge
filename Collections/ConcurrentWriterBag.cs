@@ -43,6 +43,21 @@ namespace Neon.Collections {
         }
 
         /// <summary>
+        /// Returns all items inside of the bag as a list. This method is not thread safe. This
+        /// method does *not* clear the collection.
+        /// </summary>
+        public List<T> ToList() {
+            List<T> result = new List<T>();
+            for (int i = 0; i < _allCollections.Count; ++i) {
+                Bag<T> collection = _allCollections[i];
+                for (int j = 0; j < collection.Length; ++j) {
+                    result.Add(collection[j]);
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
         /// Calls the iterator over every item in the bag and then clears the bags that were
         /// iterated.
         /// </summary>

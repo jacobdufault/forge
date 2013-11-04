@@ -252,11 +252,14 @@ namespace Neon.Entities {
             _entities.Add(toAdd, GetEntitiesListFromMetadata(toAdd));
         }
 
-        private void SinglethreadFrameBegin() {
+        private void SinglethreadFrameEnd() {
             _addedEntities.Clear();
-            _notifiedAddingEntities.CopyIntoAndClear(_addedEntities);
-
             _removedEntities.Clear();
+        }
+
+        private void SinglethreadFrameBegin() {
+            // _addedEntities and _removedEntities were cleared in SinglethreadFrameEnd()
+            _notifiedAddingEntities.CopyIntoAndClear(_addedEntities);
             _notifiedRemovedEntities.CopyIntoAndClear(_removedEntities);
 
             ++UpdateNumber;
@@ -371,6 +374,8 @@ namespace Neon.Entities {
             MultithreadRunSystems(commands);
             long multithreadEnd = stopwatch.ElapsedTicks;
 
+            SinglethreadFrameEnd();
+
             stopwatch.Stop();
 
             StringBuilder builder = new StringBuilder();
@@ -469,12 +474,26 @@ namespace Neon.Entities {
             _notifiedStateChangeEntities.Add(sender);
         }
 
+        /// <summary>
+        /// Returns all entities that will be added in the next update.
+        /// </summary>
+        public List<Entity> GetEntitiesToAdd() {
+            return _notifiedAddingEntities.ToList();
+        }
+
+        /// <summary>
+        /// Returns all entities that will be removed in the next update.
+        /// </summary>
+        public List<Entity> GetEntitiesToRemove() {
+            return _notifiedRemovedEntities.ToList();
+        }
+
         #region MultithreadedSystemSharedContext Implementation
-        public List<Entity> AddedEntities {
+        List<Entity> MultithreadedSystemSharedContext.AddedEntities {
             get { return _addedEntities; }
         }
 
-        public List<Entity> RemovedEntities {
+        List<Entity> MultithreadedSystemSharedContext.RemovedEntities {
             get { return _removedEntities; }
         }
 

@@ -10,10 +10,20 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace PerformanceTests {
+    public class SpawnData : GameData<SpawnData> {
+        public EntityTemplate SpawnedTemplate;
+
+        public override void DoCopyFrom(SpawnData source) {
+            this.SpawnedTemplate = source.SpawnedTemplate;
+        }
+
+        public override int HashCode {
+            get { return 0; }
+        }
+    }
+
     public class MyPositionData : GameData<MyPositionData> {
         public int X;
         public int Z;
@@ -50,18 +60,18 @@ namespace PerformanceTests {
         }
     }
 
-    public class MovementSystem1 : ITriggerUpdate, ITriggerAdded, ITriggerModified {
+    public class MovementSystem : ITriggerUpdate, ITriggerAdded, ITriggerModified {
         public void OnAdded(IEntity entity) {
-            Console.WriteLine("OnAdded " + entity + "; previous=" + entity.Previous<MyPositionData>() + "; current=" + entity.Current<MyPositionData>());
+            //Console.WriteLine("OnAdded " + entity + "; previous=" + entity.Previous<MyPositionData>() + "; current=" + entity.Current<MyPositionData>());
         }
 
         public void OnUpdate(IEntity entity) {
-            Console.WriteLine("OnUpdate " + entity + "; previous=" + entity.Previous<MyPositionData>() + "; current=" + entity.Current<MyPositionData>());
+            //Console.WriteLine("OnUpdate " + entity + "; previous=" + entity.Previous<MyPositionData>() + "; current=" + entity.Current<MyPositionData>());
             entity.Modify<MyPositionData>().X += 1;
         }
 
         public void OnModified(IEntity entity) {
-            Console.WriteLine("OnModified " + entity + "; previous=" + entity.Previous<MyPositionData>() + "; current=" + entity.Current<MyPositionData>());
+            //Console.WriteLine("OnModified " + entity + "; previous=" + entity.Previous<MyPositionData>() + "; current=" + entity.Current<MyPositionData>());
         }
 
         public Type[] ComputeEntityFilter() {
@@ -80,15 +90,14 @@ namespace PerformanceTests {
         }
     }
 
-    public class MovementSystem2 : ITriggerUpdate, ITriggerModified {
+    public class SpawnSystem : ITriggerUpdate {
         public void OnUpdate(IEntity entity) {
-        }
-
-        public void OnModified(IEntity entity) {
+            //Console.WriteLine("Running SpawnSystem.OnUpdate for " + entity);
+            entity.Current<SpawnData>().SpawnedTemplate.Instantiate();
         }
 
         public Type[] ComputeEntityFilter() {
-            return new[] { typeof(MyPositionData) };
+            return new[] { typeof(SpawnData) };
         }
 
         public string RestorationGUID {
@@ -99,7 +108,6 @@ namespace PerformanceTests {
             return new JsonData();
         }
 
-
         public void Restore(JsonData data) {
         }
     }
@@ -107,73 +115,57 @@ namespace PerformanceTests {
     public class SystemProvider : ISystemProvider {
         public ISystem[] GetSystems() {
             return new ISystem[] {
-                new MovementSystem1(),
-                //new MovementSystem2()
+                new MovementSystem(),
+                new SpawnSystem()
             };
         }
     }
 
-    class Program {
+    internal class Program {
         private IEntity CreateEntity() {
             IEntity entity = new Entity();
             entity.AddData<MyPositionData>();
             return entity;
         }
 
-        public Program() {
-
-            EntityManager.EnableMultithreading = true;
-            EntityManager entityManager = new EntityManager(new Entity());
-
-            entityManager.AddSystem(new MovementSystem1());
-
-            for (int i = 0; i < 50; ++i) {
-                entityManager.AddSystem(new MovementSystem2());
-            }
-
-
-            for (int i = 0; i < 500; ++i) {
-                entityManager.AddEntity(CreateEntity());
-            }
-
-            //Stopwatch stopwatch = new Stopwatch();
-            //stopwatch.Start();
-            List<IStructuredInput> input = new List<IStructuredInput>();
-            for (int i = 0; i < 1000; ++i) {
-                entityManager.UpdateWorld(input).Wait();
-            }
-            //stopwatch.Stop();
-            //Console.WriteLine(stopwatch.ElapsedMilliseconds);
-            //Console.ReadLine();
-        }
-
-        static void Main(string[] args) {
-
-            Tuple<EntityManager, LevelMetadata> loadedLevel = Loader.LoadEntityManager("../../Level.json");
+        private static void Main(string[] args) {
+            Console.WriteLine("...loading");
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+            Tuple<EntityManager, LevelMetadata> loadedLevel = Loader.LoadEntityManager("../../SavedLevel.json");
+            stopwatch.Stop();
+            Console.WriteLine("Done; loading the level took " + stopwatch.ElapsedTicks + " ticks (or " + stopwatch.ElapsedMilliseconds + "ms)");
             EntityManager entityManager = loadedLevel.Item1;
-            for (int i = 0; i < 3; ++i) {
-                Console.WriteLine();
-                Console.WriteLine();
-                Console.WriteLine();
+
+            stopwatch.Reset();
+            stopwatch.Start();
+            for (int i = 0; i < 1; ++i) {
                 entityManager.UpdateWorld(new List<IStructuredInput>()).Wait();
             }
+            stopwatch.Stop();
+            Console.WriteLine("Done; updating took " + stopwatch.ElapsedTicks + " ticks (or " + stopwatch.ElapsedMilliseconds + "ms)");
 
-
+            stopwatch.Reset();
+            stopwatch.Start();
             string saved = Loader.SaveEntityManager(loadedLevel.Item1, loadedLevel.Item2);
+            stopwatch.Stop();
+            Console.WriteLine("Done; saving took " + stopwatch.ElapsedTicks + " ticks (or " + stopwatch.ElapsedMilliseconds + "ms)");
+
             File.WriteAllText("../../SavedLevel.json", saved);
 
+            Console.WriteLine();
+            Console.WriteLine("Hit enter to exit");
             Console.ReadLine();
             return;
 
-
-            // file configuration failed; fall back to hard-coded backup; setup the default configuration
+            // file configuration failed; fall back to hard-coded backup; setup the default
+            // configuration
             Hierarchy hierarchy = (Hierarchy)LogManager.GetRepository();
             hierarchy.Shutdown();
             hierarchy.ResetConfiguration();
             hierarchy.Root.Level = log4net.Core.Level.All;
 
             ConfigureAppenders();
-
 
             new Program();
 

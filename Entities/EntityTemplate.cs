@@ -13,6 +13,21 @@ namespace Neon.Entities {
         protected List<Data> _defaultDataInstances = new List<Data>();
 
         /// <summary>
+        /// The entity manager that spawned entities are injected into.
+        /// </summary>
+        // TODO: figure out some good DI system
+        public static EntityManager EntityManager;
+
+        public int TemplateId {
+            get;
+            private set;
+        }
+
+        public EntityTemplate(int id) {
+            TemplateId = id;
+        }
+
+        /// <summary>
         /// Adds a default data instance to the template. The template "owns" the passed data
         /// instance; a copy is not made of it.
         /// </summary>
@@ -41,46 +56,8 @@ namespace Neon.Entities {
         public virtual IEntity Instantiate() {
             IEntity entity = new Entity();
             InjectDataInto(entity);
+            EntityManager.AddEntity(entity);
             return entity;
         }
-
-        /*
-        /// <summary>
-        /// Attempts to return the default data instance for the given Data type in the given
-        /// Entity.
-        /// </summary>
-        /// <remarks>
-        /// The returned data instance should *NEVER* be modified.
-        /// </remarks>
-        /// <param name="dataType">The type of data to lookup</param>
-        /// <returns>A potential data instance that contains default values.</returns>
-        public Maybe<Data> GetDefaultInstance(DataAccessor dataType) {
-            if (_defaultDataInstances.Contains(dataType.Id)) {
-                return Maybe<Data>.Just(_defaultDataInstances[dataType.Id]);
-            }
-
-            return Maybe<Data>.Empty;
-        }
-
-        /// <summary>
-        /// Returns an enumerator that iterates through the collection.
-        /// </summary>
-        /// <returns>A <see cref="T:System.Collections.Generic.IEnumerator`1" /> that can be used to
-        /// iterate through the collection.</returns>
-        public IEnumerator<Data> GetEnumerator() {
-            foreach (var tuple in _defaultDataInstances) {
-                yield return tuple.Item2;
-            }
-        }
-
-        /// <summary>
-        /// Returns an enumerator that iterates through a collection.
-        /// </summary>
-        /// <returns>An <see cref="T:System.Collections.IEnumerator" /> object that can be used to
-        /// iterate through the collection.</returns>
-        IEnumerator IEnumerable.GetEnumerator() {
-            return _defaultDataInstances.GetEnumerator();
-        }
-        */
     }
 }

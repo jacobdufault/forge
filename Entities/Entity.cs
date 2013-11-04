@@ -1,4 +1,5 @@
-﻿using Neon.Collections;
+﻿using LitJson;
+using Neon.Collections;
 using Neon.Utilities;
 using System;
 using System.Collections.Generic;
@@ -24,14 +25,74 @@ namespace Neon.Entities {
     }
 
     public class Entity : IEntity {
-        #region Enabled
-        private volatile bool _enabled;
-        bool IEntity.Enabled {
-            get {
-                return _enabled;
+        public EntityJson ToJson(bool entityIsAdding, bool entityIsRemoving) {
+            List<DataAccessor> modified = _concurrentModifications.ToList();
+
+            List<DataJson> dataJsonList = new List<DataJson>();
+            foreach (var tuple in _data) {
+                int id = tuple.Item1;
+                DataAccessor accessor = new DataAccessor(id);
+                ImmutableContainer<Data> container = tuple.Item2;
+
+                DataJson dataJson = new DataJson() {
+                    DataType = container.Current.GetType().ToString(),
+                    IsAdding = false,
+                    IsRemoving = IsRemoving(accessor)
+                };
+
+                if (modified.Contains(accessor)) { 
+                    dataJson.WasModified = true;
+                    dataJson.PreviousState = JsonMapper.ToJsonData(container.Current);
+                    dataJson.CurrentState = JsonMapper.ToJsonData(container.Modifying);
+                }
+
+                else {
+                    dataJson.WasModified = false;
+                    dataJson.PreviousState = JsonMapper.ToJsonData(container.Previous);
+                    dataJson.CurrentState = JsonMapper.ToJsonData(container.Current);
+                }
+
+                dataJsonList.Add(dataJson);
             }
-            set {
-                _enabled = value;
+
+
+            foreach (var addedData in _toAdd) {
+                DataAccessor accessor = new DataAccessor(addedData.GetType());
+
+                DataJson dataJson = new DataJson() {
+                    DataType = addedData.GetType().ToString(),
+                    WasModified = false, // doesn't matter
+                    IsAdding = true, // always true
+                    IsRemoving = false, // doesn't matter
+                    PreviousState = JsonMapper.ToJsonData(addedData), // doesn't matter
+                    CurrentState = JsonMapper.ToJsonData(addedData)
+                };
+                dataJsonList.Add(dataJson);
+            }
+
+
+            EntityJson entityJson = new EntityJson() {
+                PrettyName = _prettyName,
+                UniqueId = _uniqueId,
+                Data = dataJsonList,
+                IsAdding = entityIsAdding,
+                IsRemoving = entityIsRemoving
+            };
+            return entityJson;
+        }
+
+        #region Pretty Name
+        /// <summary>
+        /// The Entity's pretty name, used for debugging / printing purposes.
+        /// </summary>
+        /// <remarks>
+        /// If the entity does not have a pretty name, then this value is set to an empty string.
+        /// </remarks>
+        private string _prettyName;
+
+        string IEntity.PrettyName {
+            get {
+                return _prettyName;
             }
         }
         #endregion
@@ -76,10 +137,10 @@ namespace Neon.Entities {
         /// <remarks>
         /// Notice, however, that this function does *NOT* notify the EntityManager if a data instance has been restored which has a modification or a state change.
         /// </remarks>
-        internal Entity(int uniqueId, List<SerializedEntityData> restoredData) {
+        internal Entity(string prettyName, int uniqueId, List<SerializedEntityData> restoredData) {
+            _prettyName = prettyName;
             _uniqueId = uniqueId;
             _idGenerator.Consume(uniqueId);
-            _enabled = true;
             _eventProcessor = new EventProcessor();
 
             DataStateChangeNotifier = new Notifier<Entity>(this);
@@ -119,8 +180,8 @@ namespace Neon.Entities {
         }
 
         public Entity() {
+            _prettyName = "";
             _uniqueId = _idGenerator.Next();
-            _enabled = true; // default to being enabled
             _eventProcessor = new EventProcessor();
 
             DataStateChangeNotifier = new Notifier<Entity>(this);
@@ -414,11 +475,10 @@ namespace Neon.Entities {
         }
 
         /// <summary>
-        /// Returns an instance of Data that is being added for the given accessor, iff that data
-        /// is being added. Otherwise returns null.
+        /// Returns all data instances that are being added.
         /// </summary>
-        public Data GetAdding(DataAccessor accessor) {
-            return GetAddedData_unlocked(accessor);
+        public List<Data> GetAddingData() {
+            return _toAdd;
         }
 
         /// <summary>
@@ -428,9 +488,14 @@ namespace Neon.Entities {
         public bool IsRemoving(DataAccessor accessor) {
             return _toRemove.Current.Contains(accessor);
         }
-        
+
         public override string ToString() {
-            return string.Format("Entity [uid={0}]", _uniqueId);
+            if (_prettyName.Length > 0) {
+                return string.Format("Entity [uid={0}, name={1}]", _uniqueId, _prettyName);
+            }
+            else {
+                return string.Format("Entity [uid={0}]", _uniqueId);
+            }
         }
     }
 }
