@@ -1,19 +1,14 @@
 ﻿{
-    "ConfigurationPath": "../../Configuration.json",
-    "Systems": [],
-//    "Templates": [
-//        {
-//            "PrettyName": "My first template",
-//            "UniqueId": 3,
-//            "Data": {
-//                "DataType": "PerformanceTests.MyLocomotionData",
-//                "State": {
-//                    "Speed": 10,
-//                    "Variance": 3
-//                }
-//            }
-//        },
-//    ],
+    "DllInjections": [
+//        "Neon.Positional.dll",
+//        "CoreTech.Systems.dll"
+    ],
+
+    "SystemProviders": [
+        "PerformanceTests.SystemProvider"
+    ],
+
+    "SavedSystemStates": [],
     
     "CurrentUpdateNumber": 0,
     

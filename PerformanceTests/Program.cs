@@ -5,6 +5,7 @@ using log4net.Config;
 using log4net.Layout;
 using log4net.Repository.Hierarchy;
 using Neon.Entities;
+using Neon.Entities.Serialization;
 using Neon.Utilities;
 using System;
 using System.Collections.Generic;
