@@ -5,6 +5,9 @@ using System.IO;
 using System.Reflection;
 
 namespace Neon.Entities.Serialization {
+    /// <summary>
+    /// JSON specification for an EntityManager state (a level).
+    /// </summary>
     public class LevelJson {
         /// <summary>
         /// The relative paths of DLLs to inject.
@@ -71,7 +74,6 @@ namespace Neon.Entities.Serialization {
         /// Returns all systems that are loaded by the level (from the registered ISystemProviders)
         /// that have also had their states restored.
         /// </summary>
-
         private List<ISystem> GetRestoredSystems() {
             // create our systems from the system providers
             List<ISystem> systems = new List<ISystem>();

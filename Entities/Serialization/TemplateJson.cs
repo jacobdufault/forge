@@ -1,21 +1,21 @@
 ﻿using LitJson;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Neon.Entities.Serialization {
+    /// <summary>
+    /// JSON specification for a data instance inside of an EntityTemplate.
+    /// </summary>
     public class TemplateDataJson {
         /// <summary>
         /// The fully qualified type of the data instance.
         /// </summary>
         public string DataType;
-        
+
         /// <summary>
         /// The JSON data for the state initial data state of the template.
         /// </summary>
         public JsonData State;
-
 
         [NonSerialized]
         private Data _dataInstance;
@@ -32,6 +32,9 @@ namespace Neon.Entities.Serialization {
         }
     }
 
+    /// <summary>
+    /// JSON specification for an EntityTemplate.
+    /// </summary>
     public class TemplateJson {
         /// <summary>
         /// The pretty name of the template (for debugging).

@@ -3,6 +3,9 @@ using System;
 using System.Collections.Generic;
 
 namespace Neon.Entities.Serialization {
+    /// <summary>
+    /// JSON specification for an instance of Data inside of an IEntity.
+    /// </summary>
     public class DataJson {
         /// <summary>
         /// The type name of the data that this data item maps to.
@@ -55,6 +58,9 @@ namespace Neon.Entities.Serialization {
         }
     }
 
+    /// <summary>
+    /// JSON specification for an IEntity instance.
+    /// </summary>
     public class EntityJson {
         /// <summary>
         /// The pretty name for the entity. This is optional and can be null (on read).
