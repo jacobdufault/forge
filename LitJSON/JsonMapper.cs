@@ -8,7 +8,6 @@
  **/
 #endregion
 
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -16,14 +15,12 @@ using System.Globalization;
 using System.IO;
 using System.Reflection;
 
-
 namespace LitJson {
     internal struct PropertyMetadata {
         public MemberInfo Info;
         public bool IsField;
         public Type Type;
     }
-
 
     internal struct ArrayMetadata {
         private Type element_type;
@@ -51,7 +48,6 @@ namespace LitJson {
         }
     }
 
-
     internal struct ObjectMetadata {
         private Type element_type;
 
@@ -78,7 +74,6 @@ namespace LitJson {
         }
     }
 
-
     internal delegate void ExporterFunc(object obj, JsonWriter writer);
     public delegate void ExporterFunc<T>(T obj, JsonWriter writer);
 
@@ -95,33 +90,34 @@ namespace LitJson {
 
         private static IFormatProvider datetime_format;
 
+        /// <summary>
+        /// Used for converting json to object instances.
+        /// </summary>
         private static IDictionary<Type, CustomObjectImporter> custom_object_importers = new Dictionary<Type, CustomObjectImporter>();
 
+        /// <summary>
+        /// Used for converting types to json.
+        /// </summary>
         private static IDictionary<Type, ExporterFunc> exporters_table = new Dictionary<Type, ExporterFunc>();
 
-        private static IDictionary<Type,
-                IDictionary<Type, ImporterFunc>> base_importers_table;
-        private static IDictionary<Type,
-                IDictionary<Type, ImporterFunc>> custom_importers_table;
+        private static IDictionary<Type, IDictionary<Type, ImporterFunc>> base_importers_table;
+        private static IDictionary<Type, IDictionary<Type, ImporterFunc>> custom_importers_table;
 
         private static IDictionary<Type, ArrayMetadata> array_metadata;
         private static readonly object array_metadata_lock = new Object();
 
-        private static IDictionary<Type,
-                IDictionary<Type, MethodInfo>> conv_ops;
+        private static IDictionary<Type, IDictionary<Type, MethodInfo>> conv_ops;
         private static readonly object conv_ops_lock = new Object();
 
         private static IDictionary<Type, ObjectMetadata> object_metadata;
         private static readonly object object_metadata_lock = new Object();
 
-        private static IDictionary<Type,
-                IList<PropertyMetadata>> type_properties;
+        private static IDictionary<Type, IList<PropertyMetadata>> type_properties;
         private static readonly object type_properties_lock = new Object();
 
         private static JsonWriter static_writer;
         private static readonly object static_writer_lock = new Object();
         #endregion
-
 
         #region Constructors
         static JsonMapper() {
@@ -146,7 +142,6 @@ namespace LitJson {
             RegisterBaseImporters();
         }
         #endregion
-
 
         #region Private Methods
         private static void AddArrayMetadata(Type type) {
@@ -246,6 +241,11 @@ namespace LitJson {
             return false;
         }
 
+        /// <summary>
+        /// Reflects information about the given type and stores property accessors to make writer
+        /// to and reading from the type faster.
+        /// </summary>
+        /// <param name="type">The given type to reflect on.</param>
         private static void AddTypeProperties(Type type) {
             if (type_properties.ContainsKey(type))
                 return;
@@ -368,8 +368,6 @@ namespace LitJson {
 
                 return instance;
             }
-
-
 
             else if (reader.IsObject) {
                 AddObjectMetadata(inst_type);
@@ -778,7 +776,6 @@ namespace LitJson {
             RegisterImporter(base_importers_table, typeof(double),
                               typeof(decimal), importer);
 
-
             importer = delegate(object input) {
                 return Convert.ToUInt32((long)input);
             };
@@ -918,8 +915,7 @@ namespace LitJson {
                 return;
             }
 
-            // Okay, so it looks like the input should be exported as an
-            // object
+            // Okay, so it looks like the input should be exported as an object
             AddTypeProperties(obj_type);
             IList<PropertyMetadata> props = type_properties[obj_type];
 
@@ -943,7 +939,6 @@ namespace LitJson {
             writer.WriteObjectEnd();
         }
         #endregion
-
 
         public static string ToJson(object obj) {
             lock (static_writer_lock) {
