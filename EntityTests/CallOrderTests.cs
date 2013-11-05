@@ -68,18 +68,6 @@ namespace EntityTests {
         public void OnGlobalInput(IStructuredInput input, IEntity singletonEntity) {
             _events.Add(TriggerEvent.OnGlobalInput);
         }
-
-        public string RestorationGUID {
-            get { return "7597cdc69f7b4ca58f52822edc9fb1aa"; }
-        }
-
-        public JsonData Save() {
-            return new JsonData();
-        }
-
-
-        public void Restore(JsonData data) {
-        }
     }
 
     class TriggerEventLoggerFilterRequiresData0 : TriggerEventLogger {

@@ -107,20 +107,23 @@ namespace Neon.Entities.Serialization {
             return systems;
         }
 
-        public Tuple<EntityManager, LoadedMetadata> Restore() {
-            // inject dlls so that type lookups resolve correctly
-            // TODO: consider using an AppDomain so we can unload the previous EntitySystem
-            InjectDlls();
-
-            // load our template cache (so that EntityTemplates resolve correctly)
-            TemplateJson.ClearCache();
-            TemplateJson.LoadTemplates(Templates);
-
-            // restore entities
+        public EntityManager.RestoredEntity GetSingletonEntity() {
             bool hasStateChange;
             bool hasModification;
 
             Entity singleton = SingletonEntity.Restore(out hasStateChange, out hasModification);
+            return new EntityManager.RestoredEntity() {
+                Entity = singleton,
+                HasModification = hasModification,
+                HasStateChange = hasStateChange,
+                IsAdding = false,
+                IsRemoving = false
+            };
+        }
+
+        public List<EntityManager.RestoredEntity> GetRestoredEntities() {
+            bool hasStateChange;
+            bool hasModification;
 
             List<EntityManager.RestoredEntity> restoredEntities = new List<EntityManager.RestoredEntity>();
             foreach (var entityJson in Entities) {
@@ -135,16 +138,31 @@ namespace Neon.Entities.Serialization {
                 });
             }
 
-            // get restored systems
-            List<ISystem> systems = GetRestoredSystems();
+            return restoredEntities;
+        }
 
-            EntityManager entityManager = new EntityManager(CurrentUpdateNumber, singleton, restoredEntities, systems);
+        public Tuple<EntityManager, LoadedMetadata> Restore() {
+            // inject dlls so that type lookups resolve correctly
+            // TODO: consider using an AppDomain so we can unload the previous EntitySystem
+            InjectDlls();
+
+            // load our template cache (so that EntityTemplates resolve correctly)
+            TemplateJson.ClearCache();
+            TemplateJson.LoadTemplates(Templates);
+
+            var restoredSystems = GetRestoredSystems();
+
+            EntityManager entityManager = new EntityManager(
+                CurrentUpdateNumber,
+                GetSingletonEntity().Entity,
+                GetRestoredEntities(),
+                restoredSystems);
             EntityTemplate.EntityManager = entityManager;
 
             LoadedMetadata metadata = new LoadedMetadata();
             metadata.DllInjections = DllInjections;
             metadata.SystemProviders = SystemProviders;
-            metadata.Systems = systems;
+            metadata.Systems = restoredSystems;
             metadata.Templates = Templates;
 
             return Tuple.Create(entityManager, metadata);

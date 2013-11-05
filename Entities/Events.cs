@@ -58,6 +58,36 @@ namespace Neon.Entities {
     }
 
     /// <summary>
+    /// Event that notifies the listener that a new Entity has been added to the EntityManager.
+    /// </summary>
+    public class EntityAddedEvent : IEvent {
+        public Entity Entity;
+
+        /// <summary>
+        /// Initializes a new instance of the EntityAddedEvent class.
+        /// </summary>
+        /// <param name="entity">The entity that was added.</param>
+        internal EntityAddedEvent(Entity entity) {
+            Entity = entity;
+        }
+    }
+
+    /// <summary>
+    /// Event that notifies the listener that a new Entity has been removed from the EntityManager.
+    /// </summary>
+    public class EntityRemovedEvent : IEvent {
+        public Entity Entity;
+
+        /// <summary>
+        /// Initializes a new instance of the EntityRemovedEvent class.
+        /// </summary>
+        /// <param name="entity">The entity that was removed.</param>
+        internal EntityRemovedEvent(Entity entity) {
+            Entity = entity;
+        }
+    }
+
+    /// <summary>
     /// Event notifying listeners that the entity should be hidden.
     /// </summary>
     public class HideEntityEvent : SingletonEvent<HideEntityEvent> { }

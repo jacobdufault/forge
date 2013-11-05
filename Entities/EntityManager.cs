@@ -137,6 +137,11 @@ namespace Neon.Entities {
         private static MetadataKey _entityUnorderedListMetadataKey = Entity.MetadataRegistry.GetKey();
 
         /// <summary>
+        /// Events that the EntityManager dispatches.
+        /// </summary>
+        public EventProcessor EventProcessor = new EventProcessor();
+
+        /// <summary>
         /// Singleton entity that contains global data.
         /// </summary>
         public IEntity SingletonEntity {
@@ -165,6 +170,7 @@ namespace Neon.Entities {
         public EntityManager(IEntity singletonEntity) {
             SingletonEntity = (Entity)singletonEntity;
             SystemDoneEvent = new CountdownEvent(0);
+            _eventProcessors.BeginMonitoring(EventProcessor);
         }
 
         public class RestoredEntity {
@@ -179,7 +185,7 @@ namespace Neon.Entities {
 
         internal EntityManager(int updateNumber, IEntity singletonEntity, List<RestoredEntity> restoredEntities, List<ISystem> systems)
             : this(singletonEntity) {
-
+            
             UpdateNumber = updateNumber;
 
             foreach (var restoredEntity in restoredEntities) {
@@ -250,6 +256,9 @@ namespace Neon.Entities {
 
             // add it our list of entities
             _entities.Add(toAdd, GetEntitiesListFromMetadata(toAdd));
+
+            // notify listeners that we added an entity
+            EventProcessor.Submit(new EntityAddedEvent(toAdd));
         }
 
         private void SinglethreadFrameEnd() {
@@ -295,6 +304,9 @@ namespace Neon.Entities {
                 // remove the entity from the list of entities
                 _entities.Remove(toRemove, GetEntitiesListFromMetadata(toRemove));
                 ((IEntity)toRemove).EventProcessor.Submit(DestroyedEntityEvent.Instance);
+
+                // notify listeners we removed an event
+                EventProcessor.Submit(new EntityRemovedEvent(toRemove));
             }
             // can't clear b/c it is shared
 

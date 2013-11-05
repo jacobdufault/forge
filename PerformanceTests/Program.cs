@@ -78,17 +78,6 @@ namespace PerformanceTests {
         public Type[] ComputeEntityFilter() {
             return new[] { typeof(MyPositionData) };
         }
-
-        public string RestorationGUID {
-            get { return "0ec7763b6a614026a3fc080c7ecfbbf3"; }
-        }
-
-        public JsonData Save() {
-            return new JsonData();
-        }
-
-        public void Restore(JsonData data) {
-        }
     }
 
     public class SpawnSystem : ITriggerUpdate {
@@ -99,17 +88,6 @@ namespace PerformanceTests {
 
         public Type[] ComputeEntityFilter() {
             return new[] { typeof(SpawnData) };
-        }
-
-        public string RestorationGUID {
-            get { return "c919bfe5d1b447bc8f45fdc087a5c38b"; }
-        }
-
-        public JsonData Save() {
-            return new JsonData();
-        }
-
-        public void Restore(JsonData data) {
         }
     }
 

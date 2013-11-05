@@ -34,6 +34,23 @@ namespace Neon.Entities.Serialization {
     /// Handles loading and unloading an EntityManager from a file.
     /// </summary>
     public static class Loader {
+        public static List<IEntity> LoadEntities(string levelPath) {
+            throw new NotImplementedException();
+        }
+
+        public static List<EntityTemplate> LoadTemplates(string levelPath) {
+            throw new NotImplementedException();
+        }
+
+        public static IEntity LoadSingletonEntity(string levelPath) {
+            throw new NotImplementedException();
+        }
+
+        public static void SaveLevel(List<IEntity> entities, List<EntityTemplate> templates,
+            IEntity singletonEntity, List<string> dlls, List<string> systemProviders) {
+            throw new NotImplementedException();
+        }
+
         public static Tuple<EntityManager, LoadedMetadata> LoadEntityManager(string levelPath) {
             String fileText = File.ReadAllText(levelPath);
 
