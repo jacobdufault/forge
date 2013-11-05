@@ -1,10 +1,9 @@
 ﻿using LitJson;
 using Neon.Collections;
+using Neon.Entities.Serialization;
 using Neon.Utilities;
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Threading;
 
 namespace Neon.Entities {
     public class SerializedEntityData {
@@ -40,7 +39,7 @@ namespace Neon.Entities {
                     IsRemoving = IsRemoving(accessor)
                 };
 
-                if (modified.Contains(accessor)) { 
+                if (modified.Contains(accessor)) {
                     dataJson.WasModified = true;
                     dataJson.PreviousState = JsonMapper.ToJsonData(container.Current);
                     dataJson.CurrentState = JsonMapper.ToJsonData(container.Modifying);
@@ -55,7 +54,6 @@ namespace Neon.Entities {
                 dataJsonList.Add(dataJson);
             }
 
-
             foreach (var addedData in _toAdd) {
                 DataAccessor accessor = new DataAccessor(addedData.GetType());
 
@@ -69,7 +67,6 @@ namespace Neon.Entities {
                 };
                 dataJsonList.Add(dataJson);
             }
-
 
             EntityJson entityJson = new EntityJson() {
                 PrettyName = _prettyName,
@@ -135,7 +132,8 @@ namespace Neon.Entities {
         /// Reconstructs an entity with the given unique id and the set of restored data instances.
         /// </summary>
         /// <remarks>
-        /// Notice, however, that this function does *NOT* notify the EntityManager if a data instance has been restored which has a modification or a state change.
+        /// Notice, however, that this function does *NOT* notify the EntityManager if a data
+        /// instance has been restored which has a modification or a state change.
         /// </remarks>
         internal Entity(string prettyName, int uniqueId, List<SerializedEntityData> restoredData) {
             _prettyName = prettyName;
@@ -231,20 +229,18 @@ namespace Neon.Entities {
 
             ModificationNotifier.Reset();
 
-            // We do *not* reset the DataStateChangeNotifier here.
-            // This may seem unusual, but the reason is for efficiency. This implementation is
-            // tightly coupled with the EntityManager. The EntityManager contains a list of Entities
-            // with data state changes (that systems use to check to see if an entity needs to be
-            // contained within it). Because data state changes run for multiple updates, that list
-            // can contain an Entity even if a modification has been applied. Activating the
-            // notifier inserts the Entity into the list. Reseting it effectively says that the
-            // Entity is no longer in the data state change list. Therefore, the EntityManager knows
-            // best when the entity is not in the list and is therefore responsible for reseting
-            // the notifier.
+            // We do *not* reset the DataStateChangeNotifier here. This may seem unusual, but the
+            // reason is for efficiency. This implementation is tightly coupled with the
+            // EntityManager. The EntityManager contains a list of Entities with data state changes
+            // (that systems use to check to see if an entity needs to be contained within it).
+            // Because data state changes run for multiple updates, that list can contain an Entity
+            // even if a modification has been applied. Activating the notifier inserts the Entity
+            // into the list. Reseting it effectively says that the Entity is no longer in the data
+            // state change list. Therefore, the EntityManager knows best when the entity is not in
+            // the list and is therefore responsible for reseting the notifier.
 
             // DataStateChangeNotifier.Reset(); do not uncomment me; see above
         }
-
 
         /// <summary>
         /// Applies data state changes to the entity.
@@ -308,7 +304,8 @@ namespace Neon.Entities {
         /// item is the next state.
         /// </summary>
         /// <remarks>
-        /// Only the entity manager calls entity APIs that write to this; it is single-threaded only.
+        /// Only the entity manager calls entity APIs that write to this; it is single-threaded
+        /// only.
         /// </remarks>
         private IterableSparseArray<ImmutableContainer<Data>> _data = new IterableSparseArray<ImmutableContainer<Data>>();
 

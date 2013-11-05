@@ -133,7 +133,7 @@ namespace PerformanceTests {
             Console.WriteLine("...loading");
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
-            Tuple<EntityManager, LevelMetadata> loadedLevel = Loader.LoadEntityManager("../../SavedLevel.json");
+            Tuple<EntityManager, LoadedMetadata> loadedLevel = Loader.LoadEntityManager("../../SavedLevel.json");
             stopwatch.Stop();
             Console.WriteLine("Done; loading the level took " + stopwatch.ElapsedTicks + " ticks (or " + stopwatch.ElapsedMilliseconds + "ms)");
             EntityManager entityManager = loadedLevel.Item1;
