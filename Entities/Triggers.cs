@@ -9,6 +9,12 @@ namespace Neon.Entities {
     /// Client code should not directly extend this, as it does not give any behavior by itself.
     /// </remarks>
     public interface ISystem {
+    }
+
+    /// <summary>
+    /// Systems which require special saving/restoration logic should extend this class.
+    /// </summary>
+    public interface IRestoredSystem {
         /// <summary>
         /// Returns the GUID for this system. This is used to identify what JSON data to
         /// use when restoring the system.

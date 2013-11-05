@@ -88,10 +88,13 @@ namespace Neon.Entities.Serialization {
             foreach (SavedSystemStateJson systemJson in SavedSystemStates) {
                 bool found = false;
                 foreach (var system in systems) {
-                    if (system.RestorationGUID == systemJson.RestorationGUID) {
-                        system.Restore(systemJson.SavedState);
-                        found = true;
-                        break;
+                    if (system is IRestoredSystem) {
+                        IRestoredSystem restorableSystem = (IRestoredSystem)system;
+                        if (restorableSystem.RestorationGUID == systemJson.RestorationGUID) {
+                            restorableSystem.Restore(systemJson.SavedState);
+                            found = true;
+                            break;
+                        }
                     }
                 }
 

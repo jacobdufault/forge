@@ -55,15 +55,19 @@ namespace Neon.Entities.Serialization {
             // Serialize systems
             level.SavedSystemStates = new List<SavedSystemStateJson>();
             foreach (var system in metadata.Systems) {
-                JsonData savedState = system.Save();
-                if (savedState.GetJsonType() != JsonType.None) {
-                    SavedSystemStateJson systemJson = new SavedSystemStateJson() {
-                        RestorationGUID = system.RestorationGUID,
-                        SavedState = savedState
-                    };
+                if (system is IRestoredSystem) {
+                    IRestoredSystem restorableSystem = (IRestoredSystem)system;
+                    JsonData savedState = restorableSystem.Save();
+                    if (savedState.GetJsonType() != JsonType.None) {
+                        SavedSystemStateJson systemJson = new SavedSystemStateJson() {
+                            RestorationGUID = restorableSystem.RestorationGUID,
+                            SavedState = savedState
+                        };
 
-                    level.SavedSystemStates.Add(systemJson);
+                        level.SavedSystemStates.Add(systemJson);
+                    }
                 }
+
             }
 
             // Serialize entities
