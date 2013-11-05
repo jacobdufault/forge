@@ -97,8 +97,7 @@ namespace LitJson {
 
         private static IDictionary<Type, CustomObjectImporter> custom_object_importers = new Dictionary<Type, CustomObjectImporter>();
 
-        private static IDictionary<Type, ExporterFunc> base_exporters_table = new Dictionary<Type, ExporterFunc>();
-        private static IDictionary<Type, ExporterFunc> custom_exporters_table = new Dictionary<Type, ExporterFunc>();
+        private static IDictionary<Type, ExporterFunc> exporters_table = new Dictionary<Type, ExporterFunc>();
 
         private static IDictionary<Type,
                 IDictionary<Type, ImporterFunc>> base_importers_table;
@@ -675,48 +674,48 @@ namespace LitJson {
         }
 
         private static void RegisterBaseExporters() {
-            base_exporters_table[typeof(byte)] =
+            exporters_table[typeof(byte)] =
                 delegate(object obj, JsonWriter writer) {
                     writer.Write(Convert.ToInt32((byte)obj));
                 };
 
-            base_exporters_table[typeof(char)] =
+            exporters_table[typeof(char)] =
                 delegate(object obj, JsonWriter writer) {
                     writer.Write(Convert.ToString((char)obj));
                 };
 
-            base_exporters_table[typeof(DateTime)] =
+            exporters_table[typeof(DateTime)] =
                 delegate(object obj, JsonWriter writer) {
                     writer.Write(Convert.ToString((DateTime)obj,
                                                     datetime_format));
                 };
 
-            base_exporters_table[typeof(decimal)] =
+            exporters_table[typeof(decimal)] =
                 delegate(object obj, JsonWriter writer) {
                     writer.Write((decimal)obj);
                 };
 
-            base_exporters_table[typeof(sbyte)] =
+            exporters_table[typeof(sbyte)] =
                 delegate(object obj, JsonWriter writer) {
                     writer.Write(Convert.ToInt32((sbyte)obj));
                 };
 
-            base_exporters_table[typeof(short)] =
+            exporters_table[typeof(short)] =
                 delegate(object obj, JsonWriter writer) {
                     writer.Write(Convert.ToInt32((short)obj));
                 };
 
-            base_exporters_table[typeof(ushort)] =
+            exporters_table[typeof(ushort)] =
                 delegate(object obj, JsonWriter writer) {
                     writer.Write(Convert.ToInt32((ushort)obj));
                 };
 
-            base_exporters_table[typeof(uint)] =
+            exporters_table[typeof(uint)] =
                 delegate(object obj, JsonWriter writer) {
                     writer.Write(Convert.ToUInt64((uint)obj));
                 };
 
-            base_exporters_table[typeof(ulong)] =
+            exporters_table[typeof(ulong)] =
                 delegate(object obj, JsonWriter writer) {
                     writer.Write((ulong)obj);
                 };
@@ -817,9 +816,9 @@ namespace LitJson {
                                    "trying to export from type {0}",
                                    obj.GetType()));
 
-            // If there's a custom exporter, use it instead
-            if (custom_exporters_table.ContainsKey(obj.GetType())) {
-                ExporterFunc exporter = custom_exporters_table[obj.GetType()];
+            // If there's a exporter, use it instead
+            if (exporters_table.ContainsKey(obj.GetType())) {
+                ExporterFunc exporter = exporters_table[obj.GetType()];
                 exporter(obj, writer);
                 return;
             }
@@ -898,16 +897,8 @@ namespace LitJson {
             Type obj_type = obj.GetType();
 
             // See if there's a custom exporter for the object
-            if (custom_exporters_table.ContainsKey(obj_type)) {
-                ExporterFunc exporter = custom_exporters_table[obj_type];
-                exporter(obj, writer);
-
-                return;
-            }
-
-            // If not, maybe there's a base exporter
-            if (base_exporters_table.ContainsKey(obj_type)) {
-                ExporterFunc exporter = base_exporters_table[obj_type];
+            if (exporters_table.ContainsKey(obj_type)) {
+                ExporterFunc exporter = exporters_table[obj_type];
                 exporter(obj, writer);
 
                 return;
@@ -1028,7 +1019,7 @@ namespace LitJson {
                     exporter((T)obj, writer);
                 };
 
-            custom_exporters_table[typeof(T)] = exporter_wrapper;
+            exporters_table[typeof(T)] = exporter_wrapper;
         }
 
         public static void RegisterImporter<TJson, TValue>(
@@ -1044,10 +1035,6 @@ namespace LitJson {
 
         public static void RegisterObjectImporter(Type type, CustomObjectImporter importer) {
             custom_object_importers.Add(type, importer);
-        }
-
-        public static void UnregisterExporters() {
-            custom_exporters_table.Clear();
         }
 
         public static void UnregisterImporters() {
