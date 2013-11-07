@@ -1,4 +1,4 @@
-﻿using LitJson;
+﻿using Neon.Serialization;
 using Neon.Utilities;
 using System;
 using System.Collections.Generic;
@@ -28,6 +28,11 @@ namespace Neon.Entities.Serialization {
         /// The templates used for creating levels.
         /// </summary>
         public List<TemplateJson> Templates;
+
+        /// <summary>
+        /// Converter used for exporting entities
+        /// </summary>
+        public SerializationConverter Converter;
     }
 
     /// <summary>
@@ -54,12 +59,11 @@ namespace Neon.Entities.Serialization {
         public static Tuple<EntityManager, LoadedMetadata> LoadEntityManager(string levelPath) {
             String fileText = File.ReadAllText(levelPath);
 
-            JsonReader reader = new JsonReader(fileText);
-            reader.SkipNonMembers = false;
-            reader.AllowComments = true;
+            SerializedData data = Parser.Parse(fileText);
+            SerializationConverter converter = new SerializationConverter();
 
-            LevelJson level = JsonMapper.ToObject<LevelJson>(reader);
-            return level.Restore();
+            LevelJson level = converter.Import<LevelJson>(data);
+            return level.Restore(converter);
         }
 
         public static string SaveEntityManager(EntityManager entityManager, LoadedMetadata metadata) {
@@ -74,41 +78,35 @@ namespace Neon.Entities.Serialization {
             foreach (var system in metadata.Systems) {
                 if (system is IRestoredSystem) {
                     IRestoredSystem restorableSystem = (IRestoredSystem)system;
-                    JsonData savedState = restorableSystem.Save();
-                    if (savedState.GetJsonType() != JsonType.None) {
-                        SavedSystemStateJson systemJson = new SavedSystemStateJson() {
-                            RestorationGUID = restorableSystem.RestorationGUID,
-                            SavedState = savedState
-                        };
+                    SerializedData savedState = restorableSystem.Save();
+                    SavedSystemStateJson systemJson = new SavedSystemStateJson() {
+                        RestorationGUID = restorableSystem.RestorationGUID,
+                        SavedState = savedState
+                    };
 
-                        level.SavedSystemStates.Add(systemJson);
-                    }
+                    level.SavedSystemStates.Add(systemJson);
                 }
 
             }
 
             // Serialize entities
-            level.SingletonEntity = ((Entity)entityManager.SingletonEntity).ToJson(false, false);
+            level.SingletonEntity = ((Entity)entityManager.SingletonEntity).ToJson(false, false, metadata.Converter);
 
             List<Entity> removing = entityManager.GetEntitiesToRemove();
 
             level.Entities = new List<EntityJson>();
             foreach (var entity in entityManager.Entities) {
-                level.Entities.Add(((Entity)entity).ToJson(entityIsAdding: false, entityIsRemoving: removing.Contains(((Entity)entity))));
+                level.Entities.Add(((Entity)entity).ToJson(entityIsAdding: false, entityIsRemoving: removing.Contains(((Entity)entity)), converter: metadata.Converter));
             }
 
             List<Entity> adding = entityManager.GetEntitiesToAdd();
             foreach (var entity in adding) {
-                level.Entities.Add(((Entity)entity).ToJson(entityIsAdding: true, entityIsRemoving: false));
+                level.Entities.Add(((Entity)entity).ToJson(entityIsAdding: true, entityIsRemoving: false, converter: metadata.Converter));
             }
 
             level.Templates = metadata.Templates;
 
-            JsonWriter writer = new JsonWriter();
-            writer.PrettyPrint = true;
-            JsonMapper.ToJson(level, writer);
-
-            return writer.ToString();
+            return metadata.Converter.Export(level).PrettyPrinted;
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using LitJson;
+﻿using Neon.Serialization;
 
 namespace Neon.Entities.Serialization {
     /// <summary>
@@ -13,6 +13,6 @@ namespace Neon.Entities.Serialization {
         /// <summary>
         /// The ISystem's saved JSON.
         /// </summary>
-        public JsonData SavedState;
+        public SerializedData SavedState;
     }
 }

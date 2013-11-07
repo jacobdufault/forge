@@ -1,5 +1,4 @@
-﻿using LitJson;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neon.Entities;
 using System;
 using System.Collections.Generic;

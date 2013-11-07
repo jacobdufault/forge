@@ -1,4 +1,5 @@
-﻿using Neon.Utilities;
+﻿using Neon.Serialization;
+using Neon.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -107,11 +108,11 @@ namespace Neon.Entities.Serialization {
             return systems;
         }
 
-        public EntityManager.RestoredEntity GetSingletonEntity() {
+        public EntityManager.RestoredEntity GetSingletonEntity(SerializationConverter converter) {
             bool hasStateChange;
             bool hasModification;
 
-            Entity singleton = SingletonEntity.Restore(out hasStateChange, out hasModification);
+            Entity singleton = SingletonEntity.Restore(out hasStateChange, out hasModification, converter);
             return new EntityManager.RestoredEntity() {
                 Entity = singleton,
                 HasModification = hasModification,
@@ -121,13 +122,13 @@ namespace Neon.Entities.Serialization {
             };
         }
 
-        public List<EntityManager.RestoredEntity> GetRestoredEntities() {
+        public List<EntityManager.RestoredEntity> GetRestoredEntities(SerializationConverter converter) {
             bool hasStateChange;
             bool hasModification;
 
             List<EntityManager.RestoredEntity> restoredEntities = new List<EntityManager.RestoredEntity>();
             foreach (var entityJson in Entities) {
-                Entity restoredEntity = entityJson.Restore(out hasStateChange, out hasModification);
+                Entity restoredEntity = entityJson.Restore(out hasStateChange, out hasModification, converter);
 
                 restoredEntities.Add(new EntityManager.RestoredEntity() {
                     Entity = restoredEntity,
@@ -141,21 +142,20 @@ namespace Neon.Entities.Serialization {
             return restoredEntities;
         }
 
-        public Tuple<EntityManager, LoadedMetadata> Restore() {
+        public Tuple<EntityManager, LoadedMetadata> Restore(SerializationConverter converter) {
             // inject dlls so that type lookups resolve correctly
             // TODO: consider using an AppDomain so we can unload the previous EntitySystem
             InjectDlls();
 
             // load our template cache (so that EntityTemplates resolve correctly)
-            TemplateJson.ClearCache();
-            TemplateJson.LoadTemplates(Templates);
+            TemplateJson.LoadTemplateConverter(Templates, converter);
 
             var restoredSystems = GetRestoredSystems();
 
             EntityManager entityManager = new EntityManager(
                 CurrentUpdateNumber,
-                GetSingletonEntity().Entity,
-                GetRestoredEntities(),
+                GetSingletonEntity(converter).Entity,
+                GetRestoredEntities(converter),
                 restoredSystems);
             EntityTemplate.EntityManager = entityManager;
 
@@ -164,6 +164,7 @@ namespace Neon.Entities.Serialization {
             metadata.SystemProviders = SystemProviders;
             metadata.Systems = restoredSystems;
             metadata.Templates = Templates;
+            metadata.Converter = converter;
 
             return Tuple.Create(entityManager, metadata);
         }

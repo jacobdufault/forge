@@ -1,4 +1,5 @@
-﻿using LitJson;
+﻿using Neon.Serialization;
+using Neon.Utilities;
 using System;
 using System.Collections.Generic;
 
@@ -13,9 +14,9 @@ namespace Neon.Entities.Serialization {
         public string DataType;
 
         /// <summary>
-        /// The JSON data for the state initial data state of the template.
+        /// The serialization data for the state initial data state of the template.
         /// </summary>
-        public JsonData State;
+        public SerializedData State;
 
         [NonSerialized]
         private Data _dataInstance;
@@ -23,9 +24,9 @@ namespace Neon.Entities.Serialization {
         /// <summary>
         /// Deserializes the TemplateDataJson into a Data instance.
         /// </summary>
-        public Data GetDataInstance() {
+        public Data GetDataInstance(SerializationConverter converter) {
             if (_dataInstance == null) {
-                _dataInstance = (Data)JsonMapper.ReadValue(TypeCache.FindType(DataType), State);
+                _dataInstance = (Data)converter.Import(TypeCache.FindType(DataType), State);
             }
 
             return _dataInstance;
@@ -51,42 +52,36 @@ namespace Neon.Entities.Serialization {
         /// </summary>
         public List<TemplateDataJson> Data;
 
-        // TODO: find a way to make TemplateJson not rely on static data
-        public static void ClearCache() {
-            _foundTemplates.Clear();
-        }
+        public static void LoadTemplateConverter(IEnumerable<TemplateJson> templates, SerializationConverter converter) {
+            Dictionary<int, EntityTemplate> _foundTemplates = new Dictionary<int, EntityTemplate>();
 
-        public static void LoadTemplates(IEnumerable<TemplateJson> templates) {
             foreach (var templateJson in templates) {
                 EntityTemplate template = new EntityTemplate(templateJson.TemplateId);
 
                 foreach (var dataJson in templateJson.Data) {
-                    template.AddDefaultData(dataJson.GetDataInstance());
+                    template.AddDefaultData(dataJson.GetDataInstance(converter));
                 }
 
                 _foundTemplates[templateJson.TemplateId] = template;
             }
-        }
 
-        private static Dictionary<int, EntityTemplate> _foundTemplates = new Dictionary<int, EntityTemplate>();
-
-        static TemplateJson() {
-            JsonMapper.RegisterExporter<EntityTemplate>((template, writer) => {
-                writer.Write(template.TemplateId);
-            });
-
-            JsonMapper.RegisterObjectImporter(typeof(EntityTemplate), jsonData => {
+            converter.AddImporter(typeof(EntityTemplate), serializedData => {
                 EntityTemplate template;
 
-                if (jsonData.IsInt) {
-                    if (_foundTemplates.TryGetValue((int)jsonData, out template)) {
+                if (serializedData.IsReal) {
+                    int id = serializedData.AsReal.AsInt;
+                    if (_foundTemplates.TryGetValue(id, out template)) {
                         return template;
                     }
 
-                    throw new Exception("No such template with id=" + (int)jsonData);
+                    throw new Exception("No such template with id=" + id);
                 }
 
                 throw new Exception("Inline template definitions are not supported; must load template by referencing its TemplateId");
+            });
+
+            converter.AddExporter(typeof(EntityTemplate), template => {
+                return new SerializedData(((EntityTemplate)template).TemplateId);
             });
         }
     }

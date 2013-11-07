@@ -1,0 +1,77 @@
+{
+    DllInjections: [
+    ]
+    SystemProviders: [
+        "PerformanceTests.SystemProvider"
+    ]
+    CurrentUpdateNumber: 1
+    Templates: [
+        {
+            PrettyName: "Base Template"
+            TemplateId: 0
+            Data: [
+                {
+                    DataType: "PerformanceTests.MyPositionData"
+                    State: {
+                        X: 0
+                        Z: 0
+                    }
+                }
+            ]
+        }
+    ]
+    SingletonEntity: {
+        PrettyName: "Global Entity"
+        UniqueId: 0
+        Data: [
+        ]
+        IsAdding: false
+        IsRemoving: false
+    }
+    Entities: [
+        {
+            PrettyName: "Spawner"
+            UniqueId: 1
+            Data: [
+                {
+                    DataType: "PerformanceTests.SpawnData"
+                    WasModified: false
+                    IsAdding: false
+                    IsRemoving: false
+                    PreviousState: {
+                        SpawnedTemplate: 0
+                    }
+                    CurrentState: {
+                        SpawnedTemplate: 0
+                    }
+                }
+            ]
+            IsAdding: false
+            IsRemoving: false
+        }
+        {
+            PrettyName: ""
+            UniqueId: 2
+            Data: [
+                {
+                    DataType: "PerformanceTests.MyPositionData"
+                    WasModified: false
+                    IsAdding: true
+                    IsRemoving: false
+                    PreviousState: {
+                        X: 0
+                        Z: 0
+                    }
+                    CurrentState: {
+                        X: 0
+                        Z: 0
+                    }
+                }
+            ]
+            IsAdding: true
+            IsRemoving: false
+        }
+    ]
+    SavedSystemStates: [
+    ]
+}

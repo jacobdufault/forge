@@ -1,6 +1,6 @@
-﻿using LitJson;
-using Neon.Collections;
+﻿using Neon.Collections;
 using Neon.Entities.Serialization;
+using Neon.Serialization;
 using Neon.Utilities;
 using System;
 using System.Collections.Generic;
@@ -24,7 +24,7 @@ namespace Neon.Entities {
     }
 
     public class Entity : IEntity {
-        public EntityJson ToJson(bool entityIsAdding, bool entityIsRemoving) {
+        public EntityJson ToJson(bool entityIsAdding, bool entityIsRemoving, SerializationConverter converter) {
             List<DataAccessor> modified = _concurrentModifications.ToList();
 
             List<DataJson> dataJsonList = new List<DataJson>();
@@ -41,14 +41,14 @@ namespace Neon.Entities {
 
                 if (modified.Contains(accessor)) {
                     dataJson.WasModified = true;
-                    dataJson.PreviousState = JsonMapper.ToJsonData(container.Current);
-                    dataJson.CurrentState = JsonMapper.ToJsonData(container.Modifying);
+                    dataJson.PreviousState = converter.Export(container.Current);
+                    dataJson.CurrentState = converter.Export(container.Modifying);
                 }
 
                 else {
                     dataJson.WasModified = false;
-                    dataJson.PreviousState = JsonMapper.ToJsonData(container.Previous);
-                    dataJson.CurrentState = JsonMapper.ToJsonData(container.Current);
+                    dataJson.PreviousState = converter.Export(container.Previous);
+                    dataJson.CurrentState = converter.Export(container.Current);
                 }
 
                 dataJsonList.Add(dataJson);
@@ -62,8 +62,8 @@ namespace Neon.Entities {
                     WasModified = false, // doesn't matter
                     IsAdding = true, // always true
                     IsRemoving = false, // doesn't matter
-                    PreviousState = JsonMapper.ToJsonData(addedData), // doesn't matter
-                    CurrentState = JsonMapper.ToJsonData(addedData)
+                    PreviousState = converter.Export(addedData), // doesn't matter
+                    CurrentState = converter.Export(addedData)
                 };
                 dataJsonList.Add(dataJson);
             }

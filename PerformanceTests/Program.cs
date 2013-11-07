@@ -1,5 +1,4 @@
-﻿using LitJson;
-using log4net;
+﻿using log4net;
 using log4net.Appender;
 using log4net.Config;
 using log4net.Layout;
@@ -111,7 +110,7 @@ namespace PerformanceTests {
             Console.WriteLine("...loading");
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
-            Tuple<EntityManager, LoadedMetadata> loadedLevel = Loader.LoadEntityManager("../../SavedLevel.json");
+            Tuple<EntityManager, LoadedMetadata> loadedLevel = Loader.LoadEntityManager("../../Level.nes");
             stopwatch.Stop();
             Console.WriteLine("Done; loading the level took " + stopwatch.ElapsedTicks + " ticks (or " + stopwatch.ElapsedMilliseconds + "ms)");
             EntityManager entityManager = loadedLevel.Item1;
@@ -130,7 +129,7 @@ namespace PerformanceTests {
             stopwatch.Stop();
             Console.WriteLine("Done; saving took " + stopwatch.ElapsedTicks + " ticks (or " + stopwatch.ElapsedMilliseconds + "ms)");
 
-            File.WriteAllText("../../SavedLevel.json", saved);
+            File.WriteAllText("../../SavedLevel.nes", saved);
 
             Console.WriteLine();
             Console.WriteLine("Hit enter to exit");

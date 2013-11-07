@@ -1,4 +1,4 @@
-﻿using LitJson;
+﻿using Neon.Serialization;
 using System;
 using System.Collections.Generic;
 
@@ -28,31 +28,31 @@ namespace Neon.Entities.Serialization {
         public bool IsRemoving;
 
         /// <summary>
-        /// The previous state of the data, in JSON form. We can only deserialize this when we have
-        /// resolved the data type.
+        /// The previous state of the data. We can only deserialize this when we have resolved the
+        /// data type.
         /// </summary>
-        public JsonData PreviousState;
+        public SerializedData PreviousState;
 
         /// <summary>
         /// The current state of the data, in JSON form. We can only deserialize this when we have
         /// resolved the data type.
         /// </summary>
-        public JsonData CurrentState;
+        public SerializedData CurrentState;
 
         [NonSerialized]
         private Data _deserializedPreviousState;
-        public Data GetDeserializedPreviousState() {
+        public Data GetDeserializedPreviousState(SerializationConverter converter) {
             if (_deserializedPreviousState == null) {
-                _deserializedPreviousState = (Data)JsonMapper.ReadValue(TypeCache.FindType(DataType), PreviousState);
+                _deserializedPreviousState = (Data)converter.Import(TypeCache.FindType(DataType), PreviousState);
             }
             return _deserializedPreviousState;
         }
 
         [NonSerialized]
         private Data _deserializedCurrentState;
-        public Data GetDeserializedCurrentState() {
+        public Data GetDeserializedCurrentState(SerializationConverter converter) {
             if (_deserializedCurrentState == null) {
-                _deserializedCurrentState = (Data)JsonMapper.ReadValue(TypeCache.FindType(DataType), CurrentState);
+                _deserializedCurrentState = (Data)converter.Import(TypeCache.FindType(DataType), CurrentState);
             }
             return _deserializedCurrentState;
         }
@@ -96,7 +96,7 @@ namespace Neon.Entities.Serialization {
         /// <param name="hasModification">Set to true if the entity has a pending
         /// modification.</param>
         /// <returns></returns>
-        public Entity Restore(out bool hasStateChange, out bool hasModification) {
+        public Entity Restore(out bool hasStateChange, out bool hasModification, SerializationConverter converter) {
             hasStateChange = false;
             hasModification = false;
 
@@ -109,8 +109,8 @@ namespace Neon.Entities.Serialization {
                     wasModifying: dataJson.WasModified,
                     isAdding: dataJson.IsAdding,
                     isRemoving: dataJson.IsRemoving,
-                    previous: dataJson.GetDeserializedPreviousState(),
-                    current: dataJson.GetDeserializedCurrentState()
+                    previous: dataJson.GetDeserializedPreviousState(converter),
+                    current: dataJson.GetDeserializedCurrentState(converter)
                 );
                 restoredData.Add(data);
             }

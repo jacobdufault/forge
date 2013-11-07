@@ -1,4 +1,4 @@
-﻿using LitJson;
+﻿using Neon.Serialization;
 using System;
 
 namespace Neon.Entities {
@@ -26,14 +26,14 @@ namespace Neon.Entities {
         /// <summary>
         /// Save any auxiliary data to the given data output.
         /// </summary>
-        /// <param name="data">The JSON container to write saved data to.</param>
-        JsonData Save();
+        /// <param name="data">The serialization container to write saved data to.</param>
+        SerializedData Save();
 
         /// <summary>
         /// Restore the system from the given data.
         /// </summary>
         /// <param name="data">The data to restore the system from.</param>
-        void Restore(JsonData data);
+        void Restore(SerializedData data);
     }
 
     /// <summary>
