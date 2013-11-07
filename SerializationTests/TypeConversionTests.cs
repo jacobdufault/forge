@@ -3,7 +3,57 @@ using Neon.Serialization;
 using Neon.Utilities;
 
 namespace Neon.Serialization.Tests {
-    [RequireCustomConverter]
+    internal interface IInterface { }
+    internal class DerivedInterfaceA : IInterface {
+        public override bool Equals(object obj) {
+            return obj is DerivedInterfaceA;
+        }
+    }
+    internal class DerivedInterfaceB : IInterface {
+        public override bool Equals(object obj) {
+            return obj is DerivedInterfaceB;
+        }
+    }
+
+    internal abstract class AbstractClass {
+        public string A;
+    }
+    internal class DerivedAbstractClassA : AbstractClass {
+        public string B;
+        public override bool Equals(object obj) {
+            return obj is DerivedAbstractClassA &&
+                ((DerivedAbstractClassA)obj).A == A && ((DerivedAbstractClassA)obj).B == B;
+        }
+    }
+    internal class DerivedAbstractClassB : AbstractClass {
+        public string C;
+        public override bool Equals(object obj) {
+            return obj is DerivedAbstractClassB &&
+                ((DerivedAbstractClassB)obj).A == A && ((DerivedAbstractClassB)obj).C == C;
+        }
+    }
+
+    [SerializationSupportInheritance]
+    internal class BaseClassWithInheritance {
+        public string A;
+    }
+    internal class DerivedBaseClassA : BaseClassWithInheritance {
+        public string B;
+        public override bool Equals(object obj) {
+            return obj is DerivedBaseClassA &&
+                ((DerivedBaseClassA)obj).A == A && ((DerivedBaseClassA)obj).B == B;
+        }
+    }
+    internal class DerivedBaseClassB : BaseClassWithInheritance {
+        public string C;
+        public override bool Equals(object obj) {
+            return obj is DerivedBaseClassB &&
+                ((DerivedBaseClassB)obj).A == A && ((DerivedBaseClassB)obj).C == C;
+        }
+    }
+
+
+    [SerializationRequireCustomConverter]
     internal class RequireCustomConverter {
     }
 
@@ -186,6 +236,39 @@ namespace Neon.Serialization.Tests {
 
             SerializedData reserializedString = converter.Export(deserialized);
             Assert.AreEqual(serializedString, reserializedString.PrettyPrinted);
+        }
+
+        private void RunInheritanceTest<InterfaceType>(InterfaceType instanceA, InterfaceType instanceB) {
+            SerializedData exported = (new SerializationConverter()).Export(instanceA);
+            InterfaceType imported = (new SerializationConverter()).Import<InterfaceType>(exported);
+            Assert.IsInstanceOfType(imported, instanceA.GetType());
+            Assert.AreEqual(instanceA, imported);
+
+            exported = (new SerializationConverter()).Export(instanceB);
+            imported = (new SerializationConverter()).Import<InterfaceType>(exported);
+            Assert.IsInstanceOfType(imported, instanceB.GetType());
+            Assert.AreEqual(instanceB, imported);
+        }
+
+        [TestMethod]
+        public void ImportExportInterfaces() {
+            RunInheritanceTest<IInterface>(new DerivedInterfaceA(), new DerivedInterfaceB());
+            RunInheritanceTest<AbstractClass>(
+                new DerivedAbstractClassA() {
+                    A = "aA",
+                    B = "aB"
+                }, new DerivedAbstractClassB() {
+                    A = "bA",
+                    C = "bC"
+                });
+            RunInheritanceTest<BaseClassWithInheritance>(
+                new DerivedBaseClassA() {
+                    A = "aA",
+                    B = "aB"
+                }, new DerivedBaseClassB() {
+                    A = "bA",
+                    C = "bC"
+                });
         }
     }
 }

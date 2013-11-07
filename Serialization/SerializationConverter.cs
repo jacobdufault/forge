@@ -171,9 +171,24 @@ namespace Neon.Serialization {
             // Iterate over all attributes in the type to check for the requirement of a custom
             // converter
             foreach (var attribute in _baseType.GetCustomAttributes(true)) {
-                if (attribute is RequireCustomConverterAttribute) {
+                if (attribute is SerializationRequireCustomConverterAttribute) {
                     RequireCustomConverter = true;
                 }
+            }
+
+            // Determine if the type needs to support inheritance
+            SupportInheritance = type.IsInterface || type.IsAbstract;
+            if (!SupportInheritance) {
+                foreach (var attribute in _baseType.GetCustomAttributes(inherit: false)) {
+                    if (attribute is SerializationSupportInheritance) {
+                        SupportInheritance = true;
+                    }
+                }
+            }
+
+            if (RequireCustomConverter && SupportInheritance) {
+                throw new InvalidOperationException("A type cannot both support inheritance and " +
+                    "have a custom converter; inheritance support consumes the converter");
             }
 
             // determine if we are a dictionary, list, or array
@@ -233,6 +248,14 @@ namespace Neon.Serialization {
         }
 
         /// <summary>
+        /// If this type needs to support inheritance, then this will be true.
+        /// </summary>
+        public bool SupportInheritance {
+            get;
+            private set;
+        }
+
+        /// <summary>
         /// The type that this metadata is modeling.
         /// </summary>
         private Type _baseType;
@@ -242,7 +265,6 @@ namespace Neon.Serialization {
         /// stored inside the array. If this metadata maps back to a Dictionary type, this this is
         /// the type of element stored inside of the value slot.
         /// </summary>
-        private Type _elementType;
         public Type ElementType {
             get {
                 if (IsArray == false && IsList == false && IsDictionary == false) {
@@ -253,6 +275,7 @@ namespace Neon.Serialization {
                 return _elementType;
             }
         }
+        private Type _elementType;
 
         /// <summary>
         /// True if the base type is a dictionary. If true, accessing Properties will throw an
@@ -284,7 +307,6 @@ namespace Neon.Serialization {
         /// The properties on the type. This is used when importing/exporting a type that does not
         /// have a user-defined importer/exporter.
         /// </summary>
-        private List<PropertyMetadata> _properties;
         public List<PropertyMetadata> Properties {
             get {
                 if (IsDictionary || IsList || IsArray) {
@@ -294,6 +316,7 @@ namespace Neon.Serialization {
                 return _properties;
             }
         }
+        private List<PropertyMetadata> _properties;
     }
 
     /// <summary>
@@ -401,31 +424,58 @@ namespace Neon.Serialization {
         }
 
         /// <summary>
+        /// Converts a general object instance into SerializedData.
+        /// </summary>
+        /// <remarks>
+        /// Though the magic of generic type inference, using this method works nicely and correctly
+        /// supports interfaces when the known instance type is not concrete. For example,
+        /// Export((iface)inst) will dispatch to Export(typeof(iface), inst) instead of
+        /// Export(inst.GetType(), inst). The second one will not import correctly, as the client is
+        /// only going to know that the base type of serialized object, not the type itself. In
+        /// essence, using a generic limits the information of the Export function to that of the
+        /// Import function.
+        /// </remarks>
+        public SerializedData Export<T>(T instance) {
+            return Export(typeof(T), instance);
+        }
+
+        /// <summary>
         /// Converts a general object instance into SerializedData. Assuming serialization is
         /// working as expected and custom importers/exporters are written correctly, calling Import
         /// on the return value with given will result in an object that is identical to instance.
         /// </summary>
-        public SerializedData Export(object instance) {
+        /// <param name="instanceType">The type to use when we export instance. instance *must* be
+        /// an instance of instanceType, though instanceType can be anywhere on the hierarchy for
+        /// instance (for example, it could be typeof(object).</param>
+        public SerializedData Export(Type instanceType, object instance) {
             if (instance == null) {
                 throw new ArgumentException("Cannot export a null object");
             }
-
-            Type exportedType = instance.GetType();
+            if (instanceType.IsInstanceOfType(instance) == false) {
+                throw new ArgumentException("The instance is not an instance of the export type");
+            }
 
             // If there is a user-defined exporter for the given type, then use it instead of doing
             // automated reflection.
-            if (_exporters.ContainsKey(exportedType)) {
-                return _exporters[exportedType](instance);
+            if (_exporters.ContainsKey(instanceType)) {
+                return _exporters[instanceType](instance);
             }
 
             // There is no user-defined exporting function. We'll have to use reflection to populate
             // the fields of the serialized value and hope that we did a good enough job.
 
-            TypeMetadata metadata = GetMetadata(exportedType);
+            TypeMetadata metadata = GetMetadata(instanceType);
+
+            // If the type needs to support inheritance, and there was not an exporter, then
+            // register the automatic one and rerun the export process.
+            if (metadata.SupportInheritance) {
+                EnableSupportForInheritance(instanceType);
+                return Export(instanceType, instance);
+            }
 
             // Oops, the type requires a custom converter. We can't process this.
             if (metadata.RequireCustomConverter) {
-                throw new RequiresCustomConverterException(exportedType, importing: false);
+                throw new RequiresCustomConverterException(instanceType, importing: false);
             }
 
             // If it's an array or a list, we have special logic for processing
@@ -436,7 +486,11 @@ namespace Neon.Serialization {
                 // outputting the object
                 IEnumerable enumerator = (IEnumerable)instance;
                 foreach (object item in enumerator) {
-                    output.Add(Export(item));
+                    // make sure we export under the element type of the list; if we don't, and say,
+                    // the element type is an interface, and we export under the instance type, then
+                    // deserialization will not work as expected (because we'll be trying to
+                    // deserialize an interface).
+                    output.Add(Export(metadata.ElementType, item));
                 }
 
                 return new SerializedData(output);
@@ -449,7 +503,11 @@ namespace Neon.Serialization {
 
                 var enumerable = (IEnumerable<KeyValuePair<string, SerializedData>>)instance;
                 foreach (var item in enumerable) {
-                    dict[item.Key] = Export(item.Value);
+                    // make sure we export the under the element type of the dictionary; if we
+                    // don't, and say, the element type is an interface, and we export under the
+                    // instance type, then deserialization will not work as expected (because we'll
+                    // be trying to deserialize an interface).
+                    dict[item.Key] = Export(metadata.ElementType, item.Value);
                 }
 
                 return new SerializedData(dict);
@@ -461,7 +519,13 @@ namespace Neon.Serialization {
 
                 for (int i = 0; i < metadata.Properties.Count; ++i) {
                     PropertyMetadata propertyMetadata = metadata.Properties[i];
-                    dict[propertyMetadata.Name] = Export(propertyMetadata.Read(instance));
+
+                    // make sure we export under the storage type of the property; if we don't, and
+                    // say, the property is an interface, and we export under the instance type,
+                    // then deserialization will not work as expected (because we'll be trying to
+                    // deserialize an interface).
+                    dict[propertyMetadata.Name] = Export(propertyMetadata.StorageType,
+                        propertyMetadata.Read(instance));
                 }
 
                 return new SerializedData(dict);
@@ -492,6 +556,13 @@ namespace Neon.Serialization {
             // the fields of the object, and hope that we did a good enough job.
 
             TypeMetadata metadata = GetMetadata(type);
+
+            // If the type needs to support inheritance, and there was not an importer, then
+            // register the automatic one and rerun the import process.
+            if (metadata.SupportInheritance) {
+                EnableSupportForInheritance(type);
+                return Import(type, serializedData);
+            }
 
             // Oops, the type requires a custom converter. We can't process this.
             if (metadata.RequireCustomConverter) {
@@ -538,6 +609,46 @@ namespace Neon.Serialization {
             }
 
             return instance;
+        }
+
+        /// <summary>
+        /// Adds a custom importer and exporter for the given type so that it can support importing
+        /// and exporting derived types. This adds additional overhead (both in time and in space)
+        /// to the serialization process and is therefore opt-in. It also consumes the custom
+        /// importer and custom exporter for the BaseType.
+        /// </summary>
+        /// <remarks>
+        /// This method is exposed in case the base type cannot be modified but needs to support
+        /// inheritance, but is not abstract not an interface.
+        /// </remarks>
+        /// <typeparam name="BaseType">The type of object to support inheritance serialization
+        /// for</typeparam>
+        public void EnableSupportForInheritance(Type interfaceType) {
+            // The serialization format is:
+            //
+            // {
+            // InstanceContent: { # looks like the top level for the base type }
+            // DerivedType: "SomeNamespace.Type"
+            // DerivedContent: { # looks like the top level for the serialized type }
+            // }
+
+            AddImporter(interfaceType, data => {
+                Type type = TypeCache.FindType(data.AsDictionary["Type"].AsString);
+                return Import(type, data.AsDictionary["Content"]);
+            });
+
+            AddExporter(interfaceType, instance => {
+                SerializedData data = SerializedData.CreateDictionary();
+
+                // Export the type so we know what type to import as.
+                data.AsDictionary["Type"] = new SerializedData(instance.GetType().FullName);
+
+                // we want to make sure we export under the direct instance type, otherwise we'll go
+                // into an infinite loop of reexporting the interface metadata.
+                data.AsDictionary["Content"] = Export(instance.GetType(), instance);
+
+                return data;
+            });
         }
     }
 }
