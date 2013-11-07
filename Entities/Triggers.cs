@@ -26,7 +26,6 @@ namespace Neon.Entities {
         /// <summary>
         /// Save any auxiliary data to the given data output.
         /// </summary>
-        /// <param name="data">The serialization container to write saved data to.</param>
         SerializedData Save();
 
         /// <summary>
