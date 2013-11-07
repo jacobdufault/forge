@@ -6,48 +6,68 @@ using System.Reflection;
 
 namespace Neon.Serialization {
     /// <summary>
-    /// Metadata for an annotated item inside of an object.
+    /// Metadata for an annotated item inside of an object. This abstracts PropertyInfo and
+    /// FieldInfo into a common interface that supports writing and reading.
     /// </summary>
     internal class PropertyMetadata {
-        public MemberInfo Info;
-        public bool IsField;
-        public bool IsPrivate;
+        /// <summary>
+        /// The member info that we read to and write from.
+        /// </summary>
+        private MemberInfo _info;
+
+        /// <summary>
+        /// The cached name of the property/field.
+        /// </summary>
         public string Name;
 
+        /// <summary>
+        /// Writes a value to the given object instance using the cached member info stored inside
+        /// of this metadata structure.
+        /// </summary>
         public void Write(object context, object value) {
-            if (Info is PropertyInfo) {
-                ((PropertyInfo)Info).SetValue(context, value, new object[] { });
+            if (_info is PropertyInfo) {
+                ((PropertyInfo)_info).SetValue(context, value, new object[] { });
             }
 
             else {
-                ((FieldInfo)Info).SetValue(context, value);
+                ((FieldInfo)_info).SetValue(context, value);
             }
         }
 
+        /// <summary>
+        /// Reads a value from the given object instance using the cached member info stored inside
+        /// of this metadata structure.
+        /// </summary>
         public object Read(object context) {
-            if (Info is PropertyInfo) {
-                return ((PropertyInfo)Info).GetValue(context, new object[] { });
+            if (_info is PropertyInfo) {
+                return ((PropertyInfo)_info).GetValue(context, new object[] { });
             }
 
             else {
-                return ((FieldInfo)Info).GetValue(context);
+                return ((FieldInfo)_info).GetValue(context);
             }
         }
 
+        /// <summary>
+        /// The type of value that is stored inside of the property. For example, for an int field,
+        /// StorageType will be typeof(int).
+        /// </summary>
         public Type StorageType;
 
+        /// <summary>
+        /// Initializes a new instance of the PropertyMetadata class from a property member.
+        /// </summary>
         public PropertyMetadata(PropertyInfo property) {
-            IsPrivate = false;
-            IsField = false;
-            Info = property;
+            _info = property;
             Name = property.Name;
             StorageType = property.PropertyType;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the PropertyMetadata class from a field member.
+        /// </summary>
         public PropertyMetadata(FieldInfo field) {
-            IsPrivate = field.IsPrivate;
-            IsField = true;
-            Info = field;
+            _info = field;
             Name = field.Name;
             StorageType = field.FieldType;
         }
@@ -57,6 +77,12 @@ namespace Neon.Serialization {
     /// Metadata for an type instance.
     /// </summary>
     internal class TypeMetadata {
+        /// <summary>
+        /// Creates a new instance of the type that this metadata points back to.
+        /// </summary>
+        /// <remarks>
+        /// Activator.CreateInstance cannot be used because TypeMetadata can point to an Array.
+        /// </remarks>
         public object CreateInstance() {
             if (IsArray) {
                 // we have to start with a size zero array otherwise it will have invalid data
@@ -67,6 +93,10 @@ namespace Neon.Serialization {
             return Activator.CreateInstance(_baseType);
         }
 
+        /// <summary>
+        /// Assuming that this object is a dictionary, this writes a key/value pair to the
+        /// dictionary.
+        /// </summary>
         public void AssignKeyValue(object context, object key, object value) {
             if (IsDictionary) {
                 IDictionary dictionary = (IDictionary)context;
@@ -84,6 +114,14 @@ namespace Neon.Serialization {
             }
         }
 
+        /// <summary>
+        /// If the context is an array, then the given value is inserted at the given indexHint. If
+        /// the context is a list, then the given value is inserted at the end of the list.
+        /// </summary>
+        /// <remarks>
+        /// The array does not have storage available at the given index, then it will be resized so
+        /// that it contains exactly the right about of storage to contain indexHint.
+        /// </remarks>
         public void AssignListSlot(ref object context, object value, int indexHint) {
             if (IsArray) {
                 Array array = (Array)context;
@@ -108,6 +146,9 @@ namespace Neon.Serialization {
             }
         }
 
+        /// <summary>
+        /// Initializes a new instance of the TypeMetadata class from a type.
+        /// </summary>
         public TypeMetadata(Type type) {
             _baseType = type;
 
@@ -197,6 +238,10 @@ namespace Neon.Serialization {
         /// </summary>
         public bool IsArray;
 
+        /// <summary>
+        /// The properties on the type. This is used when importing/exporting a type that does not
+        /// have a user-defined importer/exporter.
+        /// </summary>
         private List<PropertyMetadata> _properties;
         public List<PropertyMetadata> Properties {
             get {
@@ -225,8 +270,20 @@ namespace Neon.Serialization {
     /// Converts types to and from SerializedDatas.
     /// </summary>
     public class SerializationConverter {
+        /// <summary>
+        /// Custom importers that convert SerializedData directly into object instances.
+        /// </summary>
         private Dictionary<Type, Importer> _importers = new Dictionary<Type, Importer>();
+
+        /// <summary>
+        /// Custom exporters that convert object instances directly into SerializedData.
+        /// </summary>
         private Dictionary<Type, Exporter> _exporters = new Dictionary<Type, Exporter>();
+
+        /// <summary>
+        /// Cached reflection information for types which do not have both a custom importer and a
+        /// custom exporter.
+        /// </summary>
         private Dictionary<Type, TypeMetadata> _typeMetadata = new Dictionary<Type, TypeMetadata>();
 
         /// <summary>
@@ -246,6 +303,11 @@ namespace Neon.Serialization {
             return metadata;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the SerializationConverter class. Adds default importers
+        /// and exporters by default; the default converters are used for converting the primitive
+        /// types that SerializedData maps directly to.
+        /// </summary>
         public SerializationConverter(bool addDefaultConverters = true) {
             // Register default converters
             if (addDefaultConverters) {
@@ -275,8 +337,6 @@ namespace Neon.Serialization {
         /// Registers a converter that will convert SerializedData instances to their respective
         /// destination types.
         /// </summary>
-        /// <param name="destinationType"></param>
-        /// <param name="converter"></param>
         public void AddImporter(Type destinationType, Importer importer) {
             if (_importers.ContainsKey(destinationType)) {
                 throw new InvalidOperationException("There is already a registered importer for type " + destinationType);
@@ -298,10 +358,16 @@ namespace Neon.Serialization {
             _exporters[serializedType] = exporter;
         }
 
+        /// <summary>
+        /// Converts a general object instance into SerializedData. Assuming serialization is
+        /// working as expected and custom importers/exporters are written correctly, calling Import
+        /// on the return value with given will result in an object that is identical to instance.
+        /// </summary>
         public SerializedData Export(object instance) {
             if (instance == null) {
                 throw new ArgumentException("Cannot export a null object");
             }
+
             Type exportedType = instance.GetType();
 
             // If there is a user-defined exporter for the given type, then use it instead of doing
@@ -355,10 +421,18 @@ namespace Neon.Serialization {
             }
         }
 
+        /// <summary>
+        /// Wrapper around Import(Type, SerializedData).
+        /// </summary>
         public T Import<T>(SerializedData serializedData) {
             return (T)Import(typeof(T), serializedData);
         }
 
+        /// <summary>
+        /// Converts SerializedData into a general object instance. Assuming serialization is
+        /// working as expected and custom importers/exporters are written correctly, calling Export
+        /// on the return value with given will result in an object that is identical to serializedData.
+        /// </summary>
         public object Import(Type type, SerializedData serializedData) {
             // If there is a user-defined importer for the given type, then use it instead of doing
             // automated reflection.
