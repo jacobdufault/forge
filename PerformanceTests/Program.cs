@@ -11,7 +11,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
-namespace PerformanceTests {
+namespace Neon.Performance.Tests {
     public class SpawnData : GameData<SpawnData> {
         public EntityTemplate SpawnedTemplate;
 

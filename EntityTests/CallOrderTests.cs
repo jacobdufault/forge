@@ -1,10 +1,9 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neon.Entities;
 using System;
 using System.Collections.Generic;
 
-namespace EntityTests {
-    enum TriggerEvent {
+namespace Neon.Entities.Tests {
+    internal enum TriggerEvent {
         OnAdded,
         OnRemoved,
         OnModified,
@@ -15,7 +14,7 @@ namespace EntityTests {
         OnGlobalInput
     }
 
-    class TriggerEventLogger : ITriggerAdded, ITriggerRemoved, ITriggerModified, ITriggerUpdate, ITriggerGlobalPreUpdate, ITriggerGlobalPostUpdate, ITriggerInput, ITriggerGlobalInput {
+    internal class TriggerEventLogger : ITriggerAdded, ITriggerRemoved, ITriggerModified, ITriggerUpdate, ITriggerGlobalPreUpdate, ITriggerGlobalPostUpdate, ITriggerInput, ITriggerGlobalInput {
         public virtual Type[] ComputeEntityFilter() {
             return new Type[] { };
         }
@@ -69,13 +68,13 @@ namespace EntityTests {
         }
     }
 
-    class TriggerEventLoggerFilterRequiresData0 : TriggerEventLogger {
+    internal class TriggerEventLoggerFilterRequiresData0 : TriggerEventLogger {
         public override Type[] ComputeEntityFilter() {
             return new[] { typeof(TestData0) };
         }
     }
 
-    class TestData0 : Data {
+    internal class TestData0 : Data {
         public override bool SupportsConcurrentModifications {
             get { return false; }
         }
@@ -91,7 +90,7 @@ namespace EntityTests {
         //}
     }
 
-    class TestData1 : Data {
+    internal class TestData1 : Data {
         public override bool SupportsConcurrentModifications {
             get { return false; }
         }
@@ -126,7 +125,6 @@ namespace EntityTests {
             }, trigger.Events);
             trigger.ClearEvents();
 
-
             for (int i = 0; i < 20; ++i) {
                 em.UpdateWorld();
                 CollectionAssert.AreEqual(new TriggerEvent[] {
@@ -136,7 +134,6 @@ namespace EntityTests {
                 }, trigger.Events);
                 trigger.ClearEvents();
             }
-
 
             em.RemoveEntity(entity);
             em.UpdateWorld();
@@ -193,8 +190,8 @@ namespace EntityTests {
             entity.Modify<TestData0>();
             em.AddEntity(entity);
 
-            // even though we modified we shouldn't care -- it should be considered
-            // part of the initialization
+            // even though we modified we shouldn't care -- it should be considered part of the
+            // initialization
             em.UpdateWorld();
             CollectionAssert.AreEqual(new TriggerEvent[] {
                 TriggerEvent.OnAdded,
@@ -297,7 +294,6 @@ namespace EntityTests {
             }, trigger.Events);
             trigger.ClearEvents();
         }
-
 
         [TestMethod]
         public void InitializeBeforeAddingDataFilter() {

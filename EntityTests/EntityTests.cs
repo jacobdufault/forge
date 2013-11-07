@@ -1,11 +1,7 @@
-﻿using System;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neon.Entities;
 
-namespace EntityTests {
+namespace Neon.Entities.Tests {
     [TestClass]
     public class EntityTest {
         [TestMethod]

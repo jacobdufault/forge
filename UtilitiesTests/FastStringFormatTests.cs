@@ -1,11 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neon.Utilities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
-namespace UtilitiesTests {
+namespace Neon.Utilities.Tests {
     [TestClass]
     public class FastStringFormatTests {
         [TestMethod]

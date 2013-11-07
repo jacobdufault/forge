@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neon.Entities;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace EntityTests {
-    class TestEvent0 : IEvent { }
-    class TestEvent1 : IEvent { }
+namespace Neon.Entities.Tests {
+    internal class TestEvent0 : IEvent { }
+    internal class TestEvent1 : IEvent { }
 
     [TestClass]
     public class EventProcessorTests {

@@ -2,7 +2,7 @@
 using Neon.Serialization;
 using Neon.Utilities;
 
-namespace JSONTests {
+namespace Neon.Serialization.Tests {
     [RequireCustomConverter]
     internal class RequireCustomConverter {
     }

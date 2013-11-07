@@ -1,8 +1,6 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neon.Utilities;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace UtilitiesTests {
+namespace Neon.Utilities.Tests {
     [TestClass]
     public class BoundTests {
         [TestMethod]

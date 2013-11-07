@@ -1,9 +1,8 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neon.Entities;
 using System;
 using System.Collections.Generic;
 
-namespace EntityTests {
+namespace Neon.Entities.Tests {
     internal class TestData2 : GameData<TestData2> {
         public int Value;
 
@@ -367,7 +366,7 @@ namespace EntityTests {
 
         [TestMethod]
         public void DelayedAddToSystem() {
-             // setup
+            // setup
             EntityManager em = new EntityManager(new Entity());
 
             DelegateAllTriggers system = new DelegateAllTriggers();
@@ -384,7 +383,7 @@ namespace EntityTests {
 
             // update the world a couple of times
             for (int i = 0; i < 20; ++i) {
-                em.UpdateWorld();                
+                em.UpdateWorld();
             }
 
             DataAllocator.AddAuxiliaryAllocator<TestData2>((data, ent) => {
@@ -392,7 +391,7 @@ namespace EntityTests {
                     ent.AddData<TestData2>();
                     Assert.Fail();
                 }
-                catch (AlreadyAddedDataException) {}
+                catch (AlreadyAddedDataException) { }
             });
             entity.AddData<TestData2>();
             Assert.AreEqual(0, addedCount);

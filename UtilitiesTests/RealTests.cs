@@ -1,11 +1,6 @@
-﻿using Neon.Utilities;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace UtilitiesTests {
+namespace Neon.Utilities.Tests {
     [TestClass]
     public class RealTests {
         [TestMethod]
