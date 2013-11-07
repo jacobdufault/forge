@@ -3,6 +3,10 @@ using Neon.Serialization;
 using Neon.Utilities;
 
 namespace JSONTests {
+    [RequireCustomConverter]
+    internal class RequireCustomConverter {
+    }
+
     internal struct SimpleStruct {
         public int A;
         public bool B;
@@ -27,6 +31,20 @@ namespace JSONTests {
 
     [TestClass]
     public class TypeConversionTests {
+        [TestMethod]
+        [ExpectedException(typeof(RequiresCustomConverterException))]
+        public void RequireCustomConverterImport() {
+            SerializationConverter converter = new SerializationConverter();
+            converter.Import<RequireCustomConverter>(SerializedData.CreateDictionary());
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(RequiresCustomConverterException))]
+        public void RequireCustomConverterExport() {
+            SerializationConverter converter = new SerializationConverter();
+            converter.Export(new RequireCustomConverter());
+        }
+
         [TestMethod]
         public void ImportDeserializingPrimitives() {
             SerializedData a = new SerializedData(Real.CreateDecimal(3));

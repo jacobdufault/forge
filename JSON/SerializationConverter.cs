@@ -6,6 +6,22 @@ using System.Reflection;
 
 namespace Neon.Serialization {
     /// <summary>
+    /// Exception thrown when a type that was imported/exported requires a custom converter, but one
+    /// was not registered.
+    /// </summary>
+    public sealed class RequiresCustomConverterException : Exception {
+        private static string CreateMessage(Type type, bool importing) {
+            return "The given type " + type + " requires a custom " +
+                (importing ? "importer" : "exporter") + " (based on annotations), but one was " +
+                "not found.";
+        }
+
+        internal RequiresCustomConverterException(Type type, bool importing)
+            : base(CreateMessage(type, importing)) {
+        }
+    }
+
+    /// <summary>
     /// Metadata for an annotated item inside of an object. This abstracts PropertyInfo and
     /// FieldInfo into a common interface that supports writing and reading.
     /// </summary>
@@ -152,6 +168,14 @@ namespace Neon.Serialization {
         public TypeMetadata(Type type) {
             _baseType = type;
 
+            // Iterate over all attributes in the type to check for the requirement of a custom
+            // converter
+            foreach (var attribute in _baseType.GetCustomAttributes(true)) {
+                if (attribute is RequireCustomConverterAttribute) {
+                    RequireCustomConverter = true;
+                }
+            }
+
             // determine if we are a dictionary, list, or array
             IsDictionary = type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>);
 
@@ -200,6 +224,15 @@ namespace Neon.Serialization {
         }
 
         /// <summary>
+        /// If this type requires a custom converter, then this will be true. Generic reflection
+        /// should not be done if this is true.
+        /// </summary>
+        public bool RequireCustomConverter {
+            get;
+            private set;
+        }
+
+        /// <summary>
         /// The type that this metadata is modeling.
         /// </summary>
         private Type _baseType;
@@ -225,18 +258,27 @@ namespace Neon.Serialization {
         /// True if the base type is a dictionary. If true, accessing Properties will throw an
         /// exception.
         /// </summary>
-        public bool IsDictionary;
+        public bool IsDictionary {
+            get;
+            private set;
+        }
 
         /// <summary>
         /// True if the base type is a list. If true, accessing Properties will throw an exception.
         /// </summary>
-        public bool IsList;
+        public bool IsList {
+            get;
+            private set;
+        }
 
         /// <summary>
         /// True if the base type is an array. If true, accessing Properties will throw an
         /// exception.
         /// </summary>
-        public bool IsArray;
+        public bool IsArray {
+            get;
+            private set;
+        }
 
         /// <summary>
         /// The properties on the type. This is used when importing/exporting a type that does not
@@ -381,6 +423,11 @@ namespace Neon.Serialization {
 
             TypeMetadata metadata = GetMetadata(exportedType);
 
+            // Oops, the type requires a custom converter. We can't process this.
+            if (metadata.RequireCustomConverter) {
+                throw new RequiresCustomConverterException(exportedType, importing: false);
+            }
+
             // If it's an array or a list, we have special logic for processing
             if (metadata.IsArray || metadata.IsList) {
                 List<SerializedData> output = new List<SerializedData>();
@@ -431,7 +478,8 @@ namespace Neon.Serialization {
         /// <summary>
         /// Converts SerializedData into a general object instance. Assuming serialization is
         /// working as expected and custom importers/exporters are written correctly, calling Export
-        /// on the return value with given will result in an object that is identical to serializedData.
+        /// on the return value with given will result in an object that is identical to
+        /// serializedData.
         /// </summary>
         public object Import(Type type, SerializedData serializedData) {
             // If there is a user-defined importer for the given type, then use it instead of doing
@@ -444,6 +492,12 @@ namespace Neon.Serialization {
             // the fields of the object, and hope that we did a good enough job.
 
             TypeMetadata metadata = GetMetadata(type);
+
+            // Oops, the type requires a custom converter. We can't process this.
+            if (metadata.RequireCustomConverter) {
+                throw new RequiresCustomConverterException(type, importing: true);
+            }
+
             object instance = metadata.CreateInstance();
 
             // If it's an array or a list, we have special logic for processing
