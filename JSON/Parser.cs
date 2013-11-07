@@ -30,8 +30,20 @@ namespace Neon.Serialization {
         }
 
         private void SkipSpace() {
-            while (HasValue() && char.IsWhiteSpace(CurrentCharacter())) {
-                MoveNext();
+            while (HasValue()) {
+                char c = CurrentCharacter();
+
+                if (char.IsWhiteSpace(c)) {
+                    MoveNext();
+                }
+                else if (c == '#') {
+                    while (HasValue() && Environment.NewLine.Contains(CurrentCharacter()) == false) {
+                        MoveNext();
+                    }
+                }
+                else {
+                    break;
+                }
             }
         }
 
