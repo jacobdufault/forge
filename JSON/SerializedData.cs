@@ -5,7 +5,7 @@ using System.Diagnostics;
 using System.Text;
 
 namespace Neon.Serialization {
-    public class SerializedValue {
+    public class SerializedData {
         private void InsertSpacing(StringBuilder builder, int count) {
             for (int i = 0; i < count; ++i) {
                 builder.Append("    ");
@@ -36,7 +36,7 @@ namespace Neon.Serialization {
                 builder.Append('"');
             }
 
-            else if (_value is Dictionary<string, SerializedValue>) {
+            else if (_value is Dictionary<string, SerializedData>) {
                 builder.Append('{');
                 builder.AppendLine();
                 foreach (var entry in AsDictionary) {
@@ -50,7 +50,7 @@ namespace Neon.Serialization {
                 builder.Append('}');
             }
 
-            else if (_value is List<SerializedValue>) {
+            else if (_value is List<SerializedData>) {
                 builder.Append('[');
                 builder.AppendLine();
                 foreach (var entry in AsList) {
@@ -77,69 +77,69 @@ namespace Neon.Serialization {
 
         private object _value;
 
-        public SerializedValue(bool boolean) {
+        public SerializedData(bool boolean) {
             _value = boolean;
         }
 
-        public SerializedValue(Real real) {
+        public SerializedData(Real real) {
             _value = real;
         }
 
-        public SerializedValue(string str) {
+        public SerializedData(string str) {
             _value = str;
         }
 
-        public SerializedValue(Dictionary<string, SerializedValue> dict) {
+        public SerializedData(Dictionary<string, SerializedData> dict) {
             _value = dict;
         }
 
-        public SerializedValue(List<SerializedValue> list) {
+        public SerializedData(List<SerializedData> list) {
             _value = list;
         }
 
-        public static SerializedValue CreateDictionary() {
-            return new Dictionary<string, SerializedValue>();
+        public static SerializedData CreateDictionary() {
+            return new Dictionary<string, SerializedData>();
         }
 
-        public static SerializedValue CreateList() {
-            return new List<SerializedValue>();
+        public static SerializedData CreateList() {
+            return new List<SerializedData>();
         }
 
-        public static implicit operator SerializedValue(bool boolean) {
-            return new SerializedValue(boolean);
+        public static implicit operator SerializedData(bool boolean) {
+            return new SerializedData(boolean);
         }
 
-        public static implicit operator SerializedValue(Real real) {
-            return new SerializedValue(real);
+        public static implicit operator SerializedData(Real real) {
+            return new SerializedData(real);
         }
 
-        public static implicit operator SerializedValue(string str) {
-            return new SerializedValue(str);
+        public static implicit operator SerializedData(string str) {
+            return new SerializedData(str);
         }
 
-        public static implicit operator SerializedValue(List<SerializedValue> list) {
-            return new SerializedValue(list);
+        public static implicit operator SerializedData(List<SerializedData> list) {
+            return new SerializedData(list);
         }
 
-        public static implicit operator SerializedValue(Dictionary<string, SerializedValue> dict) {
-            return new SerializedValue(dict);
+        public static implicit operator SerializedData(Dictionary<string, SerializedData> dict) {
+            return new SerializedData(dict);
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        public IDictionary<string, SerializedValue> AsDictionary {
+        public IDictionary<string, SerializedData> AsDictionary {
             get {
-                return Cast<IDictionary<string, SerializedValue>>();
+                return Cast<IDictionary<string, SerializedData>>();
             }
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        public IList<SerializedValue> AsList {
+        public IList<SerializedData> AsList {
             get {
-                return Cast<IList<SerializedValue>>();
+                return Cast<IList<SerializedData>>();
             }
         }
 
-        public SerializedValue this[int index] {
+        public SerializedData this[int index] {
             get {
                 return AsList[index];
             }
@@ -148,7 +148,7 @@ namespace Neon.Serialization {
             }
         }
 
-        public SerializedValue this[string key] {
+        public SerializedData this[string key] {
             get {
                 return AsDictionary[key];
             }
@@ -157,15 +157,15 @@ namespace Neon.Serialization {
             }
         }
 
-        public static implicit operator Real(SerializedValue value) {
+        public static implicit operator Real(SerializedData value) {
             return value.Cast<Real>();
         }
 
-        public static implicit operator string(SerializedValue value) {
+        public static implicit operator string(SerializedData value) {
             return value.Cast<string>();
         }
 
-        public static implicit operator bool(SerializedValue value) {
+        public static implicit operator bool(SerializedData value) {
             return value.Cast<bool>();
         }
 
@@ -183,7 +183,7 @@ namespace Neon.Serialization {
                 return false;
             }
 
-            SerializedValue v = obj as SerializedValue;
+            SerializedData v = obj as SerializedData;
             if (v == null) {
                 return false;
             }
@@ -191,7 +191,7 @@ namespace Neon.Serialization {
             return _value.Equals(v._value);
         }
 
-        public bool Equals(SerializedValue v) {
+        public bool Equals(SerializedData v) {
             if (v == null) {
                 return false;
             }
@@ -199,7 +199,7 @@ namespace Neon.Serialization {
             return _value.Equals(v._value);
         }
 
-        public static bool operator ==(SerializedValue a, SerializedValue b) {
+        public static bool operator ==(SerializedData a, SerializedData b) {
             // If both are null, or both are same instance, return true.
             if (ReferenceEquals(a, b)) {
                 return true;
@@ -213,7 +213,7 @@ namespace Neon.Serialization {
             return a.Equals(b);
         }
 
-        public static bool operator !=(SerializedValue a, SerializedValue b) {
+        public static bool operator !=(SerializedData a, SerializedData b) {
             return !(a == b);
         }
 

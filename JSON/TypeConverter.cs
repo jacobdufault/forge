@@ -212,17 +212,17 @@ namespace Neon.Serialization {
     /// <summary>
     /// Converts a given serialized value into an instance of an object.
     /// </summary>
-    /// <param name="serializedValue">The serialized value to convert.</param>
-    public delegate object Importer(SerializedValue serializedValue);
+    /// <param name="serializedData">The serialized value to convert.</param>
+    public delegate object Importer(SerializedData serializedData);
 
     /// <summary>
     /// Deserialize a given object instance into a serialized value.
     /// </summary>
     /// <param name="instance">The object instance to serialize.</param>
-    public delegate SerializedValue Exporter(object instance);
+    public delegate SerializedData Exporter(object instance);
 
     /// <summary>
-    /// Converts types to and from SerializedValues.
+    /// Converts types to and from SerializedDatas.
     /// </summary>
     public class TypeConverter {
         private Dictionary<Type, Importer> _importers = new Dictionary<Type, Importer>();
@@ -257,21 +257,21 @@ namespace Neon.Serialization {
                 AddImporter(typeof(Real), value => (Real)value);
                 AddImporter(typeof(bool), value => (bool)value);
                 AddImporter(typeof(string), value => (string)value);
-                AddImporter(typeof(SerializedValue), value => value);
+                AddImporter(typeof(SerializedData), value => value);
 
                 // use implicit conversion operators exporters convert the input type to a
                 // serialized value
-                AddExporter(typeof(byte), value => new SerializedValue((Real)value));
-                AddExporter(typeof(short), value => new SerializedValue((Real)value));
-                AddExporter(typeof(int), value => new SerializedValue(Real.CreateDecimal((long)(int)value)));
-                AddExporter(typeof(Real), value => new SerializedValue((Real)value));
-                AddExporter(typeof(bool), value => new SerializedValue((bool)value));
-                AddExporter(typeof(string), value => new SerializedValue((string)value));
+                AddExporter(typeof(byte), value => new SerializedData((Real)value));
+                AddExporter(typeof(short), value => new SerializedData((Real)value));
+                AddExporter(typeof(int), value => new SerializedData(Real.CreateDecimal((long)(int)value)));
+                AddExporter(typeof(Real), value => new SerializedData((Real)value));
+                AddExporter(typeof(bool), value => new SerializedData((bool)value));
+                AddExporter(typeof(string), value => new SerializedData((string)value));
             }
         }
 
         /// <summary>
-        /// Registers a converter that will convert SerializedValue instances to their respective
+        /// Registers a converter that will convert SerializedData instances to their respective
         /// destination types.
         /// </summary>
         /// <param name="destinationType"></param>
@@ -297,7 +297,7 @@ namespace Neon.Serialization {
             _exporters[serializedType] = exporter;
         }
 
-        public SerializedValue Export(object instance) {
+        public SerializedData Export(object instance) {
             if (instance == null) {
                 throw new ArgumentException("Cannot export a null object");
             }
@@ -316,7 +316,7 @@ namespace Neon.Serialization {
 
             // If it's an array or a list, we have special logic for processing
             if (metadata.IsArray || metadata.IsList) {
-                List<SerializedValue> output = new List<SerializedValue>();
+                List<SerializedData> output = new List<SerializedData>();
 
                 // luckily both arrays and lists are enumerable, so we'll use that interface when
                 // outputting the object
@@ -331,9 +331,9 @@ namespace Neon.Serialization {
             // If the object is a dictionary, then we populate it with all fields in the serialized
             // value
             else if (metadata.IsDictionary) {
-                var dict = new Dictionary<string, SerializedValue>();
+                var dict = new Dictionary<string, SerializedData>();
 
-                var enumerable = (IEnumerable<KeyValuePair<string, SerializedValue>>)instance;
+                var enumerable = (IEnumerable<KeyValuePair<string, SerializedData>>)instance;
                 foreach (var item in enumerable) {
                     dict[item.Key] = Export(item.Value);
                 }
@@ -343,7 +343,7 @@ namespace Neon.Serialization {
 
             // This is not an array or list; populate from reflected properties
             else {
-                var dict = new Dictionary<string, SerializedValue>();
+                var dict = new Dictionary<string, SerializedData>();
 
                 for (int i = 0; i < metadata.Properties.Count; ++i) {
                     PropertyMetadata propertyMetadata = metadata.Properties[i];
@@ -354,15 +354,15 @@ namespace Neon.Serialization {
             }
         }
 
-        public T Import<T>(SerializedValue serializedValue) {
-            return (T)Import(typeof(T), serializedValue);
+        public T Import<T>(SerializedData serializedData) {
+            return (T)Import(typeof(T), serializedData);
         }
 
-        public object Import(Type type, SerializedValue serializedValue) {
+        public object Import(Type type, SerializedData serializedData) {
             // If there is a user-defined importer for the given type, then use it instead of doing
             // automated reflection.
             if (_importers.ContainsKey(type)) {
-                return _importers[type](serializedValue);
+                return _importers[type](serializedData);
             }
 
             // There is no user-defined importer function. We'll have to use reflection to populate
@@ -373,10 +373,10 @@ namespace Neon.Serialization {
 
             // If it's an array or a list, we have special logic for processing
             if (metadata.IsArray || metadata.IsList) {
-                IList<SerializedValue> items = serializedValue.AsList;
+                IList<SerializedData> items = serializedData.AsList;
 
                 for (int i = 0; i < items.Count; ++i) {
-                    object indexedObject = Import(metadata.ElementType, serializedValue[i]);
+                    object indexedObject = Import(metadata.ElementType, serializedData[i]);
                     metadata.AssignListSlot(ref instance, indexedObject, i);
                 }
             }
@@ -384,7 +384,7 @@ namespace Neon.Serialization {
             // If the object is a dictionary, then we populate it with all fields in the serialized
             // value
             else if (metadata.IsDictionary) {
-                IDictionary<string, SerializedValue> dict = serializedValue.AsDictionary;
+                IDictionary<string, SerializedData> dict = serializedData.AsDictionary;
                 foreach (var entry in dict) {
                     string key = entry.Key;
                     object value = Import(metadata.ElementType, entry.Value);
@@ -400,7 +400,7 @@ namespace Neon.Serialization {
                     // deserialize the property
                     string name = propertyMetadata.Name;
                     Type storageType = propertyMetadata.StorageType;
-                    object deserialized = Import(storageType, serializedValue[name]);
+                    object deserialized = Import(storageType, serializedData[name]);
 
                     // write it into the instance
                     propertyMetadata.Write(instance, deserialized);

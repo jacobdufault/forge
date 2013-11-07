@@ -101,7 +101,7 @@ namespace Neon.Serialization {
             }
         }
 
-        SerializedValue ParseTrue() {
+        SerializedData ParseTrue() {
             if (CurrentCharacter() != 't') throw new ParseException("expected true", this);
             MoveNext();
             if (CurrentCharacter() != 'r') throw new ParseException("expected true", this);
@@ -114,7 +114,7 @@ namespace Neon.Serialization {
             return true;
         }
 
-        SerializedValue ParseFalse() {
+        SerializedData ParseFalse() {
             if (CurrentCharacter() != 'f') throw new ParseException("expected false", this);
             MoveNext();
             if (CurrentCharacter() != 'a') throw new ParseException("expected false", this);
@@ -141,7 +141,7 @@ namespace Neon.Serialization {
         /// Parses numbers that follow the regular expression [-+](\d+|\d*\.\d*)
         /// </summary>
         /// <returns></returns>
-        SerializedValue ParseNumber() {
+        SerializedData ParseNumber() {
             // determine if the result should be negative
             bool negative = false;
             if (CurrentCharacter() == '-' || CurrentCharacter() == '+') {
@@ -163,7 +163,7 @@ namespace Neon.Serialization {
 
             // if there is no period, then we don't have a decimal, number is of format [-]\d*
             if ((HasValue() && CurrentCharacter() == '.') == false) {
-                return new SerializedValue(Real.CreateDecimal(leftValue));
+                return new SerializedData(Real.CreateDecimal(leftValue));
             }
 
             // we have a period, so the number is of the format [-]\d*.\d*
@@ -175,7 +175,7 @@ namespace Neon.Serialization {
             end = _start;
 
             int rightValue = (int)ParseSubstring(_json, start, end);
-            return new SerializedValue(Real.CreateDecimal(leftValue, rightValue));
+            return new SerializedData(Real.CreateDecimal(leftValue, rightValue));
         }
 
         string ParseKey() {
@@ -198,7 +198,7 @@ namespace Neon.Serialization {
             return result.ToString();
         }
 
-        SerializedValue ParseString() {
+        SerializedData ParseString() {
             if (CurrentCharacter() != '"') {
                 throw new ParseException("Attempt to parse string without leading \"", this);
             }
@@ -230,15 +230,15 @@ namespace Neon.Serialization {
         }
 
 
-        SerializedValue ParseArray() {
+        SerializedData ParseArray() {
             // skip '['
             MoveNext();
             SkipSpace();
 
-            List<SerializedValue> result = new List<SerializedValue>();
+            List<SerializedData> result = new List<SerializedData>();
 
             while (CurrentCharacter() != ']') {
-                SerializedValue element = RunParse();
+                SerializedData element = RunParse();
                 result.Add(element);
 
                 SkipSpace();
@@ -252,13 +252,13 @@ namespace Neon.Serialization {
 
 
 
-        SerializedValue ParseObject() {
+        SerializedData ParseObject() {
             // skip '{'
             SkipSpace();
             MoveNext();
             SkipSpace();
 
-            Dictionary<string, SerializedValue> result = new Dictionary<string, SerializedValue>();
+            Dictionary<string, SerializedData> result = new Dictionary<string, SerializedData>();
 
             while (CurrentCharacter() != '}') {
                 SkipSpace();
@@ -273,7 +273,7 @@ namespace Neon.Serialization {
                 MoveNext();
                 SkipSpace();
 
-                SerializedValue value = RunParse();
+                SerializedData value = RunParse();
                 result.Add(key, value);
 
                 SkipSpace();
@@ -285,7 +285,7 @@ namespace Neon.Serialization {
         }
 
 
-        public static SerializedValue Parse(string json) {
+        public static SerializedData Parse(string json) {
             Parser context = new Parser(json);
             return context.RunParse();
         }
@@ -295,7 +295,7 @@ namespace Neon.Serialization {
             _start = 0;
         }
 
-        SerializedValue RunParse() {
+        SerializedData RunParse() {
             SkipSpace();
 
             switch (CurrentCharacter()) {
