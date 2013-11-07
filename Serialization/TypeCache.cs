@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace Neon.Entities.Serialization {
+namespace Neon.Serialization {
     /// <summary>
     /// Caches type name to type lookups. Type lookups occur in all loaded assemblies.
     /// </summary>
-    internal static class TypeCache {
+    public static class TypeCache {
         /// <summary>
         /// Cache from fully qualified type name to type instances.
         /// </summary>
@@ -37,7 +37,7 @@ namespace Neon.Entities.Serialization {
             }
 
             // couldn't find the type; throw an exception
-            throw new Exception(string.Format("Unable to find the type for {0}; is the configuration file for DLL loading correct?", name));
+            throw new Exception(string.Format("Unable to find the type for {0}", name));
         }
     }
 }
