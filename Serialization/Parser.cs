@@ -6,27 +6,27 @@ using System.Text;
 
 namespace Neon.Serialization {
     public class Parser {
-        internal string _json;
+        internal string _input;
         internal int _start;
 
         private char CurrentCharacter(int offset = 0) {
-            return _json[_start + offset];
+            return _input[_start + offset];
         }
 
         private void MoveNext() {
             ++_start;
 
-            if (_start > _json.Length) {
+            if (_start > _input.Length) {
                 throw new ParseException("Unexpected end of input", this);
             }
         }
 
         private bool HasNext() {
-            return _start < _json.Length - 1;
+            return _start < _input.Length - 1;
         }
 
         private bool HasValue(int offset = 0) {
-            return (_start + offset) >= 0 && (_start + offset) < _json.Length;
+            return (_start + offset) >= 0 && (_start + offset) < _input.Length;
         }
 
         private void SkipSpace() {
@@ -168,7 +168,7 @@ namespace Neon.Serialization {
             }
             int end = _start;
 
-            long leftValue = ParseSubstring(_json, start, end);
+            long leftValue = ParseSubstring(_input, start, end);
             if (negative) {
                 leftValue *= -1;
             }
@@ -186,7 +186,7 @@ namespace Neon.Serialization {
             }
             end = _start;
 
-            int rightValue = (int)ParseSubstring(_json, start, end);
+            int rightValue = (int)ParseSubstring(_input, start, end);
             return new SerializedData(Real.CreateDecimal(leftValue, rightValue));
         }
 
@@ -297,13 +297,13 @@ namespace Neon.Serialization {
         }
 
 
-        public static SerializedData Parse(string json) {
-            Parser context = new Parser(json);
+        public static SerializedData Parse(string input) {
+            Parser context = new Parser(input);
             return context.RunParse();
         }
 
-        private Parser(string json) {
-            _json = json;
+        private Parser(string input) {
+            _input = input;
             _start = 0;
         }
 
