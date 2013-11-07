@@ -5,7 +5,7 @@
     ]
 
     SystemProviders: [
-        "PerformanceTests.SystemProvider"
+        "Neon.Performance.Tests.SystemProvider"
     ]
 
     SavedSystemStates: []
@@ -26,7 +26,7 @@
             TemplateId: 0
             Data: [
                 {
-                    DataType: "PerformanceTests.MyPositionData"
+                    DataType: "Neon.Performance.Tests.MyPositionData"
                     State: {
                         X: 0
                         Z: 0
@@ -44,7 +44,7 @@
             IsRemoving: false
             Data: [
                 {
-                    DataType: "PerformanceTests.SpawnData"
+                    DataType: "Neon.Performance.Tests.SpawnData"
                     WasModified: false
                     IsAdding: false
                     IsRemoving: false
