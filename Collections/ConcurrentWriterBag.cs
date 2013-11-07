@@ -8,6 +8,7 @@ namespace Neon.Collections {
     /// single-thread.
     /// </summary>
     /// <typeparam name="T">The type of object stored.</typeparam>
+    // TODO: consider making this class disposable
     public class ConcurrentWriterBag<T> {
         /// <summary>
         /// All thread-local bags; this is used when iterating over the entire contents of the bag.
