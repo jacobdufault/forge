@@ -170,12 +170,11 @@ namespace Neon.Serialization {
         }
 
         private T Cast<T>() {
-            try {
+            if (_value is T) {
                 return (T)_value;
             }
-            catch (InvalidCastException) {
-                throw new Exception("Unable to cast <" + this + "> to type " + typeof(T));
-            }
+
+            throw new Exception("Unable to cast <" + AsString + "> to type " + typeof(T));
         }
 
         public override bool Equals(Object obj) {
