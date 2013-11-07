@@ -1,0 +1,96 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{F3D00C86-F3DC-490E-8A49-744C30C01117}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Neon.Entities</RootNamespace>
+    <AssemblyName>Neon.Entities</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <CodeAnalysisRuleSet>..\AnalysisRuleSet.ruleset</CodeAnalysisRuleSet>
+    <DocumentationFile>bin\Debug\Neon.Entities.xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <DocumentationFile>bin\Release\Neon.Entities.xml</DocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Threading">
+      <HintPath>..\System.Threading.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Data.cs" />
+    <Compile Include="DataAccessor.cs" />
+    <Compile Include="DataAllocator.cs" />
+    <Compile Include="Entity.cs" />
+    <Compile Include="EventProcessor.cs" />
+    <Compile Include="Events.cs" />
+    <Compile Include="Exceptions.cs" />
+    <Compile Include="IEntity.cs" />
+    <Compile Include="IEntityExtensions.cs" />
+    <Compile Include="EntityTemplate.cs" />
+    <Compile Include="ImmutableContainer.cs" />
+    <Compile Include="Serialization\EntityJson.cs" />
+    <Compile Include="Serialization\ISystemProvider.cs" />
+    <Compile Include="Serialization\LevelJson.cs" />
+    <Compile Include="Serialization\LevelParser.cs" />
+    <Compile Include="Serialization\SavedSystemStateJson.cs" />
+    <Compile Include="Serialization\TemplateJson.cs" />
+    <Compile Include="System.cs" />
+    <Compile Include="IStructuredInput.cs" />
+    <Compile Include="EntityManager.cs" />
+    <Compile Include="Filter.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Triggers.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Collections\Collections.csproj">
+      <Project>{9d91d020-4291-4926-b76d-b73d138b0aef}</Project>
+      <Name>Collections</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Serialization\Serialization.csproj">
+      <Project>{b97ca54f-0428-4853-af39-5ed8375a0262}</Project>
+      <Name>Serialization</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Utilities\Utilities.csproj">
+      <Project>{25db9f16-ecae-4a3f-b3c3-5794b8288587}</Project>
+      <Name>Utilities</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
