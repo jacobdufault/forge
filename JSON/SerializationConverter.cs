@@ -224,7 +224,7 @@ namespace Neon.Serialization {
     /// <summary>
     /// Converts types to and from SerializedDatas.
     /// </summary>
-    public class TypeConverter {
+    public class SerializationConverter {
         private Dictionary<Type, Importer> _importers = new Dictionary<Type, Importer>();
         private Dictionary<Type, Exporter> _exporters = new Dictionary<Type, Exporter>();
         private Dictionary<Type, TypeMetadata> _typeMetadata = new Dictionary<Type, TypeMetadata>();
@@ -246,17 +246,17 @@ namespace Neon.Serialization {
             return metadata;
         }
 
-        public TypeConverter(bool addDefaultConverters = true) {
+        public SerializationConverter(bool addDefaultConverters = true) {
             // Register default converters
             if (addDefaultConverters) {
                 // use implicit conversion operators importers convert a serialized value to a
                 // non-serialized value
-                AddImporter(typeof(byte), value => ((Real)value).AsInt);
-                AddImporter(typeof(short), value => ((Real)value).AsInt);
-                AddImporter(typeof(int), value => ((Real)value).AsInt);
-                AddImporter(typeof(Real), value => (Real)value);
-                AddImporter(typeof(bool), value => (bool)value);
-                AddImporter(typeof(string), value => (string)value);
+                AddImporter(typeof(byte), value => value.AsReal.AsInt);
+                AddImporter(typeof(short), value => value.AsReal.AsInt);
+                AddImporter(typeof(int), value => value.AsReal.AsInt);
+                AddImporter(typeof(Real), value => value.AsReal);
+                AddImporter(typeof(bool), value => value.AsBool);
+                AddImporter(typeof(string), value => value.AsString);
                 AddImporter(typeof(SerializedData), value => value);
 
                 // use implicit conversion operators exporters convert the input type to a
@@ -267,6 +267,7 @@ namespace Neon.Serialization {
                 AddExporter(typeof(Real), value => new SerializedData((Real)value));
                 AddExporter(typeof(bool), value => new SerializedData((bool)value));
                 AddExporter(typeof(string), value => new SerializedData((string)value));
+                AddExporter(typeof(SerializedData), value => (SerializedData)value);
             }
         }
 
@@ -325,7 +326,7 @@ namespace Neon.Serialization {
                     output.Add(Export(item));
                 }
 
-                return output;
+                return new SerializedData(output);
             }
 
             // If the object is a dictionary, then we populate it with all fields in the serialized
@@ -338,7 +339,7 @@ namespace Neon.Serialization {
                     dict[item.Key] = Export(item.Value);
                 }
 
-                return dict;
+                return new SerializedData(dict);
             }
 
             // This is not an array or list; populate from reflected properties
@@ -350,7 +351,7 @@ namespace Neon.Serialization {
                     dict[propertyMetadata.Name] = Export(propertyMetadata.Read(instance));
                 }
 
-                return dict;
+                return new SerializedData(dict);
             }
         }
 
@@ -376,7 +377,7 @@ namespace Neon.Serialization {
                 IList<SerializedData> items = serializedData.AsList;
 
                 for (int i = 0; i < items.Count; ++i) {
-                    object indexedObject = Import(metadata.ElementType, serializedData[i]);
+                    object indexedObject = Import(metadata.ElementType, items[i]);
                     metadata.AssignListSlot(ref instance, indexedObject, i);
                 }
             }
@@ -394,13 +395,14 @@ namespace Neon.Serialization {
 
             // This is not an array or list; populate from reflected properties
             else {
+                Dictionary<string, SerializedData> serializedDataDict = serializedData.AsDictionary;
                 for (int i = 0; i < metadata.Properties.Count; ++i) {
                     PropertyMetadata propertyMetadata = metadata.Properties[i];
 
                     // deserialize the property
                     string name = propertyMetadata.Name;
                     Type storageType = propertyMetadata.StorageType;
-                    object deserialized = Import(storageType, serializedData[name]);
+                    object deserialized = Import(storageType, serializedDataDict[name]);
 
                     // write it into the instance
                     propertyMetadata.Write(instance, deserialized);

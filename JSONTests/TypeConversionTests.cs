@@ -29,12 +29,12 @@ namespace JSONTests {
     public class TypeConversionTests {
         [TestMethod]
         public void ImportDeserializingPrimitives() {
-            SerializedData a = (Real)3.0;
-            SerializedData b = true;
-            SerializedData c = false;
-            SerializedData d = "hello";
+            SerializedData a = new SerializedData(Real.CreateDecimal(3));
+            SerializedData b = new SerializedData(true);
+            SerializedData c = new SerializedData(false);
+            SerializedData d = new SerializedData("hello");
 
-            TypeConverter converter = new TypeConverter();
+            SerializationConverter converter = new SerializationConverter();
             Assert.AreEqual((Real)3, converter.Import<Real>(a));
             Assert.AreEqual(true, converter.Import<bool>(b));
             Assert.AreEqual(false, converter.Import<bool>(c));
@@ -44,11 +44,11 @@ namespace JSONTests {
         [TestMethod]
         public void ImportDeserializingStructs() {
             SerializedData serialized = SerializedData.CreateDictionary();
-            serialized["A"] = (Real)3;
-            serialized["B"] = true;
-            serialized["C"] = "hello";
+            serialized.AsDictionary["A"] = new SerializedData(Real.CreateDecimal(3));
+            serialized.AsDictionary["B"] = new SerializedData(true);
+            serialized.AsDictionary["C"] = new SerializedData("hello");
 
-            TypeConverter converter = new TypeConverter();
+            SerializationConverter converter = new SerializationConverter();
             SimpleStruct simpleStruct = converter.Import<SimpleStruct>(serialized);
 
             Assert.AreEqual(3, simpleStruct.A);
@@ -59,9 +59,9 @@ namespace JSONTests {
         [TestMethod]
         public void ImportPrivateFields() {
             SerializedData serialized = SerializedData.CreateDictionary();
-            serialized["A"] = (Real)3;
+            serialized.AsDictionary["A"] = new SerializedData(Real.CreateDecimal(3));
 
-            TypeConverter converter = new TypeConverter();
+            SerializationConverter converter = new SerializationConverter();
             ClassWithPrivateField obj = converter.Import<ClassWithPrivateField>(serialized);
 
             Assert.AreEqual((Real)3, obj.GetA());
@@ -90,7 +90,7 @@ namespace JSONTests {
     ]
 }
 ");
-            TypeConverter converter = new TypeConverter();
+            SerializationConverter converter = new SerializationConverter();
             ClassWithArray deserialized = converter.Import<ClassWithArray>(serialized);
 
             Assert.AreEqual(1, deserialized.Items[0].A);
@@ -106,20 +106,20 @@ namespace JSONTests {
 
         [TestMethod]
         public void ExportPrimitives() {
-            TypeConverter converter = new TypeConverter();
+            SerializationConverter converter = new SerializationConverter();
             Assert.AreEqual(new SerializedData(3), converter.Export(3));
-            Assert.AreEqual((SerializedData)true, converter.Export(true));
-            Assert.AreEqual((SerializedData)false, converter.Export(false));
-            Assert.AreEqual((SerializedData)"hello", converter.Export("hello"));
+            Assert.AreEqual(new SerializedData(true), converter.Export(true));
+            Assert.AreEqual(new SerializedData(false), converter.Export(false));
+            Assert.AreEqual(new SerializedData("hello"), converter.Export("hello"));
         }
 
         [TestMethod]
         public void ExportPrimitivesAsString() {
-            TypeConverter converter = new TypeConverter();
-            Assert.AreEqual("3", converter.Export(3).AsString);
-            Assert.AreEqual("true", converter.Export(true).AsString);
-            Assert.AreEqual("false", converter.Export(false).AsString);
-            Assert.AreEqual("\"hello\"", converter.Export("hello").AsString);
+            SerializationConverter converter = new SerializationConverter();
+            Assert.AreEqual("3", converter.Export(3).PrettyPrinted);
+            Assert.AreEqual("true", converter.Export(true).PrettyPrinted);
+            Assert.AreEqual("false", converter.Export(false).PrettyPrinted);
+            Assert.AreEqual("\"hello\"", converter.Export("hello").PrettyPrinted);
         }
 
         [TestMethod]
@@ -130,14 +130,14 @@ namespace JSONTests {
                 C = "hi"
             };
 
-            TypeConverter converter = new TypeConverter();
+            SerializationConverter converter = new SerializationConverter();
             SerializedData exported = converter.Export(s);
 
             Assert.AreEqual(@"{
     A: 3
     B: true
     C: ""hi""
-}", exported.AsString);
+}", exported.PrettyPrinted);
         }
 
         [TestMethod]
@@ -163,11 +163,11 @@ namespace JSONTests {
 }";
             SerializedData serializedData = Parser.Parse(serializedString);
 
-            TypeConverter converter = new TypeConverter();
+            SerializationConverter converter = new SerializationConverter();
             ClassWithArray deserialized = converter.Import<ClassWithArray>(serializedData);
 
             SerializedData reserializedString = converter.Export(deserialized);
-            Assert.AreEqual(serializedString, reserializedString.AsString);
+            Assert.AreEqual(serializedString, reserializedString.PrettyPrinted);
         }
     }
 }

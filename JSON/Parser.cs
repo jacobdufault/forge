@@ -123,7 +123,7 @@ namespace Neon.Serialization {
             if (CurrentCharacter() != 'e') throw new ParseException("expected true", this);
             MoveNext();
 
-            return true;
+            return new SerializedData(true);
         }
 
         SerializedData ParseFalse() {
@@ -138,7 +138,7 @@ namespace Neon.Serialization {
             if (CurrentCharacter() != 'e') throw new ParseException("expected false", this);
             MoveNext();
 
-            return false;
+            return new SerializedData(false);
         }
 
         private long ParseSubstring(string baseString, int start, int end) {
@@ -238,7 +238,7 @@ namespace Neon.Serialization {
             // skip '"'
             MoveNext();
 
-            return result.ToString();
+            return new SerializedData(result.ToString());
         }
 
 
@@ -259,7 +259,7 @@ namespace Neon.Serialization {
             // skip ']'
             MoveNext();
 
-            return result;
+            return new SerializedData(result);
         }
 
 
@@ -293,7 +293,7 @@ namespace Neon.Serialization {
 
             /* skip '}' */
             MoveNext();
-            return result;
+            return new SerializedData(result);
         }
 
 
