@@ -73,9 +73,67 @@ namespace Neon.Utilities {
             return Real.Create(value);
         }
 
+        public static implicit operator Real(double value) {
+            return Real.Create((float)value);
+        }
+
         public static Real CreateFromRaw(long StartingRawValue) {
             Real real;
             real.RawValue = StartingRawValue;
+            return real;
+        }
+
+        /// <summary>
+        /// Assuming this real has a base 10 representation, this shifts the decimal value to the
+        /// left by count digits.
+        /// </summary>
+        private void ShiftDecimal(int count) {
+            int digitBase = 10;
+
+            int pow = 1;
+            for (int i = 0; i < count; ++i) {
+                pow *= digitBase;
+            }
+
+            this /= (OneF * pow);
+        }
+
+        /// <summary>
+        /// Returns the number of digits in the given value. The negative sign is not considered
+        /// a digit.
+        /// </summary>
+        private static int GetDigitCount(int number) {
+            // remark: we compare against 10, and not 0, in this function because 0 has one digit
+
+            int digits = 1;
+            while (number >= 10) {
+                number /= 10;
+                digits += 1;
+            }
+            return digits;
+        }
+
+        /// <summary>
+        /// Creates a real value with that is 0.number. For example, CreateDecimal(123) will create
+        /// a real value that is equal to "0.123".
+        /// </summary>
+        /// <param name="number">The decimal number to create</param>
+        /// <returns></returns>
+        public static Real CreateDecimal(long beforeDecimal, int afterDecimal) {
+            Contract.Requires(afterDecimal >= 0, "Cannot have a negative decimal portion");
+
+            int sign = beforeDecimal >= 0 ? 1 : -1;
+
+            Real real;
+            real.RawValue = (One * afterDecimal) * sign;
+            real.ShiftDecimal(GetDigitCount(afterDecimal));
+            real.RawValue += One * beforeDecimal;
+            return real;
+        }
+
+        public static Real CreateDecimal(long beforeDecimal) {
+            Real real;
+            real.RawValue = One * beforeDecimal;
             return real;
         }
 

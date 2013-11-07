@@ -1,6 +1,9 @@
 ﻿using Neon.Utilities;
 using System.Collections.Generic;
 
+/// <summary>
+/// Common extensions of types which implement the IList[T] interface.
+/// </summary>
 public static class ListExtensions {
     /// <summary>
     /// Shuffle the specified list.

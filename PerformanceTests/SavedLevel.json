@@ -1,11 +1,10 @@
-
 {
     "DllInjections": [
     ],
     "SystemProviders": [
         "PerformanceTests.SystemProvider"
     ],
-    "CurrentUpdateNumber": 4,
+    "CurrentUpdateNumber": 7,
     "Templates": [
         {
             "PrettyName": "Base Template",
@@ -60,6 +59,72 @@
                     "IsAdding": false,
                     "IsRemoving": false,
                     "PreviousState": {
+                        "X": 5,
+                        "Z": 0
+                    },
+                    "CurrentState": {
+                        "X": 6,
+                        "Z": 0
+                    }
+                }
+            ],
+            "IsAdding": false,
+            "IsRemoving": false
+        },
+        {
+            "PrettyName": "",
+            "UniqueId": 3,
+            "Data": [
+                {
+                    "DataType": "PerformanceTests.MyPositionData",
+                    "WasModified": true,
+                    "IsAdding": false,
+                    "IsRemoving": false,
+                    "PreviousState": {
+                        "X": 4,
+                        "Z": 0
+                    },
+                    "CurrentState": {
+                        "X": 5,
+                        "Z": 0
+                    }
+                }
+            ],
+            "IsAdding": false,
+            "IsRemoving": false
+        },
+        {
+            "PrettyName": "",
+            "UniqueId": 4,
+            "Data": [
+                {
+                    "DataType": "PerformanceTests.MyPositionData",
+                    "WasModified": true,
+                    "IsAdding": false,
+                    "IsRemoving": false,
+                    "PreviousState": {
+                        "X": 3,
+                        "Z": 0
+                    },
+                    "CurrentState": {
+                        "X": 4,
+                        "Z": 0
+                    }
+                }
+            ],
+            "IsAdding": false,
+            "IsRemoving": false
+        },
+        {
+            "PrettyName": "",
+            "UniqueId": 5,
+            "Data": [
+                {
+                    "DataType": "PerformanceTests.MyPositionData",
+                    "WasModified": true,
+                    "IsAdding": false,
+                    "IsRemoving": false,
+                    "PreviousState": {
                         "X": 2,
                         "Z": 0
                     },
@@ -74,7 +139,7 @@
         },
         {
             "PrettyName": "",
-            "UniqueId": 3,
+            "UniqueId": 6,
             "Data": [
                 {
                     "DataType": "PerformanceTests.MyPositionData",
@@ -96,7 +161,7 @@
         },
         {
             "PrettyName": "",
-            "UniqueId": 4,
+            "UniqueId": 7,
             "Data": [
                 {
                     "DataType": "PerformanceTests.MyPositionData",
@@ -118,7 +183,7 @@
         },
         {
             "PrettyName": "",
-            "UniqueId": 5,
+            "UniqueId": 8,
             "Data": [
                 {
                     "DataType": "PerformanceTests.MyPositionData",

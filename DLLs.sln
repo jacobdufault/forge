@@ -27,6 +27,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LitJSON", "LitJSON\LitJSON.csproj", "{0F1AFE2C-C560-47F3-A1D4-0545EFB0F313}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NES", "JSON\NES.csproj", "{B97CA54F-0428-4853-AF39-5ED8375A0262}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NESTests", "JSONTests\NESTests.csproj", "{6D2D44B7-AA38-4B69-B3E9-04B3D197F467}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -77,6 +81,14 @@ Global
 		{0F1AFE2C-C560-47F3-A1D4-0545EFB0F313}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0F1AFE2C-C560-47F3-A1D4-0545EFB0F313}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0F1AFE2C-C560-47F3-A1D4-0545EFB0F313}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B97CA54F-0428-4853-AF39-5ED8375A0262}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B97CA54F-0428-4853-AF39-5ED8375A0262}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B97CA54F-0428-4853-AF39-5ED8375A0262}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B97CA54F-0428-4853-AF39-5ED8375A0262}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D2D44B7-AA38-4B69-B3E9-04B3D197F467}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D2D44B7-AA38-4B69-B3E9-04B3D197F467}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D2D44B7-AA38-4B69-B3E9-04B3D197F467}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D2D44B7-AA38-4B69-B3E9-04B3D197F467}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
