@@ -1,7 +1,9 @@
-﻿using Neon.Utilities;
+﻿using Neon.Serialization;
+using Neon.Utilities;
 using System;
 
 namespace Neon.Entities {
+    [SerializationNoAutoInheritance]
     public abstract class Data : IImmutableData<Data> {
         /// <summary>
         /// The Entity that contains this Data instance.

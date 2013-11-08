@@ -170,7 +170,7 @@ namespace Neon.Serialization {
 
             // Iterate over all attributes in the type to check for the requirement of a custom
             // converter
-            foreach (var attribute in _baseType.GetCustomAttributes(true)) {
+            foreach (var attribute in _baseType.GetCustomAttributes(inherit: true)) {
                 if (attribute is SerializationRequireCustomConverterAttribute) {
                     RequireCustomConverter = true;
                 }
@@ -182,6 +182,15 @@ namespace Neon.Serialization {
                 foreach (var attribute in _baseType.GetCustomAttributes(inherit: false)) {
                     if (attribute is SerializationSupportInheritance) {
                         SupportInheritance = true;
+                    }
+                }
+            }
+
+            // But do not support it if inheritance is explicitly denied
+            if (SupportInheritance) {
+                foreach (var attribute in _baseType.GetCustomAttributes(inherit: true)) {
+                    if (attribute is SerializationNoAutoInheritance) {
+                        SupportInheritance = false;
                     }
                 }
             }
@@ -216,20 +225,19 @@ namespace Neon.Serialization {
             // If we're not one of those three types, then we will be using Properties to assign
             // data to ourselves, so we want to lookup said information
             if (IsDictionary == false && IsArray == false && IsList == false) {
-                // Additional flags used to widen the property and field search, ie, we want to
-                // include private fields as well
-                BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic |
-                    BindingFlags.Instance | BindingFlags.FlattenHierarchy;
+                // TODO: this doesn't currently support private fields; perhaps we should support
+                // private fields annotated with [Serializable]?
 
                 _properties = new List<PropertyMetadata>();
-                foreach (PropertyInfo property in type.GetProperties(bindingFlags)) {
+
+                foreach (PropertyInfo property in type.GetProperties()) {
                     // We only populate properties that can be both read and written to
                     if (property.CanRead && property.CanWrite) {
                         _properties.Add(new PropertyMetadata(property));
                     }
                 }
 
-                foreach (FieldInfo field in type.GetFields(bindingFlags)) {
+                foreach (FieldInfo field in type.GetFields()) {
                     // We serialize all fields, except those annotated with [NonSerialized].
                     if (field.IsNotSerialized == false) {
                         _properties.Add(new PropertyMetadata(field));
@@ -448,6 +456,8 @@ namespace Neon.Serialization {
         /// an instance of instanceType, though instanceType can be anywhere on the hierarchy for
         /// instance (for example, it could be typeof(object).</param>
         public SerializedData Export(Type instanceType, object instance) {
+            Log<SerializationConverter>.Info("Exporting " + instance + " with type " + instanceType);
+
             if (instance == null) {
                 throw new ArgumentException("Cannot export a null object");
             }
@@ -459,6 +469,11 @@ namespace Neon.Serialization {
             // automated reflection.
             if (_exporters.ContainsKey(instanceType)) {
                 return _exporters[instanceType](instance);
+            }
+
+            // we just serialize all enums as strings
+            if (instanceType.IsEnum) {
+                return Export(typeof(string), instance.ToString());
             }
 
             // There is no user-defined exporting function. We'll have to use reflection to populate
@@ -546,10 +561,17 @@ namespace Neon.Serialization {
         /// serializedData.
         /// </summary>
         public object Import(Type type, SerializedData serializedData) {
+            Log<SerializationConverter>.Info("Exporting " + serializedData.PrettyPrinted + " with type " + type);
+
             // If there is a user-defined importer for the given type, then use it instead of doing
             // automated reflection.
             if (_importers.ContainsKey(type)) {
                 return _importers[type](serializedData);
+            }
+
+            // we just import all enums as strings
+            if (type.IsEnum) {
+                return Enum.Parse(type, serializedData.AsString);
             }
 
             // There is no user-defined importer function. We'll have to use reflection to populate

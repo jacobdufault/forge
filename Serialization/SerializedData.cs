@@ -1,4 +1,4 @@
-﻿#define ALLOW_IMPLICITS
+﻿//#define ALLOW_IMPLICITS
 
 using Neon.Utilities;
 using System;
@@ -156,7 +156,8 @@ namespace Neon.Serialization {
                 return (T)_value;
             }
 
-            throw new InvalidCastException("Unable to cast <" + PrettyPrinted + "> to type " + typeof(T));
+            throw new InvalidCastException("Unable to cast <" + PrettyPrinted + "> (with type = " +
+                _value.GetType() + ") to type " + typeof(T));
         }
         #endregion
 

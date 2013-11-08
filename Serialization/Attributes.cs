@@ -19,4 +19,10 @@ namespace Neon.Serialization {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface,
         Inherited = false, AllowMultiple = false)]
     public sealed class SerializationSupportInheritance : Attribute { }
+
+    /// <summary>
+    /// Annotate a type with this class to *not* automatically inject inheritance support if the
+    /// type is abstract or an interface.
+    /// </summary>
+    public sealed class SerializationNoAutoInheritance : Attribute { }
 }

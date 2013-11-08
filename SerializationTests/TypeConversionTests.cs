@@ -3,6 +3,14 @@ using Neon.Serialization;
 using Neon.Utilities;
 
 namespace Neon.Serialization.Tests {
+    enum MyEnum {
+        MyEnum0,
+        MyEnum1,
+        MyEnum2,
+        MyEnum3,
+        MyEnum4
+    }
+
     internal interface IInterface { }
     internal class DerivedInterfaceA : IInterface {
         public override bool Equals(object obj) {
@@ -124,7 +132,8 @@ namespace Neon.Serialization.Tests {
             Assert.AreEqual("hello", simpleStruct.C);
         }
 
-        [TestMethod]
+        //[TestMethod]
+        // This test is disabled for now until we rebuild support for private fields.
         public void ImportPrivateFields() {
             SerializedData serialized = SerializedData.CreateDictionary();
             serialized.AsDictionary["A"] = new SerializedData(Real.CreateDecimal(3));
@@ -236,6 +245,21 @@ namespace Neon.Serialization.Tests {
 
             SerializedData reserializedString = converter.Export(deserialized);
             Assert.AreEqual(serializedString, reserializedString.PrettyPrinted);
+        }
+
+        private void RunEnumTest<T>(T t0) {
+            SerializedData exported = (new SerializationConverter()).Export(t0);
+            T imported = (new SerializationConverter()).Import<T>(exported);
+            Assert.AreEqual(t0, imported);            
+        }
+
+        [TestMethod]
+        public void ImportExportEnums() {
+            RunEnumTest(MyEnum.MyEnum0);
+            RunEnumTest(MyEnum.MyEnum1);
+            RunEnumTest(MyEnum.MyEnum2);
+            RunEnumTest(MyEnum.MyEnum3);
+            RunEnumTest(MyEnum.MyEnum4);
         }
 
         private void RunInheritanceTest<InterfaceType>(InterfaceType instanceA, InterfaceType instanceB) {
