@@ -39,31 +39,34 @@ namespace Neon.Entities {
                     IsRemoving = IsRemoving(accessor)
                 };
 
+                Type dataType = container.Current.GetType();
+
                 if (modified.Contains(accessor)) {
                     dataJson.WasModified = true;
-                    dataJson.PreviousState = converter.Export(container.Current);
-                    dataJson.CurrentState = converter.Export(container.Modifying);
+                    dataJson.PreviousState = converter.Export(dataType, container.Current);
+                    dataJson.CurrentState = converter.Export(dataType, container.Modifying);
                 }
 
                 else {
                     dataJson.WasModified = false;
-                    dataJson.PreviousState = converter.Export(container.Previous);
-                    dataJson.CurrentState = converter.Export(container.Current);
+                    dataJson.PreviousState = converter.Export(dataType, container.Previous);
+                    dataJson.CurrentState = converter.Export(dataType, container.Current);
                 }
 
                 dataJsonList.Add(dataJson);
             }
 
             foreach (var addedData in _toAdd) {
-                DataAccessor accessor = new DataAccessor(addedData.GetType());
+                Type dataType = addedData.GetType();
+                DataAccessor accessor = new DataAccessor(dataType);
 
                 DataJson dataJson = new DataJson() {
                     DataType = addedData.GetType().ToString(),
                     WasModified = false, // doesn't matter
                     IsAdding = true, // always true
                     IsRemoving = false, // doesn't matter
-                    PreviousState = converter.Export(addedData), // doesn't matter
-                    CurrentState = converter.Export(addedData)
+                    PreviousState = converter.Export(dataType, addedData), // doesn't matter
+                    CurrentState = converter.Export(dataType, addedData)
                 };
                 dataJsonList.Add(dataJson);
             }
