@@ -62,7 +62,9 @@ namespace Neon.Entities {
         public virtual IEntity Instantiate() {
             IEntity entity = new Entity();
             InjectDataInto(entity);
-            EntityManager.AddEntity(entity);
+            if (EntityManager != null) {
+                EntityManager.AddEntity(entity);
+            }
             return entity;
         }
 
