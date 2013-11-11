@@ -27,7 +27,7 @@ namespace Neon.Entities.Serialization {
         /// <summary>
         /// The templates used for creating levels.
         /// </summary>
-        public List<TemplateJson> Templates;
+        public List<SerializedTemplate> Templates;
 
         /// <summary>
         /// Converter used for exporting entities
@@ -42,36 +42,37 @@ namespace Neon.Entities.Serialization {
         /// <summary>
         /// Loads a level structure from a NES file at the given path.
         /// </summary>
-        public static LevelJson LoadLevelJson(string levelPath, SerializationConverter converter = null) {
+        public static SerializedLevel LoadLevelJson(string levelPath,
+            SerializationConverter converter = null) {
             if (converter == null) {
                 converter = new SerializationConverter();
             }
 
             String fileText = File.ReadAllText(levelPath);
             SerializedData data = Parser.Parse(fileText);
-            return converter.Import<LevelJson>(data);
+            return converter.Import<SerializedLevel>(data);
         }
 
         public static Tuple<EntityManager, LoadedMetadata> LoadEntityManager(string levelPath) {
             SerializationConverter converter = new SerializationConverter();
-            LevelJson level = LoadLevelJson(levelPath, converter);
+            SerializedLevel level = LoadLevelJson(levelPath, converter);
             return level.Restore(converter);
         }
 
         public static string SaveEntityManager(EntityManager entityManager, LoadedMetadata metadata) {
-            LevelJson level = new LevelJson();
+            SerializedLevel level = new SerializedLevel();
 
             level.DllInjections = metadata.DllInjections;
             level.SystemProviders = metadata.SystemProviders;
             level.CurrentUpdateNumber = entityManager.UpdateNumber;
 
             // Serialize systems
-            level.SavedSystemStates = new List<SavedSystemStateJson>();
+            level.SavedSystemStates = new List<SerializedSystem>();
             foreach (var system in metadata.Systems) {
                 if (system is IRestoredSystem) {
                     IRestoredSystem restorableSystem = (IRestoredSystem)system;
                     SerializedData savedState = restorableSystem.Save();
-                    SavedSystemStateJson systemJson = new SavedSystemStateJson() {
+                    SerializedSystem systemJson = new SerializedSystem() {
                         RestorationGUID = restorableSystem.RestorationGUID,
                         SavedState = savedState
                     };

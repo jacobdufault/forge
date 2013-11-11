@@ -2,9 +2,9 @@
 
 namespace Neon.Entities.Serialization {
     /// <summary>
-    /// JSON specification for a saved ISystem state.
+    /// Serialization specification for a saved ISystem state.
     /// </summary>
-    public class SavedSystemStateJson {
+    public class SerializedSystem {
         /// <summary>
         /// The ISystem GUID used for identifying the system to restore.
         /// </summary>

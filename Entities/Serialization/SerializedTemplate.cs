@@ -5,9 +5,9 @@ using System.Collections.Generic;
 
 namespace Neon.Entities.Serialization {
     /// <summary>
-    /// JSON specification for a data instance inside of an EntityTemplate.
+    /// Serialization specification for a data instance inside of an EntityTemplate.
     /// </summary>
-    public class TemplateDataJson {
+    public class SerializedTemplateData {
         /// <summary>
         /// The fully qualified type of the data instance.
         /// </summary>
@@ -22,7 +22,7 @@ namespace Neon.Entities.Serialization {
         private Data _dataInstance;
 
         /// <summary>
-        /// Deserializes the TemplateDataJson into a Data instance.
+        /// Deserializes the TemplateDataJson into a Data instance. The result is cached.
         /// </summary>
         public Data GetDataInstance(SerializationConverter converter) {
             if (_dataInstance == null) {
@@ -34,9 +34,9 @@ namespace Neon.Entities.Serialization {
     }
 
     /// <summary>
-    /// JSON specification for an EntityTemplate.
+    /// Serialization specification for an EntityTemplate.
     /// </summary>
-    public class TemplateJson {
+    public class SerializedTemplate {
         /// <summary>
         /// The pretty name of the template (for debugging).
         /// </summary>
@@ -50,9 +50,14 @@ namespace Neon.Entities.Serialization {
         /// <summary>
         /// All data instances inside of the template.
         /// </summary>
-        public List<TemplateDataJson> Data;
+        public List<SerializedTemplateData> Data;
 
-        public static void LoadTemplateConverter(IEnumerable<TemplateJson> templates, SerializationConverter converter) {
+        /// <summary>
+        /// Loads the template converter that allows templates to be specified by their id.
+        /// </summary>
+        public static void LoadTemplateConverter(IEnumerable<SerializedTemplate> templates,
+            SerializationConverter converter) {
+
             Dictionary<int, EntityTemplate> _foundTemplates = new Dictionary<int, EntityTemplate>();
 
             foreach (var templateJson in templates) {

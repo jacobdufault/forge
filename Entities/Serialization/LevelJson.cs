@@ -7,9 +7,9 @@ using System.Reflection;
 
 namespace Neon.Entities.Serialization {
     /// <summary>
-    /// JSON specification for an EntityManager state (a level).
+    /// Serialization specification for an EntityManager state (a level).
     /// </summary>
-    public class LevelJson {
+    public class SerializedLevel {
         /// <summary>
         /// The relative paths of DLLs to inject.
         /// </summary>
@@ -28,7 +28,7 @@ namespace Neon.Entities.Serialization {
         /// <summary>
         /// The templates that are used in this level.
         /// </summary>
-        public List<TemplateJson> Templates;
+        public List<SerializedTemplate> Templates;
 
         /// <summary>
         /// Singleton entity that the EntityManager owns
@@ -43,7 +43,7 @@ namespace Neon.Entities.Serialization {
         /// <summary>
         /// Saved system states.
         /// </summary>
-        public List<SavedSystemStateJson> SavedSystemStates;
+        public List<SerializedSystem> SavedSystemStates;
 
         private void InjectDlls() {
             // load the dlls
@@ -86,7 +86,7 @@ namespace Neon.Entities.Serialization {
             }
 
             // restore them
-            foreach (SavedSystemStateJson systemJson in SavedSystemStates) {
+            foreach (SerializedSystem systemJson in SavedSystemStates) {
                 bool found = false;
                 foreach (var system in systems) {
                     if (system is IRestoredSystem) {
@@ -148,7 +148,7 @@ namespace Neon.Entities.Serialization {
             InjectDlls();
 
             // load our template cache (so that EntityTemplates resolve correctly)
-            TemplateJson.LoadTemplateConverter(Templates, converter);
+            SerializedTemplate.LoadTemplateConverter(Templates, converter);
 
             var restoredSystems = GetRestoredSystems();
 

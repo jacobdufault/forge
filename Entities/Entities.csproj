@@ -62,8 +62,8 @@
     <Compile Include="Serialization\ISystemProvider.cs" />
     <Compile Include="Serialization\LevelJson.cs" />
     <Compile Include="Serialization\LevelParser.cs" />
-    <Compile Include="Serialization\SavedSystemStateJson.cs" />
-    <Compile Include="Serialization\TemplateJson.cs" />
+    <Compile Include="Serialization\SerializedSystem.cs" />
+    <Compile Include="Serialization\SerializedTemplate.cs" />
     <Compile Include="System.cs" />
     <Compile Include="IStructuredInput.cs" />
     <Compile Include="EntityManager.cs" />
