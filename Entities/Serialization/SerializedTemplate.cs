@@ -61,7 +61,8 @@ namespace Neon.Entities.Serialization {
             Dictionary<int, EntityTemplate> _foundTemplates = new Dictionary<int, EntityTemplate>();
 
             foreach (var templateJson in templates) {
-                EntityTemplate template = new EntityTemplate(templateJson.TemplateId);
+                EntityTemplate template = new EntityTemplate(templateJson.TemplateId,
+                    templateJson.PrettyName);
 
                 foreach (var dataJson in templateJson.Data) {
                     template.AddDefaultData(dataJson.GetDataInstance(converter));

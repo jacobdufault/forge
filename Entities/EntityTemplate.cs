@@ -23,8 +23,14 @@ namespace Neon.Entities {
             private set;
         }
 
-        public EntityTemplate(int id) {
+        public string PrettyName {
+            get;
+            private set;
+        }
+
+        public EntityTemplate(int id, string prettyName) {
             TemplateId = id;
+            PrettyName = prettyName;
         }
 
         /// <summary>
@@ -58,6 +64,15 @@ namespace Neon.Entities {
             InjectDataInto(entity);
             EntityManager.AddEntity(entity);
             return entity;
+        }
+
+        public override string ToString() {
+            if (PrettyName.Length > 0) {
+                return string.Format("Template [tid={0}, name={1}]", TemplateId, PrettyName);
+            }
+            else {
+                return string.Format("Template [tid={0}]", TemplateId);
+            }
         }
     }
 }
