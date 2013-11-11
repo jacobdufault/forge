@@ -16,8 +16,8 @@ namespace Neon.Entities {
     /// </summary>
     public interface IRestoredSystem {
         /// <summary>
-        /// Returns the GUID for this system. This is used to identify what JSON data to
-        /// use when restoring the system.
+        /// Returns the GUID for this system. This is used to identify what serialized data to use
+        /// when restoring the system.
         /// </summary>
         string RestorationGUID {
             get;

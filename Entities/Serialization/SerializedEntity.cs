@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Neon.Entities.Serialization {
     /// <summary>
-    /// JSON specification for an instance of Data inside of an IEntity.
+    /// Serialization specification for an instance of Data inside of an IEntity.
     /// </summary>
     public class SerializedEntityData {
         /// <summary>
@@ -34,7 +34,7 @@ namespace Neon.Entities.Serialization {
         public SerializedData PreviousState;
 
         /// <summary>
-        /// The current state of the data, in JSON form. We can only deserialize this when we have
+        /// The current serialized state of the data. We can only deserialize this when we have
         /// resolved the data type.
         /// </summary>
         public SerializedData CurrentState;
@@ -59,7 +59,7 @@ namespace Neon.Entities.Serialization {
     }
 
     /// <summary>
-    /// JSON specification for an IEntity instance.
+    /// Serialization specification for an IEntity instance.
     /// </summary>
     public class SerializedEntity {
         /// <summary>

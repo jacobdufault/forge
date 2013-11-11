@@ -22,7 +22,7 @@ namespace Neon.Entities.Serialization {
         private Data _dataInstance;
 
         /// <summary>
-        /// Deserializes the TemplateDataJson into a Data instance. The result is cached.
+        /// Deserializes the SerializedTemplateData into a Data instance. The result is cached.
         /// </summary>
         public Data GetDataInstance(SerializationConverter converter) {
             if (_dataInstance == null) {

@@ -42,7 +42,7 @@ namespace Neon.Entities.Serialization {
         /// <summary>
         /// Loads a level structure from a NES file at the given path.
         /// </summary>
-        public static SerializedLevel LoadLevelJson(string levelPath,
+        public static SerializedLevel LoadSerializedLevel(string levelPath,
             SerializationConverter converter = null) {
             if (converter == null) {
                 converter = new SerializationConverter();
@@ -55,7 +55,7 @@ namespace Neon.Entities.Serialization {
 
         public static Tuple<EntityManager, LoadedMetadata> LoadEntityManager(string levelPath) {
             SerializationConverter converter = new SerializationConverter();
-            SerializedLevel level = LoadLevelJson(levelPath, converter);
+            SerializedLevel level = LoadSerializedLevel(levelPath, converter);
             return level.Restore(converter);
         }
 
@@ -72,29 +72,33 @@ namespace Neon.Entities.Serialization {
                 if (system is IRestoredSystem) {
                     IRestoredSystem restorableSystem = (IRestoredSystem)system;
                     SerializedData savedState = restorableSystem.Save();
-                    SerializedSystem systemJson = new SerializedSystem() {
+                    SerializedSystem serializedSystem = new SerializedSystem() {
                         RestorationGUID = restorableSystem.RestorationGUID,
                         SavedState = savedState
                     };
 
-                    level.SavedSystemStates.Add(systemJson);
+                    level.SavedSystemStates.Add(serializedSystem);
                 }
 
             }
 
             // Serialize entities
-            level.SingletonEntity = ((Entity)entityManager.SingletonEntity).ToJson(false, false, metadata.Converter);
+            level.SingletonEntity = ((Entity)entityManager.SingletonEntity).ToSerializedEntity(
+                false, false, metadata.Converter);
 
             List<Entity> removing = entityManager.GetEntitiesToRemove();
 
             level.Entities = new List<SerializedEntity>();
             foreach (var entity in entityManager.Entities) {
-                level.Entities.Add(((Entity)entity).ToJson(entityIsAdding: false, entityIsRemoving: removing.Contains(((Entity)entity)), converter: metadata.Converter));
+                level.Entities.Add(((Entity)entity).ToSerializedEntity(entityIsAdding: false,
+                    entityIsRemoving: removing.Contains(((Entity)entity)),
+                    converter: metadata.Converter));
             }
 
             List<Entity> adding = entityManager.GetEntitiesToAdd();
             foreach (var entity in adding) {
-                level.Entities.Add(((Entity)entity).ToJson(entityIsAdding: true, entityIsRemoving: false, converter: metadata.Converter));
+                level.Entities.Add(((Entity)entity).ToSerializedEntity(entityIsAdding: true,
+                    entityIsRemoving: false, converter: metadata.Converter));
             }
 
             level.Templates = metadata.Templates;

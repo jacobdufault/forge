@@ -7,16 +7,17 @@ using System.Collections.Generic;
 
 namespace Neon.Entities {
     public class Entity : IEntity {
-        public SerializedEntity ToJson(bool entityIsAdding, bool entityIsRemoving, SerializationConverter converter) {
+        public SerializedEntity ToSerializedEntity(bool entityIsAdding, bool entityIsRemoving,
+            SerializationConverter converter) {
             List<DataAccessor> modified = _concurrentModifications.ToList();
 
-            List<SerializedEntityData> dataJsonList = new List<SerializedEntityData>();
+            List<SerializedEntityData> serializedDataList = new List<SerializedEntityData>();
             foreach (var tuple in _data) {
                 int id = tuple.Item1;
                 DataAccessor accessor = new DataAccessor(id);
                 ImmutableContainer<Data> container = tuple.Item2;
 
-                SerializedEntityData dataJson = new SerializedEntityData() {
+                SerializedEntityData serializedData = new SerializedEntityData() {
                     DataType = container.Current.GetType().ToString(),
                     IsAdding = false,
                     IsRemoving = IsRemoving(accessor)
@@ -25,25 +26,25 @@ namespace Neon.Entities {
                 Type dataType = container.Current.GetType();
 
                 if (modified.Contains(accessor)) {
-                    dataJson.WasModified = true;
-                    dataJson.PreviousState = converter.Export(dataType, container.Current);
-                    dataJson.CurrentState = converter.Export(dataType, container.Modifying);
+                    serializedData.WasModified = true;
+                    serializedData.PreviousState = converter.Export(dataType, container.Current);
+                    serializedData.CurrentState = converter.Export(dataType, container.Modifying);
                 }
 
                 else {
-                    dataJson.WasModified = false;
-                    dataJson.PreviousState = converter.Export(dataType, container.Previous);
-                    dataJson.CurrentState = converter.Export(dataType, container.Current);
+                    serializedData.WasModified = false;
+                    serializedData.PreviousState = converter.Export(dataType, container.Previous);
+                    serializedData.CurrentState = converter.Export(dataType, container.Current);
                 }
 
-                dataJsonList.Add(dataJson);
+                serializedDataList.Add(serializedData);
             }
 
             foreach (var addedData in _toAdd) {
                 Type dataType = addedData.GetType();
                 DataAccessor accessor = new DataAccessor(dataType);
 
-                SerializedEntityData dataJson = new SerializedEntityData() {
+                SerializedEntityData serializedData = new SerializedEntityData() {
                     DataType = addedData.GetType().ToString(),
                     WasModified = false, // doesn't matter
                     IsAdding = true, // always true
@@ -51,17 +52,16 @@ namespace Neon.Entities {
                     PreviousState = converter.Export(dataType, addedData), // doesn't matter
                     CurrentState = converter.Export(dataType, addedData)
                 };
-                dataJsonList.Add(dataJson);
+                serializedDataList.Add(serializedData);
             }
 
-            SerializedEntity entityJson = new SerializedEntity() {
+            return new SerializedEntity() {
                 PrettyName = _prettyName,
                 UniqueId = _uniqueId,
-                Data = dataJsonList,
+                Data = serializedDataList,
                 IsAdding = entityIsAdding,
                 IsRemoving = entityIsRemoving
             };
-            return entityJson;
         }
 
         #region Pretty Name
@@ -123,11 +123,11 @@ namespace Neon.Entities {
         /// </remarks>
         /// <param name="addingToEntityManager">Is this entity going to end up in an EntityManager
         /// instance? This has implications on how internal state is managed.</param>
-        public Entity(SerializedEntity entityJson, SerializationConverter converter,
+        public Entity(SerializedEntity serializedEntity, SerializationConverter converter,
             out bool hasModification, out bool hasStateChange, bool addingToEntityManager) {
 
-            _prettyName = entityJson.PrettyName ?? "";
-            _uniqueId = entityJson.UniqueId;
+            _prettyName = serializedEntity.PrettyName ?? "";
+            _uniqueId = serializedEntity.UniqueId;
             _idGenerator.Consume(_uniqueId);
             _eventProcessor = new EventProcessor();
 
@@ -137,7 +137,7 @@ namespace Neon.Entities {
             hasModification = false;
             hasStateChange = false;
 
-            foreach (var data in entityJson.Data) {
+            foreach (var data in serializedEntity.Data) {
                 hasStateChange = hasStateChange || data.IsAdding || data.IsRemoving;
                 hasModification = hasModification || data.WasModified;
 

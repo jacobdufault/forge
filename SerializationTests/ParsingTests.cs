@@ -7,10 +7,10 @@ namespace Neon.Serialization.Tests {
     public class ParsingTests {
         [TestMethod]
         public void TestStrings() {
-            string json = @"
+            string data = @"
 ""hello""
 ";
-            var result = Parser.Parse(json);
+            var result = Parser.Parse(data);
             Assert.AreEqual("hello", result.AsString);
         }
 

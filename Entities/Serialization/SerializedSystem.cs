@@ -11,7 +11,7 @@ namespace Neon.Entities.Serialization {
         public string RestorationGUID;
 
         /// <summary>
-        /// The ISystem's saved JSON.
+        /// The ISystem's saved state.
         /// </summary>
         public SerializedData SavedState;
     }

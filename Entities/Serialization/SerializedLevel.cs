@@ -84,13 +84,13 @@ namespace Neon.Entities.Serialization {
             }
 
             // restore them
-            foreach (SerializedSystem systemJson in SavedSystemStates) {
+            foreach (SerializedSystem serializedSystem in SavedSystemStates) {
                 bool found = false;
                 foreach (var system in systems) {
                     if (system is IRestoredSystem) {
                         IRestoredSystem restorableSystem = (IRestoredSystem)system;
-                        if (restorableSystem.RestorationGUID == systemJson.RestorationGUID) {
-                            restorableSystem.Restore(systemJson.SavedState);
+                        if (restorableSystem.RestorationGUID == serializedSystem.RestorationGUID) {
+                            restorableSystem.Restore(serializedSystem.SavedState);
                             found = true;
                             break;
                         }
@@ -99,7 +99,7 @@ namespace Neon.Entities.Serialization {
 
                 if (found == false) {
                     throw new Exception(string.Format("Unable to find a system with GUID={0} " +
-                        "when restoring systems", systemJson.RestorationGUID));
+                        "when restoring systems", serializedSystem.RestorationGUID));
                 }
             }
 
