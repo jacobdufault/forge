@@ -184,14 +184,14 @@ namespace Neon.Entities {
             
             {
                 bool hasModification, hasStateChange;
-                SingletonEntity = new Entity(singletonEntity, converter, out hasModification, out hasStateChange);
+                SingletonEntity = new Entity(singletonEntity, converter, out hasModification, out hasStateChange, addingToEntityManager: true);
             }
             
             UpdateNumber = updateNumber;
 
             foreach (var serializedEntity in restoredEntities) {
                 bool hasModification, hasStateChange;
-                Entity restored = new Entity(serializedEntity, converter, out hasModification, out hasStateChange);
+                Entity restored = new Entity(serializedEntity, converter, out hasModification, out hasStateChange, addingToEntityManager: true);
 
                 if (serializedEntity.IsAdding) {
                     AddEntity(restored);

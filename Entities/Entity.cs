@@ -121,8 +121,10 @@ namespace Neon.Entities {
         /// Notice, however, that this function does *NOT* notify the EntityManager if a data
         /// instance has been restored which has a modification or a state change.
         /// </remarks>
-        public Entity(SerializedEntity entityJson,
-            SerializationConverter converter, out bool hasModification, out bool hasStateChange) {
+        /// <param name="addingToEntityManager">Is this entity going to end up in an EntityManager
+        /// instance? This has implications on how internal state is managed.</param>
+        public Entity(SerializedEntity entityJson, SerializationConverter converter,
+            out bool hasModification, out bool hasStateChange, bool addingToEntityManager) {
 
             _prettyName = entityJson.PrettyName ?? "";
             _uniqueId = entityJson.UniqueId;
@@ -173,6 +175,12 @@ namespace Neon.Entities {
                     }
                 }
             }
+
+            // if we're not going to be added to an entity manager, then we should apply
+            // modifications so that previous and current map to the correct values
+            if (addingToEntityManager == false) {
+                ApplyModifications();
+            }
         }
 
         public Entity() {
@@ -222,7 +230,7 @@ namespace Neon.Entities {
             });
         }
 
-        public void ApplyModifications() {
+        internal void ApplyModifications() {
             DoModifications();
 
             ModificationNotifier.Reset();

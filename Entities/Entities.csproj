@@ -58,9 +58,9 @@
     <Compile Include="IEntityExtensions.cs" />
     <Compile Include="EntityTemplate.cs" />
     <Compile Include="ImmutableContainer.cs" />
-    <Compile Include="Serialization\EntityJson.cs" />
+    <Compile Include="Serialization\SerializedEntity.cs" />
     <Compile Include="Serialization\ISystemProvider.cs" />
-    <Compile Include="Serialization\LevelJson.cs" />
+    <Compile Include="Serialization\SerializedLevel.cs" />
     <Compile Include="Serialization\LevelParser.cs" />
     <Compile Include="Serialization\SerializedSystem.cs" />
     <Compile Include="Serialization\SerializedTemplate.cs" />
