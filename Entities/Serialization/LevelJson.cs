@@ -58,14 +58,12 @@ namespace Neon.Entities.Serialization {
             List<ISystemProvider> providers = new List<ISystemProvider>();
             foreach (var providerName in SystemProviders) {
                 Type providerType = TypeCache.FindType(providerName);
-                object instance = Activator.CreateInstance(providerType);
-
-                Console.WriteLine("Injecting systems from provider " + instance + " (an instance of type " + providerType + ")");
-
-                if (instance is ISystemProvider == false) {
-                    throw new Exception("System provider " + providerName + " has to derive from ISystemProvider, but it does not");
+                ISystemProvider instance = Activator.CreateInstance(providerType) as ISystemProvider;
+                if (instance == null) {
+                    throw new InvalidOperationException("System provider " + providerName +
+                        " has to derive from ISystemProvider, but it does not");
                 }
-                providers.Add((ISystemProvider)instance);
+                providers.Add(instance);
             }
 
             return providers;
