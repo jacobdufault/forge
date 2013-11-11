@@ -39,30 +39,22 @@ namespace Neon.Entities.Serialization {
     /// Handles loading and unloading an EntityManager from a file.
     /// </summary>
     public static class Loader {
-        public static List<IEntity> LoadEntities(string levelPath) {
-            throw new NotImplementedException();
-        }
+        /// <summary>
+        /// Loads a level structure from a NES file at the given path.
+        /// </summary>
+        public static LevelJson LoadLevelJson(string levelPath, SerializationConverter converter = null) {
+            if (converter == null) {
+                converter = new SerializationConverter();
+            }
 
-        public static List<EntityTemplate> LoadTemplates(string levelPath) {
-            throw new NotImplementedException();
-        }
-
-        public static IEntity LoadSingletonEntity(string levelPath) {
-            throw new NotImplementedException();
-        }
-
-        public static void SaveLevel(List<IEntity> entities, List<EntityTemplate> templates,
-            IEntity singletonEntity, List<string> dlls, List<string> systemProviders) {
-            throw new NotImplementedException();
+            String fileText = File.ReadAllText(levelPath);
+            SerializedData data = Parser.Parse(fileText);
+            return converter.Import<LevelJson>(data);
         }
 
         public static Tuple<EntityManager, LoadedMetadata> LoadEntityManager(string levelPath) {
-            String fileText = File.ReadAllText(levelPath);
-
-            SerializedData data = Parser.Parse(fileText);
             SerializationConverter converter = new SerializationConverter();
-
-            LevelJson level = converter.Import<LevelJson>(data);
+            LevelJson level = LoadLevelJson(levelPath, converter);
             return level.Restore(converter);
         }
 

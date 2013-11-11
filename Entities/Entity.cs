@@ -138,7 +138,7 @@ namespace Neon.Entities {
         /// Notice, however, that this function does *NOT* notify the EntityManager if a data
         /// instance has been restored which has a modification or a state change.
         /// </remarks>
-        internal Entity(string prettyName, int uniqueId, List<SerializedEntityData> restoredData) {
+        public Entity(string prettyName, int uniqueId, List<SerializedEntityData> restoredData) {
             _prettyName = prettyName;
             _uniqueId = uniqueId;
             _idGenerator.Consume(uniqueId);
@@ -227,7 +227,7 @@ namespace Neon.Entities {
             });
         }
 
-        internal void ApplyModifications() {
+        public void ApplyModifications() {
             DoModifications();
 
             ModificationNotifier.Reset();
