@@ -106,13 +106,31 @@ namespace Neon.Entities.Serialization {
             return systems;
         }
 
+        public List<EntityTemplate> RestoreTemplates(SerializationConverter converter) {
+            List<EntityTemplate> restoredTemplates = new List<EntityTemplate>();
+
+            // push initial converter (empty) so that we will get good error messages even on the
+            // first template defined
+            SerializedTemplate.UpdateTemplateConverter(restoredTemplates, converter);
+
+            foreach (SerializedTemplate serializedTemplate in Templates) {
+                EntityTemplate entityTemplate = serializedTemplate.Restore(converter);
+                restoredTemplates.Add(entityTemplate);
+
+                // we continuously update the converter so that templates can reference previously
+                // defined templates
+                SerializedTemplate.UpdateTemplateConverter(restoredTemplates, converter);
+            }
+
+            return restoredTemplates;
+        }
+
         public Tuple<EntityManager, LoadedMetadata> Restore(SerializationConverter converter) {
             // inject dlls so that type lookups resolve correctly
             // TODO: consider using an AppDomain so we can unload the previous EntitySystem
             InjectDlls();
 
-            // load our template cache (so that EntityTemplates resolve correctly)
-            SerializedTemplate.LoadTemplateConverter(Templates, converter);
+            RestoreTemplates(converter);
 
             var restoredSystems = GetRestoredSystems();
 

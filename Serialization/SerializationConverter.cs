@@ -407,6 +407,22 @@ namespace Neon.Serialization {
         }
 
         /// <summary>
+        /// Attempt to remove an importer that imports the given type. Returns true if an importer
+        /// was found and removed.
+        /// </summary>
+        public bool RemoveImporter(Type destinationType) {
+            return _importers.Remove(destinationType);
+        }
+
+        /// <summary>
+        /// Attempt to remove an exporter that exports the given type. Returns true if an exporter
+        /// was found and removed.
+        /// </summary>
+        public bool RemoveExporter(Type serializedType) {
+            return _exporters.Remove(serializedType);
+        }
+
+        /// <summary>
         /// Registers a converter that will convert SerializedData instances to their respective
         /// destination types.
         /// </summary>

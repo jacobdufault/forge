@@ -53,22 +53,54 @@ namespace Neon.Entities.Serialization {
         public List<SerializedTemplateData> Data;
 
         /// <summary>
-        /// Loads the template converter that allows templates to be specified by their id.
+        /// Default constructor for Neon.Serialization. This method assigns an empty list instance
+        /// to Data, but otherwise does nothing.
         /// </summary>
-        public static void LoadTemplateConverter(IEnumerable<SerializedTemplate> templates,
+        public SerializedTemplate() {
+            Data = new List<SerializedTemplateData>();
+        }
+
+        /// <summary>
+        /// Construct a SerializedTemplate from an EntityTemplate.
+        /// </summary>
+        public SerializedTemplate(EntityTemplate template, SerializationConverter converter) {
+            PrettyName = template.PrettyName;
+            TemplateId = template.TemplateId;
+
+            Data = new List<SerializedTemplateData>();
+            foreach (Data data in template) {
+                SerializedTemplateData serializedData = new SerializedTemplateData() {
+                    DataType = data.GetType().FullName,
+                    State = converter.Export(data.GetType(), data)
+                };
+                Data.Add(serializedData);
+            }
+        }
+
+        public EntityTemplate Restore(SerializationConverter converter) {
+            EntityTemplate template = new EntityTemplate(TemplateId, PrettyName);
+
+            foreach (var serializedData in Data) {
+                Data data = serializedData.GetDataInstance(converter);
+                template.AddDefaultData(data);
+            }
+
+            return template;
+        }
+
+        /// <summary>
+        /// Loads the template converter that allows templates to be specified by their id. If there
+        /// are already converters loaded, then this overrides them.
+        /// </summary>
+        public static void UpdateTemplateConverter(IEnumerable<EntityTemplate> templates,
             SerializationConverter converter) {
 
+            converter.RemoveImporter(typeof(EntityTemplate));
+            converter.RemoveExporter(typeof(EntityTemplate));
+
             Dictionary<int, EntityTemplate> _foundTemplates = new Dictionary<int, EntityTemplate>();
-
-            foreach (var templateJson in templates) {
-                EntityTemplate template = new EntityTemplate(templateJson.TemplateId,
-                    templateJson.PrettyName);
-
-                foreach (var dataJson in templateJson.Data) {
-                    template.AddDefaultData(dataJson.GetDataInstance(converter));
-                }
-
-                _foundTemplates[templateJson.TemplateId] = template;
+            foreach (var template in templates) {
+                _foundTemplates[template.TemplateId] = template;
             }
 
             converter.AddImporter(typeof(EntityTemplate), serializedData => {

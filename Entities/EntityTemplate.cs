@@ -6,7 +6,7 @@ namespace Neon.Entities {
     /// is not an entity itself, entities can be instantiated directly from it which contain the
     /// same initial data values as those stored in the template.
     /// </summary>
-    public class EntityTemplate {
+    public class EntityTemplate : IEnumerable<Data> {
         /// <summary>
         /// Default data instances, mapped by DataAccessor.
         /// </summary>
@@ -73,6 +73,14 @@ namespace Neon.Entities {
             else {
                 return string.Format("Template [tid={0}]", TemplateId);
             }
+        }
+
+        public IEnumerator<Data> GetEnumerator() {
+            return _defaultDataInstances.GetEnumerator();
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() {
+            return _defaultDataInstances.GetEnumerator();
         }
     }
 }
