@@ -86,36 +86,5 @@ namespace Neon.Entities.Serialization {
         /// Does the entity need to be removed from the EntityManager in the next update?
         /// </summary>
         public bool IsRemoving;
-
-        /// <summary>
-        /// Restores an Entity instance. This additionally returns if the entity has a data state
-        /// change and if the entity has a modification pending for the next update.
-        /// </summary>
-        /// <param name="hasStateChange">Set to true if the entity has a pending state
-        /// change.</param>
-        /// <param name="hasModification">Set to true if the entity has a pending
-        /// modification.</param>
-        /// <returns></returns>
-        public Entity Restore(out bool hasStateChange, out bool hasModification, SerializationConverter converter) {
-            hasStateChange = false;
-            hasModification = false;
-
-            List<SerializedEntityData> restoredData = new List<SerializedEntityData>();
-            foreach (var dataJson in Data) {
-                hasModification = hasModification || dataJson.WasModified;
-                hasStateChange = hasStateChange || dataJson.IsAdding || dataJson.IsRemoving;
-
-                SerializedEntityData data = new SerializedEntityData(
-                    wasModifying: dataJson.WasModified,
-                    isAdding: dataJson.IsAdding,
-                    isRemoving: dataJson.IsRemoving,
-                    previous: dataJson.GetDeserializedPreviousState(converter),
-                    current: dataJson.GetDeserializedCurrentState(converter)
-                );
-                restoredData.Add(data);
-            }
-
-            return new Entity(PrettyName ?? "", UniqueId, restoredData);
-        }
     }
 }

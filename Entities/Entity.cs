@@ -6,23 +6,6 @@ using System;
 using System.Collections.Generic;
 
 namespace Neon.Entities {
-    public class SerializedEntityData {
-        public bool WasModified;
-        public bool IsAdding;
-        public bool IsRemoving;
-
-        public Data Previous;
-        public Data Current;
-
-        public SerializedEntityData(bool wasModifying, bool isAdding, bool isRemoving, Data previous, Data current) {
-            WasModified = wasModifying;
-            IsAdding = isAdding;
-            IsRemoving = isRemoving;
-            Previous = previous;
-            Current = current;
-        }
-    }
-
     public class Entity : IEntity {
         public EntityJson ToJson(bool entityIsAdding, bool entityIsRemoving, SerializationConverter converter) {
             List<DataAccessor> modified = _concurrentModifications.ToList();
@@ -138,23 +121,35 @@ namespace Neon.Entities {
         /// Notice, however, that this function does *NOT* notify the EntityManager if a data
         /// instance has been restored which has a modification or a state change.
         /// </remarks>
-        public Entity(string prettyName, int uniqueId, List<SerializedEntityData> restoredData) {
-            _prettyName = prettyName;
-            _uniqueId = uniqueId;
-            _idGenerator.Consume(uniqueId);
+        public Entity(EntityJson entityJson,
+            SerializationConverter converter, out bool hasModification, out bool hasStateChange) {
+
+            _prettyName = entityJson.PrettyName ?? "";
+            _uniqueId = entityJson.UniqueId;
+            _idGenerator.Consume(_uniqueId);
             _eventProcessor = new EventProcessor();
 
             DataStateChangeNotifier = new Notifier<Entity>(this);
             ModificationNotifier = new Notifier<Entity>(this);
 
-            foreach (var data in restoredData) {
+            hasModification = false;
+            hasStateChange = false;
+
+            foreach (var data in entityJson.Data) {
+                hasStateChange = hasStateChange || data.IsAdding || data.IsRemoving;
+                hasModification = hasModification || data.WasModified;
+
                 if (data.IsAdding) {
-                    _toAdd.Add(data.Current);
+                    Data current = data.GetDeserializedCurrentState(converter);
+                    _toAdd.Add(current);
                 }
 
                 else {
-                    int id = DataAccessorFactory.GetId(data.Current.GetType());
-                    _data[id] = new ImmutableContainer<Data>(data.Previous, data.Current, data.Current.Duplicate());
+                    Data current = data.GetDeserializedCurrentState(converter);
+                    Data previous = data.GetDeserializedPreviousState(converter);
+
+                    int id = DataAccessorFactory.GetId(current.GetType());
+                    _data[id] = new ImmutableContainer<Data>(previous, current, current.Duplicate());
 
                     // There is going to be an ApplyModification call before systems actually view
                     // this Entity instance. With that in mind, we can treat our data initialization

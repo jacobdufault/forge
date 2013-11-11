@@ -112,7 +112,7 @@ namespace Neon.Entities.Serialization {
             bool hasStateChange;
             bool hasModification;
 
-            Entity singleton = SingletonEntity.Restore(out hasStateChange, out hasModification, converter);
+            Entity singleton = new Entity(SingletonEntity, converter, out hasModification, out hasStateChange);
             return new EntityManager.RestoredEntity() {
                 Entity = singleton,
                 HasModification = hasModification,
@@ -128,7 +128,7 @@ namespace Neon.Entities.Serialization {
 
             List<EntityManager.RestoredEntity> restoredEntities = new List<EntityManager.RestoredEntity>();
             foreach (var entityJson in Entities) {
-                Entity restoredEntity = entityJson.Restore(out hasStateChange, out hasModification, converter);
+                Entity restoredEntity = new Entity(entityJson, converter, out hasModification, out hasStateChange);
 
                 restoredEntities.Add(new EntityManager.RestoredEntity() {
                     Entity = restoredEntity,
