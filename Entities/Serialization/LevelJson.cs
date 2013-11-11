@@ -108,40 +108,6 @@ namespace Neon.Entities.Serialization {
             return systems;
         }
 
-        public EntityManager.RestoredEntity GetSingletonEntity(SerializationConverter converter) {
-            bool hasStateChange;
-            bool hasModification;
-
-            Entity singleton = new Entity(SingletonEntity, converter, out hasModification, out hasStateChange);
-            return new EntityManager.RestoredEntity() {
-                Entity = singleton,
-                HasModification = hasModification,
-                HasStateChange = hasStateChange,
-                IsAdding = false,
-                IsRemoving = false
-            };
-        }
-
-        public List<EntityManager.RestoredEntity> GetRestoredEntities(SerializationConverter converter) {
-            bool hasStateChange;
-            bool hasModification;
-
-            List<EntityManager.RestoredEntity> restoredEntities = new List<EntityManager.RestoredEntity>();
-            foreach (var entityJson in Entities) {
-                Entity restoredEntity = new Entity(entityJson, converter, out hasModification, out hasStateChange);
-
-                restoredEntities.Add(new EntityManager.RestoredEntity() {
-                    Entity = restoredEntity,
-                    HasModification = hasModification,
-                    HasStateChange = hasStateChange,
-                    IsAdding = entityJson.IsAdding,
-                    IsRemoving = entityJson.IsRemoving
-                });
-            }
-
-            return restoredEntities;
-        }
-
         public Tuple<EntityManager, LoadedMetadata> Restore(SerializationConverter converter) {
             // inject dlls so that type lookups resolve correctly
             // TODO: consider using an AppDomain so we can unload the previous EntitySystem
@@ -154,9 +120,10 @@ namespace Neon.Entities.Serialization {
 
             EntityManager entityManager = new EntityManager(
                 CurrentUpdateNumber,
-                GetSingletonEntity(converter).Entity,
-                GetRestoredEntities(converter),
-                restoredSystems);
+                SingletonEntity,
+                Entities,
+                restoredSystems,
+                converter);
             EntityTemplate.EntityManager = entityManager;
 
             LoadedMetadata metadata = new LoadedMetadata();

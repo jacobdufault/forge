@@ -1,4 +1,6 @@
 ﻿using Neon.Collections;
+using Neon.Entities.Serialization;
+using Neon.Serialization;
 using Neon.Utilities;
 using System;
 using System.Collections.Generic;
@@ -173,42 +175,44 @@ namespace Neon.Entities {
             _eventProcessors.BeginMonitoring(EventProcessor);
         }
 
-        public class RestoredEntity {
-            public bool HasModification;
-            public bool HasStateChange;
+        internal EntityManager(int updateNumber, EntityJson singletonEntity,
+            List<EntityJson> restoredEntities, List<ISystem> systems,
+            SerializationConverter converter) {
 
-            public bool IsAdding;
-            public bool IsRemoving;
-
-            public Entity Entity;
-        }
-
-        internal EntityManager(int updateNumber, IEntity singletonEntity, List<RestoredEntity> restoredEntities, List<ISystem> systems)
-            : this(singletonEntity) {
+            SystemDoneEvent = new CountdownEvent(0);
+            _eventProcessors.BeginMonitoring(EventProcessor);
+            
+            {
+                bool hasModification, hasStateChange;
+                SingletonEntity = new Entity(singletonEntity, converter, out hasModification, out hasStateChange);
+            }
             
             UpdateNumber = updateNumber;
 
-            foreach (var restoredEntity in restoredEntities) {
-                if (restoredEntity.IsAdding) {
-                    AddEntity(restoredEntity.Entity);
+            foreach (var serializedEntity in restoredEntities) {
+                bool hasModification, hasStateChange;
+                Entity restored = new Entity(serializedEntity, converter, out hasModification, out hasStateChange);
+
+                if (serializedEntity.IsAdding) {
+                    AddEntity(restored);
                 }
 
                 else {
                     // add the entity
-                    InternalAddEntity(restoredEntity.Entity);
+                    InternalAddEntity(restored);
 
-                    if (restoredEntity.HasModification) {
-                        restoredEntity.Entity.ModificationNotifier.Notify();
+                    if (hasModification) {
+                        restored.ModificationNotifier.Notify();
                     }
 
                     // done via InternalAddEntity
-                    //if (restoredEntity.HasStateChange) {
-                    //    restoredEntity.Entity.DataStateChangeNotifier.Notify();
+                    //if (hasStateChange) {
+                    //    restored.DataStateChangeNotifier.Notify();
                     //}
                 }
 
-                if (restoredEntity.IsRemoving) {
-                    RemoveEntity(restoredEntity.Entity);
+                if (serializedEntity.IsRemoving) {
+                    RemoveEntity(restored);
                 }
             }
 
