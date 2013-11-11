@@ -7,16 +7,16 @@ using System.Collections.Generic;
 
 namespace Neon.Entities {
     public class Entity : IEntity {
-        public EntityJson ToJson(bool entityIsAdding, bool entityIsRemoving, SerializationConverter converter) {
+        public SerializedEntity ToJson(bool entityIsAdding, bool entityIsRemoving, SerializationConverter converter) {
             List<DataAccessor> modified = _concurrentModifications.ToList();
 
-            List<DataJson> dataJsonList = new List<DataJson>();
+            List<SerializedEntityData> dataJsonList = new List<SerializedEntityData>();
             foreach (var tuple in _data) {
                 int id = tuple.Item1;
                 DataAccessor accessor = new DataAccessor(id);
                 ImmutableContainer<Data> container = tuple.Item2;
 
-                DataJson dataJson = new DataJson() {
+                SerializedEntityData dataJson = new SerializedEntityData() {
                     DataType = container.Current.GetType().ToString(),
                     IsAdding = false,
                     IsRemoving = IsRemoving(accessor)
@@ -43,7 +43,7 @@ namespace Neon.Entities {
                 Type dataType = addedData.GetType();
                 DataAccessor accessor = new DataAccessor(dataType);
 
-                DataJson dataJson = new DataJson() {
+                SerializedEntityData dataJson = new SerializedEntityData() {
                     DataType = addedData.GetType().ToString(),
                     WasModified = false, // doesn't matter
                     IsAdding = true, // always true
@@ -54,7 +54,7 @@ namespace Neon.Entities {
                 dataJsonList.Add(dataJson);
             }
 
-            EntityJson entityJson = new EntityJson() {
+            SerializedEntity entityJson = new SerializedEntity() {
                 PrettyName = _prettyName,
                 UniqueId = _uniqueId,
                 Data = dataJsonList,
@@ -121,7 +121,7 @@ namespace Neon.Entities {
         /// Notice, however, that this function does *NOT* notify the EntityManager if a data
         /// instance has been restored which has a modification or a state change.
         /// </remarks>
-        public Entity(EntityJson entityJson,
+        public Entity(SerializedEntity entityJson,
             SerializationConverter converter, out bool hasModification, out bool hasStateChange) {
 
             _prettyName = entityJson.PrettyName ?? "";

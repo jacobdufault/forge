@@ -6,7 +6,7 @@ namespace Neon.Entities.Serialization {
     /// <summary>
     /// JSON specification for an instance of Data inside of an IEntity.
     /// </summary>
-    public class DataJson {
+    public class SerializedEntityData {
         /// <summary>
         /// The type name of the data that this data item maps to.
         /// </summary>
@@ -61,7 +61,7 @@ namespace Neon.Entities.Serialization {
     /// <summary>
     /// JSON specification for an IEntity instance.
     /// </summary>
-    public class EntityJson {
+    public class SerializedEntity {
         /// <summary>
         /// The pretty name for the entity. This is optional and can be null (on read).
         /// </summary>
@@ -75,7 +75,7 @@ namespace Neon.Entities.Serialization {
         /// <summary>
         /// The data that is contained within the entity.
         /// </summary>
-        public List<DataJson> Data;
+        public List<SerializedEntityData> Data;
 
         /// <summary>
         /// Does the entity need to be added to the EntityManager in the next update?

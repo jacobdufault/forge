@@ -175,8 +175,8 @@ namespace Neon.Entities {
             _eventProcessors.BeginMonitoring(EventProcessor);
         }
 
-        internal EntityManager(int updateNumber, EntityJson singletonEntity,
-            List<EntityJson> restoredEntities, List<ISystem> systems,
+        internal EntityManager(int updateNumber, SerializedEntity singletonEntity,
+            List<SerializedEntity> restoredEntities, List<ISystem> systems,
             SerializationConverter converter) {
 
             SystemDoneEvent = new CountdownEvent(0);

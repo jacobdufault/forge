@@ -33,12 +33,12 @@ namespace Neon.Entities.Serialization {
         /// <summary>
         /// Singleton entity that the EntityManager owns
         /// </summary>
-        public EntityJson SingletonEntity;
+        public SerializedEntity SingletonEntity;
 
         /// <summary>
         /// All entities that are being simulated (at the current update).
         /// </summary>
-        public List<EntityJson> Entities;
+        public List<SerializedEntity> Entities;
 
         /// <summary>
         /// Saved system states.

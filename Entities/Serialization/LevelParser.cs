@@ -87,7 +87,7 @@ namespace Neon.Entities.Serialization {
 
             List<Entity> removing = entityManager.GetEntitiesToRemove();
 
-            level.Entities = new List<EntityJson>();
+            level.Entities = new List<SerializedEntity>();
             foreach (var entity in entityManager.Entities) {
                 level.Entities.Add(((Entity)entity).ToJson(entityIsAdding: false, entityIsRemoving: removing.Contains(((Entity)entity)), converter: metadata.Converter));
             }
