@@ -24,5 +24,16 @@ namespace Neon.Serialization {
     /// Annotate a type with this class to *not* automatically inject inheritance support if the
     /// type is abstract or an interface.
     /// </summary>
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface,
+        Inherited = false, AllowMultiple = false)]
     public sealed class SerializationNoAutoInheritance : Attribute { }
+
+    /// <summary>
+    /// Marks that a specified field/type/etc should not be serialized. This is equivalent to
+    /// [NonSerialized] except it can be applied to a significantly larger number of types.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Struct |
+        AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Event,
+        Inherited = true, AllowMultiple = false)]
+    public sealed class NotSerializableAttribute : Attribute { }
 }

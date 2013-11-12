@@ -236,25 +236,61 @@ namespace Neon.Serialization {
             foreach (PropertyInfo property in type.GetProperties(flags)) {
                 // We don't serialize delegates
                 if (typeof(Delegate).IsAssignableFrom(property.PropertyType)) {
+                    Log<TypeMetadata>.Info("Ignoring property {0}.{1} because it is a delegate",
+                        type.FullName, property.Name);
                     continue;
                 }
 
-                // We only populate properties that can be both read and written to
-                if (property.CanRead && property.CanWrite) {
-                    _properties.Add(new PropertyMetadata(property));
+                // We don't serialize properties marked with [NonSerialized] or [NotSerializable]
+                foreach (var attribute in property.GetCustomAttributes(true)) {
+                    if (attribute is NonSerializedAttribute || attribute is NotSerializableAttribute) {
+                        Log<TypeMetadata>.Info("Ignoring property {0}.{1} because it has a " +
+                            "NonSerialized or a NotSerializable attribute", type.FullName,
+                            property.Name);
+                        break;
+                    }
                 }
+
+                // If the property cannot be both read and written to, we don't serialize it
+                if (property.CanRead == false || property.CanWrite == false) {
+                    Log<TypeMetadata>.Info("Ignoring property {0}.{1} because it cannot both be " +
+                        "read from and written to", type.FullName, property.Name);
+                    goto loop_end;
+                }
+
+                _properties.Add(new PropertyMetadata(property));
+
+                loop_end: { }
             }
 
             foreach (FieldInfo field in type.GetFields(flags)) {
                 // We don't serialize delegates
                 if (typeof(Delegate).IsAssignableFrom(field.FieldType)) {
+                    Log<TypeMetadata>.Info("Ignoring field {0}.{1} because it is a delegate",
+                        type.FullName, field.Name);
                     continue;
                 }
 
-                // We serialize all fields, except those annotated with [NonSerialized].
-                if (field.IsNotSerialized == false) {
-                    _properties.Add(new PropertyMetadata(field));
+                // We don't serialize non-serializable properties
+                if (field.IsNotSerialized) {
+                    Log<TypeMetadata>.Info("Ignoring field {0}.{1} because it is marked " +
+                        "NoNSerialized", type.FullName, field.Name);
+                    continue;
                 }
+
+                // We don't serialize fields marked with [NonSerialized] or [NotSerializable]
+                foreach (var attribute in field.GetCustomAttributes(true)) {
+                    if (attribute is NonSerializedAttribute || attribute is NotSerializableAttribute) {
+                        Log<TypeMetadata>.Info("Ignoring field {0}.{1} because it has a " +
+                            "NonSerialized or a NotSerializable attribute", type.FullName,
+                            field.Name);
+                        goto loop_end;
+                    }
+                }
+
+                _properties.Add(new PropertyMetadata(field));
+
+            loop_end: { }
             }
 
             if (type.BaseType != null) {
@@ -662,6 +698,14 @@ namespace Neon.Serialization {
                     // deserialize the property
                     string name = propertyMetadata.Name;
                     Type storageType = propertyMetadata.StorageType;
+
+                    // throw if the dictionary is missing a required property
+                    if (serializedDataDict.ContainsKey(name) == false) {
+                        throw new Exception("There is no key " + name + " in serialized data "
+                            + serializedDataDict + " when trying to deserialize an instance of " +
+                            type);
+                    }
+
                     object deserialized = Import(storageType, serializedDataDict[name]);
 
                     // write it into the instance
