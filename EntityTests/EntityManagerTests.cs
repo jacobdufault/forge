@@ -129,6 +129,7 @@ namespace Neon.Entities.Tests {
 
     public static class EntityManagerExtensions {
         public static void UpdateWorld(this EntityManager em) {
+            em.UpdateEntitiesWithStateChanges();
             List<IStructuredInput> commands = new List<IStructuredInput>();
             em.UpdateWorld(commands).Wait();
         }

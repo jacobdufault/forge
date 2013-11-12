@@ -270,7 +270,7 @@ namespace Neon.Entities {
             _removedEntities.Clear();
         }
 
-        private void SinglethreadFrameBegin() {
+        public void UpdateEntitiesWithStateChanges() {
             // _addedEntities and _removedEntities were cleared in SinglethreadFrameEnd()
             _notifiedAddingEntities.CopyIntoAndClear(_addedEntities);
             _notifiedRemovedEntities.CopyIntoAndClear(_removedEntities);
@@ -335,6 +335,11 @@ namespace Neon.Entities {
             _notifiedModifiedEntities.IterateAndClear(modified => {
                 modified.ApplyModifications();
             });
+
+            // update the singleton data
+            Entity singletonEntity = (Entity)SingletonEntity;
+            singletonEntity.ApplyModifications();
+            singletonEntity.DataStateChangeUpdate();
         }
 
         private void MultithreadRunSystems(List<IStructuredInput> input) {
@@ -384,7 +389,6 @@ namespace Neon.Entities {
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            SinglethreadFrameBegin();
             long frameBegin = stopwatch.ElapsedTicks;
 
             MultithreadRunSystems(commands);
@@ -415,11 +419,6 @@ namespace Neon.Entities {
 
             }
             Log<EntityManager>.Info(builder.ToString());
-
-            // update the singleton data
-            Entity singletonEntity = (Entity)SingletonEntity;
-            singletonEntity.ApplyModifications();
-            singletonEntity.DataStateChangeUpdate();
         }
 
         public Task UpdateWorld(List<IStructuredInput> commands) {
