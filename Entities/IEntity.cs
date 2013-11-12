@@ -116,6 +116,7 @@ namespace Neon.Entities {
         /// </summary>
         string PrettyName {
             get;
+            set;
         }
     }
 }

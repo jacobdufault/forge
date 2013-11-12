@@ -59,12 +59,18 @@ namespace Neon.Entities {
         /// </summary>
         /// <returns>A new entity instance that contains data instances based off of this
         /// template.</returns>
-        public virtual IEntity Instantiate() {
-            IEntity entity = new Entity();
+        public virtual IEntity Instantiate(bool addToEntityManager = true) {
+            Entity entity = new Entity();
             InjectDataInto(entity);
-            if (EntityManager != null) {
+
+            if (addToEntityManager == false) {
+                entity.ApplyModifications();
+                entity.DataStateChangeUpdate();
+            }
+            else if (EntityManager != null) {
                 EntityManager.AddEntity(entity);
             }
+
             return entity;
         }
 

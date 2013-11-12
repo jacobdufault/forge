@@ -56,7 +56,7 @@ namespace Neon.Entities {
             }
 
             return new SerializedEntity() {
-                PrettyName = _prettyName,
+                PrettyName = PrettyName,
                 UniqueId = _uniqueId,
                 Data = serializedDataList,
                 IsAdding = entityIsAdding,
@@ -71,12 +71,9 @@ namespace Neon.Entities {
         /// <remarks>
         /// If the entity does not have a pretty name, then this value is set to an empty string.
         /// </remarks>
-        private string _prettyName;
-
-        string IEntity.PrettyName {
-            get {
-                return _prettyName;
-            }
+        public string PrettyName {
+            get;
+            set;
         }
         #endregion
 
@@ -126,7 +123,7 @@ namespace Neon.Entities {
         public Entity(SerializedEntity serializedEntity, SerializationConverter converter,
             out bool hasModification, out bool hasStateChange, bool addingToEntityManager) {
 
-            _prettyName = serializedEntity.PrettyName ?? "";
+            PrettyName = serializedEntity.PrettyName ?? "";
             _uniqueId = serializedEntity.UniqueId;
             _idGenerator.Consume(_uniqueId);
             _eventProcessor = new EventProcessor();
@@ -180,11 +177,12 @@ namespace Neon.Entities {
             // modifications so that previous and current map to the correct values
             if (addingToEntityManager == false) {
                 ApplyModifications();
+                DataStateChangeUpdate();
             }
         }
 
         public Entity() {
-            _prettyName = "";
+            PrettyName = "";
             _uniqueId = _idGenerator.Next();
             _eventProcessor = new EventProcessor();
 
@@ -493,8 +491,8 @@ namespace Neon.Entities {
         }
 
         public override string ToString() {
-            if (_prettyName.Length > 0) {
-                return string.Format("Entity [uid={0}, name={1}]", _uniqueId, _prettyName);
+            if (PrettyName.Length > 0) {
+                return string.Format("Entity [uid={0}, name={1}]", _uniqueId, PrettyName);
             }
             else {
                 return string.Format("Entity [uid={0}]", _uniqueId);
