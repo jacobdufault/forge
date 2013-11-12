@@ -141,6 +141,19 @@ namespace Neon.Serialization {
             return new SerializedData(false);
         }
 
+        SerializedData ParseNull() {
+            if (CurrentCharacter() != 'n') throw new ParseException("expected null", this);
+            MoveNext();
+            if (CurrentCharacter() != 'u') throw new ParseException("expected null", this);
+            MoveNext();
+            if (CurrentCharacter() != 'l') throw new ParseException("expected null", this);
+            MoveNext();
+            if (CurrentCharacter() != 'l') throw new ParseException("expected null", this);
+            MoveNext();
+
+            return new SerializedData();
+        }
+
         private long ParseSubstring(string baseString, int start, int end) {
             if (start == end) {
                 return 0;
@@ -329,6 +342,7 @@ namespace Neon.Serialization {
                 case '{': return ParseObject();
                 case 't': return ParseTrue();
                 case 'f': return ParseFalse();
+                case 'n': return ParseNull();
                 default: throw new ParseException("unable to parse", this);
             }
         }

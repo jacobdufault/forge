@@ -474,9 +474,11 @@ namespace Neon.Serialization {
         public SerializedData Export(Type instanceType, object instance) {
             Log<SerializationConverter>.Info("Exporting " + instance + " with type " + instanceType);
 
+            // special case for null values
             if (instance == null) {
-                throw new ArgumentException("Cannot export a null object");
+                return new SerializedData();
             }
+
             if (instanceType.IsInstanceOfType(instance) == false) {
                 throw new ArgumentException("The instance is not an instance of the export type");
             }
@@ -578,6 +580,11 @@ namespace Neon.Serialization {
         /// </summary>
         public object Import(Type type, SerializedData serializedData) {
             Log<SerializationConverter>.Info("Exporting " + serializedData.PrettyPrinted + " with type " + type);
+
+            // special case for null values
+            if (serializedData.IsNull) {
+                return null;
+            }
 
             // If there is a user-defined importer for the given type, then use it instead of doing
             // automated reflection.

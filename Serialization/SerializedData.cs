@@ -19,6 +19,10 @@ namespace Neon.Serialization {
         private object _value;
 
         #region Constructors
+        public SerializedData() {
+            _value = null;
+        }
+
         public SerializedData(bool boolean) {
             _value = boolean;
         }
@@ -49,6 +53,15 @@ namespace Neon.Serialization {
         #endregion
 
         #region Casting Predicates
+        /// <summary>
+        /// Returns true if this SerializedData instance maps back to null.
+        /// </summary>
+        public bool IsNull {
+            get {
+                return _value == null;
+            }
+        }
+
         /// <summary>
         /// Returns true if this SerializedData instance maps back to a Real.
         /// </summary>
@@ -229,7 +242,11 @@ namespace Neon.Serialization {
         /// Formats this data into the given builder.
         /// </summary>
         private void BuildString(StringBuilder builder, int depth) {
-            if (IsBool) {
+            if (IsNull) {
+                builder.Append("null");
+            }
+
+            else if (IsBool) {
                 bool b = (bool)_value;
                 if (b) {
                     builder.Append("true");
@@ -313,12 +330,20 @@ namespace Neon.Serialization {
                 return false;
             }
 
+            if (_value == null) {
+                return v._value == null;
+            }
+
             return _value.Equals(v._value);
         }
 
         public bool Equals(SerializedData v) {
             if (v == null) {
                 return false;
+            }
+
+            if (_value == null) {
+                return v._value == null;
             }
 
             return _value.Equals(v._value);
