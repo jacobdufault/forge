@@ -75,18 +75,6 @@ namespace Neon.Serialization.Tests {
         public SimpleStruct[] Items;
     }
 
-    internal class ClassWithPrivateField {
-        private int A;
-
-        public int GetA() {
-            return A;
-        }
-
-        public void SetA(int value) {
-            A = value;
-        }
-    }
-
     [TestClass]
     public class TypeConversionTests {
         [TestMethod]
@@ -130,18 +118,6 @@ namespace Neon.Serialization.Tests {
             Assert.AreEqual(3, simpleStruct.A);
             Assert.AreEqual(true, simpleStruct.B);
             Assert.AreEqual("hello", simpleStruct.C);
-        }
-
-        //[TestMethod]
-        // This test is disabled for now until we rebuild support for private fields.
-        public void ImportPrivateFields() {
-            SerializedData serialized = SerializedData.CreateDictionary();
-            serialized.AsDictionary["A"] = new SerializedData(Real.CreateDecimal(3));
-
-            SerializationConverter converter = new SerializationConverter();
-            ClassWithPrivateField obj = converter.Import<ClassWithPrivateField>(serialized);
-
-            Assert.AreEqual((Real)3, obj.GetA());
         }
 
         [TestMethod]

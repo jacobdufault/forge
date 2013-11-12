@@ -55,7 +55,9 @@
   <ItemGroup>
     <Compile Include="ParsingTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TypeConversionPrivateTests.cs" />
     <Compile Include="TypeConversionTests.cs" />
+    <Compile Include="TypeConversionVirtualTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Serialization\Serialization.csproj">

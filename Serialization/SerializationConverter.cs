@@ -225,24 +225,40 @@ namespace Neon.Serialization {
             // If we're not one of those three types, then we will be using Properties to assign
             // data to ourselves, so we want to lookup said information
             if (IsDictionary == false && IsArray == false && IsList == false) {
-                // TODO: this doesn't currently support private fields; perhaps we should support
-                // private fields annotated with [Serializable]?
-
                 _properties = new List<PropertyMetadata>();
+                CollectProperties(type, _properties);
+            }
+        }
 
-                foreach (PropertyInfo property in type.GetProperties()) {
-                    // We only populate properties that can be both read and written to
-                    if (property.CanRead && property.CanWrite) {
-                        _properties.Add(new PropertyMetadata(property));
-                    }
+        private void CollectProperties(Type type, List<PropertyMetadata> properties) {
+            BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance;
+
+            foreach (PropertyInfo property in type.GetProperties(flags)) {
+                // We don't serialize delegates
+                if (typeof(Delegate).IsAssignableFrom(property.PropertyType)) {
+                    continue;
                 }
 
-                foreach (FieldInfo field in type.GetFields()) {
-                    // We serialize all fields, except those annotated with [NonSerialized].
-                    if (field.IsNotSerialized == false) {
-                        _properties.Add(new PropertyMetadata(field));
-                    }
+                // We only populate properties that can be both read and written to
+                if (property.CanRead && property.CanWrite) {
+                    _properties.Add(new PropertyMetadata(property));
                 }
+            }
+
+            foreach (FieldInfo field in type.GetFields(flags)) {
+                // We don't serialize delegates
+                if (typeof(Delegate).IsAssignableFrom(field.FieldType)) {
+                    continue;
+                }
+
+                // We serialize all fields, except those annotated with [NonSerialized].
+                if (field.IsNotSerialized == false) {
+                    _properties.Add(new PropertyMetadata(field));
+                }
+            }
+
+            if (type.BaseType != null) {
+                CollectProperties(type.BaseType, properties);
             }
         }
 
