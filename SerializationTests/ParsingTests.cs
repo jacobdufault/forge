@@ -14,27 +14,28 @@ namespace Neon.Serialization.Tests {
             Assert.AreEqual("hello", result.AsString);
         }
 
-        private void TestRealVariants(string baseNumber, long beforeDecimal, int afterDecimal) {
+        private void TestRealVariants(string baseNumber, long beforeDecimal, int afterDecimal, int afterDigits) {
             var result = Parser.Parse(baseNumber);
-            var expected = Real.CreateDecimal(beforeDecimal, afterDecimal);
+            var expected = Real.CreateDecimal(beforeDecimal, afterDecimal, afterDigits);
             Assert.AreEqual(expected, result.AsReal);
 
             result = Parser.Parse("-" + baseNumber);
-            expected = Real.CreateDecimal(-beforeDecimal, afterDecimal);
+            expected = Real.CreateDecimal(-beforeDecimal, afterDecimal, afterDigits);
             Assert.AreEqual(expected, result.AsReal);
 
             result = Parser.Parse("+" + baseNumber);
-            expected = Real.CreateDecimal(beforeDecimal, afterDecimal);
+            expected = Real.CreateDecimal(beforeDecimal, afterDecimal, afterDigits);
             Assert.AreEqual(expected, result.AsReal);
         }
 
         [TestMethod]
         public void TestNumbers() {
-            TestRealVariants("12", 12, 0);
-            TestRealVariants("15.325", 15, 325);
-            TestRealVariants("15.", 15, 0);
-            TestRealVariants(".", 0, 0);
-            TestRealVariants(".33", 0, 33);
+            TestRealVariants("12", 12, 0, 0);
+            TestRealVariants("15.325", 15, 325, 3);
+            TestRealVariants("15.", 15, 0, 0);
+            TestRealVariants(".", 0, 0, 0);
+            TestRealVariants(".33", 0, 33, 2);
+            TestRealVariants(".0005", 0, 0005, 4);
         }
 
         [TestMethod]

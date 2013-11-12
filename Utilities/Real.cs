@@ -117,16 +117,20 @@ namespace Neon.Utilities {
         /// Creates a real value with that is 0.number. For example, CreateDecimal(123) will create
         /// a real value that is equal to "0.123".
         /// </summary>
-        /// <param name="number">The decimal number to create</param>
+        /// <remarks>
+        /// CreateDecimal(1, 0005, 4) will create 1.0005
+        /// CreateDecimal(1, 5, 4) will create 1.0005
+        /// </remarks>
         /// <returns></returns>
-        public static Real CreateDecimal(long beforeDecimal, int afterDecimal) {
+        public static Real CreateDecimal(long beforeDecimal, int afterDecimal, int afterDigits) {
             Contract.Requires(afterDecimal >= 0, "Cannot have a negative decimal portion");
 
             int sign = beforeDecimal >= 0 ? 1 : -1;
 
             Real real;
             real.RawValue = (One * afterDecimal) * sign;
-            real.ShiftDecimal(GetDigitCount(afterDecimal));
+            real.ShiftDecimal(afterDigits);
+            //real.ShiftDecimal(GetDigitCount(afterDecimal));
             real.RawValue += One * beforeDecimal;
             return real;
         }

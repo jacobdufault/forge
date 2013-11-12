@@ -200,7 +200,7 @@ namespace Neon.Serialization {
             end = _start;
 
             int rightValue = (int)ParseSubstring(_input, start, end);
-            return new SerializedData(Real.CreateDecimal(leftValue, rightValue));
+            return new SerializedData(Real.CreateDecimal(leftValue, rightValue, end - start));
         }
 
         string ParseKey() {
