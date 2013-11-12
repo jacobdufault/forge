@@ -87,6 +87,7 @@ namespace Neon.Collections {
         /// </summary>
         /// <returns>True if the item was removed, false otherwise</returns>
         public bool Remove(T item, UnorderedListMetadata metadata) {
+            // the metadata says the item is not in the collection
             if (metadata.Index == -1) {
                 return false;
             }
@@ -94,6 +95,11 @@ namespace Neon.Collections {
             int index = metadata.Index;
             metadata.Index = -1;
             metadata.StoredIn = null;
+
+            // nothing to remove if we are empty
+            if (Length == 0) {
+                return false;
+            }
 
             StoredItem replacer = Pop();
 
