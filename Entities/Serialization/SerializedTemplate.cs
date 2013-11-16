@@ -68,7 +68,7 @@ namespace Neon.Entities.Serialization {
             TemplateId = template.TemplateId;
 
             Data = new List<SerializedTemplateData>();
-            foreach (Data data in template) {
+            foreach (Data data in template.SelectData()) {
                 SerializedTemplateData serializedData = new SerializedTemplateData() {
                     DataType = data.GetType().FullName,
                     State = converter.Export(data.GetType(), data)

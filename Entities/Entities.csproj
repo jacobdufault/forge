@@ -58,6 +58,7 @@
     <Compile Include="IEntityExtensions.cs" />
     <Compile Include="EntityTemplate.cs" />
     <Compile Include="ImmutableContainer.cs" />
+    <Compile Include="IQueryableEntity.cs" />
     <Compile Include="Serialization\SerializedEntity.cs" />
     <Compile Include="Serialization\ISystemProvider.cs" />
     <Compile Include="Serialization\SerializedLevel.cs" />

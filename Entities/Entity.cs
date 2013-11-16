@@ -86,7 +86,7 @@ namespace Neon.Entities {
         // thread safe because we never write
         private int _uniqueId;
 
-        int IEntity.UniqueId {
+        int IQueryableEntity.UniqueId {
             get { return _uniqueId; }
         }
         #endregion
@@ -106,7 +106,7 @@ namespace Neon.Entities {
 
         #region Event Processor
         private EventProcessor _eventProcessor;
-        EventProcessor IEntity.EventProcessor {
+        EventProcessor IQueryableEntity.EventProcessor {
             get { return _eventProcessor; }
         }
         #endregion
@@ -365,7 +365,7 @@ namespace Neon.Entities {
             return ((IEntity)this).Modify(accessor);
         }
 
-        ICollection<Data> IEntity.SelectCurrentData(Predicate<Data> filter, ICollection<Data> storage) {
+        ICollection<Data> IQueryableEntity.SelectCurrentData(Predicate<Data> filter, ICollection<Data> storage) {
             if (storage == null) {
                 storage = new List<Data>();
             }
@@ -448,7 +448,7 @@ namespace Neon.Entities {
         }
         #endregion
 
-        Data IEntity.Current(DataAccessor accessor) {
+        Data IQueryableEntity.Current(DataAccessor accessor) {
             if (_data.Contains(accessor.Id) == false) {
                 throw new NoSuchDataException(this, accessor);
             }
@@ -456,7 +456,7 @@ namespace Neon.Entities {
             return _data[accessor.Id].Current;
         }
 
-        Data IEntity.Previous(DataAccessor accessor) {
+        Data IQueryableEntity.Previous(DataAccessor accessor) {
             if (((IEntity)this).ContainsData(accessor) == false) {
                 throw new NoSuchDataException(this, accessor);
             }
@@ -465,13 +465,13 @@ namespace Neon.Entities {
         }
 
         #region ContainsData
-        bool IEntity.ContainsData(DataAccessor accessor) {
+        bool IQueryableEntity.ContainsData(DataAccessor accessor) {
             int id = accessor.Id;
             return _data.Contains(id) && _removed.Contains(id) == false;
         }
         #endregion
 
-        bool IEntity.WasModified(DataAccessor accessor) {
+        bool IQueryableEntity.WasModified(DataAccessor accessor) {
             return _modifiedLastFrame.Contains(accessor.Id);
         }
 
