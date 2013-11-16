@@ -33,6 +33,13 @@ namespace Neon.Entities {
         private static Dictionary<Type, int> _ids = new Dictionary<Type, int>();
 
         /// <summary>
+        /// Returns the id for the given data type. Forwards the call to GetId(Type).
+        /// </summary>
+        public static int GetId(Data data) {
+            return GetId(data.GetType());
+        }
+
+        /// <summary>
         /// Returns the identifier/integer for the given type, constructing if it necessary.
         /// </summary>
         /// <param name="type">The type to get.</param>
@@ -70,6 +77,14 @@ namespace Neon.Entities {
     /// Provides a convenient and efficient way to access a type of Data.
     /// </summary>
     public struct DataAccessor {
+        /// <summary>
+        /// Helper constructor for DataAccessor(Type). This merely forwards the call with the type
+        /// parameter being data.GetType().
+        /// </summary>
+        public DataAccessor(Data data)
+            : this(data.GetType()) {
+        }
+
         /// <summary>
         /// Creates a new DataAccessor that accesses the specified Data type.
         /// </summary>
