@@ -19,19 +19,19 @@
             return (T)entity.Modify(DataMap<T>.Accessor, force);
         }
 
-        public static T Current<T>(this IEntity entity) where T : Data {
+        public static T Current<T>(this IQueryableEntity entity) where T : Data {
             return (T)entity.Current(DataMap<T>.Accessor);
         }
 
-        public static T Previous<T>(this IEntity entity) where T : Data {
+        public static T Previous<T>(this IQueryableEntity entity) where T : Data {
             return (T)entity.Previous(DataMap<T>.Accessor);
         }
 
-        public static bool ContainsData<T>(this IEntity entity) where T : Data {
+        public static bool ContainsData<T>(this IQueryableEntity entity) where T : Data {
             return entity.ContainsData(DataMap<T>.Accessor);
         }
 
-        public static bool WasModified<T>(this IEntity entity) where T : Data {
+        public static bool WasModified<T>(this IQueryableEntity entity) where T : Data {
             return entity.WasModified(DataMap<T>.Accessor);
         }
 
