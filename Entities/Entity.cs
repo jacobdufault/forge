@@ -228,7 +228,7 @@ namespace Neon.Entities {
             });
         }
 
-        internal void ApplyModifications() {
+        public void ApplyModifications() {
             DoModifications();
 
             ModificationNotifier.Reset();
@@ -254,7 +254,7 @@ namespace Neon.Entities {
         /// this function is being executed.
         /// </remarks>
         /// <returns>If more data state change updates are needed</returns>
-        internal void DataStateChangeUpdate() {
+        public void DataStateChangeUpdate() {
             // do removals
             {
                 List<DataAccessor> removedStage2 = _toRemove.Previous;
