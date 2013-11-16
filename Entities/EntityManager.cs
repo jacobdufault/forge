@@ -136,7 +136,7 @@ namespace Neon.Entities {
         /// <summary>
         /// The key we use to access unordered list metadata from the entity.
         /// </summary>
-        private static MetadataKey _entityUnorderedListMetadataKey = Entity.MetadataRegistry.GetKey();
+        private static MetadataKey _entityUnorderedListMetadataKey = QueryableEntity.MetadataRegistry.GetKey();
 
         /// <summary>
         /// Events that the EntityManager dispatches.

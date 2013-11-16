@@ -49,12 +49,5 @@ namespace Neon.Entities {
         /// modification then it will be overwritten. This should *NEVER* be used in systems or
         /// general client code; it is available for inspector GUI changes.</param>
         Data Modify(DataAccessor accessor, bool force = false);
-
-        /// <summary>
-        /// Metadata container that allows arbitrary data to be stored within the Entity.
-        /// </summary>
-        MetadataContainer<object> Metadata {
-            get;
-        }
     }
 }

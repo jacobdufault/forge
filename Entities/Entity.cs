@@ -92,12 +92,8 @@ namespace Neon.Entities {
         #endregion
 
         #region Metadata
-        /// <summary>
-        /// Used to retrieve keys for storing things in instance-specific metadata containers.
-        /// </summary>
-        public static MetadataRegistry MetadataRegistry = new MetadataRegistry();
         private MetadataContainer<object> _metadata = new MetadataContainer<object>();
-        MetadataContainer<object> IEntity.Metadata {
+        MetadataContainer<object> IQueryableEntity.Metadata {
             get {
                 return _metadata;
             }

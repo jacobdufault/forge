@@ -368,7 +368,7 @@ namespace Neon.Entities {
             /// </summary>
             public EntityCache(Filter filter) {
                 _filter = filter;
-                _metadataKey = Entity.MetadataRegistry.GetKey();
+                _metadataKey = QueryableEntity.MetadataRegistry.GetKey();
 
                 CachedEntities = new UnorderedList<IEntity>();
             }

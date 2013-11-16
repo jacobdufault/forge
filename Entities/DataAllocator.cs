@@ -7,6 +7,7 @@ namespace Neon.Entities {
     /// <summary>
     /// Allocates instances of Data.
     /// </summary>
+    // TODO: remove this class
     public sealed class DataAllocator {
         /// <summary>
         /// Used to allocate types of a given object
