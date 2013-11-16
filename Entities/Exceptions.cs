@@ -27,9 +27,10 @@ namespace Neon.Entities {
         /// Creates the exception with the given context and data type.
         /// </summary>
         /// <param name="context">The entity that triggered the exception.</param>
-        /// <param name="type">The data type that the entity lacks.</param>
-        internal NoSuchDataException(IEntity context, Type type)
-            : base("No such data for type=" + type + " in " + context) {
+        /// <param name="accessor">The data type that the entity lacks.</param>
+        internal NoSuchDataException(IQueryableEntity context, DataAccessor accessor)
+            : base("No such data for type=" + DataAccessorFactory.GetTypeFromAccessor(accessor) +
+            " in " + context) {
         }
     }
 

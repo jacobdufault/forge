@@ -433,7 +433,7 @@ namespace Neon.Entities {
                     return added;
                 }
 
-                throw new NoSuchDataException(this, DataAccessorFactory.GetTypeFromAccessor(accessor));
+                throw new NoSuchDataException(this, accessor);
             }
 
             if (_data[id].MotificationActivation.TryActivate()) {
@@ -450,7 +450,7 @@ namespace Neon.Entities {
 
         Data IEntity.Current(DataAccessor accessor) {
             if (_data.Contains(accessor.Id) == false) {
-                throw new NoSuchDataException(this, DataAccessorFactory.GetTypeFromAccessor(accessor));
+                throw new NoSuchDataException(this, accessor);
             }
 
             return _data[accessor.Id].Current;
@@ -458,7 +458,7 @@ namespace Neon.Entities {
 
         Data IEntity.Previous(DataAccessor accessor) {
             if (((IEntity)this).ContainsData(accessor) == false) {
-                throw new NoSuchDataException(this, DataAccessorFactory.GetTypeFromAccessor(accessor));
+                throw new NoSuchDataException(this, accessor);
             }
 
             return _data[accessor.Id].Previous;
