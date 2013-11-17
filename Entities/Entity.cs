@@ -368,7 +368,7 @@ namespace Neon.Entities {
 
             foreach (var tuple in _data) {
                 Data data = tuple.Item2.Current;
-                if (filter(data)) {
+                if (filter == null || filter(data)) {
                     storage.Add(data);
                 }
             }
