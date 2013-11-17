@@ -216,10 +216,6 @@ namespace Neon.Entities {
                     _data[id].Increment();
 
                     _modifiedLastFrame[id] = _data[id];
-
-                    // TODO: make sure that visualization events are correctly copied when
-                    //       reproducing data
-                    _data[id].Current.DoUpdateVisualization();
                 }
             });
         }
@@ -294,7 +290,6 @@ namespace Neon.Entities {
 
                 // visualize the initial data
                 ((this as IEntity)).EventProcessor.Submit(new AddedDataEvent(added.GetType()));
-                added.DoUpdateVisualization();
             }
             _toAdd.Clear();
 

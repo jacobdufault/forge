@@ -18,21 +18,6 @@ namespace Neon.Entities {
             return (Data)MemberwiseClone();
         }
 
-        /// <summary>
-        /// Optionally update any visualizations of this Data instance to the value currently stored
-        /// in this instance.
-        /// </summary>
-        public void DoUpdateVisualization() {
-            if (OnUpdateVisualization != null) {
-                OnUpdateVisualization(this);
-            }
-        }
-
-        /// <summary>
-        /// Called when this data has new values that the attached Entity should visualize.
-        /// </summary>
-        public event Action<Data> OnUpdateVisualization;
-
         public virtual bool SupportsConcurrentModifications {
             get {
                 return false;
