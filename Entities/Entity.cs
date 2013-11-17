@@ -273,18 +273,34 @@ namespace Neon.Entities {
                 removedStage2.Clear();
             }
 
+            // We don't throw an exception immediately. If we are throwing an exception, that means
+            // that the Entity is in an invalid state (adding a bad data instance). However, the
+            // only way to recover from that invalid state is by having this method terminate.
+            // Hence, we only throw an exception at the end of the method.
+            Exception exceptionToThrow = null;
+
             // do additions
             for (int i = 0; i < _toAdd.Count; ++i) {
                 Data added = _toAdd[i];
-                ((this as IEntity)).EventProcessor.Submit(new AddedDataEvent(added.GetType()));
-
                 int id = DataAccessorFactory.GetId(added.GetType());
+
+                // make sure we do not readd the same data instance twice
+                if (_data.Contains(id)) {
+                    exceptionToThrow = new AlreadyAddedDataException(this, added.GetType());
+                    continue;
+                }
+
                 _data[id] = new ImmutableContainer<Data>(added.Duplicate(), added.Duplicate(), added.Duplicate());
 
                 // visualize the initial data
+                ((this as IEntity)).EventProcessor.Submit(new AddedDataEvent(added.GetType()));
                 added.DoUpdateVisualization();
             }
             _toAdd.Clear();
+
+            if (exceptionToThrow != null) {
+                throw exceptionToThrow;
+            }
         }
 
         internal bool NeedsMoreDataStateChangeUpdates() {

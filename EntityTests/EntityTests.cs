@@ -23,9 +23,20 @@ namespace Neon.Entities.Tests {
         [ExpectedException(typeof(AlreadyAddedDataException))]
 
         public void CannotAddMultipleDataInstances() {
-            IEntity entity = new Entity();
+            Entity entity = new Entity();
             entity.AddData<TestData0>();
             entity.AddData<TestData0>();
+            entity.DataStateChangeUpdate();
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(AlreadyAddedDataException))]
+        public void CannotAddMultipleDataInstancesAfterStateUpdates() {
+            Entity entity = new Entity();
+            entity.AddData<TestData0>();
+            entity.DataStateChangeUpdate();
+            entity.AddData<TestData0>();
+            entity.DataStateChangeUpdate();
         }
 
         [TestMethod]
