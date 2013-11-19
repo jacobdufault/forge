@@ -95,7 +95,7 @@ namespace Neon.Serialization {
                 return Array.CreateInstance(ElementType, 0);
             }
 
-            return Activator.CreateInstance(_baseType);
+            return Activator.CreateInstance(ReflectedType);
         }
 
         /// <summary>
@@ -159,11 +159,11 @@ namespace Neon.Serialization {
         /// Initializes a new instance of the TypeMetadata class from a type.
         /// </summary>
         public TypeMetadata(Type type) {
-            _baseType = type;
+            ReflectedType = type;
 
             // Iterate over all attributes in the type to check for the requirement of a custom
             // converter
-            foreach (var attribute in _baseType.GetCustomAttributes(inherit: true)) {
+            foreach (var attribute in ReflectedType.GetCustomAttributes(inherit: true)) {
                 if (attribute is SerializationRequireCustomConverterAttribute) {
                     RequiresCustomConverter = true;
                 }
@@ -172,7 +172,7 @@ namespace Neon.Serialization {
             // Determine if the type needs to support inheritance
             SupportsInheritance = type.IsInterface || type.IsAbstract;
             if (!SupportsInheritance) {
-                foreach (var attribute in _baseType.GetCustomAttributes(inherit: false)) {
+                foreach (var attribute in ReflectedType.GetCustomAttributes(inherit: false)) {
                     if (attribute is SerializationSupportInheritance) {
                         SupportsInheritance = true;
                     }
@@ -181,7 +181,7 @@ namespace Neon.Serialization {
 
             // But do not support it if inheritance is explicitly denied
             if (SupportsInheritance) {
-                foreach (var attribute in _baseType.GetCustomAttributes(inherit: true)) {
+                foreach (var attribute in ReflectedType.GetCustomAttributes(inherit: true)) {
                     if (attribute is SerializationNoAutoInheritance) {
                         SupportsInheritance = false;
                     }
@@ -247,7 +247,7 @@ namespace Neon.Serialization {
                         Log<TypeMetadata>.Info("Ignoring property {0}.{1} because it has a " +
                             "NonSerialized or a NotSerializable attribute", type.FullName,
                             property.Name);
-                        break;
+                        goto loop_end;
                     }
                 }
 
@@ -255,7 +255,17 @@ namespace Neon.Serialization {
                 if (property.CanRead == false || property.CanWrite == false) {
                     Log<TypeMetadata>.Info("Ignoring property {0}.{1} because it cannot both be " +
                         "read from and written to", type.FullName, property.Name);
-                    goto loop_end;
+                    continue;
+                }
+
+                // If the property is named "Item", it might be the this[int] indexer, which in that
+                // case we don't serialize it We cannot just compare with "Item" because of explicit
+                // interfaces, where the name of the property will be the full method name.
+                if (property.Name.EndsWith("Item")) {
+                    ParameterInfo[] parameters = property.GetIndexParameters();
+                    if (parameters.Length == 1) {
+                        goto loop_end;
+                    }
                 }
 
                 _properties.Add(new PropertyMetadata(property));
@@ -318,7 +328,10 @@ namespace Neon.Serialization {
         /// <summary>
         /// The type that this metadata is modeling.
         /// </summary>
-        private Type _baseType;
+        public Type ReflectedType {
+            get;
+            private set;
+        }
 
         /// <summary>
         /// Iff this metadata maps back to a List or an Array type, then this is the type of element

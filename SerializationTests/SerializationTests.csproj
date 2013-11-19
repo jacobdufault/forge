@@ -60,6 +60,10 @@
     <Compile Include="TypeConversionVirtualTests.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Collections\Collections.csproj">
+      <Project>{9d91d020-4291-4926-b76d-b73d138b0aef}</Project>
+      <Name>Collections</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Serialization\Serialization.csproj">
       <Project>{b97ca54f-0428-4853-af39-5ed8375a0262}</Project>
       <Name>Serialization</Name>

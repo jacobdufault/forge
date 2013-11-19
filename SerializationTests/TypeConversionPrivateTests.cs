@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Neon.Collections;
 using Neon.Utilities;
 using System;
 
@@ -64,6 +65,17 @@ namespace Neon.Serialization.Tests {
         }
     }
 
+    internal class TypeWithNonSerialized {
+        [NotSerializable]
+        public int this[int index] {
+            get {
+                return 0;
+            }
+            set {
+            }
+        }
+    }
+
     [TestClass]
     public class TypeConversionPrivateTests {
         [TestMethod]
@@ -112,6 +124,18 @@ namespace Neon.Serialization.Tests {
 
             Assert.IsTrue(exported.IsDictionary);
             Assert.AreEqual(0, exported.AsDictionary.Count);
+        }
+
+        [TestMethod]
+        public void TypeWithNonSerializedAttribute() {
+            (new SerializationConverter()).Export(new TypeWithNonSerialized());
+            (new SerializationConverter()).Import<TypeWithNonSerialized>(SerializedData.CreateDictionary());
+        }
+
+        [TestMethod]
+        public void BagTest() {
+            SerializedData data = (new SerializationConverter()).Export(new Bag<int>());
+            (new SerializationConverter()).Import<Bag<int>>(data);
         }
     }
 }
