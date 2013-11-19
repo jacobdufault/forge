@@ -1,4 +1,5 @@
 using Neon.Collections;
+using Neon.Utilities;
 using System;
 using System.Collections.Generic;
 
@@ -26,22 +27,46 @@ namespace Neon.Entities {
         private EventProcessor _eventProcessor = new EventProcessor();
 
         /// <summary>
+        /// Generator for auto-generated template ids.
+        /// </summary>
+        private static UniqueIntGenerator _idGenerator = new UniqueIntGenerator();
+
+        /// <summary>
         /// The entity manager that spawned entities are injected into.
         /// </summary>
         // TODO: figure out some good DI system
         public static EntityManager EntityManager;
 
+        /// <summary>
+        /// Returns the unique template id for the template.
+        /// </summary>
         public int TemplateId {
             get;
             private set;
         }
 
+        /// <summary>
+        /// Returns the user-defined pretty name for the template. This is useful for debugging
+        /// purposes.
+        /// </summary>
         public string PrettyName {
             get;
             set;
         }
 
+        /// <summary>
+        /// Creates a new EntityTemplate with an automatically generated id and an empty pretty
+        /// name.
+        /// </summary>
+        public EntityTemplate()
+            : this(_idGenerator.Next(), "") {
+        }
+
+        /// <summary>
+        /// Creates a new EntityTemplate with the given id and the given pretty name.
+        /// </summary>
         public EntityTemplate(int id, string prettyName) {
+            _idGenerator.Consume(id);
             TemplateId = id;
             PrettyName = prettyName;
         }
