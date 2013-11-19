@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 // This file contains a number of classes which make reflection easier. These are used heavily by
 // the SerializationConverter, but are exposed publicly so that all code can use the same reflection
@@ -296,6 +297,12 @@ namespace Neon.Serialization {
                             field.Name);
                         goto loop_end;
                     }
+                }
+
+                // We don't serialize compiler generated fields (an example would be a backing field
+                // for an automatically generated property).
+                if (field.IsDefined(typeof(CompilerGeneratedAttribute), false)) {
+                    continue;
                 }
 
                 _properties.Add(new PropertyMetadata(field));
