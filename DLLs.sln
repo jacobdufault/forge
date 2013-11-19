@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serialization", "Serializat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SerializationTests", "SerializationTests\SerializationTests.csproj", "{6D2D44B7-AA38-4B69-B3E9-04B3D197F467}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CollectionsTests", "CollectionsTests\CollectionsTests.csproj", "{1973EECC-8908-47BC-9EA4-DC99530C888A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -71,6 +73,10 @@ Global
 		{6D2D44B7-AA38-4B69-B3E9-04B3D197F467}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6D2D44B7-AA38-4B69-B3E9-04B3D197F467}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6D2D44B7-AA38-4B69-B3E9-04B3D197F467}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1973EECC-8908-47BC-9EA4-DC99530C888A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1973EECC-8908-47BC-9EA4-DC99530C888A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1973EECC-8908-47BC-9EA4-DC99530C888A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1973EECC-8908-47BC-9EA4-DC99530C888A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

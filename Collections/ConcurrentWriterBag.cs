@@ -40,7 +40,7 @@ namespace Neon.Collections {
         /// </remarks>
         /// <param name="item">The item to enqueue</param>
         public void Add(T item) {
-            _collection.Value.Append(item);
+            _collection.Value.Add(item);
         }
 
         /// <summary>

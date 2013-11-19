@@ -168,7 +168,7 @@ namespace Neon.Collections {
         }
 
         public void Add(T item, Vector2r position) {
-            _items.Append(new StoredItem(item, position));
+            _items.Add(new StoredItem(item, position));
 
             // call OnEnter for all monitors that are interested in the item
             for (int i = 0; i < _monitors.Length; ++i) {
@@ -226,7 +226,7 @@ namespace Neon.Collections {
         }
 
         public void Add(IQuadTreeMonitor<T> monitor, Bound monitoredRegion) {
-            _monitors.Append(new StoredMonitor(monitor, monitoredRegion));
+            _monitors.Add(new StoredMonitor(monitor, monitoredRegion));
 
             // check to see if the monitor is interested in any of our stored items
             for (int i = 0; i < _items.Length; ++i) {
