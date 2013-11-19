@@ -1,7 +1,10 @@
 ﻿using System;
 
 namespace Neon.Utilities {
-    public struct MaybeU {
+    /// <summary>
+    /// Helper for Maybe[T] by providing local type inference at Just and Empty call sites.
+    /// </summary>
+    public static class Maybe {
         public static Maybe<T> Just<T>(T instance) {
             return new Maybe<T>(instance);
         }

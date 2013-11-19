@@ -35,7 +35,7 @@ namespace Neon.Collections {
 
             set {
                 EnsureIndex(index);
-                Elements[index] = MaybeU.Just(value);
+                Elements[index] = Maybe.Just(value);
             }
         }
 
