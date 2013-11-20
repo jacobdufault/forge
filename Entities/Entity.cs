@@ -116,7 +116,7 @@ namespace Neon.Entities {
         /// </remarks>
         /// <param name="addingToEntityManager">Is this entity going to end up in an EntityManager
         /// instance? This has implications on how internal state is managed.</param>
-        public Entity(SerializedEntity serializedEntity, SerializationConverter converter,
+        public void Restore(SerializedEntity serializedEntity, SerializationConverter converter,
             out bool hasModification, out bool hasStateChange, bool addingToEntityManager) {
 
             PrettyName = serializedEntity.PrettyName ?? "";
@@ -177,9 +177,15 @@ namespace Neon.Entities {
             }
         }
 
-        public Entity() {
-            PrettyName = "";
-            _uniqueId = _idGenerator.Next();
+        public Entity()
+            : this(_idGenerator.Next(), "") {
+        }
+
+        public Entity(int uniqueId, string prettyName) {
+            PrettyName = prettyName;
+            _uniqueId = uniqueId;
+            _idGenerator.Consume(uniqueId);
+
             _eventProcessor = new EventProcessor();
 
             DataStateChangeNotifier = new Notifier<Entity>(this);

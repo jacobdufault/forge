@@ -76,51 +76,5 @@ namespace Neon.Entities.Serialization {
                 Data.Add(serializedData);
             }
         }
-
-        public EntityTemplate Restore(SerializationConverter converter) {
-            EntityTemplate template = new EntityTemplate(TemplateId, PrettyName);
-
-            foreach (var serializedData in Data) {
-                Data data = serializedData.GetDataInstance(converter);
-                template.AddDefaultData(data);
-            }
-
-            return template;
-        }
-
-        /// <summary>
-        /// Loads the template converter that allows templates to be specified by their id. If there
-        /// are already converters loaded, then this overrides them.
-        /// </summary>
-        public static void UpdateTemplateConverter(IEnumerable<EntityTemplate> templates,
-            SerializationConverter converter) {
-
-            converter.RemoveImporter(typeof(EntityTemplate));
-            converter.RemoveExporter(typeof(EntityTemplate));
-
-            Dictionary<int, EntityTemplate> _foundTemplates = new Dictionary<int, EntityTemplate>();
-            foreach (var template in templates) {
-                _foundTemplates[template.TemplateId] = template;
-            }
-
-            converter.AddImporter(typeof(EntityTemplate), serializedData => {
-                EntityTemplate template;
-
-                if (serializedData.IsReal) {
-                    int id = serializedData.AsReal.AsInt;
-                    if (_foundTemplates.TryGetValue(id, out template)) {
-                        return template;
-                    }
-
-                    throw new Exception("No such template with id=" + id);
-                }
-
-                throw new Exception("Inline template definitions are not supported; must load template by referencing its TemplateId");
-            });
-
-            converter.AddExporter(typeof(EntityTemplate), template => {
-                return new SerializedData(((EntityTemplate)template).TemplateId);
-            });
-        }
     }
 }
