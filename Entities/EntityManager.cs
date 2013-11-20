@@ -186,7 +186,7 @@ namespace Neon.Entities {
 
             EntityDeserializer entityDeserializer = new EntityDeserializer(singletonEntity, restoredEntities, converter, addingToEntityManager: true);
             foreach (var deserializedEntity in entityDeserializer) {
-                int entityId = ((IEntity)deserializedEntity).UniqueId;
+                int entityId = ((IEntity)deserializedEntity.Entity).UniqueId;
 
                 // are we restoring the singleton entity?
                 if (entityId == singletonEntity.UniqueId) {
