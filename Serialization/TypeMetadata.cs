@@ -403,8 +403,8 @@ namespace Neon.Serialization {
         public List<PropertyMetadata> Properties {
             get {
                 if (IsCollection || IsArray) {
-                    throw new InvalidOperationException("A type that is a collection or an array" +
-                        "does not have properties");
+                    throw new InvalidOperationException("A type that is a collection or an array " +
+                        "does not have properties (for metadata on type " + ReflectedType + ")");
                 }
 
                 return _properties;

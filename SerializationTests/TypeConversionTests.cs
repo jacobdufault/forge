@@ -1,5 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Neon.Collections;
 using Neon.Utilities;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -89,13 +91,22 @@ namespace Neon.Serialization.Tests {
     [TestClass]
     public class TypeConversionTests {
         /// <summary>
+        /// Exports the value using a serialization converter, then reimports it using a new
+        /// serialization converter. Returns the reimported value.
+        /// </summary>
+        private T GetImportedExportedValue<T>(T t0) {
+            SerializedData exported = (new SerializationConverter()).Export(t0);
+            T imported = (new SerializationConverter()).Import<T>(exported);
+            return imported;
+        }
+
+        /// <summary>
         /// Helper method that exports the given instance, imports the exported data, and then
         /// asserts that the imported instance is equal to the original instance using
         /// Assert.AreEqual.
         /// </summary>
         private void RunImportExportTest<T>(T t0) {
-            SerializedData exported = (new SerializationConverter()).Export(t0);
-            T imported = (new SerializationConverter()).Import<T>(exported);
+            T imported = GetImportedExportedValue(t0);
             Assert.AreEqual(t0, imported);
         }
 
@@ -104,9 +115,9 @@ namespace Neon.Serialization.Tests {
         /// asserts that the imported instance is equal to the original instance using
         /// CollectionAssert.AreEqual.
         /// </summary>
-        private void RunCollectionImportExportTest<TCollection>(TCollection collection) where TCollection : ICollection {
-            SerializedData exported = (new SerializationConverter()).Export(collection);
-            TCollection imported = (new SerializationConverter()).Import<TCollection>(exported);
+        private void RunCollectionImportExportTest<TCollection>(TCollection collection)
+            where TCollection : ICollection {
+            TCollection imported = GetImportedExportedValue(collection);
             CollectionAssert.AreEqual(collection, imported);
         }
 
@@ -282,7 +293,7 @@ namespace Neon.Serialization.Tests {
             });
 
             Dictionary<MyEnum, string> dict = new Dictionary<MyEnum, string>();
-            dict.Add(MyEnum.MyEnum0, "ok");
+            dict.Add(MyEnum.MyEnum0, "OK");
             RunCollectionImportExportTest(dict);
         }
 
@@ -370,6 +381,36 @@ namespace Neon.Serialization.Tests {
             dict2[MyEnum.MyEnum3] = "3";
             dict2[MyEnum.MyEnum4] = "4";
             RunCollectionImportExportTest(dict2);
+        }
+
+        [TestMethod]
+        public void ImportExportBag() {
+            Bag<int> bag = new Bag<int>() {
+                1, 2, 3, 4, 5
+            };
+            RunCollectionImportExportTest(bag);
+        }
+
+        [TestMethod]
+        public void ImportExportIterableSparseArray() {
+            IterableSparseArray<string> original = new IterableSparseArray<string>();
+            original[0] = "0";
+            original[2] = "2";
+            original[4] = "4";
+            original[6] = "6";
+            original[8] = "8";
+
+            IterableSparseArray<string> imported = GetImportedExportedValue(original);
+
+            var originalEnumerator = original.GetEnumerator();
+            var importedEnumerator = imported.GetEnumerator();
+
+            while (originalEnumerator.MoveNext() && importedEnumerator.MoveNext()) {
+                Assert.AreEqual(originalEnumerator.Current, importedEnumerator.Current);
+            }
+
+            Assert.IsFalse(originalEnumerator.MoveNext(), "Not enough elements in the imported collection");
+            Assert.IsFalse(importedEnumerator.MoveNext(), "Too many elements in the imported collection");
         }
     }
 }
