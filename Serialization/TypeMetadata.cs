@@ -82,7 +82,10 @@ namespace Neon.Serialization {
         /// <summary>
         /// Determines whether the specified see cref="System.Object" }, is equal to this instance.
         /// </summary>
-        /// <param name="obj">The <see cref="System.Object" /> to compare with this instance.</param> <returns> <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>. </returns>
+        /// <param name="obj">The <see cref="System.Object" /> to compare with this
+        /// instance.</param>
+        /// <returns><c>true</c> if the specified <see cref="System.Object" /> is equal to this
+        /// instance; otherwise, <c>false</c>.</returns>
         public override bool Equals(System.Object obj) {
             // If parameter is null return false.
             if (obj == null) {
@@ -102,7 +105,10 @@ namespace Neon.Serialization {
         /// <summary>
         /// Determines whether the specified see cref="System.Object" }, is equal to this instance.
         /// </summary>
-        /// <param name="obj">The <see cref="System.Object" /> to compare with this instance.</param> <returns> <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>. </returns>
+        /// <param name="obj">The <see cref="System.Object" /> to compare with this
+        /// instance.</param>
+        /// <returns><c>true</c> if the specified <see cref="System.Object" /> is equal to this
+        /// instance; otherwise, <c>false</c>.</returns>
         public bool Equals(PropertyMetadata p) {
             // If parameter is null return false:
             if ((object)p == null) {
@@ -125,7 +131,7 @@ namespace Neon.Serialization {
 
     /// <summary>
     /// Metadata for an type instance. The type can point to a regular type, an array, a list, or a
-    /// dictionary.
+    /// dictionary. Use TypeCache to get instances of TypeMetadata; do not construct it directly.
     /// </summary>
     public class TypeMetadata {
         /// <summary>
@@ -174,9 +180,10 @@ namespace Neon.Serialization {
         }
 
         /// <summary>
-        /// Initializes a new instance of the TypeMetadata class from a type.
+        /// Initializes a new instance of the TypeMetadata class from a type. Use TypeCache to get
+        /// instances of TypeMetadata; do not use this constructor directly.
         /// </summary>
-        public TypeMetadata(Type type) {
+        internal TypeMetadata(Type type) {
             ReflectedType = type;
 
             // Iterate over all attributes in the type to check for the requirement of a custom

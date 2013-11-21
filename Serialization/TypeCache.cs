@@ -13,6 +13,11 @@ namespace Neon.Serialization {
         private static Dictionary<string, Type> _cachedTypes = new Dictionary<string, Type>();
 
         /// <summary>
+        /// Cache from types to its associated metadata.
+        /// </summary>
+        private static Dictionary<Type, TypeMetadata> _cachedMetadata = new Dictionary<Type, TypeMetadata>();
+
+        /// <summary>
         /// Find a type with the given name. An exception is thrown if no type with the given name
         /// can be found. This method searches all currently loaded assemblies for the given type.
         /// </summary>
@@ -38,6 +43,20 @@ namespace Neon.Serialization {
 
             // couldn't find the type; throw an exception
             throw new Exception(string.Format("Unable to find the type for {0}", name));
+        }
+
+        /// <summary>
+        /// Finds the type metadata associated with the given type. If there is currently no
+        /// metadata, then this method creates it. Otherwise, it returns a cached instance.
+        /// </summary>
+        public static TypeMetadata GetMetadata(Type type) {
+            TypeMetadata metadata;
+            if (_cachedMetadata.TryGetValue(type, out metadata) == false) {
+                metadata = new TypeMetadata(type);
+                _cachedMetadata[type] = metadata;
+            }
+
+            return metadata;
         }
     }
 }

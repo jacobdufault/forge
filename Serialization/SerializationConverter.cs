@@ -47,29 +47,6 @@ namespace Neon.Serialization {
         private Dictionary<Type, Exporter> _exporters = new Dictionary<Type, Exporter>();
 
         /// <summary>
-        /// Cached reflection information for types which do not have both a custom importer and a
-        /// custom exporter.
-        /// </summary>
-        private Dictionary<Type, TypeMetadata> _typeMetadata = new Dictionary<Type, TypeMetadata>();
-
-        /// <summary>
-        /// Get the type metadata for the given type. The the metadata does not already exist inside
-        /// the cache, then it is created.
-        /// </summary>
-        private TypeMetadata GetMetadata(Type type) {
-            // Try and find it in the cache
-            TypeMetadata metadata;
-            if (_typeMetadata.TryGetValue(type, out metadata)) {
-                return metadata;
-            }
-
-            // Its not in the cache; create it
-            metadata = new TypeMetadata(type);
-            _typeMetadata[type] = metadata;
-            return metadata;
-        }
-
-        /// <summary>
         /// Initializes a new instance of the SerializationConverter class. Adds default importers
         /// and exporters by default; the default converters are used for converting the primitive
         /// types that SerializedData maps directly to.
@@ -190,7 +167,7 @@ namespace Neon.Serialization {
             // There is no user-defined exporting function. We'll have to use reflection to populate
             // the fields of the serialized value and hope that we did a good enough job.
 
-            TypeMetadata metadata = GetMetadata(instanceType);
+            TypeMetadata metadata = TypeCache.GetMetadata(instanceType);
 
             // If the type needs to support inheritance, and there was not an exporter, then
             // register the automatic one and rerun the export process.
@@ -276,7 +253,7 @@ namespace Neon.Serialization {
             // There is no user-defined importer function. We'll have to use reflection to populate
             // the fields of the object, and hope that we did a good enough job.
 
-            TypeMetadata metadata = GetMetadata(type);
+            TypeMetadata metadata = TypeCache.GetMetadata(type);
 
             // If the type needs to support inheritance, and there was not an importer, then
             // register the automatic one and rerun the import process.
