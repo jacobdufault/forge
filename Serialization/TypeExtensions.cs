@@ -17,18 +17,24 @@ namespace Neon.Serialization {
         /// <returns>The actual interface type that the type contains, or null if there is no
         /// implementation of the given interfaceType on type.</returns>
         public static Type GetInterface(this Type type, Type interfaceType) {
+            if (interfaceType.IsGenericType) {
+                interfaceType = interfaceType.GetGenericTypeDefinition();
+            }
+
             while (type != null) {
                 foreach (var iface in type.GetInterfaces()) {
-                    if (interfaceType.IsGenericTypeDefinition) {
-                        if (iface.GetGenericTypeDefinition() == interfaceType) {
+                    if (iface.IsGenericType) {
+                        if (interfaceType == iface.GetGenericTypeDefinition()) {
                             return iface;
                         }
                     }
 
-                    else if (iface == interfaceType) {
+                    else if (interfaceType == iface) {
                         return iface;
                     }
                 }
+
+                type = type.BaseType;
             }
 
             return null;
