@@ -344,8 +344,26 @@ namespace Neon.Serialization.Tests {
             dict["5"] = 5;
             RunCollectionImportExportTest(dict);
 
-
             Dictionary<MyEnum, string> dict2 = new Dictionary<MyEnum, string>();
+            dict2[MyEnum.MyEnum0] = "0";
+            dict2[MyEnum.MyEnum1] = "1";
+            dict2[MyEnum.MyEnum2] = "2";
+            dict2[MyEnum.MyEnum3] = "3";
+            dict2[MyEnum.MyEnum4] = "4";
+            RunCollectionImportExportTest(dict2);
+        }
+
+        [TestMethod]
+        public void ImportExportSortedDictionary() {
+            SortedDictionary<int, string> dict = new SortedDictionary<int, string>();
+            dict[1] = "1";
+            dict[2] = "2";
+            dict[3] = "3";
+            dict[4] = "4";
+            dict[5] = "5";
+            RunCollectionImportExportTest(dict);
+
+            SortedDictionary<MyEnum, string> dict2 = new SortedDictionary<MyEnum, string>();
             dict2[MyEnum.MyEnum0] = "0";
             dict2[MyEnum.MyEnum1] = "1";
             dict2[MyEnum.MyEnum2] = "2";
