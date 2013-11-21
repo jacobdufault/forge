@@ -175,13 +175,13 @@ namespace Neon.Collections {
         }
 
         IEnumerator<T> IEnumerable<T>.GetEnumerator() {
-            for (int i = 0; i < _items.Length; ++i) {
+            for (int i = 0; i < Length; ++i) {
                 yield return _items[i];
             }
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() {
-            for (int i = 0; i < _items.Length; ++i) {
+            for (int i = 0; i < Length; ++i) {
                 yield return _items[i];
             }
         }
