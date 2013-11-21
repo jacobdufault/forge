@@ -54,25 +54,23 @@ namespace Neon.Serialization {
         public SerializationConverter(bool addDefaultConverters = true) {
             // Register default converters
             if (addDefaultConverters) {
-                // use implicit conversion operators importers convert a serialized value to a
-                // non-serialized value
-                AddImporter(typeof(byte), value => value.AsReal.AsInt);
-                AddImporter(typeof(short), value => value.AsReal.AsInt);
-                AddImporter(typeof(int), value => value.AsReal.AsInt);
-                AddImporter(typeof(Real), value => value.AsReal);
-                AddImporter(typeof(bool), value => value.AsBool);
-                AddImporter(typeof(string), value => value.AsString);
-                AddImporter(typeof(SerializedData), value => value);
+                // add importers for some of the primitive types
+                AddImporter<byte>(data => (byte)data.AsReal.AsInt);
+                AddImporter<short>(data => (short)data.AsReal.AsInt);
+                AddImporter<int>(data => data.AsReal.AsInt);
+                AddImporter<Real>(data => data.AsReal);
+                AddImporter<bool>(data => data.AsBool);
+                AddImporter<string>(data => data.AsString);
+                AddImporter<SerializedData>(data => data);
 
-                // use implicit conversion operators exporters convert the input type to a
-                // serialized value
-                AddExporter(typeof(byte), value => new SerializedData((Real)value));
-                AddExporter(typeof(short), value => new SerializedData((Real)value));
-                AddExporter(typeof(int), value => new SerializedData(Real.CreateDecimal((long)(int)value)));
-                AddExporter(typeof(Real), value => new SerializedData((Real)value));
-                AddExporter(typeof(bool), value => new SerializedData((bool)value));
-                AddExporter(typeof(string), value => new SerializedData((string)value));
-                AddExporter(typeof(SerializedData), value => (SerializedData)value);
+                // add exporters for some of the more primitive types
+                AddExporter<byte>(value => new SerializedData(Real.CreateDecimal(value)));
+                AddExporter<short>(value => new SerializedData(Real.CreateDecimal(value)));
+                AddExporter<int>(value => new SerializedData(Real.CreateDecimal(value)));
+                AddExporter<Real>(value => new SerializedData(value));
+                AddExporter<bool>(value => new SerializedData(value));
+                AddExporter<string>(value => new SerializedData(value));
+                AddExporter<SerializedData>(value => value);
             }
         }
 
@@ -96,12 +94,31 @@ namespace Neon.Serialization {
         /// Registers a converter that will convert SerializedData instances to their respective
         /// destination types.
         /// </summary>
+        /// <param name="importer">A function that takes instances of serialized data and converts
+        /// them to instances of type T.</param>
+        public void AddImporter<T>(Func<SerializedData, T> importer) {
+            AddImporter(typeof(T), data => importer(data));
+        }
+
+        /// <summary>
+        /// Registers a converter that will convert SerializedData instances to their respective
+        /// destination types.
+        /// </summary>
         public void AddImporter(Type destinationType, Importer importer) {
             if (_importers.ContainsKey(destinationType)) {
                 throw new InvalidOperationException("There is already a registered importer for type " + destinationType);
             }
 
             _importers[destinationType] = importer;
+        }
+
+        /// <summary>
+        /// Adds an exporter that takes instances of data and converts them to serialized data.
+        /// </summary>
+        /// <param name="exporter">A function that takes instances of data and converts them to
+        /// serialized data</param>
+        public void AddExporter<T>(Func<T, SerializedData> exporter) {
+            AddExporter(typeof(T), instance => exporter((T)instance));
         }
 
         /// <summary>
