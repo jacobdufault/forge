@@ -167,7 +167,8 @@ namespace Neon.Serialization {
             }
 
             if (instanceType.IsInstanceOfType(instance) == false) {
-                throw new ArgumentException("The instance is not an instance of the export type");
+                throw new ArgumentException("The instance is not an instance of the export type; " +
+                    "instance=" + instance + ", instanceType=" + instanceType);
             }
 
             // If there is a user-defined exporter for the given type, then use it instead of doing
