@@ -7,7 +7,7 @@ namespace Neon.Collections {
     /// <summary>
     /// An unordered collection of items.
     /// </summary>
-    public class Bag<T> : IList<T>, ICollection<T>, IEnumerable<T>, IEnumerable {
+    public class Bag<T> : IList<T>, ICollection<T>, ICollection, IEnumerable<T>, IEnumerable {
         private T[] _items;
 
         public Bag()
@@ -184,6 +184,26 @@ namespace Neon.Collections {
             for (int i = 0; i < _items.Length; ++i) {
                 yield return _items[i];
             }
+        }
+        #endregion
+
+        #region ICollection Interface
+        void ICollection.CopyTo(Array array, int index) {
+            ((ICollection<T>)this).CopyTo((T[])array, index);
+        }
+
+        int ICollection.Count {
+            get {
+                return ((ICollection<T>)this).Count;
+            }
+        }
+
+        bool ICollection.IsSynchronized {
+            get { return false; }
+        }
+
+        object ICollection.SyncRoot {
+            get { return this; }
         }
         #endregion
     }
