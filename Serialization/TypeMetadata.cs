@@ -18,7 +18,10 @@ namespace Neon.Serialization {
         /// <summary>
         /// The member info that we read to and write from.
         /// </summary>
-        private MemberInfo _info;
+        public MemberInfo MemberInfo {
+            get;
+            private set;
+        }
 
         /// <summary>
         /// The cached name of the property/field.
@@ -30,12 +33,12 @@ namespace Neon.Serialization {
         /// of this metadata structure.
         /// </summary>
         public void Write(object context, object value) {
-            if (_info is PropertyInfo) {
-                ((PropertyInfo)_info).SetValue(context, value, new object[] { });
+            if (MemberInfo is PropertyInfo) {
+                ((PropertyInfo)MemberInfo).SetValue(context, value, new object[] { });
             }
 
             else {
-                ((FieldInfo)_info).SetValue(context, value);
+                ((FieldInfo)MemberInfo).SetValue(context, value);
             }
         }
 
@@ -44,12 +47,12 @@ namespace Neon.Serialization {
         /// of this metadata structure.
         /// </summary>
         public object Read(object context) {
-            if (_info is PropertyInfo) {
-                return ((PropertyInfo)_info).GetValue(context, new object[] { });
+            if (MemberInfo is PropertyInfo) {
+                return ((PropertyInfo)MemberInfo).GetValue(context, new object[] { });
             }
 
             else {
-                return ((FieldInfo)_info).GetValue(context);
+                return ((FieldInfo)MemberInfo).GetValue(context);
             }
         }
 
@@ -63,7 +66,7 @@ namespace Neon.Serialization {
         /// Initializes a new instance of the PropertyMetadata class from a property member.
         /// </summary>
         public PropertyMetadata(PropertyInfo property) {
-            _info = property;
+            MemberInfo = property;
             Name = property.Name;
             StorageType = property.PropertyType;
         }
@@ -72,9 +75,39 @@ namespace Neon.Serialization {
         /// Initializes a new instance of the PropertyMetadata class from a field member.
         /// </summary>
         public PropertyMetadata(FieldInfo field) {
-            _info = field;
+            MemberInfo = field;
             Name = field.Name;
             StorageType = field.FieldType;
+        }
+
+        public override bool Equals(System.Object obj) {
+            // If parameter is null return false.
+            if (obj == null) {
+                return false;
+            }
+
+            // If parameter cannot be cast to Point return false.
+            PropertyMetadata p = obj as PropertyMetadata;
+            if ((System.Object)p == null) {
+                return false;
+            }
+
+            // Return true if the fields match:
+            return (StorageType == p.StorageType) && (Name == p.Name);
+        }
+
+        public bool Equals(PropertyMetadata p) {
+            // If parameter is null return false:
+            if ((object)p == null) {
+                return false;
+            }
+
+            // Return true if the fields match:
+            return (StorageType == p.StorageType) && (Name == p.Name);
+        }
+
+        public override int GetHashCode() {
+            return StorageType.GetHashCode() ^ Name.GetHashCode();
         }
     }
 
@@ -219,8 +252,9 @@ namespace Neon.Serialization {
             // If we're not one of those three types, then we will be using Properties to assign
             // data to ourselves, so we want to lookup said information
             if (IsDictionary == false && IsArray == false && IsList == false) {
-                _properties = new List<PropertyMetadata>();
-                CollectProperties(type, _properties);
+                HashSet<PropertyMetadata> properties = new HashSet<PropertyMetadata>();
+                CollectProperties(type, properties);
+                _properties = new List<PropertyMetadata>(properties);
             }
         }
 
@@ -231,7 +265,7 @@ namespace Neon.Serialization {
         /// <param name="type">The type to process. This method will recurse up the type's
         /// inheritance hierarchy</param>
         /// <param name="properties">The list of properties that should be appended to</param>
-        private void CollectProperties(Type type, List<PropertyMetadata> properties) {
+        private static void CollectProperties(Type type, HashSet<PropertyMetadata> properties) {
             BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance;
 
             foreach (PropertyInfo property in type.GetProperties(flags)) {
@@ -269,7 +303,7 @@ namespace Neon.Serialization {
                     }
                 }
 
-                _properties.Add(new PropertyMetadata(property));
+                properties.Add(new PropertyMetadata(property));
 
             loop_end: { }
             }
@@ -305,7 +339,7 @@ namespace Neon.Serialization {
                     continue;
                 }
 
-                _properties.Add(new PropertyMetadata(field));
+                properties.Add(new PropertyMetadata(field));
 
             loop_end: { }
             }
