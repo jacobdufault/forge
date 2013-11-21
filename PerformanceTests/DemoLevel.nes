@@ -1,6 +1,7 @@
 {
     DllInjections: []
-    SystemProviders: []
+    SystemProviders: [
+    ]
     CurrentUpdateNumber: 0
     Templates: [
         {
@@ -27,10 +28,13 @@
     SingletonEntity: {
         PrettyName: "Global Entity"
         UniqueId: 0
-        Data: []
-        IsAdding: false
+        Data: [
+        ]
+        IsAdding: true
         IsRemoving: false
     }
-    Entities: []
+    Entities: [
+        
+    ]
     SavedSystemStates: []
 }

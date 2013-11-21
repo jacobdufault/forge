@@ -56,6 +56,10 @@
       <Project>{f3d00c86-f3dc-490e-8a49-744c30c01117}</Project>
       <Name>Entities</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Serialization\Serialization.csproj">
+      <Project>{b97ca54f-0428-4853-af39-5ed8375a0262}</Project>
+      <Name>Serialization</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Utilities\Utilities.csproj">
       <Project>{25db9f16-ecae-4a3f-b3c3-5794b8288587}</Project>
       <Name>Utilities</Name>

@@ -110,7 +110,7 @@ namespace Neon.Performance.Tests {
             Console.WriteLine("...loading");
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
-            Tuple<EntityManager, LoadedMetadata> loadedLevel = Loader.LoadEntityManager("../../Level.nes");
+            Tuple<EntityManager, LoadedMetadata> loadedLevel = Loader.LoadEntityManager("../../DemoLevel.nes");
             stopwatch.Stop();
             Console.WriteLine("Done; loading the level took " + stopwatch.ElapsedTicks + " ticks (or " + stopwatch.ElapsedMilliseconds + "ms)");
             EntityManager entityManager = loadedLevel.Item1;
