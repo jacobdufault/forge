@@ -1,6 +1,5 @@
 ﻿using Neon.Utilities;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -80,6 +79,10 @@ namespace Neon.Serialization {
             StorageType = field.FieldType;
         }
 
+        /// <summary>
+        /// Determines whether the specified see cref="System.Object" }, is equal to this instance.
+        /// </summary>
+        /// <param name="obj">The <see cref="System.Object" /> to compare with this instance.</param> <returns> <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>. </returns>
         public override bool Equals(System.Object obj) {
             // If parameter is null return false.
             if (obj == null) {
@@ -96,6 +99,10 @@ namespace Neon.Serialization {
             return (StorageType == p.StorageType) && (Name == p.Name);
         }
 
+        /// <summary>
+        /// Determines whether the specified see cref="System.Object" }, is equal to this instance.
+        /// </summary>
+        /// <param name="obj">The <see cref="System.Object" /> to compare with this instance.</param> <returns> <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>. </returns>
         public bool Equals(PropertyMetadata p) {
             // If parameter is null return false:
             if ((object)p == null) {
@@ -106,6 +113,11 @@ namespace Neon.Serialization {
             return (StorageType == p.StorageType) && (Name == p.Name);
         }
 
+        /// <summary>
+        /// Returns a hash code for this instance.
+        /// </summary>
+        /// <returns>A hash code for this instance, suitable for use in hashing algorithms and data
+        /// structures like a hash table.</returns>
         public override int GetHashCode() {
             return StorageType.GetHashCode() ^ Name.GetHashCode();
         }
@@ -133,39 +145,11 @@ namespace Neon.Serialization {
         }
 
         /// <summary>
-        /// Assuming that this object is a dictionary, this writes a key/value pair to the
-        /// dictionary.
+        /// Appends a value to the end of the array or collection. If the metadata is modeling an
+        /// array, then the value is inserted at indexHint, which *should* be equal to
+        /// ((Array)context).Length.
         /// </summary>
-        /// <remarks>
-        /// This throws an exception if the context (as a dictionary) already has a value for the
-        /// given key.
-        /// </remarks>
-        public void AssignKeyValue(object context, object key, object value) {
-            if (IsDictionary) {
-                IDictionary dictionary = (IDictionary)context;
-
-                if (dictionary.Contains(key)) {
-                    throw new InvalidOperationException("The dictionary already contains a " +
-                        "value for the given key \"" + key + "\"");
-                }
-
-                dictionary[key] = value;
-            }
-            else {
-                throw new InvalidOperationException("Cannot assign a key/value slot to a " +
-                    "non-dictionary type");
-            }
-        }
-
-        /// <summary>
-        /// If the context is an array, then the given value is inserted at the given indexHint. If
-        /// the context is a list, then the given value is inserted at the end of the list.
-        /// </summary>
-        /// <remarks>
-        /// The array does not have storage available at the given index, then it will be resized so
-        /// that it contains exactly the right about of storage to contain indexHint.
-        /// </remarks>
-        public void AssignListSlot(ref object context, object value, int indexHint) {
+        public void AppendValue(ref object context, object value, int indexHint) {
             if (IsArray) {
                 Array array = (Array)context;
 
@@ -180,9 +164,9 @@ namespace Neon.Serialization {
                 array.SetValue(value, indexHint);
                 context = array;
             }
-            else if (IsList) {
-                IList list = (IList)context;
-                list.Add(value);
+            else if (IsCollection) {
+                _collectionAddMethod.Invoke(context, BindingFlags.ExactBinding, null,
+                    new object[] { value }, null);
             }
             else {
                 throw new InvalidOperationException("Cannot assign a list slot to a non-list type");
@@ -227,31 +211,26 @@ namespace Neon.Serialization {
                     "have a custom converter; inheritance support consumes the converter");
             }
 
-            // determine if we are a dictionary, list, or array
-            IsDictionary = type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>);
-
+            // determine if we are a collection or array; recall that arrays implement the
+            // ICollection interface, however
             IsArray = type.IsArray;
-            IsList = type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>);
-            if (IsArray && IsList) {
-                throw new InvalidOperationException("Type that is both a list an and array is " +
-                    "not supported by the serialization metadata model");
-            }
+            IsCollection = IsArray == false && type.IsImplementationOf(typeof(ICollection<>));
 
-            // If we're a list or array, get the generic type definition so that client code can
-            // determine how to deserialize child elements
-            if (IsList) {
-                _elementType = type.GetGenericArguments()[0];
+            // If we're a collection or array, get the generic type definition so that client code
+            // can determine how to deserialize child elements
+            if (IsCollection) {
+                Type collectionType = type.GetInterface(typeof(ICollection<>));
+
+                _elementType = collectionType.GetGenericArguments()[0];
+                _collectionAddMethod = collectionType.GetMethod("Add");
             }
             else if (IsArray) {
                 _elementType = type.GetElementType();
             }
-            else if (IsDictionary) {
-                _elementType = type.GetGenericArguments()[1];
-            }
 
             // If we're not one of those three types, then we will be using Properties to assign
             // data to ourselves, so we want to lookup said information
-            if (IsDictionary == false && IsArray == false && IsList == false) {
+            else {
                 HashSet<PropertyMetadata> properties = new HashSet<PropertyMetadata>();
                 CollectProperties(type, properties);
                 _properties = new List<PropertyMetadata>(properties);
@@ -359,7 +338,8 @@ namespace Neon.Serialization {
         }
 
         /// <summary>
-        /// If this type needs to support inheritance, then this will be true.
+        /// If this type needs to support inheritance in serialization/deserialization, then this
+        /// will be true.
         /// </summary>
         public bool SupportsInheritance {
             get;
@@ -367,7 +347,8 @@ namespace Neon.Serialization {
         }
 
         /// <summary>
-        /// The type that this metadata is modeling.
+        /// The type that this metadata is modeling, ie, the type that the metadata was constructed
+        /// off of.
         /// </summary>
         public Type ReflectedType {
             get;
@@ -382,9 +363,9 @@ namespace Neon.Serialization {
         /// </summary>
         public Type ElementType {
             get {
-                if (IsArray == false && IsList == false && IsDictionary == false) {
-                    throw new InvalidOperationException("Unable to get the ListElementType of a " +
-                        "non-list/non-dictionary metadata object");
+                if (IsCollection == false && IsArray == false) {
+                    throw new InvalidOperationException("Unable to get the ElementType of a " +
+                        "metadata object that is not a collection or an array");
                 }
 
                 return _elementType;
@@ -393,21 +374,19 @@ namespace Neon.Serialization {
         private Type _elementType;
 
         /// <summary>
-        /// True if the base type is a dictionary. If true, accessing Properties will throw an
+        /// True if the base type is a collection. If true, accessing Properties will throw an
         /// exception.
         /// </summary>
-        public bool IsDictionary {
+        public bool IsCollection {
             get;
             private set;
         }
 
         /// <summary>
-        /// True if the base type is a list. If true, accessing Properties will throw an exception.
+        /// The cached Add method in ICollection[T]. This only contains a value if IsCollection is
+        /// true.
         /// </summary>
-        public bool IsList {
-            get;
-            private set;
-        }
+        private MethodInfo _collectionAddMethod;
 
         /// <summary>
         /// True if the base type is an array. If true, accessing Properties will throw an
@@ -424,8 +403,8 @@ namespace Neon.Serialization {
         /// </summary>
         public List<PropertyMetadata> Properties {
             get {
-                if (IsDictionary || IsList || IsArray) {
-                    throw new InvalidOperationException("A type that is a dictionary or list " +
+                if (IsCollection || IsArray) {
+                    throw new InvalidOperationException("A type that is a collection or an array" +
                         "does not have properties");
                 }
 

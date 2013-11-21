@@ -50,6 +50,7 @@
     <Compile Include="SerializedData.cs" />
     <Compile Include="SerializationConverter.cs" />
     <Compile Include="TypeCache.cs" />
+    <Compile Include="TypeExtensions.cs" />
     <Compile Include="TypeMetadata.cs" />
   </ItemGroup>
   <ItemGroup>

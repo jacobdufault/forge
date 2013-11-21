@@ -205,7 +205,7 @@ namespace Neon.Serialization {
             }
 
             // If it's an array or a list, we have special logic for processing
-            if (metadata.IsArray || metadata.IsList) {
+            if (metadata.IsArray || metadata.IsCollection) {
                 List<SerializedData> output = new List<SerializedData>();
 
                 // luckily both arrays and lists are enumerable, so we'll use that interface when
@@ -220,23 +220,6 @@ namespace Neon.Serialization {
                 }
 
                 return new SerializedData(output);
-            }
-
-            // If the object is a dictionary, then we populate it with all fields in the serialized
-            // value
-            else if (metadata.IsDictionary) {
-                var dict = new Dictionary<string, SerializedData>();
-
-                var enumerable = (IEnumerable<KeyValuePair<string, SerializedData>>)instance;
-                foreach (var item in enumerable) {
-                    // make sure we export the under the element type of the dictionary; if we
-                    // don't, and say, the element type is an interface, and we export under the
-                    // instance type, then deserialization will not work as expected (because we'll
-                    // be trying to deserialize an interface).
-                    dict[item.Key] = Export(metadata.ElementType, item.Value);
-                }
-
-                return new SerializedData(dict);
             }
 
             // This is not an array or list; populate from reflected properties
@@ -309,24 +292,13 @@ namespace Neon.Serialization {
 
             object instance = metadata.CreateInstance();
 
-            // If it's an array or a list, we have special logic for processing
-            if (metadata.IsArray || metadata.IsList) {
+            // If it's an array or a collection, we have special logic for processing
+            if (metadata.IsArray || metadata.IsCollection) {
                 IList<SerializedData> items = serializedData.AsList;
 
                 for (int i = 0; i < items.Count; ++i) {
                     object indexedObject = Import(metadata.ElementType, items[i]);
-                    metadata.AssignListSlot(ref instance, indexedObject, i);
-                }
-            }
-
-            // If the object is a dictionary, then we populate it with all fields in the serialized
-            // value
-            else if (metadata.IsDictionary) {
-                IDictionary<string, SerializedData> dict = serializedData.AsDictionary;
-                foreach (var entry in dict) {
-                    string key = entry.Key;
-                    object value = Import(metadata.ElementType, entry.Value);
-                    metadata.AssignKeyValue(instance, key, value);
+                    metadata.AppendValue(ref instance, indexedObject, i);
                 }
             }
 

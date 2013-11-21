@@ -1,14 +1,26 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neon.Serialization;
 using Neon.Utilities;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace Neon.Serialization.Tests {
-    enum MyEnum {
+    internal enum MyEnum {
         MyEnum0,
         MyEnum1,
         MyEnum2,
         MyEnum3,
         MyEnum4
+    }
+
+    internal class EnumContainer {
+        public MyEnum EnumA;
+        public MyEnum EnumB;
+
+        public override bool Equals(object obj) {
+            if (obj is EnumContainer == false) return false;
+            EnumContainer ec = (EnumContainer)obj;
+            return EnumA == ec.EnumA && EnumB == ec.EnumB;
+        }
     }
 
     internal interface IInterface { }
@@ -60,7 +72,6 @@ namespace Neon.Serialization.Tests {
         }
     }
 
-
     [SerializationRequireCustomConverter]
     internal class RequireCustomConverter {
     }
@@ -77,6 +88,28 @@ namespace Neon.Serialization.Tests {
 
     [TestClass]
     public class TypeConversionTests {
+        /// <summary>
+        /// Helper method that exports the given instance, imports the exported data, and then
+        /// asserts that the imported instance is equal to the original instance using
+        /// Assert.AreEqual.
+        /// </summary>
+        private void RunImportExportTest<T>(T t0) {
+            SerializedData exported = (new SerializationConverter()).Export(t0);
+            T imported = (new SerializationConverter()).Import<T>(exported);
+            Assert.AreEqual(t0, imported);
+        }
+
+        /// <summary>
+        /// Helper method that exports the given instance, imports the exported data, and then
+        /// asserts that the imported instance is equal to the original instance using
+        /// CollectionAssert.AreEqual.
+        /// </summary>
+        private void RunCollectionImportExportTest<TCollection>(TCollection collection) where TCollection : ICollection {
+            SerializedData exported = (new SerializationConverter()).Export(collection);
+            TCollection imported = (new SerializationConverter()).Import<TCollection>(exported);
+            CollectionAssert.AreEqual(collection, imported);
+        }
+
         [TestMethod]
         [ExpectedException(typeof(RequiresCustomConverterException))]
         public void RequireCustomConverterImport() {
@@ -223,21 +256,41 @@ namespace Neon.Serialization.Tests {
             Assert.AreEqual(serializedString, reserializedString.PrettyPrinted);
         }
 
-        private void RunEnumTest<T>(T t0) {
-            SerializedData exported = (new SerializationConverter()).Export(t0);
-            T imported = (new SerializationConverter()).Import<T>(exported);
-            Assert.AreEqual(t0, imported);            
-        }
-
         [TestMethod]
         public void ImportExportEnums() {
-            RunEnumTest(MyEnum.MyEnum0);
-            RunEnumTest(MyEnum.MyEnum1);
-            RunEnumTest(MyEnum.MyEnum2);
-            RunEnumTest(MyEnum.MyEnum3);
-            RunEnumTest(MyEnum.MyEnum4);
+            RunImportExportTest(MyEnum.MyEnum0);
+            RunImportExportTest(MyEnum.MyEnum1);
+            RunImportExportTest(MyEnum.MyEnum2);
+            RunImportExportTest(MyEnum.MyEnum3);
+            RunImportExportTest(MyEnum.MyEnum4);
+
+            RunImportExportTest(new EnumContainer() {
+                EnumA = MyEnum.MyEnum0,
+                EnumB = MyEnum.MyEnum1
+            });
+            RunImportExportTest(new EnumContainer() {
+                EnumA = MyEnum.MyEnum1,
+                EnumB = MyEnum.MyEnum1
+            });
+            RunImportExportTest(new EnumContainer() {
+                EnumA = MyEnum.MyEnum4,
+                EnumB = MyEnum.MyEnum2
+            });
+            RunImportExportTest(new EnumContainer() {
+                EnumA = MyEnum.MyEnum0,
+                EnumB = MyEnum.MyEnum0
+            });
+
+            Dictionary<MyEnum, string> dict = new Dictionary<MyEnum, string>();
+            dict.Add(MyEnum.MyEnum0, "ok");
+            RunCollectionImportExportTest(dict);
         }
 
+        /// <summary>
+        /// Runs an inheritance test. The generic parameter is the interface type (the base type in
+        /// the inheritance tree), instanceA is a derived class of the interface type, and instanceB
+        /// is another derived type of the interface type.
+        /// </summary>
         private void RunInheritanceTest<InterfaceType>(InterfaceType instanceA, InterfaceType instanceB) {
             SerializedData exported = (new SerializationConverter()).Export(instanceA);
             InterfaceType imported = (new SerializationConverter()).Import<InterfaceType>(exported);
@@ -251,8 +304,14 @@ namespace Neon.Serialization.Tests {
         }
 
         [TestMethod]
-        public void ImportExportInterfaces() {
-            RunInheritanceTest<IInterface>(new DerivedInterfaceA(), new DerivedInterfaceB());
+        public void InterfaceInheritance() {
+            RunInheritanceTest<IInterface>(
+                new DerivedInterfaceA(),
+                new DerivedInterfaceB());
+        }
+
+        [TestMethod]
+        public void AbstractClassInheritance() {
             RunInheritanceTest<AbstractClass>(
                 new DerivedAbstractClassA() {
                     A = "aA",
@@ -261,6 +320,10 @@ namespace Neon.Serialization.Tests {
                     A = "bA",
                     C = "bC"
                 });
+        }
+
+        [TestMethod]
+        public void BaseClassInheritance() {
             RunInheritanceTest<BaseClassWithInheritance>(
                 new DerivedBaseClassA() {
                     A = "aA",
@@ -269,6 +332,26 @@ namespace Neon.Serialization.Tests {
                     A = "bA",
                     C = "bC"
                 });
+        }
+
+        [TestMethod]
+        public void ImportExportDictionary() {
+            Dictionary<string, int> dict = new Dictionary<string, int>();
+            dict["1"] = 1;
+            dict["2"] = 2;
+            dict["3"] = 3;
+            dict["4"] = 4;
+            dict["5"] = 5;
+            RunCollectionImportExportTest(dict);
+
+
+            Dictionary<MyEnum, string> dict2 = new Dictionary<MyEnum, string>();
+            dict2[MyEnum.MyEnum0] = "0";
+            dict2[MyEnum.MyEnum1] = "1";
+            dict2[MyEnum.MyEnum2] = "2";
+            dict2[MyEnum.MyEnum3] = "3";
+            dict2[MyEnum.MyEnum4] = "4";
+            RunCollectionImportExportTest(dict2);
         }
     }
 }
