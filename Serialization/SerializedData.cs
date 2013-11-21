@@ -19,34 +19,58 @@ namespace Neon.Serialization {
         private object _value;
 
         #region Constructors
+        /// <summary>
+        /// Creates a SerializedData instance that holds null.
+        /// </summary>
         public SerializedData() {
             _value = null;
         }
 
+        /// <summary>
+        /// Creates a SerializedData instance that holds a boolean.
+        /// </summary>
         public SerializedData(bool boolean) {
             _value = boolean;
         }
 
+        /// <summary>
+        /// Creates a SerializedData instance that holds a real.
+        /// </summary>
         public SerializedData(Real real) {
             _value = real;
         }
 
+        /// <summary>
+        /// Creates a SerializedData instance that holds a string.
+        /// </summary>
         public SerializedData(string str) {
             _value = str;
         }
 
+        /// <summary>
+        /// Creates a SerializedData instance that holds a dictionary of values.
+        /// </summary>
         public SerializedData(Dictionary<string, SerializedData> dict) {
             _value = dict;
         }
 
+        /// <summary>
+        /// Creates a SerializedData instance that holds a list of values.
+        /// </summary>
         public SerializedData(List<SerializedData> list) {
             _value = list;
         }
 
+        /// <summary>
+        /// Helper method to create a SerialziedData instance that holds a dictionary.
+        /// </summary>
         public static SerializedData CreateDictionary() {
             return new SerializedData(new Dictionary<string, SerializedData>());
         }
 
+        /// <summary>
+        /// Helper method to create a SerialziedData instance that holds a list.
+        /// </summary>
         public static SerializedData CreateList() {
             return new SerializedData(new List<SerializedData>());
         }
@@ -320,6 +344,9 @@ namespace Neon.Serialization {
         #endregion
 
         #region Equality Comparisons
+        /// <summary>
+        /// Determines whether the specified object is equal to the current object.
+        /// </summary>
         public override bool Equals(Object obj) {
             if (obj == null) {
                 return false;
@@ -337,6 +364,9 @@ namespace Neon.Serialization {
             return _value.Equals(v._value);
         }
 
+        /// <summary>
+        /// Determines whether the specified object is equal to the current object.
+        /// </summary>
         public bool Equals(SerializedData v) {
             if (v == null) {
                 return false;
@@ -349,6 +379,9 @@ namespace Neon.Serialization {
             return _value.Equals(v._value);
         }
 
+        /// <summary>
+        /// Returns true iff a == b.
+        /// </summary>
         public static bool operator ==(SerializedData a, SerializedData b) {
             // If both are null, or both are same instance, return true.
             if (ReferenceEquals(a, b)) {
@@ -363,10 +396,18 @@ namespace Neon.Serialization {
             return a.Equals(b);
         }
 
+        /// <summary>
+        /// Returns true iff a != b.
+        /// </summary>
         public static bool operator !=(SerializedData a, SerializedData b) {
             return !(a == b);
         }
 
+        /// <summary>
+        /// Returns a hash code for this instance.
+        /// </summary>
+        /// <returns>A hash code for this instance, suitable for use in hashing algorithms and data
+        /// structures like a hash table.</returns>
         public override int GetHashCode() {
             return _value.GetHashCode();
         }

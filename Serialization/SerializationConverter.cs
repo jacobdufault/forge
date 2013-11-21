@@ -5,22 +5,6 @@ using System.Collections.Generic;
 
 namespace Neon.Serialization {
     /// <summary>
-    /// Exception thrown when a type that was imported/exported requires a custom converter, but one
-    /// was not registered.
-    /// </summary>
-    public sealed class RequiresCustomConverterException : Exception {
-        private static string CreateMessage(Type type, bool importing) {
-            return "The given type " + type + " requires a custom " +
-                (importing ? "importer" : "exporter") + " (based on annotations), but one was " +
-                "not found.";
-        }
-
-        internal RequiresCustomConverterException(Type type, bool importing)
-            : base(CreateMessage(type, importing)) {
-        }
-    }
-
-    /// <summary>
     /// Converts a given serialized value into an instance of an object.
     /// </summary>
     /// <param name="serializedData">The serialized value to convert.</param>
@@ -158,6 +142,8 @@ namespace Neon.Serialization {
         /// <param name="instanceType">The type to use when we export instance. instance *must* be
         /// an instance of instanceType, though instanceType can be anywhere on the hierarchy for
         /// instance (for example, it could be typeof(object).</param>
+        /// <param name="instance">The object instance to export. If it is not null, then it must be
+        /// an instance of instanceType</param>
         public SerializedData Export(Type instanceType, object instance) {
             Log<SerializationConverter>.Info("Exporting " + instance + " with type " + instanceType);
 
@@ -199,12 +185,12 @@ namespace Neon.Serialization {
                 throw new RequiresCustomConverterException(instanceType, importing: false);
             }
 
-            // If it's an array or a list, we have special logic for processing
+            // If it's an array or a collection, we have special logic for processing
             if (metadata.IsArray || metadata.IsCollection) {
                 List<SerializedData> output = new List<SerializedData>();
 
-                // luckily both arrays and lists are enumerable, so we'll use that interface when
-                // outputting the object
+                // luckily both arrays and collections are enumerable, so we'll use that interface
+                // when outputting the object
                 IEnumerable enumerator = (IEnumerable)instance;
                 foreach (object item in enumerator) {
                     // make sure we export under the element type of the list; if we don't, and say,
@@ -334,13 +320,12 @@ namespace Neon.Serialization {
         /// This method is exposed in case the base type cannot be modified but needs to support
         /// inheritance, but is not abstract not an interface.
         /// </remarks>
-        /// <typeparam name="BaseType">The type of object to support inheritance serialization
-        /// for</typeparam>
+        /// <param name="interfaceType">The type of object to support inheritance serialization
+        /// for</param>
         public void EnableSupportForInheritance(Type interfaceType) {
             // The serialization format is:
             //
             // {
-            // InstanceContent: { # looks like the top level for the base type }
             // DerivedType: "SomeNamespace.Type"
             // DerivedContent: { # looks like the top level for the serialized type }
             // }

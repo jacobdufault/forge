@@ -5,6 +5,9 @@ using System.Linq;
 using System.Text;
 
 namespace Neon.Serialization {
+    /// <summary>
+    /// Parses serialized data into instances of SerializedData.
+    /// </summary>
     public class Parser {
         internal string _input;
         internal int _start;
@@ -73,7 +76,6 @@ namespace Neon.Serialization {
             return p1 + p2 + p3 + p4;
         }
 
-
         private char UnescapeChar() {
             /* skip leading backslash '\' */
             switch (CurrentCharacter()) {
@@ -113,7 +115,7 @@ namespace Neon.Serialization {
             }
         }
 
-        SerializedData ParseTrue() {
+        private SerializedData ParseTrue() {
             if (CurrentCharacter() != 't') throw new ParseException("expected true", this);
             MoveNext();
             if (CurrentCharacter() != 'r') throw new ParseException("expected true", this);
@@ -126,7 +128,7 @@ namespace Neon.Serialization {
             return new SerializedData(true);
         }
 
-        SerializedData ParseFalse() {
+        private SerializedData ParseFalse() {
             if (CurrentCharacter() != 'f') throw new ParseException("expected false", this);
             MoveNext();
             if (CurrentCharacter() != 'a') throw new ParseException("expected false", this);
@@ -141,7 +143,7 @@ namespace Neon.Serialization {
             return new SerializedData(false);
         }
 
-        SerializedData ParseNull() {
+        private SerializedData ParseNull() {
             if (CurrentCharacter() != 'n') throw new ParseException("expected null", this);
             MoveNext();
             if (CurrentCharacter() != 'u') throw new ParseException("expected null", this);
@@ -166,7 +168,7 @@ namespace Neon.Serialization {
         /// Parses numbers that follow the regular expression [-+](\d+|\d*\.\d*)
         /// </summary>
         /// <returns></returns>
-        SerializedData ParseNumber() {
+        private SerializedData ParseNumber() {
             // determine if the result should be negative
             bool negative = false;
             if (CurrentCharacter() == '-' || CurrentCharacter() == '+') {
@@ -203,7 +205,7 @@ namespace Neon.Serialization {
             return new SerializedData(Real.CreateDecimal(leftValue, rightValue, end - start));
         }
 
-        string ParseKey() {
+        private string ParseKey() {
             StringBuilder result = new StringBuilder();
 
             while (CurrentCharacter() != ':') {
@@ -223,7 +225,7 @@ namespace Neon.Serialization {
             return result.ToString();
         }
 
-        SerializedData ParseString() {
+        private SerializedData ParseString() {
             if (CurrentCharacter() != '"') {
                 throw new ParseException("Attempt to parse string without leading \"", this);
             }
@@ -247,15 +249,13 @@ namespace Neon.Serialization {
                 MoveNext();
             }
 
-
             // skip '"'
             MoveNext();
 
             return new SerializedData(result.ToString());
         }
 
-
-        SerializedData ParseArray() {
+        private SerializedData ParseArray() {
             // skip '['
             MoveNext();
             SkipSpace();
@@ -275,9 +275,7 @@ namespace Neon.Serialization {
             return new SerializedData(result);
         }
 
-
-
-        SerializedData ParseObject() {
+        private SerializedData ParseObject() {
             // skip '{'
             SkipSpace();
             MoveNext();
@@ -309,7 +307,11 @@ namespace Neon.Serialization {
             return new SerializedData(result);
         }
 
-
+        /// <summary>
+        /// Parses the specified input. Throws a ParseException if parsing failed.
+        /// </summary>
+        /// <param name="input">The input to parse.</param>
+        /// <returns>The parsed input.</returns>
         public static SerializedData Parse(string input) {
             Parser context = new Parser(input);
             return context.RunParse();
@@ -320,7 +322,7 @@ namespace Neon.Serialization {
             _start = 0;
         }
 
-        SerializedData RunParse() {
+        private SerializedData RunParse() {
             SkipSpace();
 
             switch (CurrentCharacter()) {
@@ -348,6 +350,5 @@ namespace Neon.Serialization {
         }
 
     }
-
 
 }

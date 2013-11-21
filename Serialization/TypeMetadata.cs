@@ -80,12 +80,8 @@ namespace Neon.Serialization {
         }
 
         /// <summary>
-        /// Determines whether the specified see cref="System.Object" }, is equal to this instance.
+        /// Determines whether the specified object is equal to this one.
         /// </summary>
-        /// <param name="obj">The <see cref="System.Object" /> to compare with this
-        /// instance.</param>
-        /// <returns><c>true</c> if the specified <see cref="System.Object" /> is equal to this
-        /// instance; otherwise, <c>false</c>.</returns>
         public override bool Equals(System.Object obj) {
             // If parameter is null return false.
             if (obj == null) {
@@ -103,12 +99,8 @@ namespace Neon.Serialization {
         }
 
         /// <summary>
-        /// Determines whether the specified see cref="System.Object" }, is equal to this instance.
+        /// Determines whether the specified object is equal to this one.
         /// </summary>
-        /// <param name="obj">The <see cref="System.Object" /> to compare with this
-        /// instance.</param>
-        /// <returns><c>true</c> if the specified <see cref="System.Object" /> is equal to this
-        /// instance; otherwise, <c>false</c>.</returns>
         public bool Equals(PropertyMetadata p) {
             // If parameter is null return false:
             if ((object)p == null) {
