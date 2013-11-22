@@ -188,12 +188,5 @@ namespace Neon.Entities {
         int IQueryableEntity.UniqueId {
             get { return TemplateId; }
         }
-
-        private MetadataContainer<object> _metadata = new MetadataContainer<object>();
-        MetadataContainer<object> IQueryableEntity.Metadata {
-            get {
-                return _metadata;
-            }
-        }
     }
 }

@@ -110,10 +110,10 @@ namespace Neon.Entities.Tests {
     public class CallOrderTests {
         [TestMethod]
         public void Basic() {
-            EntityManager em = new EntityManager(new Entity());
+            EntityManager em = new EntityManager(EntityHelpers.CreateEntity());
             TriggerEventLogger trigger = new TriggerEventLogger();
             em.AddSystem(trigger);
-            IEntity entity = new Entity();
+            IEntity entity = EntityHelpers.CreateEntity();
             em.AddEntity(entity);
 
             em.UpdateWorld();
@@ -153,10 +153,10 @@ namespace Neon.Entities.Tests {
 
         [TestMethod]
         public void InitializeWithAddingData() {
-            EntityManager em = new EntityManager(new Entity());
+            EntityManager em = new EntityManager(EntityHelpers.CreateEntity());
             TriggerEventLogger trigger = new TriggerEventLogger();
             em.AddSystem(trigger);
-            IEntity entity = new Entity();
+            IEntity entity = EntityHelpers.CreateEntity();
             em.AddEntity(entity);
 
             entity.AddData<TestData0>();
@@ -182,10 +182,10 @@ namespace Neon.Entities.Tests {
 
         [TestMethod]
         public void EntityModifyBeforeUpdate() {
-            EntityManager em = new EntityManager(new Entity());
+            EntityManager em = new EntityManager(EntityHelpers.CreateEntity());
             TriggerEventLogger trigger = new TriggerEventLogger();
             em.AddSystem(trigger);
-            IEntity entity = new Entity();
+            IEntity entity = EntityHelpers.CreateEntity();
             TestData0 data = entity.AddData<TestData0>();
             entity.Modify<TestData0>();
             em.AddEntity(entity);
@@ -204,10 +204,10 @@ namespace Neon.Entities.Tests {
 
         [TestMethod]
         public void EntityRemoveNothing() {
-            EntityManager em = new EntityManager(new Entity());
+            EntityManager em = new EntityManager(EntityHelpers.CreateEntity());
             TriggerEventLogger trigger = new TriggerEventLoggerFilterRequiresData0();
             em.AddSystem(trigger);
-            IEntity entity = new Entity();
+            IEntity entity = EntityHelpers.CreateEntity();
             TestData0 data = entity.AddData<TestData0>();
             em.AddEntity(entity);
 
@@ -252,10 +252,10 @@ namespace Neon.Entities.Tests {
 
         [TestMethod]
         public void EntityModifyAfterUpdate() {
-            EntityManager em = new EntityManager(new Entity());
+            EntityManager em = new EntityManager(EntityHelpers.CreateEntity());
             TriggerEventLogger trigger = new TriggerEventLoggerFilterRequiresData0();
             em.AddSystem(trigger);
-            IEntity entity = new Entity();
+            IEntity entity = EntityHelpers.CreateEntity();
             TestData0 data = entity.AddData<TestData0>();
             em.AddEntity(entity);
 
@@ -297,10 +297,10 @@ namespace Neon.Entities.Tests {
 
         [TestMethod]
         public void InitializeBeforeAddingDataFilter() {
-            EntityManager em = new EntityManager(new Entity());
+            EntityManager em = new EntityManager(EntityHelpers.CreateEntity());
             TriggerEventLogger trigger = new TriggerEventLoggerFilterRequiresData0();
             em.AddSystem(trigger);
-            IEntity entity = new Entity();
+            IEntity entity = EntityHelpers.CreateEntity();
             TestData0 data = entity.AddData<TestData0>();
             em.AddEntity(entity);
 
@@ -325,7 +325,7 @@ namespace Neon.Entities.Tests {
             trigger.ClearEvents();
 
             // entity no longer has the data, it should get removed
-            ((Entity)entity).RemoveData<TestData0>();
+            entity.RemoveData<TestData0>();
             em.UpdateWorld();
             CollectionAssert.AreEqual(new TriggerEvent[] {
                 TriggerEvent.OnRemoved,
@@ -336,10 +336,10 @@ namespace Neon.Entities.Tests {
 
         [TestMethod]
         public void InitializeAfterAddingDataFilter() {
-            EntityManager em = new EntityManager(new Entity());
+            EntityManager em = new EntityManager(EntityHelpers.CreateEntity());
             TriggerEventLogger trigger = new TriggerEventLoggerFilterRequiresData0();
             em.AddSystem(trigger);
-            IEntity entity = new Entity();
+            IEntity entity = EntityHelpers.CreateEntity();
             em.AddEntity(entity);
 
             // entity doesn't have required data
@@ -372,7 +372,7 @@ namespace Neon.Entities.Tests {
             trigger.ClearEvents();
 
             // entity no longer has the data, it should get removed
-            ((Entity)entity).RemoveData<TestData0>();
+            entity.RemoveData<TestData0>();
             em.UpdateWorld();
 
             CollectionAssert.AreEqual(new TriggerEvent[] {

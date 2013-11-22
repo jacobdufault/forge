@@ -8,14 +8,14 @@ namespace Neon.Entities.Tests {
     public class EventProcessorTests {
         [TestMethod]
         public void NewEntityCreatesEventProcessor() {
-            IEntity e = new Entity();
+            IEntity e = EntityHelpers.CreateEntity();
             Assert.IsNotNull(e.EventProcessor);
         }
 
         [TestMethod]
         public void EntityManagerIntegration() {
-            EntityManager em = new EntityManager(new Entity());
-            IEntity e = new Entity();
+            EntityManager em = new EntityManager(EntityHelpers.CreateEntity());
+            IEntity e = EntityHelpers.CreateEntity();
             em.AddEntity(e);
             em.UpdateWorld();
 

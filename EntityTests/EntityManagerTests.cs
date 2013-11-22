@@ -139,14 +139,14 @@ namespace Neon.Entities.Tests {
     public class EntityManagerTests {
         [TestMethod]
         public void Creation() {
-            EntityManager em = new EntityManager(new Entity());
+            EntityManager em = new EntityManager(EntityHelpers.CreateEntity());
 
             Assert.IsNotNull(em.SingletonEntity);
         }
 
         [TestMethod]
         public void UpdateNumber() {
-            EntityManager em = new EntityManager(new Entity());
+            EntityManager em = new EntityManager(EntityHelpers.CreateEntity());
 
             for (int i = 0; i < 50; ++i) {
                 Assert.AreEqual(em.UpdateNumber, i);
@@ -156,7 +156,7 @@ namespace Neon.Entities.Tests {
 
         [TestMethod]
         public void AddTrigger() {
-            EntityManager em = new EntityManager(new Entity());
+            EntityManager em = new EntityManager(EntityHelpers.CreateEntity());
 
             CountUpdatesTrigger updates = new CountUpdatesTrigger();
             em.AddSystem(updates);
@@ -171,7 +171,7 @@ namespace Neon.Entities.Tests {
 
             int numEntities = 25;
             for (int i = 0; i < numEntities; ++i) {
-                IEntity e = new Entity();
+                IEntity e = EntityHelpers.CreateEntity();
                 em.AddEntity(e);
             }
 
@@ -185,16 +185,16 @@ namespace Neon.Entities.Tests {
 
         [TestMethod]
         public void AddEntity() {
-            EntityManager em = new EntityManager(new Entity());
-            IEntity e = new Entity();
+            EntityManager em = new EntityManager(EntityHelpers.CreateEntity());
+            IEntity e = EntityHelpers.CreateEntity();
             em.AddEntity(e);
         }
 
         [TestMethod]
         public void InitializeData() {
-            EntityManager em = new EntityManager(new Entity());
+            EntityManager em = new EntityManager(EntityHelpers.CreateEntity());
 
-            IEntity e = new Entity();
+            IEntity e = EntityHelpers.CreateEntity();
             em.AddEntity(e);
 
             {
@@ -214,9 +214,9 @@ namespace Neon.Entities.Tests {
 
         [TestMethod]
         public void InitializeDataViaModification() {
-            EntityManager em = new EntityManager(new Entity());
+            EntityManager em = new EntityManager(EntityHelpers.CreateEntity());
 
-            IEntity e = new Entity();
+            IEntity e = EntityHelpers.CreateEntity();
             em.AddEntity(e);
 
             // use modify, not the object we get from AddData, to initialize the data
@@ -240,16 +240,16 @@ namespace Neon.Entities.Tests {
 
         [TestMethod]
         public void SystemModificationNotificationWithoutPassingFilter() {
-            EntityManager em = new EntityManager(new Entity());
+            EntityManager em = new EntityManager(EntityHelpers.CreateEntity());
 
             CountModifiesTrigger system = new CountModifiesTrigger(new Type[] {
                 typeof(TestData2)
             });
             em.AddSystem(system);
 
-            IEntity e0 = new Entity();
+            IEntity e0 = EntityHelpers.CreateEntity();
             em.AddEntity(e0);
-            IEntity e1 = new Entity();
+            IEntity e1 = EntityHelpers.CreateEntity();
             em.AddEntity(e1);
 
             e0.AddData<TestData2>();
@@ -273,7 +273,7 @@ namespace Neon.Entities.Tests {
 
         [TestMethod]
         public void ModifiedTrigger() {
-            EntityManager em = new EntityManager(new Entity());
+            EntityManager em = new EntityManager(EntityHelpers.CreateEntity());
 
             DelegateAllTriggers system = new DelegateAllTriggers();
             em.AddSystem(system);
@@ -283,7 +283,7 @@ namespace Neon.Entities.Tests {
                 Assert.AreEqual(modifiedCount++, modified.Current<TestData2>().Value);
             };
 
-            IEntity entity = new Entity();
+            IEntity entity = EntityHelpers.CreateEntity();
             entity.AddData<TestData2>();
             em.AddEntity(entity);
             em.UpdateWorld();
@@ -300,8 +300,8 @@ namespace Neon.Entities.Tests {
         [TestMethod]
         public void AddAndRemoveInSequentialFrames() {
             // setup
-            EntityManager em = new EntityManager(new Entity());
-            IEntity entity = new Entity();
+            EntityManager em = new EntityManager(EntityHelpers.CreateEntity());
+            IEntity entity = EntityHelpers.CreateEntity();
             entity.AddData<TestData2>();
             em.AddEntity(entity);
             em.UpdateWorld();
@@ -327,8 +327,8 @@ namespace Neon.Entities.Tests {
         //[TestMethod]
         public void RemoveAndModifySameFrame() {
             // setup
-            EntityManager em = new EntityManager(new Entity());
-            IEntity entity = new Entity();
+            EntityManager em = new EntityManager(EntityHelpers.CreateEntity());
+            IEntity entity = EntityHelpers.CreateEntity();
             entity.AddData<TestData2>();
             em.AddEntity(entity);
             em.UpdateWorld();
@@ -345,7 +345,7 @@ namespace Neon.Entities.Tests {
         [TestMethod]
         public void UpdateTriggerCalled() {
             // setup
-            EntityManager em = new EntityManager(new Entity());
+            EntityManager em = new EntityManager(EntityHelpers.CreateEntity());
 
             DelegateAllTriggers system = new DelegateAllTriggers();
             system.EntityFilter = new[] { typeof(TestData2) };
@@ -355,7 +355,7 @@ namespace Neon.Entities.Tests {
             };
             em.AddSystem(system);
 
-            IEntity entity = new Entity();
+            IEntity entity = EntityHelpers.CreateEntity();
             entity.AddData<TestData2>();
             em.AddEntity(entity);
 
@@ -368,7 +368,7 @@ namespace Neon.Entities.Tests {
         [TestMethod]
         public void DelayedAddToSystem() {
             // setup
-            EntityManager em = new EntityManager(new Entity());
+            EntityManager em = new EntityManager(EntityHelpers.CreateEntity());
 
             DelegateAllTriggers system = new DelegateAllTriggers();
             system.EntityFilter = new[] { typeof(TestData2) };
@@ -378,7 +378,7 @@ namespace Neon.Entities.Tests {
             system.Modified += e => ++modifiedCount;
             em.AddSystem(system);
 
-            IEntity entity = new Entity();
+            IEntity entity = EntityHelpers.CreateEntity();
             em.AddEntity(entity);
             entity.AddData<TestData0>();
 

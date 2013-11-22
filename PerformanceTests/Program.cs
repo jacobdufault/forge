@@ -100,12 +100,6 @@ namespace Neon.Performance.Tests {
     }
 
     internal class Program {
-        private IEntity CreateEntity() {
-            IEntity entity = new Entity();
-            entity.AddData<MyPositionData>();
-            return entity;
-        }
-
         private static void Main(string[] args) {
             Console.WriteLine("...loading");
             Stopwatch stopwatch = new Stopwatch();

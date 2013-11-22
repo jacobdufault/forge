@@ -7,7 +7,7 @@ namespace Neon.Entities.Serialization {
     // TODO: replace HasModification with entity.HasModification, and HasStateChange with
     //       entity.NeedsStateChangeUpdate, then remove DeserializedEntity
     public class DeserializedEntity {
-        public Entity Entity;
+        public IEntity Entity;
         public bool HasModification;
         public bool HasStateChange;
         public bool IsAdding;
@@ -78,7 +78,7 @@ namespace Neon.Entities.Serialization {
 
         public static void RestoreEntity(SerializedEntity entity, DeserializedEntity storage,
             SerializationConverter converter, bool addingToEntityManager) {
-            storage.Entity.Restore(entity, converter, out storage.HasModification,
+            ((Entity)storage.Entity).Restore(entity, converter, out storage.HasModification,
                 out storage.HasStateChange, addingToEntityManager);
             storage.IsAdding = entity.IsAdding;
             storage.IsRemoving = entity.IsRemoving;

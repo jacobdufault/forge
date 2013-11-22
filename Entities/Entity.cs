@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 
 namespace Neon.Entities {
-    public class Entity : IEntity {
+    internal class Entity : IEntity {
         public SerializedEntity ToSerializedEntity(bool entityIsAdding, bool entityIsRemoving,
             SerializationConverter converter) {
             List<DataAccessor> modified = _concurrentModifications.ToList();
@@ -92,12 +92,7 @@ namespace Neon.Entities {
         #endregion
 
         #region Metadata
-        private MetadataContainer<object> _metadata = new MetadataContainer<object>();
-        MetadataContainer<object> IQueryableEntity.Metadata {
-            get {
-                return _metadata;
-            }
-        }
+        public EntityManagerMetadata Metadata = new EntityManagerMetadata();
         #endregion
 
         #region Event Processor

@@ -86,7 +86,7 @@ namespace Neon.Entities.Serialization {
             level.SingletonEntity = ((Entity)entityManager.SingletonEntity).ToSerializedEntity(
                 false, false, metadata.Converter);
 
-            List<Entity> removing = entityManager.GetEntitiesToRemove();
+            List<IEntity> removing = entityManager.GetEntitiesToRemove();
 
             level.Entities = new List<SerializedEntity>();
             foreach (var entity in entityManager.Entities) {
@@ -95,7 +95,7 @@ namespace Neon.Entities.Serialization {
                     converter: metadata.Converter));
             }
 
-            List<Entity> adding = entityManager.GetEntitiesToAdd();
+            List<IEntity> adding = entityManager.GetEntitiesToAdd();
             foreach (var entity in adding) {
                 level.Entities.Add(((Entity)entity).ToSerializedEntity(entityIsAdding: true,
                     entityIsRemoving: false, converter: metadata.Converter));

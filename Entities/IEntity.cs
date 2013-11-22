@@ -49,5 +49,8 @@ namespace Neon.Entities {
         /// modification then it will be overwritten. This should *NEVER* be used in systems or
         /// general client code; it is available for inspector GUI changes.</param>
         Data Modify(DataAccessor accessor, bool force = false);
+
+        // TODO: add updatemodification, updatestate methods
+        void DataStateChangeUpdate();
     }
 }

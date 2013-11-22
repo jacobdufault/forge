@@ -152,7 +152,7 @@ namespace Neon.Entities {
         }
 
 
-        public void Restore(IEntity entity) {
+        public void Restore(Entity entity) {
             if (_entityCache.UpdateCache(entity) == EntityCache.CacheChangeResult.Added) {
                 DoAdd(entity);
             }
@@ -214,7 +214,7 @@ namespace Neon.Entities {
                 // process entities that were added to the system
                 int addedCount = _shared.AddedEntities.Count; // immutable
                 for (int i = 0; i < addedCount; ++i) {
-                    IEntity added = _shared.AddedEntities[i];
+                    Entity added = _shared.AddedEntities[i];
                     if (_entityCache.UpdateCache(added) == EntityCache.CacheChangeResult.Added) {
                         DoAdd(added);
                         _dispatchAdded.Add(added);
@@ -225,7 +225,7 @@ namespace Neon.Entities {
                 // process entities that were removed from the system
                 int removedCount = _shared.RemovedEntities.Count; // immutable
                 for (int i = 0; i < removedCount; ++i) {
-                    IEntity removed = _shared.RemovedEntities[i];
+                    Entity removed = _shared.RemovedEntities[i];
                     if (_entityCache.Remove(removed)) {
                         DoRemove(removed);
                         _dispatchRemoved.Add(removed);
@@ -235,7 +235,7 @@ namespace Neon.Entities {
 
                 // process state changes
                 for (int i = 0; i < _shared.StateChangedEntities.Count; ++i) { // immutable
-                    IEntity stateChanged = _shared.StateChangedEntities[i];
+                    Entity stateChanged = _shared.StateChangedEntities[i];
                     EntityCache.CacheChangeResult change = _entityCache.UpdateCache(stateChanged);
                     if (change == EntityCache.CacheChangeResult.Added) {
                         DoAdd(stateChanged);
@@ -350,7 +350,7 @@ namespace Neon.Entities {
             /// <summary>
             /// Key used for retrieving metadata to store items in CachedEntities
             /// </summary>
-            private MetadataKey _metadataKey;
+            private int _metadataKey;
 
             /// <summary>
             /// The filter that the trigger is using
@@ -368,7 +368,7 @@ namespace Neon.Entities {
             /// </summary>
             public EntityCache(Filter filter) {
                 _filter = filter;
-                _metadataKey = QueryableEntity.MetadataRegistry.GetKey();
+                _metadataKey = EntityManagerMetadata.GetUnorderedListMetadataIndex();
 
                 CachedEntities = new UnorderedList<IEntity>();
             }
@@ -387,7 +387,7 @@ namespace Neon.Entities {
             /// the filter but was not before, then it will be added to the cache.
             /// </summary>
             /// <returns>The change in cache status for the entity</returns>
-            public CacheChangeResult UpdateCache(IEntity entity) {
+            public CacheChangeResult UpdateCache(Entity entity) {
                 UnorderedListMetadata metadata = GetMetadata(entity);
 
                 bool passed = _filter.Check(entity);
@@ -414,8 +414,8 @@ namespace Neon.Entities {
             /// </summary>
             /// <returns>True if the entity was previously in the cache and was removed, false if it
             /// was not in the cache and was therefore not removed.</returns>
-            public bool Remove(IEntity entity) {
-                if (CachedEntities.Remove(entity, (UnorderedListMetadata)entity.Metadata[_metadataKey])) {
+            public bool Remove(Entity entity) {
+                if (CachedEntities.Remove(entity, GetMetadata(entity))) {
                     return true;
                 }
                 return false;
@@ -424,12 +424,12 @@ namespace Neon.Entities {
             /// <summary>
             /// Returns the CachedEntities metadata for the given entity.
             /// </summary>
-            private UnorderedListMetadata GetMetadata(IEntity entity) {
+            private UnorderedListMetadata GetMetadata(Entity entity) {
                 // get our unordered list metadata or create it
-                UnorderedListMetadata metadata = (UnorderedListMetadata)entity.Metadata[_metadataKey];
+                UnorderedListMetadata metadata = entity.Metadata.UnorderedListMetadata[_metadataKey];
                 if (metadata == null) {
                     metadata = new UnorderedListMetadata();
-                    entity.Metadata[_metadataKey] = metadata;
+                    entity.Metadata.UnorderedListMetadata[_metadataKey] = metadata;
                 }
 
                 return metadata;

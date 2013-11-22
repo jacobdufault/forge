@@ -5,6 +5,7 @@ using Neon.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -67,7 +68,7 @@ namespace Neon.Entities {
         /// <summary>
         /// The list of active Entities in the world.
         /// </summary>
-        private UnorderedList<IEntity> _entities = new UnorderedList<IEntity>();
+        private UnorderedList<Entity> _entities = new UnorderedList<Entity>();
 
         /// <summary>
         /// A list of Entities that were added to the EntityManager in the last update loop. This
@@ -136,7 +137,7 @@ namespace Neon.Entities {
         /// <summary>
         /// The key we use to access unordered list metadata from the entity.
         /// </summary>
-        private static MetadataKey _entityUnorderedListMetadataKey = QueryableEntity.MetadataRegistry.GetKey();
+        private static int _entityUnorderedListMetadataKey = EntityManagerMetadata.GetUnorderedListMetadataIndex();
 
         /// <summary>
         /// Events that the EntityManager dispatches.
@@ -156,7 +157,7 @@ namespace Neon.Entities {
         /// </summary>
         public IEnumerable<IEntity> Entities {
             get {
-                return _entities;
+                return _entities.Select(e => (IEntity)e);
             }
         }
 
@@ -201,10 +202,10 @@ namespace Neon.Entities {
 
                     else {
                         // add the entity
-                        InternalAddEntity(deserializedEntity.Entity);
+                        InternalAddEntity((Entity)deserializedEntity.Entity);
 
                         if (deserializedEntity.HasModification) {
-                            deserializedEntity.Entity.ModificationNotifier.Notify();
+                            ((Entity)deserializedEntity.Entity).ModificationNotifier.Notify();
                         }
 
                         // done via InternalAddEntity
@@ -259,7 +260,7 @@ namespace Neon.Entities {
             toAdd.DataStateChangeNotifier.Notify();
 
             // ensure it contains metadata for our keys
-            ((IEntity)toAdd).Metadata[_entityUnorderedListMetadataKey] = new UnorderedListMetadata();
+            toAdd.Metadata.UnorderedListMetadata[_entityUnorderedListMetadataKey] = new UnorderedListMetadata();
 
             // add it our list of entities
             _entities.Add(toAdd, GetEntitiesListFromMetadata(toAdd));
@@ -474,8 +475,8 @@ namespace Neon.Entities {
         /// <summary>
         /// Helper method that returns the _entities unordered list metadata.
         /// </summary>
-        private UnorderedListMetadata GetEntitiesListFromMetadata(IEntity entity) {
-            return (UnorderedListMetadata)entity.Metadata[_entityUnorderedListMetadataKey];
+        private UnorderedListMetadata GetEntitiesListFromMetadata(Entity entity) {
+            return entity.Metadata.UnorderedListMetadata[_entityUnorderedListMetadataKey];
         }
 
         /// <summary>
@@ -495,15 +496,15 @@ namespace Neon.Entities {
         /// <summary>
         /// Returns all entities that will be added in the next update.
         /// </summary>
-        public List<Entity> GetEntitiesToAdd() {
-            return _notifiedAddingEntities.ToList();
+        public List<IEntity> GetEntitiesToAdd() {
+            return _notifiedAddingEntities.ToList().Select(e => (IEntity)e).ToList();
         }
 
         /// <summary>
         /// Returns all entities that will be removed in the next update.
         /// </summary>
-        public List<Entity> GetEntitiesToRemove() {
-            return _notifiedRemovedEntities.ToList();
+        public List<IEntity> GetEntitiesToRemove() {
+            return _notifiedRemovedEntities.ToList().Select(e => (IEntity)e).ToList();
         }
 
         #region MultithreadedSystemSharedContext Implementation

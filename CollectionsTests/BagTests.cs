@@ -35,7 +35,7 @@ namespace CollectionsTests {
                 Bag<int> b = new Bag<int>();
 
                 // insert even numbers
-                for (int i = 0; i < length; ++i) {
+                for (int i = 0; i < length + 1; ++i) {
                     b.Add(i * 2);
                 }
 

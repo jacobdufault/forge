@@ -69,22 +69,5 @@ namespace Neon.Entities {
             get;
             set;
         }
-
-        /// <summary>
-        /// Metadata container that allows arbitrary data to be stored within the Entity.
-        /// </summary>
-        /// <remarks>
-        /// Use QueryableEntity.MetadataRegistry to retrieve keys for this Metadata container.
-        /// </remarks>
-        MetadataContainer<object> Metadata {
-            get;
-        }
-    }
-
-    public static class QueryableEntity {
-        /// <summary>
-        /// Used to retrieve keys for storing things in instance-specific metadata containers.
-        /// </summary>
-        public static MetadataRegistry MetadataRegistry = new MetadataRegistry();
     }
 }

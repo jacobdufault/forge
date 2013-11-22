@@ -61,13 +61,13 @@ namespace Neon.Entities {
     /// Event that notifies the listener that a new Entity has been added to the EntityManager.
     /// </summary>
     public class EntityAddedEvent : IEvent {
-        public Entity Entity;
+        public IEntity Entity;
 
         /// <summary>
         /// Initializes a new instance of the EntityAddedEvent class.
         /// </summary>
         /// <param name="entity">The entity that was added.</param>
-        internal EntityAddedEvent(Entity entity) {
+        internal EntityAddedEvent(IEntity entity) {
             Entity = entity;
         }
     }
@@ -76,7 +76,7 @@ namespace Neon.Entities {
     /// Event that notifies the listener that a new Entity has been removed from the EntityManager.
     /// </summary>
     public class EntityRemovedEvent : IEvent {
-        public Entity Entity;
+        public IEntity Entity;
 
         /// <summary>
         /// Initializes a new instance of the EntityRemovedEvent class.

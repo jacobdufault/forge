@@ -51,6 +51,7 @@
     <Compile Include="DataAccessor.cs" />
     <Compile Include="DataAllocator.cs" />
     <Compile Include="Entity.cs" />
+    <Compile Include="EntityManagerMetadata.cs" />
     <Compile Include="EventProcessor.cs" />
     <Compile Include="Events.cs" />
     <Compile Include="Exceptions.cs" />

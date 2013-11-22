@@ -2,11 +2,17 @@
 using System.Collections.Generic;
 
 namespace Neon.Entities.Tests {
+    public static class EntityHelpers {
+        public static IEntity CreateEntity() {
+            return new EntityTemplate().Instantiate(false);
+        }
+    }
+
     [TestClass]
     public class EntityTest {
         [TestMethod]
         public void EntityCreation() {
-            IEntity entity = new Entity();
+            IEntity entity = EntityHelpers.CreateEntity();
         }
 
         [TestMethod]
@@ -14,16 +20,15 @@ namespace Neon.Entities.Tests {
             HashSet<int> ids = new HashSet<int>();
 
             for (int i = 0; i < 200; ++i) {
-                IEntity entity = new Entity();
+                IEntity entity = EntityHelpers.CreateEntity(); 
                 Assert.IsTrue(ids.Add(entity.UniqueId));
             }
         }
 
         [TestMethod]
         [ExpectedException(typeof(AlreadyAddedDataException))]
-
         public void CannotAddMultipleDataInstances() {
-            Entity entity = new Entity();
+            IEntity entity = EntityHelpers.CreateEntity();
             entity.AddData<TestData0>();
             entity.AddData<TestData0>();
             entity.DataStateChangeUpdate();
@@ -32,7 +37,7 @@ namespace Neon.Entities.Tests {
         [TestMethod]
         [ExpectedException(typeof(AlreadyAddedDataException))]
         public void CannotAddMultipleDataInstancesAfterStateUpdates() {
-            Entity entity = new Entity();
+            IEntity entity = EntityHelpers.CreateEntity(); 
             entity.AddData<TestData0>();
             entity.DataStateChangeUpdate();
             entity.AddData<TestData0>();
@@ -41,7 +46,7 @@ namespace Neon.Entities.Tests {
 
         [TestMethod]
         public void InitializingReturnsOneConstantInstance() {
-            IEntity entity = new Entity();
+            IEntity entity = EntityHelpers.CreateEntity(); 
             TestData0 data0 = entity.AddData<TestData0>();
             TestData0 data1 = entity.AddOrModify<TestData0>();
             TestData0 data2 = entity.Modify<TestData0>();
@@ -53,7 +58,7 @@ namespace Neon.Entities.Tests {
         [TestMethod]
         [ExpectedException(typeof(NoSuchDataException))]
         public void AddedDataIsNotContained() {
-            IEntity entity = new Entity();
+            IEntity entity = EntityHelpers.CreateEntity(); 
             entity.AddData<TestData0>();
 
             Assert.IsFalse(entity.ContainsData<TestData0>());
