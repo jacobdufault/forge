@@ -392,15 +392,15 @@ namespace Neon.Serialization.Tests {
         }
 
         [TestMethod]
-        public void ImportExportIterableSparseArray() {
-            IterableSparseArray<string> original = new IterableSparseArray<string>();
+        public void ImportExportSparseArray() {
+            SparseArray<string> original = new SparseArray<string>();
             original[0] = "0";
             original[2] = "2";
             original[4] = "4";
             original[6] = "6";
             original[8] = "8";
 
-            IterableSparseArray<string> imported = GetImportedExportedValue(original);
+            SparseArray<string> imported = GetImportedExportedValue(original);
 
             var originalEnumerator = original.GetEnumerator();
             var importedEnumerator = imported.GetEnumerator();

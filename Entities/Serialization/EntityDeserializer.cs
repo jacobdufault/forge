@@ -32,7 +32,7 @@ namespace Neon.Entities.Serialization {
         /// <summary>
         /// The list of deserialized entities.
         /// </summary>
-        private IterableSparseArray<DeserializedEntity> _entities;
+        private SparseArray<DeserializedEntity> _entities;
 
         /// <summary>
         /// Deserializes the entities using the given converter.
@@ -47,7 +47,7 @@ namespace Neon.Entities.Serialization {
             SerializationConverter converter, bool addingToEntityManager) {
             _converter = converter;
             _addingToEntityManager = addingToEntityManager;
-            _entities = new IterableSparseArray<DeserializedEntity>();
+            _entities = new SparseArray<DeserializedEntity>();
 
             // prepare the entity references so that we can have circular references to other
             // entities
@@ -86,7 +86,7 @@ namespace Neon.Entities.Serialization {
 
         public IEnumerator<DeserializedEntity> GetEnumerator() {
             foreach (var tuple in _entities) {
-                yield return tuple.Item2;
+                yield return tuple.Value;
             }
         }
 

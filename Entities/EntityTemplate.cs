@@ -19,7 +19,7 @@ namespace Neon.Entities {
         /// <summary>
         /// Default data instances, mapped by DataAccessor.
         /// </summary>
-        private IterableSparseArray<Data> _defaultDataInstances = new IterableSparseArray<Data>();
+        private SparseArray<Data> _defaultDataInstances = new SparseArray<Data>();
 
         /// <summary>
         /// Event processor used for dispatching interesting events (ie, data adds and removes)
@@ -86,7 +86,7 @@ namespace Neon.Entities {
         /// <param name="entity">The entity to inject our data into</param>
         public void InjectDataInto(IEntity entity) {
             foreach (var tuple in _defaultDataInstances) {
-                Data defaultData = tuple.Item2;
+                Data defaultData = tuple.Value;
 
                 Data addedData = entity.AddOrModify(new DataAccessor(defaultData));
                 addedData.CopyFrom(defaultData);
@@ -137,7 +137,7 @@ namespace Neon.Entities {
             }
 
             foreach (var tuple in _defaultDataInstances) {
-                Data data = tuple.Item2;
+                Data data = tuple.Value;
 
                 if (filter == null || filter(data)) {
                     storage.Add(data);

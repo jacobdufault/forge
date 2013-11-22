@@ -6,11 +6,11 @@ using System.Collections.Generic;
 
 namespace Neon.Entities.Serialization {
     public class EntityTemplateDeserializer : IEnumerable<EntityTemplate> {
-        private IterableSparseArray<EntityTemplate> _templates;
+        private SparseArray<EntityTemplate> _templates;
         private SerializationConverter _converter;
 
         public EntityTemplateDeserializer(List<SerializedTemplate> serializedTemplates, SerializationConverter converter) {
-            _templates = new IterableSparseArray<EntityTemplate>();
+            _templates = new SparseArray<EntityTemplate>();
             _converter = converter;
 
             // create our initial list of template references
@@ -98,7 +98,7 @@ namespace Neon.Entities.Serialization {
 
         public IEnumerator<EntityTemplate> GetEnumerator() {
             foreach (var tuple in _templates) {
-                yield return tuple.Item2;
+                yield return tuple.Value;
             }
         }
 

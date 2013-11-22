@@ -13,9 +13,9 @@ namespace Neon.Entities {
 
             List<SerializedEntityData> serializedDataList = new List<SerializedEntityData>();
             foreach (var tuple in _data) {
-                int id = tuple.Item1;
+                int id = tuple.Key;
                 DataAccessor accessor = new DataAccessor(id);
-                ImmutableContainer<Data> container = tuple.Item2;
+                ImmutableContainer<Data> container = tuple.Value;
 
                 SerializedEntityData serializedData = new SerializedEntityData() {
                     DataType = container.Current.GetType().ToString(),
@@ -204,7 +204,7 @@ namespace Neon.Entities {
         internal void RemoveAllData() {
             // TODO: potentially optimize this method
             foreach (var tuple in _data) {
-                DataAccessor accessor = new DataAccessor(tuple.Item2.Current.GetType());
+                DataAccessor accessor = new DataAccessor(tuple.Value.Current.GetType());
                 ((IEntity)this).RemoveData(accessor);
             }
         }
@@ -324,7 +324,7 @@ namespace Neon.Entities {
         /// Only the entity manager calls entity APIs that write to this; it is single-threaded
         /// only.
         /// </remarks>
-        private IterableSparseArray<ImmutableContainer<Data>> _data = new IterableSparseArray<ImmutableContainer<Data>>();
+        private SparseArray<ImmutableContainer<Data>> _data = new SparseArray<ImmutableContainer<Data>>();
 
         /// <summary>
         /// Data that has been modified this frame and needs to be pushed out
@@ -384,7 +384,7 @@ namespace Neon.Entities {
             }
 
             foreach (var tuple in _data) {
-                Data data = tuple.Item2.Current;
+                Data data = tuple.Value.Current;
                 if (filter == null || filter(data)) {
                     storage.Add(data);
                 }
