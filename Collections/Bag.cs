@@ -126,7 +126,7 @@ namespace Neon.Collections {
             }
 
             // shift elements forwards
-            for (int i = Length; i > index; --i) {
+            for (int i = Length - 1; i > index; --i) {
                 _items[i] = _items[i - 1];
             }
 
