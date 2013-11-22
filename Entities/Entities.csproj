@@ -49,7 +49,6 @@
   <ItemGroup>
     <Compile Include="Data.cs" />
     <Compile Include="DataAccessor.cs" />
-    <Compile Include="DataAllocator.cs" />
     <Compile Include="Entity.cs" />
     <Compile Include="EntityManagerMetadata.cs" />
     <Compile Include="EventProcessor.cs" />

@@ -387,13 +387,6 @@ namespace Neon.Entities.Tests {
                 em.UpdateWorld();
             }
 
-            DataAllocator.AddAuxiliaryAllocator<TestData2>((data, ent) => {
-                try {
-                    ent.AddData<TestData2>();
-                    Assert.Fail();
-                }
-                catch (AlreadyAddedDataException) { }
-            });
             entity.AddData<TestData2>();
             Assert.AreEqual(0, addedCount);
 

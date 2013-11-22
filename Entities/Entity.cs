@@ -396,7 +396,8 @@ namespace Neon.Entities {
             }
 
             // add our data
-            Data data = DataAllocator.Allocate(accessor);
+            Type dataType = DataAccessorFactory.GetTypeFromAccessor(accessor);
+            Data data = (Data)Activator.CreateInstance(dataType);
             _toAdd.Add(data);
 
             // initialize data outside of lock
@@ -405,9 +406,6 @@ namespace Neon.Entities {
             // notify the entity manager
             ModificationNotifier.Notify();
             DataStateChangeNotifier.Notify();
-
-            // populate the data instance from the prefab / etc
-            DataAllocator.NotifyAllocated(accessor, this, data);
 
             // return the new instance
             return data;
