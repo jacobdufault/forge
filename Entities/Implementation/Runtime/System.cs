@@ -151,7 +151,6 @@ namespace Neon.Entities {
             _triggerGlobalInput = trigger as ITriggerGlobalInput;
         }
 
-
         public void Restore(Entity entity) {
             if (_entityCache.UpdateCache(entity) == EntityCache.CacheChangeResult.Added) {
                 DoAdd(entity);
@@ -186,8 +185,8 @@ namespace Neon.Entities {
             if (_triggerModified != null) {
                 ((Entity)removed).ModificationNotifier.Listener -= ModificationNotifier_Listener;
 
-                // We have to remove the entity from our list of entities to dispatch, as during
-                // the frame when OnRemoved is called OnModified (and also OnUpdate) will not be
+                // We have to remove the entity from our list of entities to dispatch, as during the
+                // frame when OnRemoved is called OnModified (and also OnUpdate) will not be
                 // invoked.
                 _dispatchModified.Remove(removed);
             }
@@ -195,17 +194,17 @@ namespace Neon.Entities {
 
         /// <summary>
         /// Runs bookkeeping on the system. All systems concurrently run this function. This
-        /// function makes an *extremely* important guarantee that there will be no external
-        /// API calls made that can modify the state of other systems that are currently executing.
+        /// function makes an *extremely* important guarantee that there will be no external API
+        /// calls made that can modify the state of other systems that are currently executing.
         /// </summary>
         public void BookkeepingBeforeRunningSystems() {
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
             try {
-                // copy our modified entities into our dispatch modified list
-                // we do this before state changes so that we only have to remove from
-                // _dispatchModified and not _notifiedModifiedEntities
+                // copy our modified entities into our dispatch modified list we do this before
+                // state changes so that we only have to remove from _dispatchModified and not
+                // _notifiedModifiedEntities
                 if (_triggerModified != null) {
                     _dispatchModified.Clear();
                     _notifiedModifiedEntities.CopyIntoAndClear(_dispatchModified);
@@ -255,7 +254,7 @@ namespace Neon.Entities {
         }
 
         public void RunSystem(object input) {
-            RunSystem((List<IStructuredInput>)input);
+            RunSystem((List<IGameInput>)input);
         }
 
         /// <summary>
@@ -265,7 +264,7 @@ namespace Neon.Entities {
         /// </summary>
         /// <param name="input">The structured input that should be delivered to the client
         /// system.</param>
-        public void RunSystem(List<IStructuredInput> input) {
+        public void RunSystem(List<IGameInput> input) {
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
@@ -363,8 +362,8 @@ namespace Neon.Entities {
             public UnorderedList<IEntity> CachedEntities;
 
             /// <summary>
-            /// Creates a new system. Entities are added to the system based on if they pass the given
-            /// filter.
+            /// Creates a new system. Entities are added to the system based on if they pass the
+            /// given filter.
             /// </summary>
             public EntityCache(Filter filter) {
                 _filter = filter;
@@ -383,8 +382,8 @@ namespace Neon.Entities {
             }
 
             /// <summary>
-            /// Updates the status of the entity inside of the cache; ie, if the entity is now passing
-            /// the filter but was not before, then it will be added to the cache.
+            /// Updates the status of the entity inside of the cache; ie, if the entity is now
+            /// passing the filter but was not before, then it will be added to the cache.
             /// </summary>
             /// <returns>The change in cache status for the entity</returns>
             public CacheChangeResult UpdateCache(Entity entity) {

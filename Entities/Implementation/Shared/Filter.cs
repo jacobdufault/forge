@@ -3,7 +3,7 @@ namespace Neon.Entities {
     /// <summary>
     /// A filter ensures that an entity contains a set of data types.
     /// </summary>
-    public class Filter {
+    internal class Filter {
         /// <summary>
         /// The list of Data types that the filter has to have.
         /// </summary>

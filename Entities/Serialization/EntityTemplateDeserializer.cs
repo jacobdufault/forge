@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 
 namespace Neon.Entities.Serialization {
-    public class EntityTemplateDeserializer : IEnumerable<EntityTemplate> {
+    internal class EntityTemplateDeserializer : IEnumerable<EntityTemplate> {
         private SparseArray<EntityTemplate> _templates;
         private SerializationConverter _converter;
 
@@ -43,7 +43,7 @@ namespace Neon.Entities.Serialization {
             SerializedTemplate serializedTemplate,
             SerializationConverter converter) {
             foreach (var serializedData in serializedTemplate.Data) {
-                Data data = serializedData.GetDataInstance(converter);
+                IData data = serializedData.GetDataInstance(converter);
                 template.AddDefaultData(data);
             }
         }

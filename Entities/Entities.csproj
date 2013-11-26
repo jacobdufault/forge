@@ -47,18 +47,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Data.cs" />
-    <Compile Include="DataAccessor.cs" />
-    <Compile Include="Entity.cs" />
-    <Compile Include="EntityManagerMetadata.cs" />
-    <Compile Include="EventProcessor.cs" />
-    <Compile Include="Events.cs" />
-    <Compile Include="Exceptions.cs" />
-    <Compile Include="IEntity.cs" />
-    <Compile Include="IEntityExtensions.cs" />
-    <Compile Include="EntityTemplate.cs" />
-    <Compile Include="ImmutableContainer.cs" />
-    <Compile Include="IQueryableEntity.cs" />
+    <Compile Include="Implementation\Shared\DataAccessor.cs" />
+    <Compile Include="Implementation\Runtime\Entity.cs" />
+    <Compile Include="Implementation\Runtime\EntityManagerMetadata.cs" />
+    <Compile Include="Implementation\Shared\EventProcessor.cs" />
+    <Compile Include="API\Events.cs" />
+    <Compile Include="API\Exceptions.cs" />
+    <Compile Include="API\IEntityExtensions.cs" />
+    <Compile Include="Implementation\Runtime\EntityTemplate.cs" />
+    <Compile Include="Implementation\Runtime\ImmutableContainer.cs" />
     <Compile Include="Serialization\EntityDeserializer.cs" />
     <Compile Include="Serialization\EntityTemplateDeserializer.cs" />
     <Compile Include="Serialization\SerializedEntity.cs" />
@@ -67,12 +64,20 @@
     <Compile Include="Serialization\LevelParser.cs" />
     <Compile Include="Serialization\SerializedSystem.cs" />
     <Compile Include="Serialization\SerializedTemplate.cs" />
-    <Compile Include="System.cs" />
-    <Compile Include="IStructuredInput.cs" />
-    <Compile Include="EntityManager.cs" />
-    <Compile Include="Filter.cs" />
+    <Compile Include="API\IContentDatabase.cs" />
+    <Compile Include="API\IData.cs" />
+    <Compile Include="API\IEntity.cs" />
+    <Compile Include="API\IEventNotifier.cs" />
+    <Compile Include="API\IGameEngine.cs" />
+    <Compile Include="API\IGameInput.cs" />
+    <Compile Include="API\IQueryableEntity.cs" />
+    <Compile Include="API\ITemplate.cs" />
+    <Compile Include="API\LevelManagement.cs" />
+    <Compile Include="API\Systems.cs" />
+    <Compile Include="Implementation\Runtime\System.cs" />
+    <Compile Include="Implementation\Runtime\GameEngine.cs" />
+    <Compile Include="Implementation\Shared\Filter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Triggers.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Collections\Collections.csproj">
@@ -87,6 +92,9 @@
       <Project>{25db9f16-ecae-4a3f-b3c3-5794b8288587}</Project>
       <Name>Utilities</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Implementation\Editor\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

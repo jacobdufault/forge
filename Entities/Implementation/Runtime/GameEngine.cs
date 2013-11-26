@@ -12,49 +12,10 @@ using System.Threading.Tasks;
 
 namespace Neon.Entities {
     /// <summary>
-    /// A set of operations that are used for managing entities.
-    /// </summary>
-    public interface IEntityManager {
-        /// <summary>
-        /// Updates the world on another thread. Systems have their respective triggers activated.
-        /// The structured input commands are dispatched to systems which are interested. Make sure
-        /// that this method is not invoked before the returned Task is completed.
-        /// </summary>
-        Task UpdateWorld(List<IStructuredInput> commands);
-
-        /// <summary>
-        /// Adds the given entity to the EntityManager.
-        /// </summary>
-        /// <param name="entity">The instance to add</param>
-        void AddEntity(IEntity entity);
-
-        /// <summary>
-        /// Runs all of the dirty event processors. The events for the event processors will be
-        /// dispatched on the same thread that calls this method.
-        /// </summary>
-        void RunEventProcessors();
-
-        /// <summary>
-        /// All entities that are currently in the EntityManager.
-        /// </summary>
-        IEnumerable<IEntity> Entities {
-            get;
-        }
-
-        /// <summary>
-        /// Singleton entity that contains global data.
-        /// </summary>
-        IEntity SingletonEntity {
-            get;
-            set;
-        }
-    }
-
-    /// <summary>
     /// The EntityManager requires an associated Entity which is not injected into the
     /// EntityManager.
     /// </summary>
-    public class EntityManager : IEntityManager, MultithreadedSystemSharedContext {
+    internal class GameEngine : MultithreadedSystemSharedContext {
         /// <summary>
         /// Should the EntityManager execute systems in separate threads?
         /// </summary>
@@ -142,7 +103,7 @@ namespace Neon.Entities {
         /// <summary>
         /// Events that the EntityManager dispatches.
         /// </summary>
-        public EventProcessor EventProcessor = new EventProcessor();
+        public IEventNotifier EventNotifier = new EventNotifier();
 
         /// <summary>
         /// Singleton entity that contains global data.
@@ -170,18 +131,18 @@ namespace Neon.Entities {
             private set;
         }
 
-        public EntityManager(IEntity singletonEntity) {
+        public GameEngine(IEntity singletonEntity) {
             SingletonEntity = (Entity)singletonEntity;
             SystemDoneEvent = new CountdownEvent(0);
-            _eventProcessors.BeginMonitoring(EventProcessor);
+            _eventProcessors.BeginMonitoring((EventNotifier)EventNotifier);
         }
 
-        internal EntityManager(int updateNumber, SerializedEntity singletonEntity,
+        internal GameEngine(int updateNumber, SerializedEntity singletonEntity,
             List<SerializedEntity> restoredEntities, List<ISystem> systems,
             SerializationConverter converter) {
 
             SystemDoneEvent = new CountdownEvent(0);
-            _eventProcessors.BeginMonitoring(EventProcessor);
+            _eventProcessors.BeginMonitoring((EventNotifier)EventNotifier);
 
             UpdateNumber = updateNumber;
 
@@ -248,13 +209,13 @@ namespace Neon.Entities {
         /// </summary>
         /// <param name="toAdd">The entity to add.</param>
         private void InternalAddEntity(Entity toAdd) {
-            toAdd.EntityManager = this;
-            ((IEntity)toAdd).EventProcessor.Submit(ShowEntityEvent.Instance);
+            toAdd.GameEngine = this;
+            ((EventNotifier)((IEntity)toAdd).EventNotifier).Submit(ShowEntityEvent.Instance);
 
             // register listeners
             toAdd.ModificationNotifier.Listener += OnEntityModified;
             toAdd.DataStateChangeNotifier.Listener += OnEntityDataStateChanged;
-            _eventProcessors.BeginMonitoring(((IEntity)toAdd).EventProcessor);
+            _eventProcessors.BeginMonitoring((EventNotifier)((IEntity)toAdd).EventNotifier);
 
             // notify ourselves of data state changes so that it the entity is pushed to systems
             toAdd.DataStateChangeNotifier.Notify();
@@ -266,7 +227,7 @@ namespace Neon.Entities {
             _entities.Add(toAdd, GetEntitiesListFromMetadata(toAdd));
 
             // notify listeners that we added an entity
-            EventProcessor.Submit(new EntityAddedEvent(toAdd));
+            ((EventNotifier)EventNotifier).Submit(new EntityAddedEvent(toAdd));
         }
 
         private void SinglethreadFrameEnd() {
@@ -303,7 +264,7 @@ namespace Neon.Entities {
                 // remove listeners
                 toRemove.ModificationNotifier.Listener -= OnEntityModified;
                 toRemove.DataStateChangeNotifier.Listener -= OnEntityDataStateChanged;
-                _eventProcessors.StopMonitoring(((IEntity)toRemove).EventProcessor);
+                _eventProcessors.StopMonitoring((EventNotifier)((IEntity)toRemove).EventNotifier);
 
                 // remove all data from the entity and then push said changes out
                 toRemove.RemoveAllData();
@@ -311,10 +272,10 @@ namespace Neon.Entities {
 
                 // remove the entity from the list of entities
                 _entities.Remove(toRemove, GetEntitiesListFromMetadata(toRemove));
-                ((IEntity)toRemove).EventProcessor.Submit(DestroyedEntityEvent.Instance);
+                ((EventNotifier)((IEntity)toRemove).EventNotifier).Submit(DestroyedEntityEvent.Instance);
 
                 // notify listeners we removed an event
-                EventProcessor.Submit(new EntityRemovedEvent(toRemove));
+                ((EventNotifier)EventNotifier).Submit(new EntityRemovedEvent(toRemove));
             }
             // can't clear b/c it is shared
 
@@ -346,7 +307,7 @@ namespace Neon.Entities {
             singletonEntity.DataStateChangeUpdate();
         }
 
-        private void MultithreadRunSystems(List<IStructuredInput> input) {
+        private void MultithreadRunSystems(List<IGameInput> input) {
             // run all bookkeeping
             {
                 SystemDoneEvent.Reset(_multithreadedSystems.Count);
@@ -388,7 +349,7 @@ namespace Neon.Entities {
         }
 
         public void RunUpdateWorld(object commandsObject) {
-            List<IStructuredInput> commands = (List<IStructuredInput>)commandsObject;
+            List<IGameInput> commands = (List<IGameInput>)commandsObject;
 
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -422,10 +383,10 @@ namespace Neon.Entities {
                     _multithreadedSystems[i].UpdateTicks);
 
             }
-            Log<EntityManager>.Info(builder.ToString());
+            Log<GameEngine>.Info(builder.ToString());
         }
 
-        public Task UpdateWorld(List<IStructuredInput> commands) {
+        public Task UpdateWorld(List<IGameInput> commands) {
             lock (_updateTaskLock) {
                 if (_updateTask != null) {
                     throw new InvalidOperationException("Cannot call UpdateWorld before the returned task has completed.");
@@ -459,7 +420,7 @@ namespace Neon.Entities {
 
             _notifiedAddingEntities.Add(entity);
 
-            instance.EventProcessor.Submit(HideEntityEvent.Instance);
+            ((EventNotifier)instance.EventNotifier).Submit(HideEntityEvent.Instance);
         }
 
         /// <summary>
@@ -469,7 +430,7 @@ namespace Neon.Entities {
         // TODO: make this internal
         public void RemoveEntity(IEntity instance) {
             _notifiedRemovedEntities.Add((Entity)instance);
-            instance.EventProcessor.Submit(HideEntityEvent.Instance);
+            ((EventNotifier)instance.EventNotifier).Submit(HideEntityEvent.Instance);
         }
 
         /// <summary>

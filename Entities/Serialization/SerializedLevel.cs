@@ -9,7 +9,7 @@ namespace Neon.Entities.Serialization {
     /// <summary>
     /// Serialization specification for an EntityManager state (a level).
     /// </summary>
-    public class SerializedLevel {
+    internal class SerializedLevel {
         /// <summary>
         /// The relative paths of DLLs to inject.
         /// </summary>
@@ -106,7 +106,7 @@ namespace Neon.Entities.Serialization {
             return systems;
         }
 
-        public Tuple<EntityManager, LoadedMetadata> Restore(SerializationConverter converter) {
+        public Tuple<GameEngine, LoadedMetadata> Restore(SerializationConverter converter) {
             // inject dlls so that type lookups resolve correctly
             // TODO: consider using an AppDomain so we can unload the previous EntitySystem
             InjectDlls();
@@ -116,13 +116,13 @@ namespace Neon.Entities.Serialization {
 
             var restoredSystems = GetRestoredSystems();
 
-            EntityManager entityManager = new EntityManager(
+            GameEngine entityManager = new GameEngine(
                 CurrentUpdateNumber,
                 SingletonEntity,
                 Entities,
                 restoredSystems,
                 converter);
-            EntityTemplate.EntityManager = entityManager;
+            EntityTemplate.GameEngine = entityManager;
 
             LoadedMetadata metadata = new LoadedMetadata();
             metadata.DllInjections = DllInjections;

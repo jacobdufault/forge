@@ -12,7 +12,7 @@ namespace Neon.Entities {
     }
 
     /// <summary>
-    /// Systems which require special saving/restoration logic should extend this class.
+    /// Systems which require special saving/restoration logic should extend this interface.
     /// </summary>
     public interface IRestoredSystem {
         /// <summary>
@@ -135,7 +135,7 @@ namespace Neon.Entities {
         /// <summary>
         /// Called on all entities which pass the filter.
         /// </summary>
-        void OnInput(IStructuredInput input, IEntity entity);
+        void OnInput(IGameInput input, IEntity entity);
     }
 
     /// <summary>
@@ -153,6 +153,6 @@ namespace Neon.Entities {
         /// <summary>
         /// Called whenever the given input type is received.
         /// </summary>
-        void OnGlobalInput(IStructuredInput input, IEntity singletonEntity);
+        void OnGlobalInput(IGameInput input, IEntity singletonEntity);
     }
 }

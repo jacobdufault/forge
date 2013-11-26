@@ -8,7 +8,7 @@ namespace Neon.Entities.Serialization {
     /// <summary>
     /// Metadata about a loaded EntityManager. This is used when the level is saved.
     /// </summary>
-    public class LoadedMetadata {
+    internal class LoadedMetadata {
         /// <summary>
         /// The DLLs that were injected / loaded.
         /// </summary>
@@ -38,7 +38,7 @@ namespace Neon.Entities.Serialization {
     /// <summary>
     /// Handles loading and unloading an EntityManager from a file.
     /// </summary>
-    public static class Loader {
+    internal static class Loader {
         /// <summary>
         /// Loads a level structure from a NES file at the given path.
         /// </summary>
@@ -53,13 +53,13 @@ namespace Neon.Entities.Serialization {
             return converter.Import<SerializedLevel>(data);
         }
 
-        public static Tuple<EntityManager, LoadedMetadata> LoadEntityManager(string levelPath) {
+        public static Tuple<GameEngine, LoadedMetadata> LoadEntityManager(string levelPath) {
             SerializationConverter converter = new SerializationConverter();
             SerializedLevel level = LoadSerializedLevel(levelPath, converter);
             return level.Restore(converter);
         }
 
-        public static string SaveEntityManager(EntityManager entityManager, LoadedMetadata metadata) {
+        public static string SaveGameEngine(GameEngine entityManager, LoadedMetadata metadata) {
             SerializedLevel level = new SerializedLevel();
 
             level.DllInjections = metadata.DllInjections;

@@ -15,16 +15,16 @@ namespace Neon.Entities {
     /// EntityTemplate. In these scenarios, EntityTemplate returns intelligent defaults. For
     /// example, in the case of WasModified, EntityTemplate always returns false.
     /// </remarks>
-    public class EntityTemplate : IQueryableEntity {
+    internal class EntityTemplate : ITemplate {
         /// <summary>
         /// Default data instances, mapped by DataAccessor.
         /// </summary>
-        private SparseArray<Data> _defaultDataInstances = new SparseArray<Data>();
+        private SparseArray<IData> _defaultDataInstances = new SparseArray<IData>();
 
         /// <summary>
         /// Event processor used for dispatching interesting events (ie, data adds and removes)
         /// </summary>
-        private EventProcessor _eventProcessor = new EventProcessor();
+        private EventNotifier _eventProcessor = new EventNotifier();
 
         /// <summary>
         /// Generator for auto-generated template ids.
@@ -35,7 +35,7 @@ namespace Neon.Entities {
         /// The entity manager that spawned entities are injected into.
         /// </summary>
         // TODO: figure out some good DI system
-        public static EntityManager EntityManager;
+        public static GameEngine GameEngine;
 
         /// <summary>
         /// Returns the unique template id for the template.
@@ -76,8 +76,8 @@ namespace Neon.Entities {
         /// instance; a copy is not made of it.
         /// </summary>
         /// <param name="instance">The data instance to copy from.</param>
-        public void AddDefaultData(Data instance) {
-            _defaultDataInstances[DataAccessorFactory.GetId(instance)] = (instance);
+        public void AddDefaultData(IData instance) {
+            _defaultDataInstances[DataAccessorFactory.GetId(instance)] = instance;
         }
 
         /// <summary>
@@ -86,9 +86,9 @@ namespace Neon.Entities {
         /// <param name="entity">The entity to inject our data into</param>
         public void InjectDataInto(IEntity entity) {
             foreach (var tuple in _defaultDataInstances) {
-                Data defaultData = tuple.Value;
+                IData defaultData = tuple.Value;
 
-                Data addedData = entity.AddOrModify(new DataAccessor(defaultData));
+                IData addedData = entity.AddOrModify(new DataAccessor(defaultData));
                 addedData.CopyFrom(defaultData);
             }
         }
@@ -98,17 +98,11 @@ namespace Neon.Entities {
         /// </summary>
         /// <returns>A new entity instance that contains data instances based off of this
         /// template.</returns>
-        public virtual IEntity Instantiate(bool addToEntityManager = true) {
+        public virtual IEntity InstantiateEntity() {
             Entity entity = new Entity();
             InjectDataInto(entity);
 
-            if (addToEntityManager == false) {
-                entity.ApplyModifications();
-                entity.DataStateChangeUpdate();
-            }
-            else if (EntityManager != null) {
-                EntityManager.AddEntity(entity);
-            }
+            GameEngine.AddEntity(entity);
 
             return entity;
         }
@@ -130,14 +124,14 @@ namespace Neon.Entities {
         /// <param name="storage">An optional storage location to store the result in; if null, then
         /// a new collection is created and returned</param>
         /// <returns></returns>
-        public ICollection<Data> SelectData(Predicate<Data> filter = null,
-            ICollection<Data> storage = null) {
+        public ICollection<IData> SelectData(Predicate<IData> filter = null,
+            ICollection<IData> storage = null) {
             if (storage == null) {
-                storage = new List<Data>();
+                storage = new List<IData>();
             }
 
             foreach (var tuple in _defaultDataInstances) {
-                Data data = tuple.Value;
+                IData data = tuple.Value;
 
                 if (filter == null || filter(data)) {
                     storage.Add(data);
@@ -147,16 +141,16 @@ namespace Neon.Entities {
             return storage;
         }
 
-        ICollection<Data> IQueryableEntity.SelectCurrentData(Predicate<Data> filter,
-            ICollection<Data> storage) {
+        ICollection<IData> IQueryableEntity.SelectCurrentData(Predicate<IData> filter,
+            ICollection<IData> storage) {
             return SelectData(filter, storage);
         }
 
-        EventProcessor IQueryableEntity.EventProcessor {
+        IEventNotifier IQueryableEntity.EventNotifier {
             get { return _eventProcessor; }
         }
 
-        Data IQueryableEntity.Current(DataAccessor accessor) {
+        IData IQueryableEntity.Current(DataAccessor accessor) {
             int id = accessor.Id;
             if (_defaultDataInstances.Contains(id) == false) {
                 throw new NoSuchDataException(this, accessor);
@@ -165,7 +159,7 @@ namespace Neon.Entities {
             return _defaultDataInstances[accessor.Id];
         }
 
-        Data IQueryableEntity.Previous(DataAccessor accessor) {
+        IData IQueryableEntity.Previous(DataAccessor accessor) {
             if (((IQueryableEntity)this).ContainsData(accessor) == false) {
                 throw new NoSuchDataException(this, accessor);
             }
@@ -183,10 +177,6 @@ namespace Neon.Entities {
             }
 
             return false;
-        }
-
-        int IQueryableEntity.UniqueId {
-            get { return TemplateId; }
         }
     }
 }

@@ -7,7 +7,7 @@ namespace Neon.Entities.Serialization {
     /// <summary>
     /// Serialization specification for a data instance inside of an EntityTemplate.
     /// </summary>
-    public class SerializedTemplateData {
+    internal class SerializedTemplateData {
         /// <summary>
         /// The fully qualified type of the data instance.
         /// </summary>
@@ -19,14 +19,14 @@ namespace Neon.Entities.Serialization {
         public SerializedData State;
 
         [NonSerialized]
-        private Data _dataInstance;
+        private IData _dataInstance;
 
         /// <summary>
         /// Deserializes the SerializedTemplateData into a Data instance. The result is cached.
         /// </summary>
-        public Data GetDataInstance(SerializationConverter converter) {
+        public IData GetDataInstance(SerializationConverter converter) {
             if (_dataInstance == null) {
-                _dataInstance = (Data)converter.Import(TypeCache.FindType(DataType), State);
+                _dataInstance = (IData)converter.Import(TypeCache.FindType(DataType), State);
             }
 
             return _dataInstance;
@@ -36,7 +36,7 @@ namespace Neon.Entities.Serialization {
     /// <summary>
     /// Serialization specification for an EntityTemplate.
     /// </summary>
-    public class SerializedTemplate {
+    internal class SerializedTemplate {
         /// <summary>
         /// The pretty name of the template (for debugging).
         /// </summary>
@@ -68,7 +68,7 @@ namespace Neon.Entities.Serialization {
             TemplateId = template.TemplateId;
 
             Data = new List<SerializedTemplateData>();
-            foreach (Data data in template.SelectData()) {
+            foreach (IData data in template.SelectData()) {
                 SerializedTemplateData serializedData = new SerializedTemplateData() {
                     DataType = data.GetType().FullName,
                     State = converter.Export(data.GetType(), data)

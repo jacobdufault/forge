@@ -1,51 +1,18 @@
 ﻿
 using Neon.Utilities;
 using System.Threading;
+
 namespace Neon.Entities {
     /// <summary>
-    /// Interface for immutable data types that exposes methods necessary for swapping between
-    /// Previous, Current, and Modifiable instances.
+    /// Contains a set of three IData instances and allows swapping between those instances such
+    /// that one of them is the previous state, one of them is the current state, and one of them is
+    /// a modifiable state.
     /// </summary>
-    public interface IImmutableData<DerivedType> where DerivedType : IImmutableData<DerivedType> {
-        /// <summary>
-        /// Duplicates this instance of data.
-        /// </summary>
-        /// <returns>An exact copy of this data instance.</returns>
-        DerivedType Duplicate();
-
-        /// <summary>
-        /// Make this data equivalent to the source data.
-        /// </summary>
-        /// <param name="source">The source data to copy from.</param>
-        void CopyFrom(DerivedType source);
-
-        /// <summary>
-        /// Does this immutable data support concurrent, multithreaded changes to the data?
-        /// </summary>
-        /// <remarks>
-        /// If this is true, then it is *CRITICAL* that *ALL* systems which modify the data do so in
-        /// a relative manner; ie, the system cannot set a particular attribute to zero, but it can
-        /// reduce it by five. If this is not followed, then state desyncs will occur.
-        /// </remarks>
-        bool SupportsConcurrentModifications { get; }
-
-        /// <summary>
-        /// If this immutable data supports concurrent modifications, then this method will be
-        /// called to resolve any potential issues.
-        /// </summary>
-        void ResolveConcurrentModifications();
-    }
-
-    /// <summary>
-    /// Contains a set of IImmutableData and allows swapping between those instances such that one
-    /// of them is the previous state, one of them is the current state, and one of them is a
-    /// modifiable state.
-    /// </summary>
-    internal class ImmutableContainer<DataType> where DataType : IImmutableData<DataType> {
+    internal class DataContainer {
         /// <summary>
         /// All stored immutable data items.
         /// </summary>
-        public DataType[] Items;
+        public IData[] Items;
 
         /// <summary>
         /// The index of the previous item.
@@ -61,15 +28,15 @@ namespace Neon.Entities {
         /// <summary>
         /// Initializes a new instance of the ImmutableContainer class.
         /// </summary>
-        public ImmutableContainer(DataType previous, DataType current, DataType modified) {
-            Items = new DataType[] { previous, current, modified };
+        public DataContainer(IData previous, IData current, IData modified) {
+            Items = new IData[] { previous, current, modified };
             MotificationActivation = new AtomicActivation();
         }
 
         /// <summary>
         /// Return the data instance that contains the current values.
         /// </summary>
-        public DataType Current {
+        public IData Current {
             get {
                 return Items[(_previousIndex + 1) % Items.Length];
             }
@@ -78,7 +45,7 @@ namespace Neon.Entities {
         /// <summary>
         /// Return the data instance that can be modified.
         /// </summary>
-        public DataType Modifying {
+        public IData Modifying {
             get {
                 return Items[(_previousIndex + 2) % Items.Length];
             }
@@ -87,7 +54,7 @@ namespace Neon.Entities {
         /// <summary>
         /// Return the data instance that contains the previous values.
         /// </summary>
-        public DataType Previous {
+        public IData Previous {
             get {
                 return Items[(_previousIndex + 0) % Items.Length];
             }

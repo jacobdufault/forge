@@ -1,10 +1,9 @@
-﻿using Neon.Collections;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace Neon.Entities {
     /// <summary>
-    /// An interface of Entity operations that only query the current state of the entity.
+    /// An entity within the game state that can be queried for information about its current data.
     /// </summary>
     public interface IQueryableEntity {
         /// <summary>
@@ -15,25 +14,27 @@ namespace Neon.Entities {
         /// <param name="storage">An optional collection to append result to, instead of creating a
         /// new one. The collection will *not* be cleared by this method.</param>
         /// <returns>A list of data instances that pass the filter.</returns>
-        ICollection<Data> SelectCurrentData(Predicate<Data> filter = null, ICollection<Data> storage = null);
+        ICollection<IData> SelectCurrentData(Predicate<IData> filter = null,
+            ICollection<IData> storage = null);
 
         /// <summary>
-        /// Gets the event processor that Systems use to notify the external world of interesting
-        /// events.
+        /// Returns an event dispatcher that is used to notify external code of interesting things
+        /// that have occurred during the last update, such as the removal of an entity or perhaps a
+        /// data addition to an entity.
         /// </summary>
-        EventProcessor EventProcessor {
+        IEventNotifier EventNotifier {
             get;
         }
 
         /// <summary>
         /// Gets the current data value for the given type.
         /// </summary>
-        Data Current(DataAccessor accessor);
+        IData Current(DataAccessor accessor);
 
         /// <summary>
         /// Gets the previous data value for the data type.
         /// </summary>
-        Data Previous(DataAccessor accessor);
+        IData Previous(DataAccessor accessor);
 
         /// <summary>
         /// Checks to see if this Entity contains the given type of data and if that data can be
@@ -41,25 +42,14 @@ namespace Neon.Entities {
         /// </summary>
         /// <remarks>
         /// Interestingly, if the data has been removed, ContainsData will return false but Current
-        /// will return an instance (though Previous and Modify will both throw
-        /// exceptions) .
+        /// will return an instance (though Previous and Modify will both throw exceptions).
         /// </remarks>
         bool ContainsData(DataAccessor accessor);
 
         /// <summary>
-        /// Returns if the Entity was modified in the previous update.
+        /// Returns if the given data was modified in the previous update.
         /// </summary>
         bool WasModified(DataAccessor accessor);
-
-        /// <summary>
-        /// The unique id for the entity. This unique-id is relative to the actual implementation
-        /// type for the entity. For example, if there are two separate types which implement
-        /// IQueryableEntity, each can share unique ids, but w.r.t. their own types, the ids will be
-        /// unique.
-        /// </summary>
-        int UniqueId {
-            get;
-        }
 
         /// <summary>
         /// A non-unique string that represents a "human readable" name for the entity. This carries

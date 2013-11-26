@@ -4,7 +4,7 @@ namespace Neon.Entities.Serialization {
     /// <summary>
     /// Serialization specification for a saved ISystem state.
     /// </summary>
-    public class SerializedSystem {
+    internal class SerializedSystem {
         /// <summary>
         /// The ISystem GUID used for identifying the system to restore.
         /// </summary>

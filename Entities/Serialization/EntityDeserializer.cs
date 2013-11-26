@@ -6,7 +6,7 @@ namespace Neon.Entities.Serialization {
 
     // TODO: replace HasModification with entity.HasModification, and HasStateChange with
     //       entity.NeedsStateChangeUpdate, then remove DeserializedEntity
-    public class DeserializedEntity {
+    internal class DeserializedEntity {
         public IEntity Entity;
         public bool HasModification;
         public bool HasStateChange;
@@ -18,7 +18,7 @@ namespace Neon.Entities.Serialization {
     /// Deserializes a list of entities. This runs the deserialization process in multiple steps, so
     /// that entities can reference any other entity.
     /// </summary>
-    public class EntityDeserializer : IEnumerable<DeserializedEntity> {
+    internal class EntityDeserializer : IEnumerable<DeserializedEntity> {
         /// <summary>
         /// The converter that is used for the deserialization process.
         /// </summary>

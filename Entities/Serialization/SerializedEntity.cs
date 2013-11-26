@@ -6,7 +6,7 @@ namespace Neon.Entities.Serialization {
     /// <summary>
     /// Serialization specification for an instance of Data inside of an IEntity.
     /// </summary>
-    public class SerializedEntityData {
+    internal class SerializedEntityData {
         /// <summary>
         /// The type name of the data that this data item maps to.
         /// </summary>
@@ -40,19 +40,19 @@ namespace Neon.Entities.Serialization {
         public SerializedData CurrentState;
 
         [NonSerialized]
-        private Data _deserializedPreviousState;
-        public Data GetDeserializedPreviousState(SerializationConverter converter) {
+        private IData _deserializedPreviousState;
+        public IData GetDeserializedPreviousState(SerializationConverter converter) {
             if (_deserializedPreviousState == null) {
-                _deserializedPreviousState = (Data)converter.Import(TypeCache.FindType(DataType), PreviousState);
+                _deserializedPreviousState = (IData)converter.Import(TypeCache.FindType(DataType), PreviousState);
             }
             return _deserializedPreviousState;
         }
 
         [NonSerialized]
-        private Data _deserializedCurrentState;
-        public Data GetDeserializedCurrentState(SerializationConverter converter) {
+        private IData _deserializedCurrentState;
+        public IData GetDeserializedCurrentState(SerializationConverter converter) {
             if (_deserializedCurrentState == null) {
-                _deserializedCurrentState = (Data)converter.Import(TypeCache.FindType(DataType), CurrentState);
+                _deserializedCurrentState = (IData)converter.Import(TypeCache.FindType(DataType), CurrentState);
             }
             return _deserializedCurrentState;
         }
@@ -61,7 +61,7 @@ namespace Neon.Entities.Serialization {
     /// <summary>
     /// Serialization specification for an IEntity instance.
     /// </summary>
-    public class SerializedEntity {
+    internal class SerializedEntity {
         /// <summary>
         /// The pretty name for the entity. This is optional and can be null (on read).
         /// </summary>

@@ -15,7 +15,7 @@ namespace Neon.Entities {
             foreach (var tuple in _data) {
                 int id = tuple.Key;
                 DataAccessor accessor = new DataAccessor(id);
-                ImmutableContainer<Data> container = tuple.Value;
+                DataContainer container = tuple.Value;
 
                 SerializedEntityData serializedData = new SerializedEntityData() {
                     DataType = container.Current.GetType().ToString(),
@@ -86,7 +86,7 @@ namespace Neon.Entities {
         // thread safe because we never write
         private int _uniqueId;
 
-        int IQueryableEntity.UniqueId {
+        int IEntity.UniqueId {
             get { return _uniqueId; }
         }
         #endregion
@@ -96,8 +96,8 @@ namespace Neon.Entities {
         #endregion
 
         #region Event Processor
-        private EventProcessor _eventProcessor;
-        EventProcessor IQueryableEntity.EventProcessor {
+        private EventNotifier _eventProcessor;
+        IEventNotifier IQueryableEntity.EventNotifier {
             get { return _eventProcessor; }
         }
         #endregion
@@ -117,7 +117,7 @@ namespace Neon.Entities {
             PrettyName = serializedEntity.PrettyName ?? "";
             _uniqueId = serializedEntity.UniqueId;
             _idGenerator.Consume(_uniqueId);
-            _eventProcessor = new EventProcessor();
+            _eventProcessor = new EventNotifier();
 
             DataStateChangeNotifier = new Notifier<Entity>(this);
             ModificationNotifier = new Notifier<Entity>(this);
@@ -130,16 +130,16 @@ namespace Neon.Entities {
                 hasModification = hasModification || data.WasModified;
 
                 if (data.IsAdding) {
-                    Data current = data.GetDeserializedCurrentState(converter);
+                    IData current = data.GetDeserializedCurrentState(converter);
                     _toAdd.Add(current);
                 }
 
                 else {
-                    Data current = data.GetDeserializedCurrentState(converter);
-                    Data previous = data.GetDeserializedPreviousState(converter);
+                    IData current = data.GetDeserializedCurrentState(converter);
+                    IData previous = data.GetDeserializedPreviousState(converter);
 
                     int id = DataAccessorFactory.GetId(current.GetType());
-                    _data[id] = new ImmutableContainer<Data>(previous, current, current.Duplicate());
+                    _data[id] = new DataContainer(previous, current, current.Duplicate());
 
                     // There is going to be an ApplyModification call before systems actually view
                     // this Entity instance. With that in mind, we can treat our data initialization
@@ -181,7 +181,7 @@ namespace Neon.Entities {
             _uniqueId = uniqueId;
             _idGenerator.Consume(uniqueId);
 
-            _eventProcessor = new EventProcessor();
+            _eventProcessor = new EventNotifier();
 
             DataStateChangeNotifier = new Notifier<Entity>(this);
             ModificationNotifier = new Notifier<Entity>(this);
@@ -191,7 +191,7 @@ namespace Neon.Entities {
         public Notifier<Entity> DataStateChangeNotifier;
         public Notifier<Entity> ModificationNotifier;
 
-        public EntityManager EntityManager;
+        public GameEngine GameEngine;
 
         /// <summary>
         /// Removes all data instances from the Entity.
@@ -259,7 +259,7 @@ namespace Neon.Entities {
                     _removed[id] = removedStage1[i];
                     // _removed[id] is removed from _removed in stage2
 
-                    ((this as IEntity)).EventProcessor.Submit(new RemovedDataEvent(_data[id].Current.GetType()));
+                    _eventProcessor.Submit(new RemovedDataEvent(_data[id].Current.GetType()));
                 }
 
                 for (int i = 0; i < removedStage2.Count; ++i) {
@@ -278,7 +278,7 @@ namespace Neon.Entities {
 
             // do additions
             for (int i = 0; i < _toAdd.Count; ++i) {
-                Data added = _toAdd[i];
+                IData added = _toAdd[i];
                 int id = DataAccessorFactory.GetId(added.GetType());
 
                 // make sure we do not readd the same data instance twice
@@ -287,10 +287,10 @@ namespace Neon.Entities {
                     continue;
                 }
 
-                _data[id] = new ImmutableContainer<Data>(added.Duplicate(), added.Duplicate(), added.Duplicate());
+                _data[id] = new DataContainer(added.Duplicate(), added.Duplicate(), added.Duplicate());
 
                 // visualize the initial data
-                ((this as IEntity)).EventProcessor.Submit(new AddedDataEvent(added.GetType()));
+                _eventProcessor.Submit(new AddedDataEvent(added.GetType()));
             }
             _toAdd.Clear();
 
@@ -307,7 +307,7 @@ namespace Neon.Entities {
 
         void IEntity.Destroy() {
             // EntityManager.RemoveEntity is synchronized
-            EntityManager.RemoveEntity(this);
+            GameEngine.RemoveEntity(this);
         }
 
         #region Instance data
@@ -319,18 +319,18 @@ namespace Neon.Entities {
         /// Only the entity manager calls entity APIs that write to this; it is single-threaded
         /// only.
         /// </remarks>
-        private SparseArray<ImmutableContainer<Data>> _data = new SparseArray<ImmutableContainer<Data>>();
+        private SparseArray<DataContainer> _data = new SparseArray<DataContainer>();
 
         /// <summary>
         /// Data that has been modified this frame and needs to be pushed out
         /// </summary>
-        private SparseArray<ImmutableContainer<Data>> _modifiedLastFrame = new SparseArray<ImmutableContainer<Data>>();
+        private SparseArray<DataContainer> _modifiedLastFrame = new SparseArray<DataContainer>();
         private ConcurrentWriterBag<DataAccessor> _concurrentModifications = new ConcurrentWriterBag<DataAccessor>();
 
         /// <summary>
         /// Items that are pending addition in the next update call
         /// </summary>
-        private List<Data> _toAdd = new List<Data>();
+        private List<IData> _toAdd = new List<IData>();
 
         private SwappableItem<List<DataAccessor>> _toRemove = new SwappableItem<List<DataAccessor>>(new List<DataAccessor>(), new List<DataAccessor>());
         private SparseArray<DataAccessor> _removed = new SparseArray<DataAccessor>();
@@ -343,7 +343,7 @@ namespace Neon.Entities {
         /// </summary>
         /// <param name="accessor">The DataAccessor to lookup</param>
         /// <returns>A data instance, or null if it cannot be found</returns>
-        private Data GetAddedData_unlocked(DataAccessor accessor) {
+        private IData GetAddedData_unlocked(DataAccessor accessor) {
             int id = accessor.Id;
             // TODO: optimize this so we don't have to search through all added data... though
             // this should actually be pretty quick
@@ -358,10 +358,10 @@ namespace Neon.Entities {
         }
         #endregion
 
-        Data IEntity.AddOrModify(DataAccessor accessor) {
+        IData IEntity.AddOrModify(DataAccessor accessor) {
             if (((IEntity)this).ContainsData(accessor) == false) {
                 lock (_toAdd) {
-                    Data added = GetAddedData_unlocked(accessor);
+                    IData added = GetAddedData_unlocked(accessor);
                     if (added == null) {
                         added = AddData_unlocked(accessor);
                     }
@@ -373,13 +373,13 @@ namespace Neon.Entities {
             return ((IEntity)this).Modify(accessor);
         }
 
-        ICollection<Data> IQueryableEntity.SelectCurrentData(Predicate<Data> filter, ICollection<Data> storage) {
+        ICollection<IData> IQueryableEntity.SelectCurrentData(Predicate<IData> filter, ICollection<IData> storage) {
             if (storage == null) {
-                storage = new List<Data>();
+                storage = new List<IData>();
             }
 
             foreach (var tuple in _data) {
-                Data data = tuple.Value.Current;
+                IData data = tuple.Value.Current;
                 if (filter == null || filter(data)) {
                     storage.Add(data);
                 }
@@ -389,7 +389,7 @@ namespace Neon.Entities {
         }
 
         #region AddData
-        private Data AddData_unlocked(DataAccessor accessor) {
+        private IData AddData_unlocked(DataAccessor accessor) {
             // ensure that we have not already added a data of this type
             if (GetAddedData_unlocked(accessor) != null) {
                 throw new AlreadyAddedDataException(this, DataAccessorFactory.GetTypeFromAccessor(accessor));
@@ -397,11 +397,11 @@ namespace Neon.Entities {
 
             // add our data
             Type dataType = DataAccessorFactory.GetTypeFromAccessor(accessor);
-            Data data = (Data)Activator.CreateInstance(dataType);
+            IData data = (IData)Activator.CreateInstance(dataType);
             _toAdd.Add(data);
 
             // initialize data outside of lock
-            data.Entity = this;
+            data.SetContainingEntity(this);
 
             // notify the entity manager
             ModificationNotifier.Notify();
@@ -411,7 +411,7 @@ namespace Neon.Entities {
             return data;
         }
 
-        Data IEntity.AddData(DataAccessor accessor) {
+        IData IEntity.AddData(DataAccessor accessor) {
             lock (_toAdd) {
                 return AddData_unlocked(accessor);
             }
@@ -430,11 +430,11 @@ namespace Neon.Entities {
         #endregion
 
         #region Modify
-        Data IEntity.Modify(DataAccessor accessor, bool force) {
+        IData IEntity.Modify(DataAccessor accessor) {
             var id = accessor.Id;
 
             if (((IEntity)this).ContainsData(accessor) == false) {
-                Data added = GetAddedData_unlocked(accessor);
+                IData added = GetAddedData_unlocked(accessor);
                 if (added != null) {
                     return added;
                 }
@@ -446,7 +446,7 @@ namespace Neon.Entities {
                 _concurrentModifications.Add(accessor);
                 ModificationNotifier.Notify();
             }
-            else if (!force && _data[id].Current.SupportsConcurrentModifications == false) {
+            else if (_data[id].Current.SupportsConcurrentModifications == false) {
                 throw new RemodifiedDataException(this, DataAccessorFactory.GetTypeFromAccessor(accessor));
             }
 
@@ -454,7 +454,7 @@ namespace Neon.Entities {
         }
         #endregion
 
-        Data IQueryableEntity.Current(DataAccessor accessor) {
+        IData IQueryableEntity.Current(DataAccessor accessor) {
             if (_data.Contains(accessor.Id) == false) {
                 throw new NoSuchDataException(this, accessor);
             }
@@ -462,7 +462,7 @@ namespace Neon.Entities {
             return _data[accessor.Id].Current;
         }
 
-        Data IQueryableEntity.Previous(DataAccessor accessor) {
+        IData IQueryableEntity.Previous(DataAccessor accessor) {
             if (((IEntity)this).ContainsData(accessor) == false) {
                 throw new NoSuchDataException(this, accessor);
             }
@@ -484,7 +484,7 @@ namespace Neon.Entities {
         /// <summary>
         /// Returns all data instances that are being added.
         /// </summary>
-        public List<Data> GetAddingData() {
+        public List<IData> GetAddingData() {
             return _toAdd;
         }
 
