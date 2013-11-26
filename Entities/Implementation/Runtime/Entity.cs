@@ -283,7 +283,7 @@ namespace Neon.Entities {
 
                 // make sure we do not readd the same data instance twice
                 if (_data.Contains(id)) {
-                    exceptionToThrow = new AlreadyAddedDataException(this, added.GetType());
+                    exceptionToThrow = new AlreadyAddedDataException(this, new DataAccessor(added));
                     continue;
                 }
 
@@ -392,16 +392,13 @@ namespace Neon.Entities {
         private IData AddData_unlocked(DataAccessor accessor) {
             // ensure that we have not already added a data of this type
             if (GetAddedData_unlocked(accessor) != null) {
-                throw new AlreadyAddedDataException(this, DataAccessorFactory.GetTypeFromAccessor(accessor));
+                throw new AlreadyAddedDataException(this, accessor);
             }
 
             // add our data
             Type dataType = DataAccessorFactory.GetTypeFromAccessor(accessor);
             IData data = (IData)Activator.CreateInstance(dataType);
             _toAdd.Add(data);
-
-            // initialize data outside of lock
-            data.SetContainingEntity(this);
 
             // notify the entity manager
             ModificationNotifier.Notify();
@@ -447,7 +444,7 @@ namespace Neon.Entities {
                 ModificationNotifier.Notify();
             }
             else if (_data[id].Current.SupportsConcurrentModifications == false) {
-                throw new RemodifiedDataException(this, DataAccessorFactory.GetTypeFromAccessor(accessor));
+                throw new RemodifiedDataException(this, accessor);
             }
 
             return _data[id].Modifying;

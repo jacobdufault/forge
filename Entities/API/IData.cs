@@ -37,8 +37,6 @@ namespace Neon.Entities {
         /// Return an exact copy of this data instance.
         /// </summary>
         IData Duplicate();
-
-        void SetContainingEntity(IEntity entity);
     }
 
     /// <summary>

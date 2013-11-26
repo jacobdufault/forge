@@ -47,6 +47,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Implementation\Content\ContentDatabase.cs" />
+    <Compile Include="Implementation\Content\ContentEntity.cs" />
+    <Compile Include="Implementation\Content\ContentTemplate.cs" />
     <Compile Include="Implementation\Shared\DataAccessor.cs" />
     <Compile Include="Implementation\Runtime\Entity.cs" />
     <Compile Include="Implementation\Runtime\EntityManagerMetadata.cs" />
@@ -93,9 +96,7 @@
       <Name>Utilities</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Implementation\Editor\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

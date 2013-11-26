@@ -11,9 +11,10 @@ namespace Neon.Entities {
         /// Creates the exception with the given context and data type.
         /// </summary>
         /// <param name="context">The entity that triggered the exception.</param>
-        /// <param name="type">The data type that was already added.</param>
-        internal AlreadyAddedDataException(IEntity context, Type type)
-            : base("The entity already has a data instance for type=" + type + " in " + context) {
+        /// <param name="accessor">The data type that was already added.</param>
+        internal AlreadyAddedDataException(IEntity context, DataAccessor accessor)
+            : base("The entity already has a data instance for type=" +
+            DataAccessorFactory.GetTypeFromAccessor(accessor) + " in " + context) {
         }
     }
 
@@ -45,8 +46,9 @@ namespace Neon.Entities {
         /// </summary>
         /// <param name="context">The entity that triggered the exception.</param>
         /// <param name="type">The data type that was concurrently modified.</param>
-        internal RemodifiedDataException(IEntity context, Type type)
-            : base("Already modified data for type=" + type + " in " + context) {
+        internal RemodifiedDataException(IEntity context, DataAccessor accessor)
+            : base("Already modified data for type=" +
+            DataAccessorFactory.GetTypeFromAccessor(accessor) + " in " + context) {
         }
     }
 }
