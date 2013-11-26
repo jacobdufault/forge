@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 
 namespace Neon.Utilities.Tests {
     [TestClass]
@@ -49,12 +50,9 @@ namespace Neon.Utilities.Tests {
         }
 
         [TestMethod]
+        [ExpectedException(typeof(Exception))]
         public void ZeroRadius() {
-            Bound b1 = new Bound(0, 0, 1);
             Bound b2 = new Bound(0, 0, 0);
-
-            Assert.IsTrue(b1.Intersects(b2));
-            Assert.IsTrue(b2.Intersects(b1));
         }
     }
 }

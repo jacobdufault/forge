@@ -50,7 +50,7 @@
   <ItemGroup>
     <Compile Include="AtomicActivation.cs" />
     <Compile Include="Bound.cs" />
-    <Compile Include="Debug.cs" />
+    <Compile Include="Contract.cs" />
     <Compile Include="FastStringFormat.cs" />
     <Compile Include="GameRandom.cs" />
     <Compile Include="Log.cs" />
