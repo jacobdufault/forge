@@ -27,6 +27,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SerializationTests", "Seria
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CollectionsTests", "CollectionsTests\CollectionsTests.csproj", "{1973EECC-8908-47BC-9EA4-DC99530C888A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileSaving", "FileSaving\FileSaving.csproj", "{3BB8571C-22E3-47A0-A4B3-12D682B25B4D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileSavingTests", "FileSavingTests\FileSavingTests.csproj", "{52380B9F-EFEC-4388-A440-288C218D68EF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -77,6 +81,14 @@ Global
 		{1973EECC-8908-47BC-9EA4-DC99530C888A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1973EECC-8908-47BC-9EA4-DC99530C888A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1973EECC-8908-47BC-9EA4-DC99530C888A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3BB8571C-22E3-47A0-A4B3-12D682B25B4D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3BB8571C-22E3-47A0-A4B3-12D682B25B4D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3BB8571C-22E3-47A0-A4B3-12D682B25B4D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3BB8571C-22E3-47A0-A4B3-12D682B25B4D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{52380B9F-EFEC-4388-A440-288C218D68EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52380B9F-EFEC-4388-A440-288C218D68EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52380B9F-EFEC-4388-A440-288C218D68EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52380B9F-EFEC-4388-A440-288C218D68EF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
