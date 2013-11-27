@@ -1,5 +1,5 @@
 ﻿using Neon.Entities.Implementation.Content.Specifications;
-using Neon.Entities.Serialization;
+using Neon.Entities.Implementation.Shared;
 using Neon.Serialization;
 using System;
 using System.Collections.Generic;

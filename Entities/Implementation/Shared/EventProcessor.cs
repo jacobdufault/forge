@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-namespace Neon.Entities {
+namespace Neon.Entities.Implementation.Shared {
     /// <summary>
     /// Handles event dispatch. Events are queued up until some point in time and then they are
     /// dispatched.

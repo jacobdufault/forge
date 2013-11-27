@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace Neon.Entities {
+namespace Neon.Entities.Implementation.Shared {
     /// <summary>
     /// Maps different types of Data to a sequential set of integers.
     /// </summary>

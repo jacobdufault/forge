@@ -1,12 +1,11 @@
 ﻿using Neon.Collections;
 using Neon.Entities.Implementation.Content;
-using Neon.Entities.Serialization;
-using Neon.Serialization;
+using Neon.Entities.Implementation.Shared;
 using Neon.Utilities;
 using System;
 using System.Collections.Generic;
 
-namespace Neon.Entities {
+namespace Neon.Entities.Implementation.Runtime {
     internal class RuntimeEntity : IEntity {
         /*
         public SerializedEntity ToSerializedEntity(bool entityIsAdding, bool entityIsRemoving,

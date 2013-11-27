@@ -1,5 +1,5 @@
 ﻿using Neon.Entities.Implementation.Content;
-using Neon.Entities.Implementation.Content.Serialization;
+using Neon.Entities.Implementation.Content.Specifications;
 using Neon.Entities.Serialization;
 using Neon.FileSaving;
 using Neon.Serialization;
@@ -10,7 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace Neon.Entities.Shared {
+namespace Neon.Entities.Implementation.Shared {
     internal class EntitiesSaveFileItem : ISaveFileItem, ISavedLevel {
         public Guid Identifier {
             get { return new Guid("C8C0303D-97C9-4876-91C0-F6259CCE6760"); }

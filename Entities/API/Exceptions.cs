@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Neon.Entities.Implementation.Shared;
+using System;
 
 namespace Neon.Entities {
     /// <summary>

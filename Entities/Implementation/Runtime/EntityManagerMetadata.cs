@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Neon.Entities {
+namespace Neon.Entities.Implementation.Runtime {
     /// <summary>
     /// Metadata that the EntityManager requires.
     /// </summary>

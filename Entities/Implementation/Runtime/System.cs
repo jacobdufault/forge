@@ -1,10 +1,10 @@
 ﻿using Neon.Collections;
-using System;
+using Neon.Entities.Implementation.Shared;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 
-namespace Neon.Entities {
+namespace Neon.Entities.Implementation.Runtime {
     /// <summary>
     /// Shared state between all multithreaded systems.
     /// </summary>

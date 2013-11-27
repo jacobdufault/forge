@@ -1,4 +1,6 @@
 ﻿using Neon.Collections;
+using Neon.Entities.Implementation.Content.Specifications;
+using Neon.Entities.Implementation.Shared;
 using Neon.Serialization;
 using Neon.Utilities;
 using System;

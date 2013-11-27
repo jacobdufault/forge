@@ -1,7 +1,7 @@
 ﻿using Neon.Serialization;
 using System.Collections.Generic;
 
-namespace Neon.Entities.Implementation.Content {
+namespace Neon.Entities.Implementation.Content.Specifications {
     /// <summary>
     /// Serialization specification for a ContentEntitySpecification instance.
     /// </summary>

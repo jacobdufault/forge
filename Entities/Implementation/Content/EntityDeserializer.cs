@@ -1,11 +1,11 @@
 ﻿using Neon.Collections;
-using Neon.Entities.Implementation.Content;
+using Neon.Entities.Implementation.Content.Specifications;
 using Neon.Serialization;
 using Neon.Utilities;
 using System;
 using System.Collections.Generic;
 
-namespace Neon.Entities.Serialization {
+namespace Neon.Entities.Implementation.Content {
     /// <summary>
     /// Deserializes a list of entities. This runs the deserialization process in multiple steps, so
     /// that entities can reference any other entity.

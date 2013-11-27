@@ -1,9 +1,10 @@
 ﻿using Neon.Collections;
+using Neon.Entities.Implementation.Runtime;
 using Neon.Utilities;
 using System;
 using System.Collections.Generic;
 
-namespace Neon.Entities.Implementation.Content {
+namespace Neon.Entities.Implementation.Shared {
     internal class Template : ITemplate {
         private static UniqueIntGenerator _idGenerator = new UniqueIntGenerator();
 

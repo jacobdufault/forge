@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Neon.Entities.Implementation.Content {
+namespace Neon.Entities.Implementation.Content.Specifications {
     /// <summary>
     /// Serialization specification for an instance of Data inside of an IEntity.
     /// </summary>

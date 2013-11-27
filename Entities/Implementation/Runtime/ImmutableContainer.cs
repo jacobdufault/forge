@@ -2,7 +2,7 @@
 using Neon.Utilities;
 using System.Threading;
 
-namespace Neon.Entities {
+namespace Neon.Entities.Implementation.Runtime {
     /// <summary>
     /// Contains a set of three IData instances and allows swapping between those instances such
     /// that one of them is the previous state, one of them is the current state, and one of them is

@@ -1,7 +1,6 @@
 ﻿using Neon.Collections;
 using Neon.Entities.Implementation.Content;
-using Neon.Entities.Serialization;
-using Neon.Serialization;
+using Neon.Entities.Implementation.Shared;
 using Neon.Utilities;
 using System;
 using System.Collections.Generic;
@@ -11,7 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Neon.Entities {
+namespace Neon.Entities.Implementation.Runtime {
     /// <summary>
     /// The EntityManager requires an associated Entity which is not injected into the
     /// EntityManager.

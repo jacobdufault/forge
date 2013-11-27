@@ -1,7 +1,8 @@
-﻿using Neon.Serialization;
+﻿using Neon.Entities.Implementation.Shared;
+using Neon.Serialization;
 using System.Collections.Generic;
 
-namespace Neon.Entities.Implementation.Content.Serialization {
+namespace Neon.Entities.Implementation.Content.Specifications {
     /// <summary>
     /// Serialization specification for an EntityTemplate.
     /// </summary>

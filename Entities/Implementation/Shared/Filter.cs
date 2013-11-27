@@ -1,5 +1,5 @@
 ﻿
-namespace Neon.Entities {
+namespace Neon.Entities.Implementation.Shared {
     /// <summary>
     /// A filter ensures that an entity contains a set of data types.
     /// </summary>

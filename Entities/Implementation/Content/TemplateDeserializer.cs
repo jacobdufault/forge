@@ -1,13 +1,13 @@
 ﻿
 using Neon.Collections;
-using Neon.Entities.Implementation.Content;
-using Neon.Entities.Implementation.Content.Serialization;
+using Neon.Entities.Implementation.Content.Specifications;
+using Neon.Entities.Implementation.Shared;
 using Neon.Serialization;
 using Neon.Utilities;
 using System;
 using System.Collections.Generic;
 
-namespace Neon.Entities.Serialization {
+namespace Neon.Entities.Implementation.Content {
     internal class TemplateDeserializer : IEnumerable<ITemplate> {
         private SparseArray<Tuple<Template, TemplateSpecification>> _templates;
         private SerializationConverter _converter;
