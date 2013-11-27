@@ -8,7 +8,7 @@ namespace Neon.FileSaving {
     /// Writes save files. Save files are just a set of file items. Each file item may only be
     /// written to a file once.
     /// </summary>
-    public class FileWriter {
+    public class SavedStateWriter {
         /// <summary>
         /// The data that we will ultimately write.
         /// </summary>
@@ -23,7 +23,7 @@ namespace Neon.FileSaving {
         /// <summary>
         /// Creates a new file writer that is empty.
         /// </summary>
-        public FileWriter() {
+        public SavedStateWriter() {
             _data = SerializedData.CreateList();
             _writtenFileItems = new HashSet<Guid>();
         }
@@ -33,7 +33,7 @@ namespace Neon.FileSaving {
         /// exception is thrown.
         /// </summary>
         /// <param name="item">The item to write.</param>
-        public void WriteFileItem(IFileItem item) {
+        public void WriteFileItem(ISaveFileItem item) {
             Contract.AssertArguments(item, "item");
 
             if (_writtenFileItems.Add(item.Identifier) == false) {

@@ -5,7 +5,7 @@ namespace Neon.FileSaving {
     /// <summary>
     /// An item that is within a save file.
     /// </summary>
-    public interface IFileItem {
+    public interface ISaveFileItem {
         /// <summary>
         /// The globally unique identifier that identifies this file item.
         /// </summary>

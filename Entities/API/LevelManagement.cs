@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Neon.FileSaving;
+using Neon.Utilities;
+using System;
 using System.Collections.Generic;
 
 namespace Neon.Entities {
@@ -7,11 +9,12 @@ namespace Neon.Entities {
     /// </summary>
     public static class LevelManager {
         /// <summary>
-        /// Loads a level that is contained within the given string.
+        /// Attempts to load level that is contained within the given string.
         /// </summary>
         /// <param name="level">The level to load.</param>
-        /// <returns></returns>
-        public static SavedLevel Load(string level) {
+        /// <returns>An empty maybe if no level could be loaded, otherwise the loaded
+        /// level.</returns>
+        public static Maybe<ISavedLevel> Load(SavedStateReader level) {
             // TODO: ensure that we are support the level version
             throw new NotImplementedException();
         }
@@ -21,7 +24,7 @@ namespace Neon.Entities {
         /// the current and original states, with no input issued thus far. This method is most
         /// appropriate for usage inside of, ie, an editor, and not for actually saving a game.
         /// </summary>
-        public static string Save(IContentDatabase content) {
+        public static void Save(SavedStateReader level, IContentDatabase content) {
             throw new NotImplementedException();
         }
 
@@ -34,7 +37,8 @@ namespace Neon.Entities {
         /// facilitates faster level loading.</param>
         /// <param name="input">The input that was used to transform the original database into the
         /// current one.</param>
-        public static string Save(IContentDatabase original, IContentDatabase current, List<IssuedInput> input) {
+        public static string Save(IContentDatabase original, IContentDatabase current,
+            List<IssuedInput> input) {
             throw new NotImplementedException();
         }
     }
@@ -65,20 +69,26 @@ namespace Neon.Entities {
     /// <summary>
     /// Represents a level that has been saved.
     /// </summary>
-    public class SavedLevel {
+    public interface ISavedLevel {
         /// <summary>
         /// The current state of the game.
         /// </summary>
-        public IContentDatabase CurrentState;
+        IContentDatabase CurrentState {
+            get;
+        }
 
         /// <summary>
         /// The original state of the game before any updates occurred.
         /// </summary>
-        public IContentDatabase OriginalState;
+        IContentDatabase OriginalState {
+            get;
+        }
 
         /// <summary>
         /// The input that can be used to transform the original state into the current state.
         /// </summary>
-        public List<IssuedInput> Input;
+        List<IssuedInput> Input {
+            get;
+        }
     }
 }

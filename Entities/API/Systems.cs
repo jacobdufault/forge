@@ -19,7 +19,7 @@ namespace Neon.Entities {
         /// Returns the GUID for this system. This is used to identify what serialized data to use
         /// when restoring the system.
         /// </summary>
-        string RestorationGUID {
+        Guid RestorationGuid {
             get;
         }
 

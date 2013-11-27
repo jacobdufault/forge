@@ -82,7 +82,7 @@ namespace Neon.Entities {
         /// Initializes a new instance of the EntityRemovedEvent class.
         /// </summary>
         /// <param name="entity">The entity that was removed.</param>
-        internal EntityRemovedEvent(Entity entity) {
+        internal EntityRemovedEvent(IEntity entity) {
             Entity = entity;
         }
     }

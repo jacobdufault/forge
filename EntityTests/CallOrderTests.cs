@@ -59,11 +59,11 @@ namespace Neon.Entities.Tests {
             get { return typeof(int); }
         }
 
-        public void OnInput(IStructuredInput input, IEntity entity) {
+        public void OnInput(IGameInput input, IEntity entity) {
             _events.Add(TriggerEvent.OnInput);
         }
 
-        public void OnGlobalInput(IStructuredInput input, IEntity singletonEntity) {
+        public void OnGlobalInput(IGameInput input, IEntity singletonEntity) {
             _events.Add(TriggerEvent.OnGlobalInput);
         }
     }
@@ -74,12 +74,12 @@ namespace Neon.Entities.Tests {
         }
     }
 
-    internal class TestData0 : Data {
+    internal class TestData0 : IData {
         public override bool SupportsConcurrentModifications {
             get { return false; }
         }
 
-        public override void CopyFrom(Data source) {
+        public override void CopyFrom(IData source) {
         }
 
         public override int HashCode {
@@ -90,12 +90,12 @@ namespace Neon.Entities.Tests {
         //}
     }
 
-    internal class TestData1 : Data {
+    internal class TestData1 : IData {
         public override bool SupportsConcurrentModifications {
             get { return false; }
         }
 
-        public override void CopyFrom(Data source) {
+        public override void CopyFrom(IData source) {
         }
 
         public override int HashCode {

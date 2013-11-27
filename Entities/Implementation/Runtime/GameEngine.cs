@@ -1,4 +1,5 @@
 ﻿using Neon.Collections;
+using Neon.Entities.Implementation.Content;
 using Neon.Entities.Serialization;
 using Neon.Serialization;
 using Neon.Utilities;
@@ -29,32 +30,32 @@ namespace Neon.Entities {
         /// <summary>
         /// The list of active Entities in the world.
         /// </summary>
-        private UnorderedList<Entity> _entities = new UnorderedList<Entity>();
+        private UnorderedList<RuntimeEntity> _entities = new UnorderedList<RuntimeEntity>();
 
         /// <summary>
         /// A list of Entities that were added to the EntityManager in the last update loop. This
         /// means that they are now ready to actually be added to the EntityManager in this update.
         /// </summary>
-        private List<Entity> _addedEntities = new List<Entity>();
+        private List<RuntimeEntity> _addedEntities = new List<RuntimeEntity>();
 
         /// <summary>
         /// The entities which are added to the EntityManager in this frame. This is concurrently
         /// written to as systems create new entities.
         /// </summary>
-        private ConcurrentWriterBag<Entity> _notifiedAddingEntities = new ConcurrentWriterBag<Entity>();
+        private ConcurrentWriterBag<RuntimeEntity> _notifiedAddingEntities = new ConcurrentWriterBag<RuntimeEntity>();
 
         /// <summary>
         /// A list of Entities that were removed from the EntityManager in the last update loop.
         /// This means that they are now ready to actually be removed from the EntityManager in this
         /// update.
         /// </summary>
-        private List<Entity> _removedEntities = new List<Entity>();
+        private List<RuntimeEntity> _removedEntities = new List<RuntimeEntity>();
 
         /// <summary>
         /// The entities which are removed to the EntityManager in this frame. This is concurrently
         /// written to as systems remove entities.
         /// </summary>
-        private ConcurrentWriterBag<Entity> _notifiedRemovedEntities = new ConcurrentWriterBag<Entity>();
+        private ConcurrentWriterBag<RuntimeEntity> _notifiedRemovedEntities = new ConcurrentWriterBag<RuntimeEntity>();
 
         /// <summary>
         /// A list of Entities that have been modified.
@@ -64,20 +65,20 @@ namespace Neon.Entities {
         /// storing the previous update's results. This is because this data is not shared with
         /// systems.
         /// </remarks>
-        private ConcurrentWriterBag<Entity> _notifiedModifiedEntities = new ConcurrentWriterBag<Entity>();
+        private ConcurrentWriterBag<RuntimeEntity> _notifiedModifiedEntities = new ConcurrentWriterBag<RuntimeEntity>();
 
         /// <summary>
         /// Entities that have state changes. Entities can have state changes for multiple frames,
         /// so the entities inside of this list can be from any update before the current one.
         /// </summary>
         // TODO: convert this to a bag if performance is a problem
-        private List<Entity> _stateChangeEntities = new List<Entity>();
+        private List<RuntimeEntity> _stateChangeEntities = new List<RuntimeEntity>();
 
         /// <summary>
         /// Entities which have state changes in this frame. This collection will be added to
         /// _stateChangeEntities during the next update.
         /// </summary>
-        private ConcurrentWriterBag<Entity> _notifiedStateChangeEntities = new ConcurrentWriterBag<Entity>();
+        private ConcurrentWriterBag<RuntimeEntity> _notifiedStateChangeEntities = new ConcurrentWriterBag<RuntimeEntity>();
 
         /// <summary>
         /// All of the multithreaded systems.
@@ -108,18 +109,9 @@ namespace Neon.Entities {
         /// <summary>
         /// Singleton entity that contains global data.
         /// </summary>
-        public IEntity SingletonEntity {
+        public RuntimeEntity SingletonEntity {
             get;
             set;
-        }
-
-        /// <summary>
-        /// All entities that are currently in the EntityManager.
-        /// </summary>
-        public IEnumerable<IEntity> Entities {
-            get {
-                return _entities.Select(e => (IEntity)e);
-            }
         }
 
         /// <summary>
@@ -131,57 +123,66 @@ namespace Neon.Entities {
             private set;
         }
 
-        public GameEngine(IEntity singletonEntity) {
-            SingletonEntity = (Entity)singletonEntity;
-            SystemDoneEvent = new CountdownEvent(0);
-            _eventProcessors.BeginMonitoring((EventNotifier)EventNotifier);
-        }
+        public GameEngine(IContentDatabase contentDatabase, int updateNumber) {
+            foreach (var template in contentDatabase.Templates) {
+                Template tem = (Template)template;
 
-        internal GameEngine(int updateNumber, SerializedEntity singletonEntity,
-            List<SerializedEntity> restoredEntities, List<ISystem> systems,
-            SerializationConverter converter) {
+                if (tem != null) {
+                    throw new InvalidOperationException("Attempt to create multiple GameEngines " +
+                        "from the same content database; this is not currently supported");
+                }
+
+                tem.GameEngine = this;
+            }
+
+            // TODO: ensure that we send out systems send out state change removal notifications
 
             SystemDoneEvent = new CountdownEvent(0);
             _eventProcessors.BeginMonitoring((EventNotifier)EventNotifier);
 
             UpdateNumber = updateNumber;
 
-            EntityDeserializer entityDeserializer = new EntityDeserializer(singletonEntity, restoredEntities, converter, addingToEntityManager: true);
-            foreach (var deserializedEntity in entityDeserializer) {
-                int entityId = ((IEntity)deserializedEntity.Entity).UniqueId;
+            SingletonEntity = new RuntimeEntity((ContentEntity)contentDatabase.SingletonEntity);
 
-                // are we restoring the singleton entity?
-                if (entityId == singletonEntity.UniqueId) {
-                    SingletonEntity = deserializedEntity.Entity;
-                }
-
-                // or is it just a generic entity in the manager
-                else {
-                    if (deserializedEntity.IsAdding) {
-                        AddEntity(deserializedEntity.Entity);
-                    }
-
-                    else {
-                        // add the entity
-                        InternalAddEntity((Entity)deserializedEntity.Entity);
-
-                        if (deserializedEntity.HasModification) {
-                            ((Entity)deserializedEntity.Entity).ModificationNotifier.Notify();
-                        }
-
-                        // done via InternalAddEntity
-                        //if (deserializedEntity.HasStateChange) {
-                        //    deserializedEntity.Entity.DataStateChangeNotifier.Notify();
-                        //}
-                    }
-
-                    if (deserializedEntity.IsRemoving) {
-                        RemoveEntity(deserializedEntity.Entity);
-                    }
-                }
+            foreach (var entity in contentDatabase.ActiveEntities) {
+                AddEntity(new RuntimeEntity((ContentEntity)entity));
             }
 
-            foreach (var system in systems) {
+            foreach (var entity in contentDatabase.AddedEntities) {
+                RuntimeEntity runtimeEntity = new RuntimeEntity((ContentEntity)entity);
+
+                // add the entity
+                InternalAddEntity(runtimeEntity);
+
+                if (((ContentEntity)entity).HasModification) {
+                    runtimeEntity.ModificationNotifier.Notify();
+                }
+
+                // done via InternalAddEntity
+                //if (deserializedEntity.HasStateChange) {
+                //    deserializedEntity.Entity.DataStateChangeNotifier.Notify();
+                //}
+            }
+
+            foreach (var entity in contentDatabase.RemovedEntities) {
+                RuntimeEntity runtimeEntity = new RuntimeEntity((ContentEntity)entity);
+
+                // add the entity
+                InternalAddEntity(runtimeEntity);
+
+                if (((ContentEntity)entity).HasModification) {
+                    runtimeEntity.ModificationNotifier.Notify();
+                }
+
+                // done via InternalAddEntity
+                //if (deserializedEntity.HasStateChange) {
+                //    deserializedEntity.Entity.DataStateChangeNotifier.Notify();
+                //}
+
+                RemoveEntity(runtimeEntity);
+            }
+
+            foreach (var system in contentDatabase.Systems) {
                 AddSystem(system);
             }
         }
@@ -208,7 +209,7 @@ namespace Neon.Entities {
         /// associated systems. This executes the add immediately.
         /// </summary>
         /// <param name="toAdd">The entity to add.</param>
-        private void InternalAddEntity(Entity toAdd) {
+        private void InternalAddEntity(RuntimeEntity toAdd) {
             toAdd.GameEngine = this;
             ((EventNotifier)((IEntity)toAdd).EventNotifier).Submit(ShowEntityEvent.Instance);
 
@@ -244,7 +245,7 @@ namespace Neon.Entities {
 
             // Add entities
             for (int i = 0; i < _addedEntities.Count; ++i) {
-                Entity toAdd = _addedEntities[i];
+                RuntimeEntity toAdd = _addedEntities[i];
 
                 InternalAddEntity(toAdd);
 
@@ -259,7 +260,7 @@ namespace Neon.Entities {
 
             // Remove entities
             for (int i = 0; i < _removedEntities.Count; ++i) {
-                Entity toRemove = _removedEntities[i];
+                RuntimeEntity toRemove = _removedEntities[i];
 
                 // remove listeners
                 toRemove.ModificationNotifier.Listener -= OnEntityModified;
@@ -302,9 +303,8 @@ namespace Neon.Entities {
             });
 
             // update the singleton data
-            Entity singletonEntity = (Entity)SingletonEntity;
-            singletonEntity.ApplyModifications();
-            singletonEntity.DataStateChangeUpdate();
+            SingletonEntity.ApplyModifications();
+            SingletonEntity.DataStateChangeUpdate();
         }
 
         private void MultithreadRunSystems(List<IGameInput> input) {
@@ -415,12 +415,10 @@ namespace Neon.Entities {
         /// Registers the given entity with the world.
         /// </summary>
         /// <param name="instance">The instance to add</param>
-        public void AddEntity(IEntity instance) {
-            Entity entity = (Entity)instance;
+        public void AddEntity(RuntimeEntity instance) {
+            _notifiedAddingEntities.Add(instance);
 
-            _notifiedAddingEntities.Add(entity);
-
-            ((EventNotifier)instance.EventNotifier).Submit(HideEntityEvent.Instance);
+            ((EventNotifier)((IEntity)instance).EventNotifier).Submit(HideEntityEvent.Instance);
         }
 
         /// <summary>
@@ -428,29 +426,29 @@ namespace Neon.Entities {
         /// </summary>
         /// <param name="instance">The entity instance to remove</param>
         // TODO: make this internal
-        public void RemoveEntity(IEntity instance) {
-            _notifiedRemovedEntities.Add((Entity)instance);
-            ((EventNotifier)instance.EventNotifier).Submit(HideEntityEvent.Instance);
+        public void RemoveEntity(RuntimeEntity instance) {
+            _notifiedRemovedEntities.Add(instance);
+            ((EventNotifier)((IEntity)instance).EventNotifier).Submit(HideEntityEvent.Instance);
         }
 
         /// <summary>
         /// Helper method that returns the _entities unordered list metadata.
         /// </summary>
-        private UnorderedListMetadata GetEntitiesListFromMetadata(Entity entity) {
+        private UnorderedListMetadata GetEntitiesListFromMetadata(RuntimeEntity entity) {
             return entity.Metadata.UnorderedListMetadata[_entityUnorderedListMetadataKey];
         }
 
         /// <summary>
         /// Called when an Entity has been modified.
         /// </summary>
-        private void OnEntityModified(Entity sender) {
+        private void OnEntityModified(RuntimeEntity sender) {
             _notifiedModifiedEntities.Add(sender);
         }
 
         /// <summary>
         /// Called when an entity has data state changes
         /// </summary>
-        private void OnEntityDataStateChanged(Entity sender) {
+        private void OnEntityDataStateChanged(RuntimeEntity sender) {
             _notifiedStateChangeEntities.Add(sender);
         }
 
@@ -469,15 +467,15 @@ namespace Neon.Entities {
         }
 
         #region MultithreadedSystemSharedContext Implementation
-        List<Entity> MultithreadedSystemSharedContext.AddedEntities {
+        List<RuntimeEntity> MultithreadedSystemSharedContext.AddedEntities {
             get { return _addedEntities; }
         }
 
-        List<Entity> MultithreadedSystemSharedContext.RemovedEntities {
+        List<RuntimeEntity> MultithreadedSystemSharedContext.RemovedEntities {
             get { return _removedEntities; }
         }
 
-        List<Entity> MultithreadedSystemSharedContext.StateChangedEntities {
+        List<RuntimeEntity> MultithreadedSystemSharedContext.StateChangedEntities {
             get { return _stateChangeEntities; }
         }
 

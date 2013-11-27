@@ -1,4 +1,5 @@
 ﻿using Neon.Collections;
+using Neon.Entities.Implementation.Content;
 using Neon.Entities.Serialization;
 using Neon.Serialization;
 using Neon.Utilities;
@@ -6,7 +7,8 @@ using System;
 using System.Collections.Generic;
 
 namespace Neon.Entities {
-    internal class Entity : IEntity {
+    internal class RuntimeEntity : IEntity {
+        /*
         public SerializedEntity ToSerializedEntity(bool entityIsAdding, bool entityIsRemoving,
             SerializationConverter converter) {
             List<DataAccessor> modified = _concurrentModifications.ToList();
@@ -63,6 +65,7 @@ namespace Neon.Entities {
                 IsRemoving = entityIsRemoving
             };
         }
+        */
 
         #region Pretty Name
         /// <summary>
@@ -102,6 +105,14 @@ namespace Neon.Entities {
         }
         #endregion
 
+        public RuntimeEntity() {
+        }
+
+        public RuntimeEntity(ContentEntity contentEntity) {
+            throw new NotImplementedException();
+        }
+
+        /*
         /// <summary>
         /// Reconstructs an entity with the given unique id and the set of restored data instances.
         /// </summary>
@@ -186,10 +197,11 @@ namespace Neon.Entities {
             DataStateChangeNotifier = new Notifier<Entity>(this);
             ModificationNotifier = new Notifier<Entity>(this);
         }
+        */
 
         #region Private EntityManager only API
-        public Notifier<Entity> DataStateChangeNotifier;
-        public Notifier<Entity> ModificationNotifier;
+        public Notifier<RuntimeEntity> DataStateChangeNotifier;
+        public Notifier<RuntimeEntity> ModificationNotifier;
 
         public GameEngine GameEngine;
 
@@ -474,8 +486,16 @@ namespace Neon.Entities {
         }
         #endregion
 
-        bool IQueryableEntity.WasModified(DataAccessor accessor) {
+        bool IEntity.WasModified(DataAccessor accessor) {
             return _modifiedLastFrame.Contains(accessor.Id);
+        }
+
+        bool IEntity.WasAdded(DataAccessor accessor) {
+            throw new NotImplementedException();
+        }
+
+        bool IEntity.WasRemoved(DataAccessor accessor) {
+            throw new NotImplementedException();
         }
 
         /// <summary>

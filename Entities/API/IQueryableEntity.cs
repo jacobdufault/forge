@@ -47,11 +47,6 @@ namespace Neon.Entities {
         bool ContainsData(DataAccessor accessor);
 
         /// <summary>
-        /// Returns if the given data was modified in the previous update.
-        /// </summary>
-        bool WasModified(DataAccessor accessor);
-
-        /// <summary>
         /// A non-unique string that represents a "human readable" name for the entity. This carries
         /// no weight in the simulation, and is only meant for diagnostics.
         /// </summary>

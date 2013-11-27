@@ -12,22 +12,22 @@ namespace Neon.Entities {
         /// <summary>
         /// Global singleton entity.
         /// </summary>
-        IEntity SingletonEntity { get; }
+        RuntimeEntity SingletonEntity { get; }
 
         /// <summary>
         /// Entities which have been added.
         /// </summary>
-        List<Entity> AddedEntities { get; }
+        List<RuntimeEntity> AddedEntities { get; }
 
         /// <summary>
         /// Entities which have been removed.
         /// </summary>
-        List<Entity> RemovedEntities { get; }
+        List<RuntimeEntity> RemovedEntities { get; }
 
         /// <summary>
         /// Entities which have state changes.
         /// </summary>
-        List<Entity> StateChangedEntities { get; }
+        List<RuntimeEntity> StateChangedEntities { get; }
 
         /// <summary>
         /// Event the system uses to notify the primary thread that it is done processing.
@@ -151,7 +151,7 @@ namespace Neon.Entities {
             _triggerGlobalInput = trigger as ITriggerGlobalInput;
         }
 
-        public void Restore(Entity entity) {
+        public void Restore(RuntimeEntity entity) {
             if (_entityCache.UpdateCache(entity) == EntityCache.CacheChangeResult.Added) {
                 DoAdd(entity);
             }
@@ -163,7 +163,7 @@ namespace Neon.Entities {
         /// <remarks>
         /// This function is only called if we have a modification trigger to invoke.
         /// </remarks>
-        private void ModificationNotifier_Listener(Entity entity) {
+        private void ModificationNotifier_Listener(RuntimeEntity entity) {
             // Notice that we cannot check to see if the entity passes the modification filter here,
             // because this callback is just informing us that the entity has been modified; it does
             // not mean that the entity is done being modified.
@@ -173,17 +173,17 @@ namespace Neon.Entities {
             _notifiedModifiedEntities.Add(entity);
         }
 
-        private void DoAdd(IEntity added) {
+        private void DoAdd(RuntimeEntity added) {
             if (_triggerModified != null) {
-                ((Entity)added).ModificationNotifier.Listener += ModificationNotifier_Listener;
+                added.ModificationNotifier.Listener += ModificationNotifier_Listener;
             }
         }
 
-        private void DoRemove(IEntity removed) {
+        private void DoRemove(RuntimeEntity removed) {
             // if we removed an entity from the cache, then we don't want to hear of any more
             // modification events
             if (_triggerModified != null) {
-                ((Entity)removed).ModificationNotifier.Listener -= ModificationNotifier_Listener;
+                removed.ModificationNotifier.Listener -= ModificationNotifier_Listener;
 
                 // We have to remove the entity from our list of entities to dispatch, as during the
                 // frame when OnRemoved is called OnModified (and also OnUpdate) will not be
@@ -213,7 +213,7 @@ namespace Neon.Entities {
                 // process entities that were added to the system
                 int addedCount = _shared.AddedEntities.Count; // immutable
                 for (int i = 0; i < addedCount; ++i) {
-                    Entity added = _shared.AddedEntities[i];
+                    RuntimeEntity added = _shared.AddedEntities[i];
                     if (_entityCache.UpdateCache(added) == EntityCache.CacheChangeResult.Added) {
                         DoAdd(added);
                         _dispatchAdded.Add(added);
@@ -224,7 +224,7 @@ namespace Neon.Entities {
                 // process entities that were removed from the system
                 int removedCount = _shared.RemovedEntities.Count; // immutable
                 for (int i = 0; i < removedCount; ++i) {
-                    Entity removed = _shared.RemovedEntities[i];
+                    RuntimeEntity removed = _shared.RemovedEntities[i];
                     if (_entityCache.Remove(removed)) {
                         DoRemove(removed);
                         _dispatchRemoved.Add(removed);
@@ -234,7 +234,7 @@ namespace Neon.Entities {
 
                 // process state changes
                 for (int i = 0; i < _shared.StateChangedEntities.Count; ++i) { // immutable
-                    Entity stateChanged = _shared.StateChangedEntities[i];
+                    RuntimeEntity stateChanged = _shared.StateChangedEntities[i];
                     EntityCache.CacheChangeResult change = _entityCache.UpdateCache(stateChanged);
                     if (change == EntityCache.CacheChangeResult.Added) {
                         DoAdd(stateChanged);
@@ -386,7 +386,7 @@ namespace Neon.Entities {
             /// passing the filter but was not before, then it will be added to the cache.
             /// </summary>
             /// <returns>The change in cache status for the entity</returns>
-            public CacheChangeResult UpdateCache(Entity entity) {
+            public CacheChangeResult UpdateCache(RuntimeEntity entity) {
                 UnorderedListMetadata metadata = GetMetadata(entity);
 
                 bool passed = _filter.Check(entity);
@@ -413,7 +413,7 @@ namespace Neon.Entities {
             /// </summary>
             /// <returns>True if the entity was previously in the cache and was removed, false if it
             /// was not in the cache and was therefore not removed.</returns>
-            public bool Remove(Entity entity) {
+            public bool Remove(RuntimeEntity entity) {
                 if (CachedEntities.Remove(entity, GetMetadata(entity))) {
                     return true;
                 }
@@ -423,7 +423,7 @@ namespace Neon.Entities {
             /// <summary>
             /// Returns the CachedEntities metadata for the given entity.
             /// </summary>
-            private UnorderedListMetadata GetMetadata(Entity entity) {
+            private UnorderedListMetadata GetMetadata(RuntimeEntity entity) {
                 // get our unordered list metadata or create it
                 UnorderedListMetadata metadata = entity.Metadata.UnorderedListMetadata[_metadataKey];
                 if (metadata == null) {

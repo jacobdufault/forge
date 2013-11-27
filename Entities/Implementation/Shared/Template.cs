@@ -2,26 +2,41 @@
 using Neon.Utilities;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Neon.Entities.Implementation.Content {
-    internal class ContentTemplate : ITemplate {
+    internal class Template : ITemplate {
         private static UniqueIntGenerator _idGenerator = new UniqueIntGenerator();
 
-        private SparseArray<IData> _data;
+        private SparseArray<IData> _defaultDataInstances;
         private EventNotifier _eventNotifier;
 
-        public ContentTemplate()
+        /// <summary>
+        /// The game engine that entities are added to when they are instantiated.
+        /// </summary>
+        public GameEngine GameEngine {
+            get;
+            set;
+        }
+
+        public Template()
             : this(_idGenerator.Next(), "") {
         }
 
-        public ContentTemplate(int id, string prettyName) {
-            _data = new SparseArray<IData>();
+        public Template(int id, string prettyName) {
+            _defaultDataInstances = new SparseArray<IData>();
             _eventNotifier = new EventNotifier();
 
             TemplateId = id;
             PrettyName = prettyName;
+        }
+
+        /// <summary>
+        /// Adds a default data instance to the template. The template "owns" the passed data
+        /// instance; a copy is not made of it.
+        /// </summary>
+        /// <param name="instance">The data instance to copy from.</param>
+        public void AddDefaultData(IData data) {
+            _defaultDataInstances[DataAccessorFactory.GetId(data)] = data;
         }
 
         public int TemplateId {
@@ -30,14 +45,20 @@ namespace Neon.Entities.Implementation.Content {
         }
 
         public IEntity InstantiateEntity() {
-            ContentEntity entity = new ContentEntity();
+            if (GameEngine == null) {
+                throw new InvalidOperationException("Unable to instantiate entity with no game engine");
+            }
 
-            foreach (var pair in _data) {
+            RuntimeEntity entity = new RuntimeEntity();
+
+            foreach (var pair in _defaultDataInstances) {
                 IData data = pair.Value;
 
-                IData added = entity.AddData(new DataAccessor(data));
+                IData added = ((IEntity)entity).AddData(new DataAccessor(data));
                 added.CopyFrom(data);
             }
+
+            GameEngine.AddEntity(entity);
 
             return entity;
         }
@@ -48,7 +69,7 @@ namespace Neon.Entities.Implementation.Content {
                 storage = new List<IData>();
             }
 
-            foreach (var pair in _data) {
+            foreach (var pair in _defaultDataInstances) {
                 IData data = pair.Value;
                 if (filter == null || filter(data)) {
                     storage.Add(data);
@@ -69,7 +90,7 @@ namespace Neon.Entities.Implementation.Content {
                 throw new NoSuchDataException(this, accessor);
             }
 
-            return _data[accessor.Id];
+            return _defaultDataInstances[accessor.Id];
         }
 
         public IData Previous(DataAccessor accessor) {
@@ -77,11 +98,11 @@ namespace Neon.Entities.Implementation.Content {
                 throw new NoSuchDataException(this, accessor);
             }
 
-            return _data[accessor.Id];
+            return _defaultDataInstances[accessor.Id];
         }
 
         public bool ContainsData(DataAccessor accessor) {
-            return _data.Contains(accessor.Id);
+            return _defaultDataInstances.Contains(accessor.Id);
         }
 
         public bool WasModified(DataAccessor accessor) {
@@ -91,6 +112,15 @@ namespace Neon.Entities.Implementation.Content {
         public string PrettyName {
             get;
             set;
+        }
+
+        public override string ToString() {
+            if (PrettyName.Length > 0) {
+                return string.Format("Template [tid={0}, name={1}]", TemplateId, PrettyName);
+            }
+            else {
+                return string.Format("Template [tid={0}]", TemplateId);
+            }
         }
     }
 }

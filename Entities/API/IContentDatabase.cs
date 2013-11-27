@@ -41,9 +41,23 @@ namespace Neon.Entities {
         }
 
         /// <summary>
-        /// All currently alive entities.
+        /// All entities in the game that were not added or removed in the previous update.
         /// </summary>
-        List<IEntity> Entities {
+        List<IEntity> ActiveEntities {
+            get;
+        }
+
+        /// <summary>
+        /// All entities that were removed during the previous update.
+        /// </summary>
+        List<IEntity> RemovedEntities {
+            get;
+        }
+
+        /// <summary>
+        /// All entities that were added during the previous update.
+        /// </summary>
+        List<IEntity> AddedEntities {
             get;
         }
 

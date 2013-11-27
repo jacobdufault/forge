@@ -1,9 +1,8 @@
 ﻿using Neon.Collections;
+using Neon.Serialization;
 using Neon.Utilities;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Neon.Entities.Implementation.Content {
     internal class ContentEntity : IEntity {
@@ -26,6 +25,29 @@ namespace Neon.Entities.Implementation.Content {
             PrettyName = prettyName;
         }
 
+        public ContentEntity(EntitySpecification specification, SerializationConverter converter) :
+            this(specification.UniqueId, specification.PrettyName) {
+            Restore(specification, converter);
+        }
+
+        public void Restore(EntitySpecification specification, SerializationConverter converter) {
+            foreach (EntityDataSpecification data in specification.Data) {
+                Type dataType = TypeCache.FindType(data.DataType);
+
+                HasModification = HasModification || data.WasModified;
+
+                IData current = (IData)converter.Import(dataType, data.CurrentState);
+                IData previous = (IData)converter.Import(dataType, data.PreviousState);
+
+                int dataId = DataAccessorFactory.GetId(dataType);
+
+                _currentData[dataId] = current;
+                _previousData[dataId] = previous;
+            }
+        }
+
+        public bool HasModification;
+
         public int UniqueId {
             get;
             private set;
@@ -36,11 +58,7 @@ namespace Neon.Entities.Implementation.Content {
         }
 
         public IData AddOrModify(DataAccessor accessor) {
-            if (ContainsData(accessor)) {
-                return Modify(accessor);
-            }
-
-            return AddData(accessor);
+            throw new InvalidOperationException("Cannot AddOrModify a ContentEntity (use Add)");
         }
 
         public IData AddData(DataAccessor accessor) {
@@ -67,7 +85,7 @@ namespace Neon.Entities.Implementation.Content {
         }
 
         public IData Modify(DataAccessor accessor) {
-            throw new NotImplementedException();
+            throw new InvalidOperationException("Cannot modify a ContentEntity");
         }
 
         public ICollection<IData> SelectCurrentData(Predicate<IData> filter = null,
@@ -111,6 +129,14 @@ namespace Neon.Entities.Implementation.Content {
         }
 
         public bool WasModified(DataAccessor accessor) {
+            return false;
+        }
+
+        public bool WasAdded(DataAccessor accessor) {
+            return false;
+        }
+
+        public bool WasRemoved(DataAccessor accessor) {
             return false;
         }
 

@@ -6,7 +6,7 @@ namespace Neon.FileSaving {
     /// <summary>
     /// Reads a saved file and allows for file items to be read from the file.
     /// </summary>
-    public class FileReader {
+    public class SavedStateReader {
         /// <summary>
         /// The raw saved data.
         /// </summary>
@@ -15,7 +15,7 @@ namespace Neon.FileSaving {
         /// <summary>
         /// Read a file from the given raw file contents (this is *not* a path).
         /// </summary>
-        public FileReader(string contents) {
+        public SavedStateReader(string contents) {
             _data = Parser.Parse(contents);
         }
 
@@ -25,7 +25,7 @@ namespace Neon.FileSaving {
         /// </summary>
         /// <typeparam name="T">The type of file item to retrieve</typeparam>
         /// <returns>The file item, if found. Otherwise an empty Maybe.</returns>
-        public Maybe<T> GetFileItem<T>() where T : IFileItem, new() {
+        public Maybe<T> GetFileItem<T>() where T : ISaveFileItem, new() {
             T item = new T();
 
             foreach (var dataItem in _data.AsList) {

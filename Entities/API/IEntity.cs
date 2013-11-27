@@ -55,5 +55,20 @@ namespace Neon.Entities {
         /// </summary>
         /// <param name="accessor">The data type to modify.</param>
         IData Modify(DataAccessor accessor);
+
+        /// <summary>
+        /// Returns if the given data was modified in the previous update.
+        /// </summary>
+        bool WasModified(DataAccessor accessor);
+
+        /// <summary>
+        /// Returns true if the given data was added to the entity in the previous update.
+        /// </summary>
+        bool WasAdded(DataAccessor accessor);
+
+        /// <summary>
+        /// Returns true if the data was removed from the entity in the previous update.
+        /// </summary>
+        bool WasRemoved(DataAccessor accessor);
     }
 }

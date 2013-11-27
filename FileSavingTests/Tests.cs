@@ -4,7 +4,7 @@ using Neon.FileSaving;
 using Neon.Serialization;
 
 namespace FileSavingTests {
-    internal class FileItem0 : IFileItem {
+    internal class FileItem0 : ISaveFileItem {
 
         public Guid Identifier {
             get { return new Guid("86394AB6-C02D-45BB-9198-7C93F801AAA9"); }
@@ -23,7 +23,7 @@ namespace FileSavingTests {
         }
     }
 
-    internal class FileItem1 : IFileItem {
+    internal class FileItem1 : ISaveFileItem {
 
         public Guid Identifier {
             get { return new Guid("8782D43C-839E-4BEE-8D08-520943584505"); }
@@ -42,7 +42,7 @@ namespace FileSavingTests {
         }
     }
 
-    internal class NullItem : IFileItem {
+    internal class NullItem : ISaveFileItem {
 
         public Guid Identifier {
             get { return Guid.Empty; }
@@ -64,27 +64,27 @@ namespace FileSavingTests {
     public class Tests {
         [TestMethod]
         public void EmptyFile() {
-            FileWriter writer = new FileWriter();
+            SavedStateWriter writer = new SavedStateWriter();
             Assert.AreEqual(SerializedData.CreateList().PrettyPrinted, writer.FileContents);
         }
 
         [TestMethod]
         public void MultipleFileItems() {
-            FileWriter writer = new FileWriter();
+            SavedStateWriter writer = new SavedStateWriter();
             writer.WriteFileItem(new FileItem0());
             writer.WriteFileItem(new FileItem1());
 
-            FileReader reader = new FileReader(writer.FileContents);
+            SavedStateReader reader = new SavedStateReader(writer.FileContents);
             Assert.IsTrue(reader.GetFileItem<FileItem0>().Exists);
             Assert.IsTrue(reader.GetFileItem<FileItem1>().Exists);
         }
 
         [TestMethod]
         public void MissingFileItem() {
-            FileWriter writer = new FileWriter();
+            SavedStateWriter writer = new SavedStateWriter();
             writer.WriteFileItem(new FileItem0());
 
-            FileReader reader = new FileReader(writer.FileContents);
+            SavedStateReader reader = new SavedStateReader(writer.FileContents);
             Assert.IsTrue(reader.GetFileItem<FileItem0>().Exists);
             Assert.IsFalse(reader.GetFileItem<FileItem1>().Exists);
         }
@@ -92,7 +92,7 @@ namespace FileSavingTests {
         [TestMethod]
         [ExpectedException(typeof(InvalidOperationException))]
         public void ReaddFileItem() {
-            FileWriter writer = new FileWriter();
+            SavedStateWriter writer = new SavedStateWriter();
             writer.WriteFileItem(new FileItem0());
             writer.WriteFileItem(new FileItem0());
         }
@@ -100,13 +100,13 @@ namespace FileSavingTests {
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
         public void WriteNullItem() {
-            FileWriter writer = new FileWriter();
+            SavedStateWriter writer = new SavedStateWriter();
             writer.WriteFileItem(null);
         }
 
         [TestMethod]
         public void WriteInvalidItem() {
-            FileWriter writer = new FileWriter();
+            SavedStateWriter writer = new SavedStateWriter();
             writer.WriteFileItem(new NullItem());
         }
     }

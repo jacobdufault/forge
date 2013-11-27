@@ -49,24 +49,24 @@
   <ItemGroup>
     <Compile Include="Implementation\Content\ContentDatabase.cs" />
     <Compile Include="Implementation\Content\ContentEntity.cs" />
-    <Compile Include="Implementation\Content\ContentTemplate.cs" />
+    <Compile Include="Implementation\Shared\Template.cs" />
+    <Compile Include="Implementation\Content\Specifications\RestorableSystemSpecification.cs" />
+    <Compile Include="Implementation\Shared\EntitiesSaveFileItem.cs" />
+    <Compile Include="Implementation\Content\Specifications\EntitySpecification.cs" />
+    <Compile Include="Implementation\Content\Specifications\EntityDataSpecification.cs" />
+    <Compile Include="Implementation\Content\Specifications\TemplateDataSpecification.cs" />
+    <Compile Include="Implementation\Content\Specifications\TemplateSpecification.cs" />
     <Compile Include="Implementation\Shared\DataAccessor.cs" />
-    <Compile Include="Implementation\Runtime\Entity.cs" />
+    <Compile Include="Implementation\Runtime\RuntimeEntity.cs" />
     <Compile Include="Implementation\Runtime\EntityManagerMetadata.cs" />
     <Compile Include="Implementation\Shared\EventProcessor.cs" />
     <Compile Include="API\Events.cs" />
     <Compile Include="API\Exceptions.cs" />
     <Compile Include="API\IEntityExtensions.cs" />
-    <Compile Include="Implementation\Runtime\EntityTemplate.cs" />
     <Compile Include="Implementation\Runtime\ImmutableContainer.cs" />
-    <Compile Include="Serialization\EntityDeserializer.cs" />
-    <Compile Include="Serialization\EntityTemplateDeserializer.cs" />
-    <Compile Include="Serialization\SerializedEntity.cs" />
-    <Compile Include="Serialization\ISystemProvider.cs" />
-    <Compile Include="Serialization\SerializedLevel.cs" />
-    <Compile Include="Serialization\LevelParser.cs" />
-    <Compile Include="Serialization\SerializedSystem.cs" />
-    <Compile Include="Serialization\SerializedTemplate.cs" />
+    <Compile Include="Implementation\Content\EntityDeserializer.cs" />
+    <Compile Include="Implementation\Content\TemplateDeserializer.cs" />
+    <Compile Include="API\ISystemProvider.cs" />
     <Compile Include="API\IContentDatabase.cs" />
     <Compile Include="API\IData.cs" />
     <Compile Include="API\IEntity.cs" />
@@ -86,6 +86,10 @@
     <ProjectReference Include="..\Collections\Collections.csproj">
       <Project>{9d91d020-4291-4926-b76d-b73d138b0aef}</Project>
       <Name>Collections</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FileSaving\FileSaving.csproj">
+      <Project>{3bb8571c-22e3-47a0-a4b3-12d682b25b4d}</Project>
+      <Name>FileSaving</Name>
     </ProjectReference>
     <ProjectReference Include="..\Serialization\Serialization.csproj">
       <Project>{b97ca54f-0428-4853-af39-5ed8375a0262}</Project>
