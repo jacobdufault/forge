@@ -11,6 +11,20 @@ namespace Neon.Entities.Implementation.Content.Specifications {
             SavedState = data.AsDictionary["SavedState"];
         }
 
+        public RestorableSystemSpecification(IRestoredSystem system, SerializationConverter converter) {
+            RestorationGuid = system.RestorationGuid;
+            SavedState = system.ExportState(converter);
+        }
+
+        public SerializedData Export() {
+            Dictionary<string, SerializedData> dict = new Dictionary<string, SerializedData>();
+
+            dict["RestorationGuid"] = new SerializedData(RestorationGuid.ToString());
+            dict["SavedState"] = SavedState;
+
+            return new SerializedData(dict);
+        }
+
         /// <summary>
         /// The ISystem GUID used for identifying the system to restore.
         /// </summary>

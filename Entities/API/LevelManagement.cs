@@ -71,6 +71,20 @@ namespace Neon.Entities {
     /// </summary>
     public interface ISavedLevel {
         /// <summary>
+        /// Paths of assemblies that should be loaded into the AppDomain.
+        /// </summary>
+        List<string> AssemblyInjectionPaths {
+            get;
+        }
+
+        /// <summary>
+        /// Types of the system providers that should be used to get instances of ISystems.
+        /// </summary>
+        List<Type> SystemProviderTypes {
+            get;
+        }
+
+        /// <summary>
         /// The current state of the game.
         /// </summary>
         IContentDatabase CurrentState {

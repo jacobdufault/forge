@@ -35,7 +35,7 @@ namespace Neon.Entities.Implementation.Content {
 
                 foreach (var restorableSystem in restorableSystems) {
                     if (systemSpec.RestorationGuid == restorableSystem.RestorationGuid) {
-                        restorableSystem.Restore(systemSpec.SavedState);
+                        restorableSystem.ImportState(systemSpec.SavedState);
                         restorableSystems.Remove(restorableSystem);
                         break;
                     }
@@ -47,6 +47,45 @@ namespace Neon.Entities.Implementation.Content {
             }
 
             return contentDatabase;
+        }
+
+        public SerializedData Export(SerializationConverter converter) {
+            Dictionary<string, SerializedData> dict = new Dictionary<string, SerializedData>();
+
+            // entities
+            dict["SingletonEntity"] = new EntitySpecification(SingletonEntity, false, false, converter).Export();
+
+            List<SerializedData> active = new List<SerializedData>();
+            foreach (var entity in ActiveEntities) {
+                active.Add(new EntitySpecification(entity, false, false, converter).Export());
+            }
+            dict["ActiveEntities"] = new SerializedData(active);
+
+            List<SerializedData> added = new List<SerializedData>();
+            foreach (var entity in AddedEntities) {
+                added.Add(new EntitySpecification(entity, false, false, converter).Export());
+            }
+            dict["AddedEntities"] = new SerializedData(active);
+
+            List<SerializedData> removed = new List<SerializedData>();
+            foreach (var entity in RemovedEntities) {
+                removed.Add(new EntitySpecification(entity, false, false, converter).Export());
+            }
+            dict["RemovedEntities"] = new SerializedData(active);
+
+            // save system state
+            List<SerializedData> systems = new List<SerializedData>();
+            foreach (var system in Systems) {
+                if (system is IRestoredSystem) {
+                    IRestoredSystem restoredSystem = (IRestoredSystem)system;
+
+                    RestorableSystemSpecification restoreSpec = new RestorableSystemSpecification(restoredSystem, converter);
+                    systems.Add(restoreSpec.Export());
+                }
+            }
+            dict["Systems"] = new SerializedData(systems);
+
+            return new SerializedData(dict);
         }
 
         public ContentDatabase() {

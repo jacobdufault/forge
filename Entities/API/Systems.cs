@@ -26,13 +26,13 @@ namespace Neon.Entities {
         /// <summary>
         /// Save any auxiliary data to the given data output.
         /// </summary>
-        SerializedData Save();
+        SerializedData ExportState(SerializationConverter converter);
 
         /// <summary>
         /// Restore the system from the given data.
         /// </summary>
         /// <param name="data">The data to restore the system from.</param>
-        void Restore(SerializedData data);
+        void ImportState(SerializedData data);
     }
 
     /// <summary>

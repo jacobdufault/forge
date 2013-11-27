@@ -1,23 +1,17 @@
 ﻿using Neon.Entities.Implementation.Content;
+using Neon.Entities.Implementation.Content.Serialization;
+using Neon.Entities.Serialization;
 using Neon.FileSaving;
 using Neon.Serialization;
+using Neon.Utilities;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 
 namespace Neon.Entities.Shared {
-    internal class EntitiesSaveFileItem : ISaveFileItem {
-        private bool _runtimeImport;
-
-        /// <summary>
-        /// Constructor. If runtimeImport is true, then the imported runtime system will be used
-        /// when doing imports, as opposed to the content system.
-        /// </summary>
-        /// <param name="runtimeImport">If true, then the runtime system will be used to satisfy
-        /// IEntity, ITemplate, etc.</param>
-        public EntitiesSaveFileItem(bool runtimeImport) {
-            _runtimeImport = runtimeImport;
-        }
-
+    internal class EntitiesSaveFileItem : ISaveFileItem, ISavedLevel {
         public Guid Identifier {
             get { return new Guid("C8C0303D-97C9-4876-91C0-F6259CCE6760"); }
         }
@@ -26,27 +20,111 @@ namespace Neon.Entities.Shared {
             get { return "Neon.Entities Saved State (format v1.0)"; }
         }
 
-        public SerializedData Export() {
-            throw new NotImplementedException();
+        private List<ISystemProvider> GetSystemProviders() {
+            List<ISystemProvider> providers = new List<ISystemProvider>();
+
+            foreach (var providerType in SystemProviderTypes) {
+                ISystemProvider instance = Activator.CreateInstance(providerType) as ISystemProvider;
+                if (instance == null) {
+                    throw new InvalidOperationException("System provider " + providerType.FullName +
+                        " has to derive from ISystemProvider, but it does not");
+                }
+
+                providers.Add(instance);
+            }
+
+            return providers;
+        }
+
+        private void InjectAssemblies() {
+            foreach (string assemblyPath in AssemblyInjectionPaths) {
+                string fullAssemblyPath = Path.GetFullPath(assemblyPath);
+                Log<EntitiesSaveFileItem>.Info("Loading assembly at path {0} (full path is {1})",
+                    assemblyPath, fullAssemblyPath);
+
+                Assembly.LoadFile(assemblyPath);
+            }
         }
 
         public void Import(SerializedData data) {
-            if (_runtimeImport) {
-                throw new NotImplementedException();
+            SerializationConverter converter = new SerializationConverter();
+
+            // load assemblies
+            AssemblyInjectionPaths = converter.Import<List<string>>(data.AsDictionary["AssemblyInjectionPaths"]);
+            InjectAssemblies();
+
+            // get systems
+            List<string> systemProviders = converter.Import<List<string>>(data.AsDictionary["SystemProviders"]);
+            SystemProviderTypes = (from providerTypeName in systemProviders
+                                   select TypeCache.FindType(providerTypeName)).ToList();
+
+            List<ISystem> systems = (from provider in GetSystemProviders()
+                                     from system in provider.GetSystems()
+                                     select system).ToList();
+
+            // load templates
+            TemplateDeserializer templateDeserializer = new TemplateDeserializer(
+                data.AsDictionary["Templates"].AsList, converter);
+            List<ITemplate> templates = templateDeserializer.ToList();
+
+            // load the two content databases
+            CurrentState = ContentDatabase.Read(data.AsDictionary["Current"], converter, templates, systems);
+            OriginalState = ContentDatabase.Read(data.AsDictionary["Original"], converter, templates, systems);
+
+            // get input
+            Input = converter.Import<List<IssuedInput>>(data.AsDictionary["IssuedInput"]);
+        }
+
+        public SerializedData Export() {
+            SerializationConverter converter = new SerializationConverter();
+
+            SerializedData result = SerializedData.CreateDictionary();
+
+            // metadata
+            result.AsDictionary["AssemblyInjectionPaths"] = converter.Export(AssemblyInjectionPaths);
+            result.AsDictionary["SystemProviders"] = converter.Export(SystemProviderTypes.Select(t => t.FullName));
+
+            // templates
+            List<SerializedData> serializedTemplates = new List<SerializedData>();
+
+            TemplateDeserializer.AddTemplateExporter(converter);
+            foreach (var template in OriginalState.Templates) {
+                TemplateSpecification templateSpec = new TemplateSpecification((Template)template, converter);
+                serializedTemplates.Add(templateSpec.Export());
             }
 
-            else {
-                SerializationConverter converter = new SerializationConverter();
+            result.AsDictionary["Templates"] = new SerializedData(serializedTemplates);
 
-                List<ITemplate> templates = new List<ITemplate>();
+            // content databases
+            result.AsDictionary["Current"] = ((ContentDatabase)CurrentState).Export(converter);
+            result.AsDictionary["Original"] = ((ContentDatabase)OriginalState).Export(converter);
 
-                List<ISystem> systems = new List<ISystem>();
+            return result;
+        }
 
-                IContentDatabase current = ContentDatabase.Read(data.AsDictionary["Current"], converter, templates, systems);
-                IContentDatabase original = ContentDatabase.Read(data.AsDictionary["Original"], converter, templates, systems);
+        public List<string> AssemblyInjectionPaths {
+            get;
+            private set;
+        }
 
-                throw new NotImplementedException();
-            }
+        public List<Type> SystemProviderTypes {
+            get;
+            private set;
+        }
+
+        public IContentDatabase CurrentState {
+            get;
+            private set;
+        }
+
+        public IContentDatabase OriginalState {
+            get;
+            private set;
+        }
+
+        public List<IssuedInput> Input {
+            get;
+            private set;
         }
     }
 }

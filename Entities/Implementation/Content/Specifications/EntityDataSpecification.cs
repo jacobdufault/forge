@@ -1,5 +1,6 @@
 ﻿using Neon.Serialization;
 using System;
+using System.Collections.Generic;
 
 namespace Neon.Entities.Implementation.Content {
     /// <summary>
@@ -13,8 +14,21 @@ namespace Neon.Entities.Implementation.Content {
             WasAdded = data.AsDictionary["WasAdded"].AsBool;
             WasRemoved = data.AsDictionary["WasRemoved"].AsBool;
 
-            PreviousState = data.AsDictionary["Previous"];
-            CurrentState = data.AsDictionary["Current"];
+            PreviousState = data.AsDictionary["PreviousState"];
+            CurrentState = data.AsDictionary["CurrentState"];
+        }
+
+        public SerializedData Export() {
+            Dictionary<string, SerializedData> dict = new Dictionary<string, SerializedData>();
+
+            dict["DataType"] = new SerializedData(DataType);
+            dict["WasModified"] = new SerializedData(WasModified);
+            dict["WasAdded"] = new SerializedData(WasAdded);
+            dict["WasRemoved"] = new SerializedData(WasRemoved);
+            dict["PreviousState"] = PreviousState;
+            dict["CurrentState"] = CurrentState;
+
+            return new SerializedData(dict);
         }
 
         public EntityDataSpecification(IData current, IData previous, bool wasModified,

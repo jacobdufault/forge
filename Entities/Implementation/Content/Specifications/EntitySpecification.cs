@@ -18,6 +18,24 @@ namespace Neon.Entities.Implementation.Content {
             }
         }
 
+        public SerializedData Export() {
+            Dictionary<string, SerializedData> dict = new Dictionary<string, SerializedData>();
+
+            dict["PrettyName"] = new SerializedData(PrettyName);
+            dict["UniqueId"] = new SerializedData(UniqueId);
+            dict["IsAdding"] = new SerializedData(IsAdding);
+            dict["IsRemoving"] = new SerializedData(IsRemoving);
+
+            List<SerializedData> data = new List<SerializedData>();
+            foreach (var dataSpec in Data) {
+                data.Add(dataSpec.Export());
+            }
+
+            dict["Data"] = new SerializedData(data);
+
+            return new SerializedData(dict);
+        }
+
         public EntitySpecification(IEntity entity, bool isAdding, bool isRemoving, SerializationConverter converter) {
             PrettyName = entity.PrettyName;
             UniqueId = entity.UniqueId;

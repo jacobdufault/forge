@@ -3,21 +3,24 @@ using Neon.Collections;
 using Neon.Entities.Implementation.Content;
 using Neon.Entities.Implementation.Content.Serialization;
 using Neon.Serialization;
+using Neon.Utilities;
 using System;
 using System.Collections.Generic;
 
 namespace Neon.Entities.Serialization {
     internal class TemplateDeserializer : IEnumerable<ITemplate> {
-        private SparseArray<Template> _templates;
+        private SparseArray<Tuple<Template, TemplateSpecification>> _templates;
         private SerializationConverter _converter;
 
-        public TemplateDeserializer(List<TemplateSpecification> serializedTemplates, SerializationConverter converter) {
-            _templates = new SparseArray<Template>();
+        public TemplateDeserializer(List<SerializedData> serializedTemplates, SerializationConverter converter) {
+            _templates = new SparseArray<Tuple<Template, TemplateSpecification>>();
             _converter = converter;
 
             // create our initial list of template references
-            foreach (var template in serializedTemplates) {
-                _templates[template.TemplateId] = new Template(template.TemplateId, template.PrettyName);
+            foreach (var templateData in serializedTemplates) {
+                TemplateSpecification spec = new TemplateSpecification(templateData);
+                Template template = new Template(spec.TemplateId, spec.PrettyName);
+                _templates[spec.TemplateId] = Tuple.Create(template, spec);
             }
 
             // setup the importer so that it returns the proper reference to the template (that may
@@ -25,8 +28,8 @@ namespace Neon.Entities.Serialization {
             AddTemplateImporter(_converter);
 
             // actually deserialize all of the templates
-            foreach (var template in serializedTemplates) {
-                RestoreTemplate(_templates[template.TemplateId], template, _converter);
+            foreach (var pair in _templates) {
+                RestoreTemplate(pair.Value.Item1, pair.Value.Item2, _converter);
             }
 
             // remove the importer
@@ -84,7 +87,7 @@ namespace Neon.Entities.Serialization {
 
         public IEnumerator<ITemplate> GetEnumerator() {
             foreach (var tuple in _templates) {
-                yield return tuple.Value;
+                yield return tuple.Value.Item1;
             }
         }
 
