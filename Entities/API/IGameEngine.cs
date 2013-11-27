@@ -1,4 +1,4 @@
-﻿using System;
+﻿using Neon.Entities.Implementation.Runtime;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -35,6 +35,12 @@ namespace Neon.Entities {
         WaitHandle SynchronizeState();
 
         /// <summary>
+        /// Dispatches all of the events that have been triggered in the previous update on the
+        /// calling thread.
+        /// </summary>
+        void DispatchEvents();
+
+        /// <summary>
         /// Iterates through all data inside of the engine and returns a content database that
         /// reflects everything contained within the engine. This method also performs a state
         /// synchronization.
@@ -62,7 +68,7 @@ namespace Neon.Entities {
         /// <param name="content">The content to allocate the engine from.</param>
         /// <returns>A game engine that can play the given content.</returns>
         public static IGameEngine CreateEngine(IContentDatabase content) {
-            throw new NotImplementedException();
+            return new GameEngine(content);
         }
     }
 }

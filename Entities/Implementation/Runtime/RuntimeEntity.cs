@@ -102,6 +102,9 @@ namespace Neon.Entities.Implementation.Runtime {
         IEventNotifier IQueryableEntity.EventNotifier {
             get { return _eventProcessor; }
         }
+        public EventNotifier EventNotifier {
+            get { return _eventProcessor; }
+        }
         #endregion
 
         public RuntimeEntity() {

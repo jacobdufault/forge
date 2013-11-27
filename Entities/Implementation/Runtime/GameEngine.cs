@@ -15,7 +15,7 @@ namespace Neon.Entities.Implementation.Runtime {
     /// The EntityManager requires an associated Entity which is not injected into the
     /// EntityManager.
     /// </summary>
-    internal class GameEngine : MultithreadedSystemSharedContext {
+    internal class GameEngine : MultithreadedSystemSharedContext, IGameEngine {
         /// <summary>
         /// Should the EntityManager execute systems in separate threads?
         /// </summary>
@@ -122,7 +122,7 @@ namespace Neon.Entities.Implementation.Runtime {
             private set;
         }
 
-        public GameEngine(IContentDatabase contentDatabase, int updateNumber) {
+        public GameEngine(IContentDatabase contentDatabase) {
             foreach (var template in contentDatabase.Templates) {
                 Template tem = (Template)template;
 
@@ -139,7 +139,8 @@ namespace Neon.Entities.Implementation.Runtime {
             SystemDoneEvent = new CountdownEvent(0);
             _eventProcessors.BeginMonitoring((EventNotifier)EventNotifier);
 
-            UpdateNumber = updateNumber;
+            // TODO: ensure that when correctly restore UpdateNumber
+            //UpdateNumber = updateNumber;
 
             SingletonEntity = new RuntimeEntity((ContentEntity)contentDatabase.SingletonEntity);
 
@@ -189,7 +190,7 @@ namespace Neon.Entities.Implementation.Runtime {
         /// <summary>
         /// Registers the given system with the EntityManager.
         /// </summary>
-        public void AddSystem(ISystem baseSystem) {
+        private void AddSystem(ISystem baseSystem) {
             if (baseSystem is ITriggerBaseFilter) {
                 MultithreadedSystem multithreadingSystem = new MultithreadedSystem(this, (ITriggerBaseFilter)baseSystem);
                 foreach (var entity in _entities) {
@@ -372,41 +373,52 @@ namespace Neon.Entities.Implementation.Runtime {
                 builder.AppendFormat(@"  {1}/{2} ({3}|{4}|{5}|{6}|{7}) ticks for system {0}",
                     _multithreadedSystems[i].Trigger.GetType(),
 
-                    _multithreadedSystems[i].BookkeepingTicks,
-                    _multithreadedSystems[i].RunSystemTicks,
+                    _multithreadedSystems[i].PerformanceData.BookkeepingTicks,
+                    _multithreadedSystems[i].PerformanceData.RunSystemTicks,
 
-                    _multithreadedSystems[i].AddedTicks,
-                    _multithreadedSystems[i].RemovedTicks,
-                    _multithreadedSystems[i].StateChangeTicks,
-                    _multithreadedSystems[i].ModificationTicks,
-                    _multithreadedSystems[i].UpdateTicks);
+                    _multithreadedSystems[i].PerformanceData.AddedTicks,
+                    _multithreadedSystems[i].PerformanceData.RemovedTicks,
+                    _multithreadedSystems[i].PerformanceData.StateChangeTicks,
+                    _multithreadedSystems[i].PerformanceData.ModificationTicks,
+                    _multithreadedSystems[i].PerformanceData.UpdateTicks);
 
             }
             Log<GameEngine>.Info(builder.ToString());
         }
 
-        public Task UpdateWorld(List<IGameInput> commands) {
-            lock (_updateTaskLock) {
-                if (_updateTask != null) {
-                    throw new InvalidOperationException("Cannot call UpdateWorld before the returned task has completed.");
-                }
-
-                Task updateTask = Task.Factory.StartNew(RunUpdateWorld, commands);
-                _updateTask = updateTask.ContinueWith((t) => {
-                    lock (_updateTaskLock) {
-                        _updateTask = null;
-                    }
-                });
-
-                return _updateTask;
+        private ManualResetEvent _updateWaitHandle;
+        public WaitHandle Update(IEnumerable<IGameInput> input) {
+            if (_updateWaitHandle.WaitOne(0)) {
+                throw new InvalidOperationException("Cannot call UpdateWorld before the returned " +
+                    "WaitHandle has completed");
             }
+            _updateWaitHandle.Reset();
+
+            Task updateTask = Task.Factory.StartNew(RunUpdateWorld, input);
+            updateTask.ContinueWith(t => {
+                _updateWaitHandle.Set();
+            });
+
+            return _updateWaitHandle;
         }
 
-        /// <summary>
-        /// Runs all of the dirty event processors. The events for the event processors will be
-        /// dispatched on the same thread that calls this method.
-        /// </summary>
-        public void RunEventProcessors() {
+        private ManualResetEvent _synchronizeStateWaitHandle;
+        public WaitHandle SynchronizeState() {
+            if (_synchronizeStateWaitHandle.WaitOne(0)) {
+                throw new InvalidOperationException("Cannot call SynchronizeState before the " +
+                    "returned WaitHandle has completed");
+            }
+            _synchronizeStateWaitHandle.Reset();
+
+            Task.Factory.StartNew(() => {
+                UpdateEntitiesWithStateChanges();
+                _synchronizeStateWaitHandle.Set();
+            });
+
+            return _synchronizeStateWaitHandle;
+        }
+
+        public void DispatchEvents() {
             _eventProcessors.DispatchEvents();
         }
 
@@ -414,20 +426,18 @@ namespace Neon.Entities.Implementation.Runtime {
         /// Registers the given entity with the world.
         /// </summary>
         /// <param name="instance">The instance to add</param>
-        public void AddEntity(RuntimeEntity instance) {
+        private void AddEntity(RuntimeEntity instance) {
             _notifiedAddingEntities.Add(instance);
-
-            ((EventNotifier)((IEntity)instance).EventNotifier).Submit(HideEntityEvent.Instance);
+            instance.EventNotifier.Submit(HideEntityEvent.Instance);
         }
 
         /// <summary>
         /// Removes the given entity from the world.
         /// </summary>
         /// <param name="instance">The entity instance to remove</param>
-        // TODO: make this internal
-        public void RemoveEntity(RuntimeEntity instance) {
+        internal void RemoveEntity(RuntimeEntity instance) {
             _notifiedRemovedEntities.Add(instance);
-            ((EventNotifier)((IEntity)instance).EventNotifier).Submit(HideEntityEvent.Instance);
+            instance.EventNotifier.Submit(HideEntityEvent.Instance);
         }
 
         /// <summary>
@@ -454,14 +464,14 @@ namespace Neon.Entities.Implementation.Runtime {
         /// <summary>
         /// Returns all entities that will be added in the next update.
         /// </summary>
-        public List<IEntity> GetEntitiesToAdd() {
+        private List<IEntity> GetEntitiesToAdd() {
             return _notifiedAddingEntities.ToList().Select(e => (IEntity)e).ToList();
         }
 
         /// <summary>
         /// Returns all entities that will be removed in the next update.
         /// </summary>
-        public List<IEntity> GetEntitiesToRemove() {
+        private List<IEntity> GetEntitiesToRemove() {
             return _notifiedRemovedEntities.ToList().Select(e => (IEntity)e).ToList();
         }
 

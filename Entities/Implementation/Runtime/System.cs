@@ -100,41 +100,13 @@ namespace Neon.Entities.Implementation.Runtime {
         public ITriggerBaseFilter Trigger;
 
         /// <summary>
-        /// Total number of ticks running the system required.
+        /// Performance data
         /// </summary>
-        public long RunSystemTicks;
-
-        /// <summary>
-        /// Total number of bookkeeping ticks required.
-        /// </summary>
-        public long BookkeepingTicks;
-
-        /// <summary>
-        /// Ticks required for adding entities when running the system.
-        /// </summary>
-        public long AddedTicks;
-
-        /// <summary>
-        /// Ticks required for removing entities when running the system.
-        /// </summary>
-        public long RemovedTicks;
-
-        /// <summary>
-        /// Ticks required for state change operations when running the system.
-        /// </summary>
-        public long StateChangeTicks;
-
-        /// <summary>
-        /// Ticks required for modification operations when running the system.
-        /// </summary>
-        public long ModificationTicks;
-
-        /// <summary>
-        /// Ticks required for updating the system.
-        /// </summary>
-        public long UpdateTicks;
+        public PerformanceInformation PerformanceData;
 
         internal MultithreadedSystem(MultithreadedSystemSharedContext sharedData, ITriggerBaseFilter trigger) {
+            PerformanceData = new PerformanceInformation();
+
             _shared = sharedData;
 
             _filter = new Filter(DataAccessorFactory.MapTypesToDataAccessors(trigger.ComputeEntityFilter()));
@@ -219,7 +191,7 @@ namespace Neon.Entities.Implementation.Runtime {
                         _dispatchAdded.Add(added);
                     }
                 }
-                AddedTicks = stopwatch.ElapsedTicks;
+                PerformanceData.AddedTicks = stopwatch.ElapsedTicks;
 
                 // process entities that were removed from the system
                 int removedCount = _shared.RemovedEntities.Count; // immutable
@@ -230,7 +202,7 @@ namespace Neon.Entities.Implementation.Runtime {
                         _dispatchRemoved.Add(removed);
                     }
                 }
-                RemovedTicks = stopwatch.ElapsedTicks - AddedTicks;
+                PerformanceData.RemovedTicks = stopwatch.ElapsedTicks - PerformanceData.AddedTicks;
 
                 // process state changes
                 for (int i = 0; i < _shared.StateChangedEntities.Count; ++i) { // immutable
@@ -245,11 +217,11 @@ namespace Neon.Entities.Implementation.Runtime {
                         _dispatchRemoved.Add(stateChanged);
                     }
                 }
-                StateChangeTicks = stopwatch.ElapsedTicks - RemovedTicks - AddedTicks;
+                PerformanceData.StateChangeTicks = stopwatch.ElapsedTicks - PerformanceData.RemovedTicks - PerformanceData.AddedTicks;
             }
             finally {
                 _shared.SystemDoneEvent.Signal();
-                BookkeepingTicks = stopwatch.ElapsedTicks;
+                PerformanceData.BookkeepingTicks = stopwatch.ElapsedTicks;
             }
         }
 
@@ -294,7 +266,7 @@ namespace Neon.Entities.Implementation.Runtime {
                         }
                     }
                 }
-                ModificationTicks = stopwatch.ElapsedTicks - StateChangeTicks - RemovedTicks - AddedTicks;
+                PerformanceData.ModificationTicks = stopwatch.ElapsedTicks - PerformanceData.StateChangeTicks - PerformanceData.RemovedTicks - PerformanceData.AddedTicks;
 
                 // call the global pre-update method, if applicable
                 if (_triggerGlobalPreUpdate != null) {
@@ -308,7 +280,7 @@ namespace Neon.Entities.Implementation.Runtime {
                         _triggerUpdate.OnUpdate(updated);
                     }
                 }
-                UpdateTicks = stopwatch.ElapsedTicks - ModificationTicks - StateChangeTicks - RemovedTicks - AddedTicks;
+                PerformanceData.UpdateTicks = stopwatch.ElapsedTicks - PerformanceData.ModificationTicks - PerformanceData.StateChangeTicks - PerformanceData.RemovedTicks - PerformanceData.AddedTicks;
 
                 // call the global post-update method, if applicable
                 if (_triggerGlobalPostUpdate != null) {
@@ -338,7 +310,7 @@ namespace Neon.Entities.Implementation.Runtime {
             }
             finally {
                 _shared.SystemDoneEvent.Signal();
-                RunSystemTicks = stopwatch.ElapsedTicks;
+                PerformanceData.RunSystemTicks = stopwatch.ElapsedTicks;
             }
         }
 
