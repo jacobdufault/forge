@@ -13,6 +13,56 @@ namespace Neon.Utilities {
         }
     }
 
+    public static class MaybeExtensions {
+        /// <summary>
+        /// Lifts a maybe into another maybe using the given lifting function. If the given maybe is
+        /// empty, then an empty maybe is returned.
+        /// </summary>
+        /// <typeparam name="T0">The type of the original maybe</typeparam> <typeparam name="T1">The
+        /// type of the new maybe</typeparam>
+        /// <param name="maybe">The maybe to transform</param>
+        /// <param name="lifter">The lifting function that will transform the maybe</param>
+        /// <returns>A new maybe created by the lifting function</returns>
+        public static Maybe<T1> Lift<T0, T1>(this Maybe<T0> maybe, Func<T0, Maybe<T1>> lifter) {
+            if (maybe.Exists) {
+                return lifter(maybe.Value);
+            }
+
+            return Maybe<T1>.Empty;
+        }
+
+        /// <summary>
+        /// Lifts a maybe into another maybe using the given lifting function. If the given maybe is
+        /// empty, then an empty maybe is returned.The returned maybe is never empty.
+        /// </summary>
+        /// <typeparam name="T0">The type of the original maybe</typeparam> <typeparam name="T1">The
+        /// type of the new maybe</typeparam>
+        /// <param name="maybe">The maybe to transform</param>
+        /// <param name="lifter">The lifting function that will transform the maybe</param>
+        /// <returns>A new maybe created by the lifting function</returns>
+        public static Maybe<T1> Lift<T0, T1>(this Maybe<T0> maybe, Func<T0, T1> lifter) {
+            if (maybe.Exists) {
+                return Maybe.Just(lifter(maybe.Value));
+            }
+
+            return Maybe<T1>.Empty;
+        }
+
+        /// <summary>
+        /// C# has a limitation where non-reference generic types cannot be contravariant (the Maybe
+        /// generic type should be contravariant). This function eases that limitation by providing
+        /// automatic casting to a higher Maybe type.
+        /// </summary>
+        public static Maybe<TBase> Lift<TDerived, TBase>(this Maybe<TDerived> maybe)
+            where TDerived : TBase {
+            if (maybe.Exists) {
+                return Maybe.Just((TBase)maybe.Value);
+            }
+
+            return Maybe<TBase>.Empty;
+        }
+    }
+
     /// <summary>
     /// Maybe wraps another type and is used to signal to other code that it might not return a
     /// result. It performs the same function as null, but in a more type-safe manner that provides
