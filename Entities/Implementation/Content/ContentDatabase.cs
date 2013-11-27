@@ -111,7 +111,7 @@ namespace Neon.Entities.Implementation.Content {
 
         public IEntity SingletonEntity {
             get;
-            private set;
+            set;
         }
 
         public List<IEntity> ActiveEntities {
@@ -131,12 +131,12 @@ namespace Neon.Entities.Implementation.Content {
 
         public List<ITemplate> Templates {
             get;
-            private set;
+            set;
         }
 
         public List<ISystem> Systems {
             get;
-            private set;
+            set;
         }
     }
 }

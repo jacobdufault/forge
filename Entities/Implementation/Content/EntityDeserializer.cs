@@ -19,12 +19,12 @@ namespace Neon.Entities.Implementation.Content {
         /// <summary>
         /// The list of deserialized entities.
         /// </summary>
-        private SparseArray<Tuple<IEntity, EntitySpecification>> _entities;
+        private SparseArray<Tuple<ContentEntity, EntitySpecification>> _entities;
 
         public IEntity AddEntity(SerializedData serializedData) {
             EntitySpecification entitySpec = new EntitySpecification(serializedData);
 
-            IEntity entity = new ContentEntity(entitySpec.UniqueId, entitySpec.PrettyName);
+            ContentEntity entity = new ContentEntity(entitySpec.UniqueId, entitySpec.PrettyName);
             _entities[entity.UniqueId] = Tuple.Create(entity, entitySpec);
             return entity;
         }
@@ -35,7 +35,7 @@ namespace Neon.Entities.Implementation.Content {
             foreach (var serializedData in entitySpecifications) {
                 EntitySpecification entitySpec = new EntitySpecification(serializedData);
 
-                IEntity entity = new ContentEntity(entitySpec.UniqueId, entitySpec.PrettyName);
+                ContentEntity entity = new ContentEntity(entitySpec.UniqueId, entitySpec.PrettyName);
                 _entities[entity.UniqueId] = Tuple.Create(entity, entitySpec);
                 result.Add(entity);
             }
@@ -52,7 +52,7 @@ namespace Neon.Entities.Implementation.Content {
         /// support for the IEntity type</param>
         public EntityDeserializer(SerializationConverter converter) {
             _converter = converter;
-            _entities = new SparseArray<Tuple<IEntity, EntitySpecification>>();
+            _entities = new SparseArray<Tuple<ContentEntity, EntitySpecification>>();
         }
 
         public void Run() {
@@ -71,15 +71,13 @@ namespace Neon.Entities.Implementation.Content {
             _converter.RemoveImporter(typeof(IEntity));
         }
 
-        public static void RestoreEntity(IEntity entity, EntitySpecification savedState,
-            SerializationConverter converter) {
+        public static void AddEntityExporter(SerializationConverter converter) {
+            converter.AddExporter<IEntity>(entity => new SerializedData(entity.UniqueId));
+        }
 
-            if (entity is ContentEntity) {
-                ((ContentEntity)entity).Restore(savedState, converter);
-            }
-            else {
-                throw new NotImplementedException();
-            }
+        public static void RestoreEntity(ContentEntity entity, EntitySpecification savedState,
+            SerializationConverter converter) {
+            entity.Restore(savedState, converter);
         }
 
         public IEnumerator<IEntity> GetEnumerator() {

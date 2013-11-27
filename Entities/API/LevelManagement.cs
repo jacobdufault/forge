@@ -1,4 +1,5 @@
-﻿using Neon.FileSaving;
+﻿using Neon.Entities.Implementation.Shared;
+using Neon.FileSaving;
 using Neon.Utilities;
 using System;
 using System.Collections.Generic;
@@ -15,31 +16,21 @@ namespace Neon.Entities {
         /// <returns>An empty maybe if no level could be loaded, otherwise the loaded
         /// level.</returns>
         public static Maybe<ISavedLevel> Load(SavedStateReader level) {
-            // TODO: ensure that we are support the level version
-            throw new NotImplementedException();
+            return level.GetFileItem<EntitiesSaveFileItem>().Lift<EntitiesSaveFileItem, ISavedLevel>();
         }
 
         /// <summary>
-        /// Saves a content database to the given file. The database is assumed to represent both
-        /// the current and original states, with no input issued thus far. This method is most
-        /// appropriate for usage inside of, ie, an editor, and not for actually saving a game.
+        /// Saves a level to the given writer.
         /// </summary>
-        public static void Save(SavedStateReader level, IContentDatabase content) {
-            throw new NotImplementedException();
+        public static void Save(SavedStateWriter level, ISavedLevel savedLevel) {
+            level.WriteFileItem((EntitiesSaveFileItem)savedLevel);
         }
 
         /// <summary>
-        /// Saves a level.
+        /// Returns a new empty level.
         /// </summary>
-        /// <param name="original">The original content database that the level was initially
-        /// started from, ie, the initial state of the level.</param>
-        /// <param name="current">The current content database; this is strictly not necessary, but
-        /// facilitates faster level loading.</param>
-        /// <param name="input">The input that was used to transform the original database into the
-        /// current one.</param>
-        public static string Save(IContentDatabase original, IContentDatabase current,
-            List<IssuedInput> input) {
-            throw new NotImplementedException();
+        public static ISavedLevel CreateLevel() {
+            return new EntitiesSaveFileItem();
         }
     }
 

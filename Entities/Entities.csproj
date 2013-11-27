@@ -49,6 +49,7 @@
   <ItemGroup>
     <Compile Include="Implementation\Content\ContentDatabase.cs" />
     <Compile Include="Implementation\Content\ContentEntity.cs" />
+    <Compile Include="Implementation\Runtime\PerformanceInformation.cs" />
     <Compile Include="Implementation\Shared\Template.cs" />
     <Compile Include="Implementation\Content\Specifications\RestorableSystemSpecification.cs" />
     <Compile Include="Implementation\Shared\EntitiesSaveFileItem.cs" />

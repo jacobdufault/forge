@@ -1,6 +1,8 @@
 ﻿using Neon.Collections;
 using Neon.Entities.Implementation.Content;
+using Neon.Entities.Implementation.Content.Specifications;
 using Neon.Entities.Implementation.Shared;
+using Neon.Serialization;
 using Neon.Utilities;
 using System;
 using System.Collections.Generic;
@@ -100,6 +102,9 @@ namespace Neon.Entities.Implementation.Runtime {
         /// </summary>
         private static int _entityUnorderedListMetadataKey = EntityManagerMetadata.GetUnorderedListMetadataIndex();
 
+        private List<ISystem> _systems;
+        private List<ITemplate> _templates;
+
         /// <summary>
         /// Events that the EntityManager dispatches.
         /// </summary>
@@ -123,6 +128,9 @@ namespace Neon.Entities.Implementation.Runtime {
         }
 
         public GameEngine(IContentDatabase contentDatabase) {
+            _systems = contentDatabase.Systems;
+            _templates = contentDatabase.Templates;
+
             foreach (var template in contentDatabase.Templates) {
                 Template tem = (Template)template;
 
@@ -426,7 +434,7 @@ namespace Neon.Entities.Implementation.Runtime {
         /// Registers the given entity with the world.
         /// </summary>
         /// <param name="instance">The instance to add</param>
-        private void AddEntity(RuntimeEntity instance) {
+        internal void AddEntity(RuntimeEntity instance) {
             _notifiedAddingEntities.Add(instance);
             instance.EventNotifier.Submit(HideEntityEvent.Instance);
         }
@@ -493,5 +501,39 @@ namespace Neon.Entities.Implementation.Runtime {
         /// </summary>
         public CountdownEvent SystemDoneEvent { get; private set; }
         #endregion
+
+        public IContentDatabase GetContentDatabase() {
+            SerializationConverter converter = new SerializationConverter();
+            TemplateDeserializer.AddTemplateExporter(converter);
+            EntityDeserializer.AddEntityExporter(converter);
+
+            ContentDatabase contentDatabase = new ContentDatabase();
+
+            contentDatabase.SingletonEntity = new ContentEntity(new EntitySpecification(SingletonEntity, false, false, converter), converter);
+
+            foreach (var adding in _notifiedAddingEntities.ToList()) {
+                contentDatabase.AddedEntities.Add(new ContentEntity(new EntitySpecification(adding, true, false, converter), converter));
+            }
+
+            List<RuntimeEntity> removing = _notifiedRemovedEntities.ToList();
+            foreach (var entity in _entities) {
+                bool isRemoving = removing.Contains(entity);
+
+                ContentEntity contentEntity = new ContentEntity(new EntitySpecification(SingletonEntity, false, isRemoving, converter), converter);
+
+                if (isRemoving) {
+                    contentDatabase.RemovedEntities.Add(contentEntity);
+                }
+                else {
+                    contentDatabase.ActiveEntities.Add(contentEntity);
+                }
+
+            }
+
+            contentDatabase.Templates = _templates;
+            contentDatabase.Systems = _systems;
+
+            return contentDatabase;
+        }
     }
 }
