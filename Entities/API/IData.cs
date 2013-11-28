@@ -41,7 +41,6 @@ namespace Neon.Entities {
     }
 
     public abstract class BaseData<TData> : IData {
-
         public abstract bool SupportsConcurrentModifications {
             get;
         }
@@ -60,15 +59,6 @@ namespace Neon.Entities {
         IData IData.Duplicate() {
             return (IData)MemberwiseClone();
         }
-    }
-
-    /// <summary>
-    /// Marks a member of a data type as non-verifiable. A non-verifiable member does not contribute
-    /// to the automatically calculated hash code which is used for error checking, ie, that
-    /// unmodifiable data is not modified and that networked games do not go out of sync.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Event)]
-    public sealed class NotVerifiableAttribute : Attribute {
     }
 
     /// <summary>

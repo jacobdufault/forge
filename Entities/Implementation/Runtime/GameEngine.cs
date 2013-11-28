@@ -2,6 +2,7 @@
 using Neon.Entities.Implementation.Content;
 using Neon.Entities.Implementation.Content.Specifications;
 using Neon.Entities.Implementation.Shared;
+using Neon.Entities.Implementation.Verification;
 using Neon.Serialization;
 using Neon.Utilities;
 using System;
@@ -146,7 +147,7 @@ namespace Neon.Entities.Implementation.Runtime {
             foreach (var template in contentDatabase.Templates) {
                 Template tem = (Template)template;
 
-                if (tem != null) {
+                if (tem.GameEngine != null) {
                     throw new InvalidOperationException("Attempt to create multiple GameEngines " +
                         "from the same content database; this is not currently supported");
                 }
@@ -164,11 +165,11 @@ namespace Neon.Entities.Implementation.Runtime {
 
             SingletonEntity = new RuntimeEntity((ContentEntity)contentDatabase.SingletonEntity);
 
-            foreach (var entity in contentDatabase.ActiveEntities) {
+            foreach (var entity in contentDatabase.AddedEntities) {
                 AddEntity(new RuntimeEntity((ContentEntity)entity));
             }
 
-            foreach (var entity in contentDatabase.AddedEntities) {
+            foreach (var entity in contentDatabase.ActiveEntities) {
                 RuntimeEntity runtimeEntity = new RuntimeEntity((ContentEntity)entity);
 
                 // add the entity
@@ -207,7 +208,6 @@ namespace Neon.Entities.Implementation.Runtime {
             }
 
             _nextState = GameEngineNextState.ExpectingSync;
-            SynchronizeState().WaitOne();
         }
 
         /// <summary>
@@ -420,11 +420,11 @@ namespace Neon.Entities.Implementation.Runtime {
                 throw new InvalidOperationException("Cannot call UpdateWorld before the returned " +
                     "WaitHandle has completed");
             }
-            _updateWaitHandle.Reset();
 
             Task updateTask = Task.Factory.StartNew(RunUpdateWorld, input);
             updateTask.ContinueWith(t => {
                 _nextState = GameEngineNextState.ExpectingSync;
+                _synchronizeStateWaitHandle.Reset();
                 _updateWaitHandle.Set();
             });
 
@@ -441,11 +441,11 @@ namespace Neon.Entities.Implementation.Runtime {
                 throw new InvalidOperationException("Cannot call SynchronizeState before the " +
                     "returned WaitHandle has completed");
             }
-            _synchronizeStateWaitHandle.Reset();
 
             Task.Factory.StartNew(() => {
                 UpdateEntitiesWithStateChanges();
                 _nextState = GameEngineNextState.ExpectingUpdate;
+                _updateWaitHandle.Reset();
                 _synchronizeStateWaitHandle.Set();
             });
 
@@ -545,7 +545,7 @@ namespace Neon.Entities.Implementation.Runtime {
             foreach (var entity in _entities) {
                 bool isRemoving = removing.Contains(entity);
 
-                ContentEntity contentEntity = new ContentEntity(new EntitySpecification(SingletonEntity, false, isRemoving, converter), converter);
+                ContentEntity contentEntity = new ContentEntity(new EntitySpecification(entity, false, isRemoving, converter), converter);
 
                 if (isRemoving) {
                     contentDatabase.RemovedEntities.Add(contentEntity);
@@ -560,6 +560,24 @@ namespace Neon.Entities.Implementation.Runtime {
             contentDatabase.Systems = _systems;
 
             return contentDatabase;
+        }
+
+        public int GetVerificationHash() {
+            int hash = 17;
+
+            foreach (IEntity entity in _entities) {
+                foreach (var data in entity.SelectCurrentData()) {
+                    DataAccessor accessor = new DataAccessor(data);
+
+                    IData current = entity.Current(accessor);
+                    IData previous = entity.Previous(accessor);
+
+                    hash = (hash * 31) + AutomatedHashComputation.GetHash(current);
+                    hash = (hash * 31) + AutomatedHashComputation.GetHash(previous);
+                }
+            }
+
+            return hash;
         }
     }
 }

@@ -11,7 +11,7 @@ namespace Neon.Entities.E2ETests {
     }
 
     [TestClass]
-    public class UnitTest1 {
+    public class ContentDatabaseTests {
         public static IContentDatabase CreateEmptyDatabase() {
             return LevelManager.CreateLevel().CurrentState;
         }
@@ -62,8 +62,23 @@ namespace Neon.Entities.E2ETests {
                 database.ActiveEntities.Add(entity);
                 entity.AddData<TestData0>();
                 entity.AddData<TestData1>().A = 60;
-
             }
+
+            {
+                entity = ContentDatabaseHelper.CreateEntity();
+                database.RemovedEntities.Add(entity);
+                entity.AddData<TestData0>();
+
+                entity = ContentDatabaseHelper.CreateEntity();
+                database.RemovedEntities.Add(entity);
+                entity.AddData<TestData1>().A = 70;
+
+                entity = ContentDatabaseHelper.CreateEntity();
+                database.RemovedEntities.Add(entity);
+                entity.AddData<TestData0>();
+                entity.AddData<TestData1>().A = 80;
+            }
+
             return database;
         }
 
@@ -72,6 +87,7 @@ namespace Neon.Entities.E2ETests {
             IContentDatabase database = CreateDefaultDatabase();
 
             IGameEngine engine = GameEngineFactory.CreateEngine(database);
+            engine.SynchronizeState().WaitOne();
             engine.Update();
 
             int notifiedCount = 0;
@@ -81,14 +97,13 @@ namespace Neon.Entities.E2ETests {
 
             engine.DispatchEvents();
 
-            Assert.AreEqual(database.AddedEntities.Count + database.ActiveEntities.Count,
-                notifiedCount);
+            Assert.AreEqual(database.AddedEntities.Count + database.ActiveEntities.Count +
+                database.RemovedEntities.Count, notifiedCount);
         }
 
         [TestMethod]
         public void CorrectUpdateCount() {
             IContentDatabase database = CreateEmptyDatabase();
-
             for (int i = 0; i < 10; ++i) {
                 IEntity entity = ContentDatabaseHelper.CreateEntity();
                 entity.AddData<TestData0>();
@@ -101,9 +116,42 @@ namespace Neon.Entities.E2ETests {
             database.Systems.Add(system);
 
             IGameEngine engine = GameEngineFactory.CreateEngine(database);
+            engine.SynchronizeState().WaitOne();
             engine.Update();
 
             Assert.AreEqual(database.ActiveEntities.Count, system.UpdateCount);
+        }
+
+        [TestMethod]
+        public void ToFromContentDatabase() {
+            IContentDatabase database0 = CreateDefaultDatabase();
+            IGameEngine engine0 = GameEngineFactory.CreateEngine(database0);
+
+            IContentDatabase database1 = engine0.GetContentDatabase();
+            IGameEngine engine1 = GameEngineFactory.CreateEngine(database1);
+
+            Assert.AreEqual(engine0.GetVerificationHash(), engine1.GetVerificationHash());
+        }
+
+        [TestMethod]
+        public void SendRemoveFromContentDatabase() {
+            IContentDatabase database = CreateEmptyDatabase();
+            for (int i = 0; i < 10; ++i) {
+                IEntity entity = ContentDatabaseHelper.CreateEntity();
+                entity.AddData<TestData0>();
+                database.RemovedEntities.Add(entity);
+            }
+
+            SystemCounter system = new SystemCounter() {
+                Filter = new[] { typeof(TestData0) }
+            };
+            database.Systems.Add(system);
+
+            IGameEngine engine = GameEngineFactory.CreateEngine(database);
+            engine.SynchronizeState().WaitOne();
+            engine.Update();
+
+            Assert.AreEqual(database.RemovedEntities.Count, system.RemovedCount);
         }
     }
 }
