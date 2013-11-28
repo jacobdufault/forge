@@ -108,7 +108,13 @@ namespace Neon.Entities.Implementation.Runtime {
         /// <summary>
         /// Events that the EntityManager dispatches.
         /// </summary>
-        public IEventNotifier EventNotifier = new EventNotifier();
+        public EventNotifier EventNotifier = new EventNotifier();
+
+        IEventNotifier IGameEngine.EventNotifier {
+            get {
+                return EventNotifier;
+            }
+        }
 
         /// <summary>
         /// Singleton entity that contains global data.
@@ -394,7 +400,8 @@ namespace Neon.Entities.Implementation.Runtime {
             Log<GameEngine>.Info(builder.ToString());
         }
 
-        private ManualResetEvent _updateWaitHandle;
+        private ManualResetEvent _updateWaitHandle = new ManualResetEvent(false);
+
         public WaitHandle Update(IEnumerable<IGameInput> input) {
             if (_updateWaitHandle.WaitOne(0)) {
                 throw new InvalidOperationException("Cannot call UpdateWorld before the returned " +
@@ -410,7 +417,7 @@ namespace Neon.Entities.Implementation.Runtime {
             return _updateWaitHandle;
         }
 
-        private ManualResetEvent _synchronizeStateWaitHandle;
+        private ManualResetEvent _synchronizeStateWaitHandle = new ManualResetEvent(false);
         public WaitHandle SynchronizeState() {
             if (_synchronizeStateWaitHandle.WaitOne(0)) {
                 throw new InvalidOperationException("Cannot call SynchronizeState before the " +

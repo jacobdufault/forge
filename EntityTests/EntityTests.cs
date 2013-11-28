@@ -1,10 +1,15 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Neon.Entities.Implementation.Content;
+using Neon.Entities.Implementation.Runtime;
+using System;
 using System.Collections.Generic;
 
 namespace Neon.Entities.Tests {
-    public static class EntityHelpers {
-        public static IEntity CreateEntity() {
-            return new EntityTemplate().Instantiate(false);
+    internal static class EntityHelpers {
+        public static RuntimeEntity CreateEntity() {
+            //return new EntityTemplate().Instantiate(false);
+            return new RuntimeEntity(new ContentEntity());
+            //throw new NotImplementedException();
         }
     }
 
@@ -20,7 +25,7 @@ namespace Neon.Entities.Tests {
             HashSet<int> ids = new HashSet<int>();
 
             for (int i = 0; i < 200; ++i) {
-                IEntity entity = EntityHelpers.CreateEntity(); 
+                IEntity entity = EntityHelpers.CreateEntity();
                 Assert.IsTrue(ids.Add(entity.UniqueId));
             }
         }
@@ -28,7 +33,7 @@ namespace Neon.Entities.Tests {
         [TestMethod]
         [ExpectedException(typeof(AlreadyAddedDataException))]
         public void CannotAddMultipleDataInstances() {
-            IEntity entity = EntityHelpers.CreateEntity();
+            RuntimeEntity entity = EntityHelpers.CreateEntity();
             entity.AddData<TestData0>();
             entity.AddData<TestData0>();
             entity.DataStateChangeUpdate();
@@ -37,7 +42,7 @@ namespace Neon.Entities.Tests {
         [TestMethod]
         [ExpectedException(typeof(AlreadyAddedDataException))]
         public void CannotAddMultipleDataInstancesAfterStateUpdates() {
-            IEntity entity = EntityHelpers.CreateEntity(); 
+            RuntimeEntity entity = EntityHelpers.CreateEntity();
             entity.AddData<TestData0>();
             entity.DataStateChangeUpdate();
             entity.AddData<TestData0>();
@@ -46,7 +51,7 @@ namespace Neon.Entities.Tests {
 
         [TestMethod]
         public void InitializingReturnsOneConstantInstance() {
-            IEntity entity = EntityHelpers.CreateEntity(); 
+            IEntity entity = EntityHelpers.CreateEntity();
             TestData0 data0 = entity.AddData<TestData0>();
             TestData0 data1 = entity.AddOrModify<TestData0>();
             TestData0 data2 = entity.Modify<TestData0>();
@@ -58,7 +63,7 @@ namespace Neon.Entities.Tests {
         [TestMethod]
         [ExpectedException(typeof(NoSuchDataException))]
         public void AddedDataIsNotContained() {
-            IEntity entity = EntityHelpers.CreateEntity(); 
+            IEntity entity = EntityHelpers.CreateEntity();
             entity.AddData<TestData0>();
 
             Assert.IsFalse(entity.ContainsData<TestData0>());

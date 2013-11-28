@@ -405,7 +405,7 @@ namespace Neon.Entities.Implementation.Runtime {
         /// </summary>
         private List<IData> _toAddStage1 = new List<IData>();
         private List<IData> _toAddStage2 = new List<IData>();
-        private SparseArray<IData> _addedLastFrame;
+        private SparseArray<IData> _addedLastFrame = new SparseArray<IData>();
 
         /// <summary>
         /// Items that are going to be removed. Removal is a two stage process, because after a data

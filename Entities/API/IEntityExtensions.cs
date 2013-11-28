@@ -2,8 +2,7 @@
     /// <summary>
     /// Helper methods built on top of the core IEntity API.
     /// </summary>
-    // TODO: add comments and make this type public
-    internal static class IEntityExtensions {
+    public static class IEntityExtensions {
         public static T Current<T>(this IQueryableEntity entity) where T : IData {
             return (T)entity.Current(DataMap<T>.Accessor);
         }

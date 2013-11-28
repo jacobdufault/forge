@@ -13,7 +13,7 @@ namespace Neon.Entities.Tests {
         [TestMethod]
         [ExpectedException(typeof(ArgumentException))]
         public void DataAccessorRejectsDataType() {
-            DataAccessor accessor = new DataAccessor(typeof(Data));
+            DataAccessor accessor = new DataAccessor(typeof(IData));
         }
 
     }

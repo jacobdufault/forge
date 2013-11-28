@@ -12,6 +12,14 @@ using System.Reflection;
 
 namespace Neon.Entities.Implementation.Shared {
     internal class EntitiesSaveFileItem : ISaveFileItem, ISavedLevel {
+        public EntitiesSaveFileItem() {
+            AssemblyInjectionPaths = new List<string>();
+            SystemProviderTypes = new List<Type>();
+            CurrentState = new ContentDatabase();
+            OriginalState = new ContentDatabase();
+            Input = new List<IssuedInput>();
+        }
+
         public Guid Identifier {
             get { return new Guid("C8C0303D-97C9-4876-91C0-F6259CCE6760"); }
         }

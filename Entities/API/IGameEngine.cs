@@ -41,6 +41,14 @@ namespace Neon.Entities {
         void DispatchEvents();
 
         /// <summary>
+        /// Event notifier used to notify listeners of events that have occurred inside of the
+        /// engine, such as an entity being added.
+        /// </summary>
+        IEventNotifier EventNotifier {
+            get;
+        }
+
+        /// <summary>
         /// Iterates through all data inside of the engine and returns a content database that
         /// reflects everything contained within the engine. This method also performs a state
         /// synchronization.

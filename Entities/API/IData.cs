@@ -40,6 +40,28 @@ namespace Neon.Entities {
         IData Duplicate();
     }
 
+    public abstract class BaseData<TData> : IData {
+
+        public abstract bool SupportsConcurrentModifications {
+            get;
+        }
+
+        public virtual void ResolveConcurrentModifications() {
+            throw new InvalidOperationException("Type " + GetType() + " supports concurrent " +
+                "modifications but did not override ResolveConcurrentModifications");
+        }
+
+        public abstract void CopyFrom(TData source);
+
+        void IData.CopyFrom(IData source) {
+            CopyFrom((TData)source);
+        }
+
+        IData IData.Duplicate() {
+            return (IData)MemberwiseClone();
+        }
+    }
+
     /// <summary>
     /// Marks a member of a data type as non-verifiable. A non-verifiable member does not contribute
     /// to the automatically calculated hash code which is used for error checking, ie, that
@@ -68,8 +90,9 @@ namespace Neon.Entities {
         /// subtype of Data</param>
         public DataAccessor(Type dataType)
             : this() {
-            if (dataType.IsSubclassOf(typeof(IData)) == false) {
-                throw new ArgumentException("Type " + dataType + " is not a subtype of " + typeof(IData));
+            if (dataType == typeof(IData) || typeof(IData).IsAssignableFrom(dataType) == false) {
+                throw new ArgumentException("Type " + dataType + " is not a subtype of " +
+                    typeof(IData));
             }
 
             Id = DataAccessorFactory.GetId(dataType);

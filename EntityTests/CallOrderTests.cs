@@ -3,6 +3,26 @@ using System;
 using System.Collections.Generic;
 
 namespace Neon.Entities.Tests {
+
+    internal class TestData0 : BaseData<TestData0> {
+        public override bool SupportsConcurrentModifications {
+            get { return false; }
+        }
+
+        public override void CopyFrom(TestData0 source) {
+        }
+    }
+
+    internal class TestData1 : BaseData<TestData1> {
+        public override bool SupportsConcurrentModifications {
+            get { return false; }
+        }
+
+        public override void CopyFrom(TestData1 source) {
+        }
+    }
+
+    /*
     internal enum TriggerEvent {
         OnAdded,
         OnRemoved,
@@ -72,38 +92,6 @@ namespace Neon.Entities.Tests {
         public override Type[] ComputeEntityFilter() {
             return new[] { typeof(TestData0) };
         }
-    }
-
-    internal class TestData0 : IData {
-        public override bool SupportsConcurrentModifications {
-            get { return false; }
-        }
-
-        public override void CopyFrom(IData source) {
-        }
-
-        public override int HashCode {
-            get { return 0; }
-        }
-
-        //public override void DoUpdateVisualization() {
-        //}
-    }
-
-    internal class TestData1 : IData {
-        public override bool SupportsConcurrentModifications {
-            get { return false; }
-        }
-
-        public override void CopyFrom(IData source) {
-        }
-
-        public override int HashCode {
-            get { return 0; }
-        }
-
-        //public override void DoUpdateVisualization() {
-        //}
     }
 
     [TestClass]
@@ -382,4 +370,5 @@ namespace Neon.Entities.Tests {
             }, trigger.Events);
         }
     }
+    */
 }

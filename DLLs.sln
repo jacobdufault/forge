@@ -31,6 +31,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileSaving", "FileSaving\Fi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileSavingTests", "FileSavingTests\FileSavingTests.csproj", "{52380B9F-EFEC-4388-A440-288C218D68EF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EntityE2ETests", "EntityE2ETests\EntityE2ETests.csproj", "{9A3F46B0-F47A-45A1-BD79-12F7A9A47537}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -89,6 +91,10 @@ Global
 		{52380B9F-EFEC-4388-A440-288C218D68EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{52380B9F-EFEC-4388-A440-288C218D68EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{52380B9F-EFEC-4388-A440-288C218D68EF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9A3F46B0-F47A-45A1-BD79-12F7A9A47537}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9A3F46B0-F47A-45A1-BD79-12F7A9A47537}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9A3F46B0-F47A-45A1-BD79-12F7A9A47537}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9A3F46B0-F47A-45A1-BD79-12F7A9A47537}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
