@@ -89,7 +89,7 @@ namespace Neon.Entities.Implementation.Shared {
         /// </summary>
         /// <typeparam name="TEvent">The event type to listen for.</typeparam>
         /// <param name="onEvent">The code to invoke.</param>
-        public void AddListener<TEvent>(Action<TEvent> onEvent) {
+        public void OnEvent<TEvent>(Action<TEvent> onEvent) {
             Type eventType = typeof(TEvent);
 
             lock (this) {
@@ -106,6 +106,7 @@ namespace Neon.Entities.Implementation.Shared {
             }
         }
 
+        /*
         /// <summary>
         /// Removes an event listener that was previously added with AddListener.
         /// </summary>
@@ -127,6 +128,7 @@ namespace Neon.Entities.Implementation.Shared {
                 return false;
             }
         }
+        */
     }
 
     /// <summary>

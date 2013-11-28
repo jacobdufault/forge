@@ -18,6 +18,12 @@ namespace Neon.Entities.Implementation.Runtime {
     /// EntityManager.
     /// </summary>
     internal class GameEngine : MultithreadedSystemSharedContext, IGameEngine {
+        private enum GameEngineNextState {
+            ExpectingSync,
+            ExpectingUpdate
+        }
+        private GameEngineNextState _nextState;
+
         /// <summary>
         /// Should the EntityManager execute systems in separate threads?
         /// </summary>
@@ -199,6 +205,9 @@ namespace Neon.Entities.Implementation.Runtime {
             foreach (var system in contentDatabase.Systems) {
                 AddSystem(system);
             }
+
+            _nextState = GameEngineNextState.ExpectingSync;
+            SynchronizeState().WaitOne();
         }
 
         /// <summary>
@@ -403,6 +412,10 @@ namespace Neon.Entities.Implementation.Runtime {
         private ManualResetEvent _updateWaitHandle = new ManualResetEvent(false);
 
         public WaitHandle Update(IEnumerable<IGameInput> input) {
+            if (_nextState != GameEngineNextState.ExpectingUpdate) {
+                throw new InvalidOperationException("Invalid call to Update; was expecting " + _nextState);
+            }
+
             if (_updateWaitHandle.WaitOne(0)) {
                 throw new InvalidOperationException("Cannot call UpdateWorld before the returned " +
                     "WaitHandle has completed");
@@ -411,6 +424,7 @@ namespace Neon.Entities.Implementation.Runtime {
 
             Task updateTask = Task.Factory.StartNew(RunUpdateWorld, input);
             updateTask.ContinueWith(t => {
+                _nextState = GameEngineNextState.ExpectingSync;
                 _updateWaitHandle.Set();
             });
 
@@ -419,6 +433,10 @@ namespace Neon.Entities.Implementation.Runtime {
 
         private ManualResetEvent _synchronizeStateWaitHandle = new ManualResetEvent(false);
         public WaitHandle SynchronizeState() {
+            if (_nextState != GameEngineNextState.ExpectingSync) {
+                throw new InvalidOperationException("Invalid call to SynchronizeState; was expecting " + _nextState);
+            }
+
             if (_synchronizeStateWaitHandle.WaitOne(0)) {
                 throw new InvalidOperationException("Cannot call SynchronizeState before the " +
                     "returned WaitHandle has completed");
@@ -427,6 +445,7 @@ namespace Neon.Entities.Implementation.Runtime {
 
             Task.Factory.StartNew(() => {
                 UpdateEntitiesWithStateChanges();
+                _nextState = GameEngineNextState.ExpectingUpdate;
                 _synchronizeStateWaitHandle.Set();
             });
 

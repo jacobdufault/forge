@@ -13,11 +13,11 @@ namespace Neon.Entities {
         /// </summary>
         /// <typeparam name="TEvent">The event type to listen for.</typeparam>
         /// <param name="onEvent">The code to invoke.</param>
-        void AddListener<TEvent>(Action<TEvent> onEvent);
+        void OnEvent<TEvent>(Action<TEvent> onEvent);
 
         /// <summary>
         /// Removes an event listener that was previously added with AddListener.
         /// </summary>
-        bool RemoveListener<TEvent>(Action<TEvent> onEvent);
+        //bool RemoveListener<TEvent>(Action<TEvent> onEvent);
     }
 }

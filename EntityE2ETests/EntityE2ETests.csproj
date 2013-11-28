@@ -55,6 +55,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="DataDefinitions.cs" />
+    <Compile Include="SystemCounter.cs" />
     <Compile Include="UnitTest1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

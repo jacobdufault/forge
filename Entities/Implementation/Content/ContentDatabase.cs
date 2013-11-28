@@ -97,18 +97,6 @@ namespace Neon.Entities.Implementation.Content {
             Systems = new List<ISystem>();
         }
 
-        public IEntity AddEntity() {
-            IEntity entity = new ContentEntity();
-            AddedEntities.Add(entity);
-            return entity;
-        }
-
-        public ITemplate AddTemplate() {
-            ITemplate template = new Template();
-            Templates.Add(template);
-            return template;
-        }
-
         public IEntity SingletonEntity {
             get;
             set;

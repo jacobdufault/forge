@@ -1,9 +1,29 @@
-﻿using System;
+﻿using Neon.Entities.Implementation.Content;
+using Neon.Entities.Implementation.Shared;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Neon.Entities {
+    public class ContentDatabaseHelper {
+        /// <summary>
+        /// Creates a new IEntity instance that can be modified as pleased. The returned object will
+        /// respond to modifications immediately; ie, after calling entity.AddData, entity.Current
+        /// will return the added instance, effectively eschewing the immutability and update-order
+        /// properties that the game engine has to simplify content creation. Make sure to add the
+        /// entity instance to an IContentDatabase!
+        /// </summary>
+        public static IEntity CreateEntity() {
+            return new ContentEntity();
+        }
+
+        /// <summary>
+        /// Creates a new ITemplate instance that can be modified. Make sure to add it to an
+        /// IContentDatabase!
+        /// </summary>
+        public static ITemplate CreateTemplate() {
+            return new Template();
+        }
+    }
+
     /// <summary>
     /// The ContentDatabase stores a serialized game state. It provides a common interface that both
     /// the engine and the editor use for accessing saved games and replays.
@@ -14,24 +34,6 @@ namespace Neon.Entities {
     /// exposed by the content database, such as entities, also need to extend MarshalByRefObject.
     /// </remarks>
     public interface IContentDatabase {
-        /// <summary>
-        /// Adds a new IEntity to the given IContentDatabase this modifier is attached to.
-        /// </summary>
-        /// <remarks>
-        /// After calling this method, Entities will contain an instance of the returned value.
-        /// </remarks>
-        /// <returns>The newly added IEntity.</returns>
-        IEntity AddEntity();
-
-        /// <summary>
-        /// Adds a new ITemplate to the given IContentDatabase this modifier is attached to.
-        /// </summary>
-        /// <remarks>
-        /// After this method returns, Templates will contain an instance of the returned value.
-        /// </remarks>
-        /// <returns>The newly added ITemplate.</returns>
-        ITemplate AddTemplate();
-
         /// <summary>
         /// The singleton entity. It is automatically created and cannot be destroyed, but it can be
         /// modified.
