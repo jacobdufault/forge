@@ -35,7 +35,7 @@ namespace Neon.Entities.Implementation.Shared {
         /// Adds a default data instance to the template. The template "owns" the passed data
         /// instance; a copy is not made of it.
         /// </summary>
-        /// <param name="instance">The data instance to copy from.</param>
+        /// <param name="data">The data instance to copy from.</param>
         public void AddDefaultData(IData data) {
             _defaultDataInstances[DataAccessorFactory.GetId(data)] = data;
         }
@@ -50,14 +50,7 @@ namespace Neon.Entities.Implementation.Shared {
                 throw new InvalidOperationException("Unable to instantiate entity with no game engine");
             }
 
-            RuntimeEntity entity = new RuntimeEntity();
-
-            foreach (var pair in _defaultDataInstances) {
-                IData data = pair.Value;
-
-                IData added = ((IEntity)entity).AddData(new DataAccessor(data));
-                added.CopyFrom(data);
-            }
+            RuntimeEntity entity = new RuntimeEntity(this);
 
             GameEngine.AddEntity(entity);
 

@@ -89,7 +89,6 @@ namespace Neon.Entities.Implementation.Shared {
         /// </summary>
         /// <typeparam name="TEvent">The event type to listen for.</typeparam>
         /// <param name="onEvent">The code to invoke.</param>
-        /// <exception cref="System.NotImplementedException"></exception>
         public void AddListener<TEvent>(Action<TEvent> onEvent) {
             Type eventType = typeof(TEvent);
 
@@ -113,7 +112,6 @@ namespace Neon.Entities.Implementation.Shared {
         /// <typeparam name="TEvent"></typeparam>
         /// <param name="onEvent"></param>
         /// <returns></returns>
-        /// <exception cref="System.NotImplementedException"></exception>
         public bool RemoveListener<TEvent>(Action<TEvent> onEvent) {
             Type eventType = typeof(TEvent);
 

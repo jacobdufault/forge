@@ -98,20 +98,72 @@ namespace Neon.Entities.Implementation.Runtime {
         #endregion
 
         #region Event Processor
-        private EventNotifier _eventProcessor;
         IEventNotifier IQueryableEntity.EventNotifier {
-            get { return _eventProcessor; }
+            get { return EventNotifier; }
         }
         public EventNotifier EventNotifier {
-            get { return _eventProcessor; }
+            get;
+            private set;
         }
         #endregion
 
-        public RuntimeEntity() {
+        private RuntimeEntity(int uniqueId, string prettyName) {
+            _uniqueId = uniqueId;
+            _idGenerator.Consume(_uniqueId);
+
+            PrettyName = prettyName;
+
+            EventNotifier = new EventNotifier();
+
+            DataStateChangeNotifier = new Notifier<RuntimeEntity>(this);
+            ModificationNotifier = new Notifier<RuntimeEntity>(this);
         }
 
-        public RuntimeEntity(ContentEntity contentEntity) {
-            throw new NotImplementedException();
+        public RuntimeEntity(ITemplate template)
+            : this(_idGenerator.Next(), "") {
+            foreach (var data in template.SelectCurrentData()) {
+                AddData_unlocked(new DataAccessor(data)).CopyFrom(data);
+            }
+        }
+
+        public RuntimeEntity(ContentEntity contentEntity)
+            : this(contentEntity.UniqueId, contentEntity.PrettyName) {
+
+            foreach (var data in contentEntity.SelectCurrentData()) {
+                DataAccessor accessor = new DataAccessor(data);
+
+                if (contentEntity.WasAdded(accessor)) {
+                    _toAdd.Add(data);
+                }
+
+                else {
+                    IData current = contentEntity.Current(accessor);
+                    IData previous = contentEntity.Previous(accessor);
+
+                    _data[accessor.Id] = new DataContainer(previous, current, current.Duplicate());
+
+                    // There is going to be an ApplyModification call before systems actually view
+                    // this Entity instance. With that in mind, we can treat our data initialization
+                    // as if if were operating on the previous frame.
+
+                    if (contentEntity.WasModified(accessor)) {
+                        // This is kind of an ugly hack, because to get the correct Previous/Current
+                        // data we need to move Previous into Current so that Previous will reflect
+                        // the true Previous value, not the Current one.
+
+                        // Internal signal that a modification is going to take place
+                        ((IEntity)this).Modify(accessor);
+
+                        // Move Previous into Current, so that after the ApplyModification we have
+                        // the correct data values
+                        _data[accessor.Id].Current.CopyFrom(_data[accessor.Id].Previous);
+                    }
+
+                    if (contentEntity.WasRemoved(accessor)) {
+                        ((IEntity)this).RemoveData(accessor);
+                    }
+                }
+            }
         }
 
         /*
@@ -273,7 +325,7 @@ namespace Neon.Entities.Implementation.Runtime {
                     _removed[id] = removedStage1[i];
                     // _removed[id] is removed from _removed in stage2
 
-                    _eventProcessor.Submit(new RemovedDataEvent(_data[id].Current.GetType()));
+                    EventNotifier.Submit(new RemovedDataEvent(_data[id].Current.GetType()));
                 }
 
                 for (int i = 0; i < removedStage2.Count; ++i) {
@@ -304,7 +356,7 @@ namespace Neon.Entities.Implementation.Runtime {
                 _data[id] = new DataContainer(added.Duplicate(), added.Duplicate(), added.Duplicate());
 
                 // visualize the initial data
-                _eventProcessor.Submit(new AddedDataEvent(added.GetType()));
+                EventNotifier.Submit(new AddedDataEvent(added.GetType()));
             }
             _toAdd.Clear();
 
@@ -346,6 +398,9 @@ namespace Neon.Entities.Implementation.Runtime {
         /// </summary>
         private List<IData> _toAdd = new List<IData>();
 
+        /// <summary>
+        /// Items that are going to be removed. Removal is a two stage process
+        /// </summary>
         private SwappableItem<List<DataAccessor>> _toRemove = new SwappableItem<List<DataAccessor>>(new List<DataAccessor>(), new List<DataAccessor>());
         private SparseArray<DataAccessor> _removed = new SparseArray<DataAccessor>();
         #endregion

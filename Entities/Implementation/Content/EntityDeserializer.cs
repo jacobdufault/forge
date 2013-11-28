@@ -46,8 +46,6 @@ namespace Neon.Entities.Implementation.Content {
         /// <summary>
         /// Deserializes the entities using the given converter.
         /// </summary>
-        /// <param name="singleton">The singleton entity</param>
-        /// <param name="entities">The list of all other entities</param>
         /// <param name="converter">The converter to use; this method requires temporary importer
         /// support for the IEntity type</param>
         public EntityDeserializer(SerializationConverter converter) {

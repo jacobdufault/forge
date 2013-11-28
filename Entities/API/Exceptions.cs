@@ -46,7 +46,7 @@ namespace Neon.Entities {
         /// Creates the exception with the given context and data type.
         /// </summary>
         /// <param name="context">The entity that triggered the exception.</param>
-        /// <param name="type">The data type that was concurrently modified.</param>
+        /// <param name="accessor">The data type that was concurrently modified.</param>
         internal RemodifiedDataException(IEntity context, DataAccessor accessor)
             : base("Already modified data for type=" +
             DataAccessorFactory.GetTypeFromAccessor(accessor) + " in " + context) {
