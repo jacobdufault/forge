@@ -133,7 +133,7 @@ namespace Neon.Entities.Implementation.Runtime {
                 DataAccessor accessor = new DataAccessor(data);
 
                 if (contentEntity.WasAdded(accessor)) {
-                    _toAdd.Add(data);
+                    _toAddStage1.Add(data);
                 }
 
                 else {
@@ -316,24 +316,22 @@ namespace Neon.Entities.Implementation.Runtime {
         public void DataStateChangeUpdate() {
             // do removals
             {
-                List<DataAccessor> removedStage2 = _toRemove.Previous;
-                List<DataAccessor> removedStage1 = _toRemove.Current;
-                _toRemove.Swap();
-
-                for (int i = 0; i < removedStage1.Count; ++i) {
-                    int id = removedStage1[i].Id;
-                    _removed[id] = removedStage1[i];
-                    // _removed[id] is removed from _removed in stage2
+                for (int i = 0; i < _toRemoveStage1.Count; ++i) {
+                    int id = _toRemoveStage1[i].Id;
+                    _removedLastFrame[id] = _toRemoveStage1[i];
+                    // _removedLastFrame[id] is removed in stage2
 
                     EventNotifier.Submit(new RemovedDataEvent(_data[id].Current.GetType()));
                 }
 
-                for (int i = 0; i < removedStage2.Count; ++i) {
-                    int id = removedStage2[i].Id;
-                    _removed.Remove(id);
+                for (int i = 0; i < _toRemoveStage2.Count; ++i) {
+                    int id = _toRemoveStage2[i].Id;
+                    _removedLastFrame.Remove(id);
                     _data.Remove(id);
                 }
-                removedStage2.Clear();
+                _toRemoveStage2.Clear();
+
+                Utils.Swap(ref _toRemoveStage1, ref _toRemoveStage2);
             }
 
             // We don't throw an exception immediately. If we are throwing an exception, that means
@@ -343,8 +341,8 @@ namespace Neon.Entities.Implementation.Runtime {
             Exception exceptionToThrow = null;
 
             // do additions
-            for (int i = 0; i < _toAdd.Count; ++i) {
-                IData added = _toAdd[i];
+            for (int i = 0; i < _toAddStage1.Count; ++i) {
+                IData added = _toAddStage1[i];
                 int id = DataAccessorFactory.GetId(added.GetType());
 
                 // make sure we do not readd the same data instance twice
@@ -353,12 +351,20 @@ namespace Neon.Entities.Implementation.Runtime {
                     continue;
                 }
 
+                _addedLastFrame[id] = added;
+
                 _data[id] = new DataContainer(added.Duplicate(), added.Duplicate(), added.Duplicate());
 
                 // visualize the initial data
                 EventNotifier.Submit(new AddedDataEvent(added.GetType()));
             }
-            _toAdd.Clear();
+
+            for (int i = 0; i < _toAddStage2.Count; ++i) {
+                _addedLastFrame.Remove(new DataAccessor(_toAddStage2[i]).Id);
+            }
+            _toAddStage2.Clear();
+
+            Utils.Swap(ref _toAddStage1, ref _toAddStage2);
 
             if (exceptionToThrow != null) {
                 throw exceptionToThrow;
@@ -367,7 +373,8 @@ namespace Neon.Entities.Implementation.Runtime {
 
         internal bool NeedsMoreDataStateChangeUpdates() {
             // do we still have things to remove or to add?
-            return _toRemove.Previous.Count > 0 || _toRemove.Current.Count > 0 || _toAdd.Count > 0;
+            return _toRemoveStage1.Count > 0 || _toRemoveStage2.Count > 0 ||
+                _toAddStage1.Count > 0 || _toAddStage2.Count > 0;
         }
         #endregion
 
@@ -396,13 +403,28 @@ namespace Neon.Entities.Implementation.Runtime {
         /// <summary>
         /// Items that are pending addition in the next update call
         /// </summary>
-        private List<IData> _toAdd = new List<IData>();
+        private List<IData> _toAddStage1 = new List<IData>();
+        private List<IData> _toAddStage2 = new List<IData>();
+        private SparseArray<IData> _addedLastFrame;
 
         /// <summary>
-        /// Items that are going to be removed. Removal is a two stage process
+        /// Items that are going to be removed. Removal is a two stage process, because after a data
+        /// item has been removed the final state of the data can be queried in the next update.
         /// </summary>
-        private SwappableItem<List<DataAccessor>> _toRemove = new SwappableItem<List<DataAccessor>>(new List<DataAccessor>(), new List<DataAccessor>());
-        private SparseArray<DataAccessor> _removed = new SparseArray<DataAccessor>();
+        private List<DataAccessor> _toRemoveStage1 = new List<DataAccessor>();
+
+        /// <summary>
+        /// Data that was removed not in the update that is currently executing, but in the update
+        /// that previously executed.
+        /// </summary>
+        private List<DataAccessor> _toRemoveStage2 = new List<DataAccessor>();
+
+        /// <summary>
+        /// Data that was removed during the last frame (update). This is identical to
+        /// _toRemoveStage1, except that it provides a fast way to check to see if a data item has
+        /// been removed.
+        /// </summary>
+        private SparseArray<DataAccessor> _removedLastFrame = new SparseArray<DataAccessor>();
         #endregion
 
         #region Helper Methods
@@ -416,10 +438,10 @@ namespace Neon.Entities.Implementation.Runtime {
             int id = accessor.Id;
             // TODO: optimize this so we don't have to search through all added data... though
             // this should actually be pretty quick
-            for (int i = 0; i < _toAdd.Count; ++i) {
-                int addedId = DataAccessorFactory.GetId(_toAdd[i].GetType());
+            for (int i = 0; i < _toAddStage1.Count; ++i) {
+                int addedId = DataAccessorFactory.GetId(_toAddStage1[i].GetType());
                 if (addedId == id) {
-                    return _toAdd[i];
+                    return _toAddStage1[i];
                 }
             }
 
@@ -429,7 +451,7 @@ namespace Neon.Entities.Implementation.Runtime {
 
         IData IEntity.AddOrModify(DataAccessor accessor) {
             if (((IEntity)this).ContainsData(accessor) == false) {
-                lock (_toAdd) {
+                lock (_toAddStage1) {
                     IData added = GetAddedData_unlocked(accessor);
                     if (added == null) {
                         added = AddData_unlocked(accessor);
@@ -467,7 +489,7 @@ namespace Neon.Entities.Implementation.Runtime {
             // add our data
             Type dataType = DataAccessorFactory.GetTypeFromAccessor(accessor);
             IData data = (IData)Activator.CreateInstance(dataType);
-            _toAdd.Add(data);
+            _toAddStage1.Add(data);
 
             // notify the entity manager
             ModificationNotifier.Notify();
@@ -478,7 +500,7 @@ namespace Neon.Entities.Implementation.Runtime {
         }
 
         IData IEntity.AddData(DataAccessor accessor) {
-            lock (_toAdd) {
+            lock (_toAddStage1) {
                 return AddData_unlocked(accessor);
             }
         }
@@ -486,8 +508,8 @@ namespace Neon.Entities.Implementation.Runtime {
 
         #region RemoveData
         void IEntity.RemoveData(DataAccessor accessor) {
-            lock (_toRemove.Current) {
-                _toRemove.Current.Add(accessor);
+            lock (_toRemoveStage1) {
+                _toRemoveStage1.Add(accessor);
             }
 
             ModificationNotifier.Notify();
@@ -538,8 +560,9 @@ namespace Neon.Entities.Implementation.Runtime {
 
         #region ContainsData
         bool IQueryableEntity.ContainsData(DataAccessor accessor) {
+            // We contain data if a) data contains it and b) it was not removed in the last frame
             int id = accessor.Id;
-            return _data.Contains(id) && _removed.Contains(id) == false;
+            return _data.Contains(id) && _removedLastFrame.Contains(id) == false;
         }
         #endregion
 
@@ -548,26 +571,11 @@ namespace Neon.Entities.Implementation.Runtime {
         }
 
         bool IEntity.WasAdded(DataAccessor accessor) {
-            throw new NotImplementedException();
+            return _addedLastFrame.Contains(accessor.Id);
         }
 
         bool IEntity.WasRemoved(DataAccessor accessor) {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Returns all data instances that are being added.
-        /// </summary>
-        public List<IData> GetAddingData() {
-            return _toAdd;
-        }
-
-        /// <summary>
-        /// Returns true if, a) there is data for the given accessor, and b) if the data is slated
-        /// for removal in the next data state update.
-        /// </summary>
-        public bool IsRemoving(DataAccessor accessor) {
-            return _toRemove.Current.Contains(accessor);
+            return _removedLastFrame.Contains(accessor.Id);
         }
 
         public override string ToString() {
