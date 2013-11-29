@@ -56,6 +56,7 @@
   <ItemGroup>
     <Compile Include="CallOrderTests.cs" />
     <Compile Include="DataDefinitions.cs" />
+    <Compile Include="LambdaSystem.cs" />
     <Compile Include="SystemCounter.cs" />
     <Compile Include="ContentDatabaseTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

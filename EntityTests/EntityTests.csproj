@@ -59,7 +59,6 @@
   </Choose>
   <ItemGroup>
     <Compile Include="AutomatedHashTests.cs" />
-    <Compile Include="CallOrderTests.cs" />
     <Compile Include="DataAccessorTests.cs" />
     <Compile Include="EntityTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

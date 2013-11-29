@@ -193,17 +193,6 @@ namespace Neon.Entities.Implementation.Runtime {
                 }
                 PerformanceData.AddedTicks = stopwatch.ElapsedTicks;
 
-                // process entities that were removed from the system
-                int removedCount = _shared.RemovedEntities.Count; // immutable
-                for (int i = 0; i < removedCount; ++i) {
-                    RuntimeEntity removed = _shared.RemovedEntities[i];
-                    if (_entityCache.Remove(removed)) {
-                        DoRemove(removed);
-                        _dispatchRemoved.Add(removed);
-                    }
-                }
-                PerformanceData.RemovedTicks = stopwatch.ElapsedTicks - PerformanceData.AddedTicks;
-
                 // process state changes
                 for (int i = 0; i < _shared.StateChangedEntities.Count; ++i) { // immutable
                     RuntimeEntity stateChanged = _shared.StateChangedEntities[i];
@@ -217,7 +206,18 @@ namespace Neon.Entities.Implementation.Runtime {
                         _dispatchRemoved.Add(stateChanged);
                     }
                 }
-                PerformanceData.StateChangeTicks = stopwatch.ElapsedTicks - PerformanceData.RemovedTicks - PerformanceData.AddedTicks;
+                PerformanceData.StateChangeTicks = stopwatch.ElapsedTicks - PerformanceData.AddedTicks;
+
+                // process entities that were removed from the system
+                int removedCount = _shared.RemovedEntities.Count; // immutable
+                for (int i = 0; i < removedCount; ++i) {
+                    RuntimeEntity removed = _shared.RemovedEntities[i];
+                    if (_entityCache.Remove(removed)) {
+                        DoRemove(removed);
+                        _dispatchRemoved.Add(removed);
+                    }
+                }
+                PerformanceData.RemovedTicks = stopwatch.ElapsedTicks - PerformanceData.AddedTicks - PerformanceData.StateChangeTicks;
             }
             finally {
                 _shared.SystemDoneEvent.Signal();

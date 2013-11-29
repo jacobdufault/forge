@@ -3,24 +3,6 @@ using System;
 using System.Collections.Generic;
 
 namespace Neon.Entities.E2ETests {
-    internal class LambdaTrigger : ITriggerAdded {
-        public Type[] ComputeEntityFilter() {
-            return EntityFilter;
-        }
-
-        public Type[] EntityFilter;
-
-        public LambdaTrigger(Type[] entityFilter) {
-            EntityFilter = entityFilter;
-        }
-
-        public Action<IEntity> OnAdded;
-
-        void ITriggerAdded.OnAdded(IEntity entity) {
-            if (OnAdded != null) OnAdded(entity);
-        }
-    }
-
     internal enum TriggerEvent {
         OnAdded,
         OnRemoved,
@@ -141,7 +123,7 @@ namespace Neon.Entities.E2ETests {
             TriggerEventLogger trigger = new TriggerEventLogger(new Type[] { });
             contentDatabase.Systems.Add(trigger);
 
-            LambdaTrigger addedTrigger = new LambdaTrigger(new Type[] { });
+            LambdaSystem addedTrigger = new LambdaSystem(new Type[] { });
             addedTrigger.OnAdded = entity => {
                 entity.AddData<TestData0>();
                 entity.Modify<TestData0>();
@@ -176,7 +158,52 @@ namespace Neon.Entities.E2ETests {
         }
 
         [TestMethod]
-        public void RemoveEntity() {
+        public void AddEntityAndModifyInUpdate() {
+            IContentDatabase contentDatabase = CreateEmptyDatabase();
+
+            TriggerEventLogger trigger = new TriggerEventLogger(new Type[] { typeof(TestData0) });
+            contentDatabase.Systems.Add(trigger);
+
+            LambdaSystem modifySystem = new LambdaSystem(new Type[] { });
+            modifySystem.OnUpdate = entity => {
+                entity.Modify<TestData0>();
+            };
+            contentDatabase.Systems.Add(modifySystem);
+
+            {
+                IEntity e = ContentDatabaseHelper.CreateEntity();
+                e.AddData<TestData0>();
+                contentDatabase.AddedEntities.Add(e);
+            }
+
+            IGameEngine engine = GameEngineFactory.CreateEngine(contentDatabase);
+            engine.SynchronizeState().WaitOne();
+            engine.Update();
+
+            CollectionAssert.AreEqual(new TriggerEvent[] {
+                TriggerEvent.OnAdded,
+                TriggerEvent.OnGlobalPreUpdate,
+                TriggerEvent.OnUpdate,
+                TriggerEvent.OnGlobalPostUpdate,
+            }, trigger.Events);
+            trigger.ClearEvents();
+
+            for (int i = 0; i < 20; ++i) {
+                engine.SynchronizeState().WaitOne();
+                engine.Update();
+
+                CollectionAssert.AreEqual(new TriggerEvent[] {
+                    TriggerEvent.OnModified,
+                    TriggerEvent.OnGlobalPreUpdate,
+                    TriggerEvent.OnUpdate,
+                    TriggerEvent.OnGlobalPostUpdate,
+                }, trigger.Events);
+                trigger.ClearEvents();
+            }
+        }
+
+        [TestMethod]
+        public void RemoveEntityWithNoData() {
             IContentDatabase contentDatabase = CreateEmptyDatabase();
 
             TriggerEventLogger trigger = new TriggerEventLogger(new Type[] { });
@@ -209,139 +236,86 @@ namespace Neon.Entities.E2ETests {
             }
         }
 
-        /*
-
         [TestMethod]
-        public void EntityModifyAfterUpdate() {
-            EntityManager em = new EntityManager(EntityHelpers.CreateEntity());
-            TriggerEventLogger trigger = new TriggerEventLoggerFilterRequiresData0();
-            em.AddSystem(trigger);
-            IEntity entity = EntityHelpers.CreateEntity();
-            TestData0 data = entity.AddData<TestData0>();
-            em.AddEntity(entity);
+        public void RemoveEntityWithData() {
+            IContentDatabase contentDatabase = CreateEmptyDatabase();
 
-            // do the add
-            em.UpdateWorld();
-            trigger.ClearEvents();
+            TriggerEventLogger trigger = new TriggerEventLogger(new Type[] { });
+            contentDatabase.Systems.Add(trigger);
 
-            // modify the data
-            entity.Modify<TestData0>();
-            em.UpdateWorld();
-            CollectionAssert.AreEqual(new TriggerEvent[] {
-                TriggerEvent.OnModified,
-                TriggerEvent.OnGlobalPreUpdate,
-                TriggerEvent.OnUpdate,
-                TriggerEvent.OnGlobalPostUpdate,
-            }, trigger.Events);
-            trigger.ClearEvents();
+            IEntity entity = ContentDatabaseHelper.CreateEntity();
+            entity.AddData<TestData0>();
+            contentDatabase.RemovedEntities.Add(entity);
 
-            // add a Data1 instance
-            entity.AddData<TestData1>();
-            em.UpdateWorld();
-            CollectionAssert.AreEqual(new TriggerEvent[] {
-                TriggerEvent.OnGlobalPreUpdate,
-                TriggerEvent.OnUpdate,
-                TriggerEvent.OnGlobalPostUpdate,
-            }, trigger.Events);
-            trigger.ClearEvents();
+            IGameEngine engine = GameEngineFactory.CreateEngine(contentDatabase);
 
-            // modify the Data1 instance
-            entity.Modify<TestData1>();
-            em.UpdateWorld();
-            CollectionAssert.AreEqual(new TriggerEvent[] {
-                TriggerEvent.OnGlobalPreUpdate,
-                TriggerEvent.OnUpdate,
-                TriggerEvent.OnGlobalPostUpdate,
-            }, trigger.Events);
-            trigger.ClearEvents();
-        }
-
-        [TestMethod]
-        public void InitializeBeforeAddingDataFilter() {
-            EntityManager em = new EntityManager(EntityHelpers.CreateEntity());
-            TriggerEventLogger trigger = new TriggerEventLoggerFilterRequiresData0();
-            em.AddSystem(trigger);
-            IEntity entity = EntityHelpers.CreateEntity();
-            TestData0 data = entity.AddData<TestData0>();
-            em.AddEntity(entity);
-
-            // entity now has the data
-            em.UpdateWorld();
-            CollectionAssert.AreEqual(new TriggerEvent[] {
-                TriggerEvent.OnAdded,
-                TriggerEvent.OnGlobalPreUpdate,
-                TriggerEvent.OnUpdate,
-                TriggerEvent.OnGlobalPostUpdate,
-            }, trigger.Events);
-            trigger.ClearEvents();
-
-            // adding random data should not trigger a modification notification
-            entity.AddData<TestData1>();
-            em.UpdateWorld();
-            CollectionAssert.AreEqual(new TriggerEvent[] {
-                TriggerEvent.OnGlobalPreUpdate,
-                TriggerEvent.OnUpdate,
-                TriggerEvent.OnGlobalPostUpdate,
-            }, trigger.Events);
-            trigger.ClearEvents();
-
-            // entity no longer has the data, it should get removed
-            entity.RemoveData<TestData0>();
-            em.UpdateWorld();
-            CollectionAssert.AreEqual(new TriggerEvent[] {
-                TriggerEvent.OnRemoved,
-                TriggerEvent.OnGlobalPreUpdate,
-                TriggerEvent.OnGlobalPostUpdate,
-            }, trigger.Events);
-        }
-
-        [TestMethod]
-        public void InitializeAfterAddingDataFilter() {
-            EntityManager em = new EntityManager(EntityHelpers.CreateEntity());
-            TriggerEventLogger trigger = new TriggerEventLoggerFilterRequiresData0();
-            em.AddSystem(trigger);
-            IEntity entity = EntityHelpers.CreateEntity();
-            em.AddEntity(entity);
-
-            // entity doesn't have required data
-            em.UpdateWorld();
-            CollectionAssert.AreEqual(new TriggerEvent[] {
-                TriggerEvent.OnGlobalPreUpdate,
-                TriggerEvent.OnGlobalPostUpdate,
-            }, trigger.Events);
-            trigger.ClearEvents();
-
-            // entity now has the data
-            TestData0 data = entity.AddData<TestData0>();
-            em.UpdateWorld();
-            CollectionAssert.AreEqual(new TriggerEvent[] {
-                TriggerEvent.OnAdded,
-                TriggerEvent.OnGlobalPreUpdate,
-                TriggerEvent.OnUpdate,
-                TriggerEvent.OnGlobalPostUpdate,
-            }, trigger.Events);
-            trigger.ClearEvents();
-
-            // adding random data should not trigger a modification notification
-            entity.AddData<TestData1>();
-            em.UpdateWorld();
-            CollectionAssert.AreEqual(new TriggerEvent[] {
-                TriggerEvent.OnGlobalPreUpdate,
-                TriggerEvent.OnUpdate,
-                TriggerEvent.OnGlobalPostUpdate,
-            }, trigger.Events);
-            trigger.ClearEvents();
-
-            // entity no longer has the data, it should get removed
-            entity.RemoveData<TestData0>();
-            em.UpdateWorld();
+            engine.SynchronizeState().WaitOne();
+            engine.Update();
 
             CollectionAssert.AreEqual(new TriggerEvent[] {
                 TriggerEvent.OnRemoved,
                 TriggerEvent.OnGlobalPreUpdate,
-                TriggerEvent.OnGlobalPostUpdate,
+                TriggerEvent.OnGlobalPostUpdate
             }, trigger.Events);
+            trigger.ClearEvents();
+
+            for (int i = 0; i < 20; ++i) {
+                engine.SynchronizeState().WaitOne();
+                engine.Update();
+
+                CollectionAssert.AreEqual(new TriggerEvent[] {
+                    TriggerEvent.OnGlobalPreUpdate,
+                    TriggerEvent.OnGlobalPostUpdate,
+                }, trigger.Events);
+                trigger.ClearEvents();
+            }
         }
-        */
+
+        /// <summary>
+        /// An entity is being removed from the engine. When systems get the OnRemoved notification,
+        /// they modify the entity.
+        /// </summary>
+        [TestMethod]
+        public void RemoveEntityAndModifyInRemoveNotification() {
+            IContentDatabase contentDatabase = CreateEmptyDatabase();
+
+            TriggerEventLogger trigger = new TriggerEventLogger(new Type[] { });
+            contentDatabase.Systems.Add(trigger);
+
+            LambdaSystem lambdaSystem = new LambdaSystem(new Type[] { });
+            lambdaSystem.OnRemoved = entity => {
+                entity.Modify<TestData0>();
+            };
+            contentDatabase.Systems.Add(lambdaSystem);
+
+            {
+                IEntity e = ContentDatabaseHelper.CreateEntity();
+                e.AddData<TestData0>();
+                contentDatabase.RemovedEntities.Add(e);
+            }
+
+            IGameEngine engine = GameEngineFactory.CreateEngine(contentDatabase);
+
+            engine.SynchronizeState().WaitOne();
+            engine.Update();
+
+            CollectionAssert.AreEqual(new TriggerEvent[] {
+                TriggerEvent.OnRemoved,
+                TriggerEvent.OnGlobalPreUpdate,
+                TriggerEvent.OnGlobalPostUpdate
+            }, trigger.Events);
+            trigger.ClearEvents();
+
+            for (int i = 0; i < 20; ++i) {
+                engine.SynchronizeState().WaitOne();
+                engine.Update();
+
+                CollectionAssert.AreEqual(new TriggerEvent[] {
+                    TriggerEvent.OnGlobalPreUpdate,
+                    TriggerEvent.OnGlobalPostUpdate,
+                }, trigger.Events);
+                trigger.ClearEvents();
+            }
+        }
     }
 }

@@ -5,6 +5,25 @@ using System;
 using System.Collections.Generic;
 
 namespace Neon.Entities.Tests {
+
+    internal class TestData0 : BaseData<TestData0> {
+        public override bool SupportsConcurrentModifications {
+            get { return false; }
+        }
+
+        public override void CopyFrom(TestData0 source) {
+        }
+    }
+
+    internal class TestData1 : BaseData<TestData1> {
+        public override bool SupportsConcurrentModifications {
+            get { return false; }
+        }
+
+        public override void CopyFrom(TestData1 source) {
+        }
+    }
+
     internal static class EntityHelpers {
         public static RuntimeEntity CreateEntity() {
             //return new EntityTemplate().Instantiate(false);
