@@ -20,9 +20,6 @@ namespace Neon.Entities.Implementation.Content {
             contentDatabase.RemovedEntities = entityDeserializer.AddEntities(dict["RemovedEntities"].AsList);
             entityDeserializer.Run();
 
-            // restore templates
-            contentDatabase.Templates = new List<ITemplate>(templates);
-
             // get systems that need restoration
             List<IRestoredSystem> restorableSystems = (from s in systems
                                                        where s is IRestoredSystem
@@ -93,7 +90,6 @@ namespace Neon.Entities.Implementation.Content {
             ActiveEntities = new List<IEntity>();
             AddedEntities = new List<IEntity>();
             RemovedEntities = new List<IEntity>();
-            Templates = new List<ITemplate>();
             Systems = new List<ISystem>();
         }
 
@@ -115,11 +111,6 @@ namespace Neon.Entities.Implementation.Content {
         public List<IEntity> RemovedEntities {
             get;
             private set;
-        }
-
-        public List<ITemplate> Templates {
-            get;
-            set;
         }
 
         public List<ISystem> Systems {

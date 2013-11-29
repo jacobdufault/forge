@@ -110,7 +110,6 @@ namespace Neon.Entities.Implementation.Runtime {
         private static int _entityUnorderedListMetadataKey = EntityManagerMetadata.GetUnorderedListMetadataIndex();
 
         private List<ISystem> _systems;
-        private List<ITemplate> _templates;
 
         /// <summary>
         /// Events that the EntityManager dispatches.
@@ -140,16 +139,15 @@ namespace Neon.Entities.Implementation.Runtime {
             private set;
         }
 
-        public GameEngine(IGameSnapshot contentDatabase) {
+        public GameEngine(IGameSnapshot contentDatabase, List<ITemplate> templates) {
             _systems = contentDatabase.Systems;
-            _templates = contentDatabase.Templates;
 
-            foreach (var template in contentDatabase.Templates) {
+            foreach (var template in templates) {
                 Template tem = (Template)template;
 
                 if (tem.GameEngine != null) {
                     throw new InvalidOperationException("Attempt to create multiple GameEngines " +
-                        "from the same content database; this is not currently supported");
+                        "from the same set of templates; this is not currently supported");
                 }
 
                 tem.GameEngine = this;
@@ -556,7 +554,6 @@ namespace Neon.Entities.Implementation.Runtime {
 
             }
 
-            snapshot.Templates = _templates;
             snapshot.Systems = _systems;
 
             return snapshot;

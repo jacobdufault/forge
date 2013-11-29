@@ -65,13 +65,6 @@ namespace Neon.Entities {
         }
 
         /// <summary>
-        /// All templates in the state.
-        /// </summary>
-        List<ITemplate> Templates {
-            get;
-        }
-
-        /// <summary>
         /// All systems that are used when executing the game.
         /// </summary>
         List<ISystem> Systems {

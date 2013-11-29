@@ -17,6 +17,7 @@ namespace Neon.Entities.Implementation.Shared {
             SystemProviderTypes = new List<Type>();
             CurrentState = new GameSnapshot();
             OriginalState = new GameSnapshot();
+            Templates = new List<ITemplate>();
             Input = new List<IssuedInput>();
         }
 
@@ -94,18 +95,11 @@ namespace Neon.Entities.Implementation.Shared {
 
             // templates
             List<SerializedData> serializedTemplates = new List<SerializedData>();
-
-            // TODO: where do we get templates from, current state or original state?
-            // TODO: should IContentDatabase even have templates?
-            // TODO: ISavedLevel should be IContentDatabase, IContentDatabase should be a
-            //       IGameSnapshot
-            // public GameEngine(IGameSnapshot snapshot, List<ITemplate> templates);
             TemplateDeserializer.AddTemplateExporter(converter);
-            foreach (var template in OriginalState.Templates) {
+            foreach (var template in Templates) {
                 TemplateSpecification templateSpec = new TemplateSpecification((Template)template, converter);
                 serializedTemplates.Add(templateSpec.Export());
             }
-
             result.AsDictionary["Templates"] = new SerializedData(serializedTemplates);
 
             // content databases
@@ -133,6 +127,11 @@ namespace Neon.Entities.Implementation.Shared {
         }
 
         public IGameSnapshot OriginalState {
+            get;
+            private set;
+        }
+
+        public List<ITemplate> Templates {
             get;
             private set;
         }

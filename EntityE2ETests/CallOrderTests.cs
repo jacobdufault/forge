@@ -90,7 +90,7 @@ namespace Neon.Entities.E2ETests {
             IEntity entity = ContentDatabaseHelper.CreateEntity();
             snapshot.AddedEntities.Add(entity);
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, new List<ITemplate>());
 
             engine.SynchronizeState().WaitOne();
             engine.Update();
@@ -132,7 +132,7 @@ namespace Neon.Entities.E2ETests {
 
             snapshot.AddedEntities.Add(ContentDatabaseHelper.CreateEntity());
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, new List<ITemplate>());
             engine.SynchronizeState().WaitOne();
             engine.Update();
 
@@ -176,7 +176,7 @@ namespace Neon.Entities.E2ETests {
                 snapshot.AddedEntities.Add(e);
             }
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, new List<ITemplate>());
             engine.SynchronizeState().WaitOne();
             engine.Update();
 
@@ -212,7 +212,7 @@ namespace Neon.Entities.E2ETests {
             IEntity entity = ContentDatabaseHelper.CreateEntity();
             snapshot.RemovedEntities.Add(entity);
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, new List<ITemplate>());
 
             engine.SynchronizeState().WaitOne();
             engine.Update();
@@ -247,7 +247,7 @@ namespace Neon.Entities.E2ETests {
             entity.AddData<TestData0>();
             snapshot.RemovedEntities.Add(entity);
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, new List<ITemplate>());
 
             engine.SynchronizeState().WaitOne();
             engine.Update();
@@ -294,7 +294,7 @@ namespace Neon.Entities.E2ETests {
                 snapshot.RemovedEntities.Add(e);
             }
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, new List<ITemplate>());
 
             engine.SynchronizeState().WaitOne();
             engine.Update();
