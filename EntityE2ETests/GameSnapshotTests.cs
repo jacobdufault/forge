@@ -11,13 +11,13 @@ namespace Neon.Entities.E2ETests {
     }
 
     [TestClass]
-    public class ContentDatabaseTests {
-        public static IContentDatabase CreateEmptyDatabase() {
+    public class GameSnapshotTests {
+        public static IGameSnapshot CreateEmptyDatabase() {
             return LevelManager.CreateLevel().CurrentState;
         }
 
-        public static IContentDatabase CreateDefaultDatabase() {
-            IContentDatabase database = CreateEmptyDatabase();
+        public static IGameSnapshot CreateDefaultDatabase() {
+            IGameSnapshot database = CreateEmptyDatabase();
 
             IEntity entity;
 
@@ -84,7 +84,7 @@ namespace Neon.Entities.E2ETests {
 
         [TestMethod]
         public void GotAddedEventsForInitialDatabase() {
-            IContentDatabase database = CreateDefaultDatabase();
+            IGameSnapshot database = CreateDefaultDatabase();
 
             IGameEngine engine = GameEngineFactory.CreateEngine(database);
             engine.SynchronizeState().WaitOne();
@@ -103,7 +103,7 @@ namespace Neon.Entities.E2ETests {
 
         [TestMethod]
         public void CorrectUpdateCount() {
-            IContentDatabase database = CreateEmptyDatabase();
+            IGameSnapshot database = CreateEmptyDatabase();
             for (int i = 0; i < 10; ++i) {
                 IEntity entity = ContentDatabaseHelper.CreateEntity();
                 entity.AddData<TestData0>();
@@ -124,10 +124,10 @@ namespace Neon.Entities.E2ETests {
 
         [TestMethod]
         public void ToFromContentDatabase() {
-            IContentDatabase database0 = CreateDefaultDatabase();
+            IGameSnapshot database0 = CreateDefaultDatabase();
             IGameEngine engine0 = GameEngineFactory.CreateEngine(database0);
 
-            IContentDatabase database1 = engine0.GetContentDatabase();
+            IGameSnapshot database1 = engine0.TakeSnapshot();
             IGameEngine engine1 = GameEngineFactory.CreateEngine(database1);
 
             Assert.AreEqual(engine0.GetVerificationHash(), engine1.GetVerificationHash());
@@ -135,7 +135,7 @@ namespace Neon.Entities.E2ETests {
 
         [TestMethod]
         public void SendRemoveFromContentDatabase() {
-            IContentDatabase database = CreateEmptyDatabase();
+            IGameSnapshot database = CreateEmptyDatabase();
             for (int i = 0; i < 10; ++i) {
                 IEntity entity = ContentDatabaseHelper.CreateEntity();
                 entity.AddData<TestData0>();

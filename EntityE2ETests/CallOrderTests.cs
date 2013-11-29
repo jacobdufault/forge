@@ -76,21 +76,21 @@ namespace Neon.Entities.E2ETests {
 
     [TestClass]
     public class CallOrderTests {
-        public static IContentDatabase CreateEmptyDatabase() {
+        public static IGameSnapshot CreateEmptySnapshot() {
             return LevelManager.CreateLevel().CurrentState;
         }
 
         [TestMethod]
         public void AddAndUpdateEntity() {
-            IContentDatabase contentDatabase = CreateEmptyDatabase();
+            IGameSnapshot snapshot = CreateEmptySnapshot();
 
             TriggerEventLogger trigger = new TriggerEventLogger(new Type[] { });
-            contentDatabase.Systems.Add(trigger);
+            snapshot.Systems.Add(trigger);
 
             IEntity entity = ContentDatabaseHelper.CreateEntity();
-            contentDatabase.AddedEntities.Add(entity);
+            snapshot.AddedEntities.Add(entity);
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(contentDatabase);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot);
 
             engine.SynchronizeState().WaitOne();
             engine.Update();
@@ -118,21 +118,21 @@ namespace Neon.Entities.E2ETests {
 
         [TestMethod]
         public void AddEntityAndModifyInAdd() {
-            IContentDatabase contentDatabase = CreateEmptyDatabase();
+            IGameSnapshot snapshot = CreateEmptySnapshot();
 
             TriggerEventLogger trigger = new TriggerEventLogger(new Type[] { });
-            contentDatabase.Systems.Add(trigger);
+            snapshot.Systems.Add(trigger);
 
             LambdaSystem addedTrigger = new LambdaSystem(new Type[] { });
             addedTrigger.OnAdded = entity => {
                 entity.AddData<TestData0>();
                 entity.Modify<TestData0>();
             };
-            contentDatabase.Systems.Add(addedTrigger);
+            snapshot.Systems.Add(addedTrigger);
 
-            contentDatabase.AddedEntities.Add(ContentDatabaseHelper.CreateEntity());
+            snapshot.AddedEntities.Add(ContentDatabaseHelper.CreateEntity());
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(contentDatabase);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot);
             engine.SynchronizeState().WaitOne();
             engine.Update();
 
@@ -159,24 +159,24 @@ namespace Neon.Entities.E2ETests {
 
         [TestMethod]
         public void AddEntityAndModifyInUpdate() {
-            IContentDatabase contentDatabase = CreateEmptyDatabase();
+            IGameSnapshot snapshot = CreateEmptySnapshot();
 
             TriggerEventLogger trigger = new TriggerEventLogger(new Type[] { typeof(TestData0) });
-            contentDatabase.Systems.Add(trigger);
+            snapshot.Systems.Add(trigger);
 
             LambdaSystem modifySystem = new LambdaSystem(new Type[] { });
             modifySystem.OnUpdate = entity => {
                 entity.Modify<TestData0>();
             };
-            contentDatabase.Systems.Add(modifySystem);
+            snapshot.Systems.Add(modifySystem);
 
             {
                 IEntity e = ContentDatabaseHelper.CreateEntity();
                 e.AddData<TestData0>();
-                contentDatabase.AddedEntities.Add(e);
+                snapshot.AddedEntities.Add(e);
             }
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(contentDatabase);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot);
             engine.SynchronizeState().WaitOne();
             engine.Update();
 
@@ -204,15 +204,15 @@ namespace Neon.Entities.E2ETests {
 
         [TestMethod]
         public void RemoveEntityWithNoData() {
-            IContentDatabase contentDatabase = CreateEmptyDatabase();
+            IGameSnapshot snapshot = CreateEmptySnapshot();
 
             TriggerEventLogger trigger = new TriggerEventLogger(new Type[] { });
-            contentDatabase.Systems.Add(trigger);
+            snapshot.Systems.Add(trigger);
 
             IEntity entity = ContentDatabaseHelper.CreateEntity();
-            contentDatabase.RemovedEntities.Add(entity);
+            snapshot.RemovedEntities.Add(entity);
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(contentDatabase);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot);
 
             engine.SynchronizeState().WaitOne();
             engine.Update();
@@ -238,16 +238,16 @@ namespace Neon.Entities.E2ETests {
 
         [TestMethod]
         public void RemoveEntityWithData() {
-            IContentDatabase contentDatabase = CreateEmptyDatabase();
+            IGameSnapshot snapshot = CreateEmptySnapshot();
 
             TriggerEventLogger trigger = new TriggerEventLogger(new Type[] { });
-            contentDatabase.Systems.Add(trigger);
+            snapshot.Systems.Add(trigger);
 
             IEntity entity = ContentDatabaseHelper.CreateEntity();
             entity.AddData<TestData0>();
-            contentDatabase.RemovedEntities.Add(entity);
+            snapshot.RemovedEntities.Add(entity);
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(contentDatabase);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot);
 
             engine.SynchronizeState().WaitOne();
             engine.Update();
@@ -277,24 +277,24 @@ namespace Neon.Entities.E2ETests {
         /// </summary>
         [TestMethod]
         public void RemoveEntityAndModifyInRemoveNotification() {
-            IContentDatabase contentDatabase = CreateEmptyDatabase();
+            IGameSnapshot snapshot = CreateEmptySnapshot();
 
             TriggerEventLogger trigger = new TriggerEventLogger(new Type[] { });
-            contentDatabase.Systems.Add(trigger);
+            snapshot.Systems.Add(trigger);
 
             LambdaSystem lambdaSystem = new LambdaSystem(new Type[] { });
             lambdaSystem.OnRemoved = entity => {
                 entity.Modify<TestData0>();
             };
-            contentDatabase.Systems.Add(lambdaSystem);
+            snapshot.Systems.Add(lambdaSystem);
 
             {
                 IEntity e = ContentDatabaseHelper.CreateEntity();
                 e.AddData<TestData0>();
-                contentDatabase.RemovedEntities.Add(e);
+                snapshot.RemovedEntities.Add(e);
             }
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(contentDatabase);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot);
 
             engine.SynchronizeState().WaitOne();
             engine.Update();

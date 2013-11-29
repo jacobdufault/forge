@@ -6,9 +6,9 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace Neon.Entities.Implementation.Content {
-    internal class ContentDatabase : IContentDatabase {
-        public static IContentDatabase Read(SerializedData data, SerializationConverter converter, List<ITemplate> templates, List<ISystem> systems) {
-            ContentDatabase contentDatabase = new ContentDatabase();
+    internal class GameSnapshot : IGameSnapshot {
+        public static IGameSnapshot Read(SerializedData data, SerializationConverter converter, List<ITemplate> templates, List<ISystem> systems) {
+            GameSnapshot contentDatabase = new GameSnapshot();
 
             var dict = data.AsDictionary;
 
@@ -88,7 +88,7 @@ namespace Neon.Entities.Implementation.Content {
             return new SerializedData(dict);
         }
 
-        public ContentDatabase() {
+        public GameSnapshot() {
             SingletonEntity = new ContentEntity();
             ActiveEntities = new List<IEntity>();
             AddedEntities = new List<IEntity>();

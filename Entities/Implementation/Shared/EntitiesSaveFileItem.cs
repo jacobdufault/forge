@@ -15,8 +15,8 @@ namespace Neon.Entities.Implementation.Shared {
         public EntitiesSaveFileItem() {
             AssemblyInjectionPaths = new List<string>();
             SystemProviderTypes = new List<Type>();
-            CurrentState = new ContentDatabase();
-            OriginalState = new ContentDatabase();
+            CurrentState = new GameSnapshot();
+            OriginalState = new GameSnapshot();
             Input = new List<IssuedInput>();
         }
 
@@ -76,8 +76,8 @@ namespace Neon.Entities.Implementation.Shared {
             List<ITemplate> templates = templateDeserializer.ToList();
 
             // load the two content databases
-            CurrentState = ContentDatabase.Read(data.AsDictionary["Current"], converter, templates, systems);
-            OriginalState = ContentDatabase.Read(data.AsDictionary["Original"], converter, templates, systems);
+            CurrentState = GameSnapshot.Read(data.AsDictionary["Current"], converter, templates, systems);
+            OriginalState = GameSnapshot.Read(data.AsDictionary["Original"], converter, templates, systems);
 
             // get input
             Input = converter.Import<List<IssuedInput>>(data.AsDictionary["Input"]);
@@ -99,6 +99,7 @@ namespace Neon.Entities.Implementation.Shared {
             // TODO: should IContentDatabase even have templates?
             // TODO: ISavedLevel should be IContentDatabase, IContentDatabase should be a
             //       IGameSnapshot
+            // public GameEngine(IGameSnapshot snapshot, List<ITemplate> templates);
             TemplateDeserializer.AddTemplateExporter(converter);
             foreach (var template in OriginalState.Templates) {
                 TemplateSpecification templateSpec = new TemplateSpecification((Template)template, converter);
@@ -108,8 +109,8 @@ namespace Neon.Entities.Implementation.Shared {
             result.AsDictionary["Templates"] = new SerializedData(serializedTemplates);
 
             // content databases
-            result.AsDictionary["Current"] = ((ContentDatabase)CurrentState).Export(converter);
-            result.AsDictionary["Original"] = ((ContentDatabase)OriginalState).Export(converter);
+            result.AsDictionary["Current"] = ((GameSnapshot)CurrentState).Export(converter);
+            result.AsDictionary["Original"] = ((GameSnapshot)OriginalState).Export(converter);
 
             result.AsDictionary["Input"] = converter.Export(Input);
 
@@ -126,12 +127,12 @@ namespace Neon.Entities.Implementation.Shared {
             private set;
         }
 
-        public IContentDatabase CurrentState {
+        public IGameSnapshot CurrentState {
             get;
             private set;
         }
 
-        public IContentDatabase OriginalState {
+        public IGameSnapshot OriginalState {
             get;
             private set;
         }

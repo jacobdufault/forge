@@ -140,7 +140,7 @@ namespace Neon.Entities.Implementation.Runtime {
             private set;
         }
 
-        public GameEngine(IContentDatabase contentDatabase) {
+        public GameEngine(IGameSnapshot contentDatabase) {
             _systems = contentDatabase.Systems;
             _templates = contentDatabase.Templates;
 
@@ -528,17 +528,17 @@ namespace Neon.Entities.Implementation.Runtime {
         public CountdownEvent SystemDoneEvent { get; private set; }
         #endregion
 
-        public IContentDatabase GetContentDatabase() {
+        public IGameSnapshot TakeSnapshot() {
             SerializationConverter converter = new SerializationConverter();
             TemplateDeserializer.AddTemplateExporter(converter);
             EntityDeserializer.AddEntityExporter(converter);
 
-            ContentDatabase contentDatabase = new ContentDatabase();
+            GameSnapshot snapshot = new GameSnapshot();
 
-            contentDatabase.SingletonEntity = new ContentEntity(new EntitySpecification(SingletonEntity, false, false, converter), converter);
+            snapshot.SingletonEntity = new ContentEntity(new EntitySpecification(SingletonEntity, false, false, converter), converter);
 
             foreach (var adding in _notifiedAddingEntities.ToList()) {
-                contentDatabase.AddedEntities.Add(new ContentEntity(new EntitySpecification(adding, true, false, converter), converter));
+                snapshot.AddedEntities.Add(new ContentEntity(new EntitySpecification(adding, true, false, converter), converter));
             }
 
             List<RuntimeEntity> removing = _notifiedRemovedEntities.ToList();
@@ -548,18 +548,18 @@ namespace Neon.Entities.Implementation.Runtime {
                 ContentEntity contentEntity = new ContentEntity(new EntitySpecification(entity, false, isRemoving, converter), converter);
 
                 if (isRemoving) {
-                    contentDatabase.RemovedEntities.Add(contentEntity);
+                    snapshot.RemovedEntities.Add(contentEntity);
                 }
                 else {
-                    contentDatabase.ActiveEntities.Add(contentEntity);
+                    snapshot.ActiveEntities.Add(contentEntity);
                 }
 
             }
 
-            contentDatabase.Templates = _templates;
-            contentDatabase.Systems = _systems;
+            snapshot.Templates = _templates;
+            snapshot.Systems = _systems;
 
-            return contentDatabase;
+            return snapshot;
         }
 
         public int GetVerificationHash() {

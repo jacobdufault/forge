@@ -49,9 +49,8 @@ namespace Neon.Entities {
         }
 
         /// <summary>
-        /// Iterates through all data inside of the engine and returns a content database that
-        /// reflects everything contained within the engine. This method also performs a state
-        /// synchronization.
+        /// Iterates through all data inside of the engine and returns a a snapshot of the game that
+        /// reflects everything contained within the engine.
         /// </summary>
         /// <remarks>
         /// Be wary of calling this method too often; it requires that no update is occurring (it
@@ -61,7 +60,7 @@ namespace Neon.Entities {
         /// <returns>A content database that contains all content within the engine. All data stored
         /// inside of the database is independent of the data stored inside of the engine, so
         /// changes to the engine will not be reflected inside of the database.</returns>
-        IContentDatabase GetContentDatabase();
+        IGameSnapshot TakeSnapshot();
 
         /// <summary>
         /// Returns a hash code of all data inside of the engine. The hash code is computed via
@@ -81,7 +80,7 @@ namespace Neon.Entities {
         /// </summary>
         /// <param name="content">The content to allocate the engine from.</param>
         /// <returns>A game engine that can play the given content.</returns>
-        public static IGameEngine CreateEngine(IContentDatabase content) {
+        public static IGameEngine CreateEngine(IGameSnapshot content) {
             return new GameEngine(content);
         }
     }

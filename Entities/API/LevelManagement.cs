@@ -78,14 +78,14 @@ namespace Neon.Entities {
         /// <summary>
         /// The current state of the game.
         /// </summary>
-        IContentDatabase CurrentState {
+        IGameSnapshot CurrentState {
             get;
         }
 
         /// <summary>
         /// The original state of the game before any updates occurred.
         /// </summary>
-        IContentDatabase OriginalState {
+        IGameSnapshot OriginalState {
             get;
         }
 
