@@ -5,7 +5,7 @@ namespace Neon.Entities {
     /// Wraps a common event pattern where there is only one instance of the event.
     /// </summary>
     /// <typeparam name="DerivedEventType">The type of the class that derives this type.</typeparam>
-    public class SingletonEvent<DerivedEventType>
+    public class SingletonEvent<DerivedEventType> : BaseEvent
         where DerivedEventType : SingletonEvent<DerivedEventType>, new() {
 
         /// <summary>
@@ -24,7 +24,7 @@ namespace Neon.Entities {
     /// <summary>
     /// Event that notifies listener that a new data instance has been added to the entity.
     /// </summary>
-    public class AddedDataEvent {
+    public class AddedDataEvent : BaseEvent {
         /// <summary>
         /// The type of data that has been added.
         /// </summary>
@@ -42,7 +42,7 @@ namespace Neon.Entities {
     /// <summary>
     /// Event that notifies listener that a new data instance has been added to the entity.
     /// </summary>
-    public class RemovedDataEvent {
+    public class RemovedDataEvent : BaseEvent {
         /// <summary>
         /// The type of data that has been added.
         /// </summary>
@@ -60,7 +60,7 @@ namespace Neon.Entities {
     /// <summary>
     /// Event that notifies the listener that a new Entity has been added to the EntityManager.
     /// </summary>
-    public class EntityAddedEvent {
+    public class EntityAddedEvent : BaseEvent {
         /// <summary>
         /// The entity that was added.
         /// </summary>
@@ -78,7 +78,7 @@ namespace Neon.Entities {
     /// <summary>
     /// Event that notifies the listener that a new Entity has been removed from the EntityManager.
     /// </summary>
-    public class EntityRemovedEvent {
+    public class EntityRemovedEvent : BaseEvent {
         /// <summary>
         /// The entity that was removed.
         /// </summary>

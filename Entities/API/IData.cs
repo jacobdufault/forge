@@ -41,8 +41,10 @@ namespace Neon.Entities {
     }
 
     public abstract class BaseData<TData> : IData {
-        public abstract bool SupportsConcurrentModifications {
-            get;
+        public virtual bool SupportsConcurrentModifications {
+            get {
+                return false;
+            }
         }
 
         public virtual void ResolveConcurrentModifications() {

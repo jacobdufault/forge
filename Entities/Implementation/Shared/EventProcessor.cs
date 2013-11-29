@@ -76,7 +76,7 @@ namespace Neon.Entities.Implementation.Shared {
         /// time.
         /// </summary>
         /// <param name="eventInstance">The event instance to dispatch</param>
-        public void Submit(object eventInstance) {
+        public void Submit(BaseEvent eventInstance) {
             lock (this) {
                 _events.Add(eventInstance);
             }
@@ -89,7 +89,7 @@ namespace Neon.Entities.Implementation.Shared {
         /// </summary>
         /// <typeparam name="TEvent">The event type to listen for.</typeparam>
         /// <param name="onEvent">The code to invoke.</param>
-        public void OnEvent<TEvent>(Action<TEvent> onEvent) {
+        public void OnEvent<TEvent>(Action<TEvent> onEvent) where TEvent : BaseEvent {
             Type eventType = typeof(TEvent);
 
             lock (this) {

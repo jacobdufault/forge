@@ -65,13 +65,13 @@ namespace Neon.Entities.Implementation.Content {
             foreach (var entity in AddedEntities) {
                 added.Add(new EntitySpecification(entity, false, false, converter).Export());
             }
-            dict["AddedEntities"] = new SerializedData(active);
+            dict["AddedEntities"] = new SerializedData(added);
 
             List<SerializedData> removed = new List<SerializedData>();
             foreach (var entity in RemovedEntities) {
                 removed.Add(new EntitySpecification(entity, false, false, converter).Export());
             }
-            dict["RemovedEntities"] = new SerializedData(active);
+            dict["RemovedEntities"] = new SerializedData(removed);
 
             // save system state
             List<SerializedData> systems = new List<SerializedData>();

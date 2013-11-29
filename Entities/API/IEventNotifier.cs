@@ -1,6 +1,9 @@
 ﻿using System;
 
 namespace Neon.Entities {
+    public abstract class BaseEvent {
+    }
+
     /// <summary>
     /// An IEventNotifier instance allows for objects to listen to other objects for interesting
     /// events based on the given IEvent type. The event dispatcher is a generalization of C#'s
@@ -13,11 +16,17 @@ namespace Neon.Entities {
         /// </summary>
         /// <typeparam name="TEvent">The event type to listen for.</typeparam>
         /// <param name="onEvent">The code to invoke.</param>
-        void OnEvent<TEvent>(Action<TEvent> onEvent);
+        void OnEvent<TEvent>(Action<TEvent> onEvent) where TEvent : BaseEvent;
 
         /// <summary>
         /// Removes an event listener that was previously added with AddListener.
         /// </summary>
         //bool RemoveListener<TEvent>(Action<TEvent> onEvent);
+
+        /// <summary>
+        /// Submit an event that listeners will eventually be notified about.
+        /// </summary>
+        /// <param name="evnt">The event to submit.</param>
+        void Submit(BaseEvent evnt);
     }
 }

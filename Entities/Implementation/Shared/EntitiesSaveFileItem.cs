@@ -80,7 +80,7 @@ namespace Neon.Entities.Implementation.Shared {
             OriginalState = ContentDatabase.Read(data.AsDictionary["Original"], converter, templates, systems);
 
             // get input
-            Input = converter.Import<List<IssuedInput>>(data.AsDictionary["IssuedInput"]);
+            Input = converter.Import<List<IssuedInput>>(data.AsDictionary["Input"]);
         }
 
         public SerializedData Export() {
@@ -90,11 +90,15 @@ namespace Neon.Entities.Implementation.Shared {
 
             // metadata
             result.AsDictionary["AssemblyInjectionPaths"] = converter.Export(AssemblyInjectionPaths);
-            result.AsDictionary["SystemProviders"] = converter.Export(SystemProviderTypes.Select(t => t.FullName));
+            result.AsDictionary["SystemProviders"] = converter.Export(SystemProviderTypes.Select(t => t.FullName).ToList());
 
             // templates
             List<SerializedData> serializedTemplates = new List<SerializedData>();
 
+            // TODO: where do we get templates from, current state or original state?
+            // TODO: should IContentDatabase even have templates?
+            // TODO: ISavedLevel should be IContentDatabase, IContentDatabase should be a
+            //       IGameSnapshot
             TemplateDeserializer.AddTemplateExporter(converter);
             foreach (var template in OriginalState.Templates) {
                 TemplateSpecification templateSpec = new TemplateSpecification((Template)template, converter);
@@ -106,6 +110,8 @@ namespace Neon.Entities.Implementation.Shared {
             // content databases
             result.AsDictionary["Current"] = ((ContentDatabase)CurrentState).Export(converter);
             result.AsDictionary["Original"] = ((ContentDatabase)OriginalState).Export(converter);
+
+            result.AsDictionary["Input"] = converter.Export(Input);
 
             return result;
         }

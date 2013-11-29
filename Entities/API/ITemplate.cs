@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
+﻿
 namespace Neon.Entities {
     /// <summary>
     /// An IEntityTemplate is used for creating IEntity instances that have a set of data values
@@ -24,5 +21,12 @@ namespace Neon.Entities {
         /// Creates a new IEntity instance.
         /// </summary>
         IEntity InstantiateEntity();
+
+        /// <summary>
+        /// Adds a default data instance to the template. The template "owns" the passed data
+        /// instance; a copy is not made of it.
+        /// </summary>
+        /// <param name="data">The data instance to copy from.</param>
+        void AddDefaultData(IData data);
     }
 }
