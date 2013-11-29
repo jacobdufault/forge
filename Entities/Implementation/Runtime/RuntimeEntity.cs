@@ -7,65 +7,6 @@ using System.Collections.Generic;
 
 namespace Neon.Entities.Implementation.Runtime {
     internal class RuntimeEntity : IEntity {
-        /*
-        public SerializedEntity ToSerializedEntity(bool entityIsAdding, bool entityIsRemoving,
-            SerializationConverter converter) {
-            List<DataAccessor> modified = _concurrentModifications.ToList();
-
-            List<SerializedEntityData> serializedDataList = new List<SerializedEntityData>();
-            foreach (var tuple in _data) {
-                int id = tuple.Key;
-                DataAccessor accessor = new DataAccessor(id);
-                DataContainer container = tuple.Value;
-
-                SerializedEntityData serializedData = new SerializedEntityData() {
-                    DataType = container.Current.GetType().ToString(),
-                    IsAdding = false,
-                    IsRemoving = IsRemoving(accessor)
-                };
-
-                Type dataType = container.Current.GetType();
-
-                if (modified.Contains(accessor)) {
-                    serializedData.WasModified = true;
-                    serializedData.PreviousState = converter.Export(dataType, container.Current);
-                    serializedData.CurrentState = converter.Export(dataType, container.Modifying);
-                }
-
-                else {
-                    serializedData.WasModified = false;
-                    serializedData.PreviousState = converter.Export(dataType, container.Previous);
-                    serializedData.CurrentState = converter.Export(dataType, container.Current);
-                }
-
-                serializedDataList.Add(serializedData);
-            }
-
-            foreach (var addedData in _toAdd) {
-                Type dataType = addedData.GetType();
-                DataAccessor accessor = new DataAccessor(dataType);
-
-                SerializedEntityData serializedData = new SerializedEntityData() {
-                    DataType = addedData.GetType().ToString(),
-                    WasModified = false, // doesn't matter
-                    IsAdding = true, // always true
-                    IsRemoving = false, // doesn't matter
-                    PreviousState = converter.Export(dataType, addedData), // doesn't matter
-                    CurrentState = converter.Export(dataType, addedData)
-                };
-                serializedDataList.Add(serializedData);
-            }
-
-            return new SerializedEntity() {
-                PrettyName = PrettyName,
-                UniqueId = _uniqueId,
-                Data = serializedDataList,
-                IsAdding = entityIsAdding,
-                IsRemoving = entityIsRemoving
-            };
-        }
-        */
-
         #region Pretty Name
         /// <summary>
         /// The Entity's pretty name, used for debugging / printing purposes.
@@ -166,109 +107,11 @@ namespace Neon.Entities.Implementation.Runtime {
             }
         }
 
-        /*
-        /// <summary>
-        /// Reconstructs an entity with the given unique id and the set of restored data instances.
-        /// </summary>
-        /// <remarks>
-        /// Notice, however, that this function does *NOT* notify the EntityManager if a data
-        /// instance has been restored which has a modification or a state change.
-        /// </remarks>
-        /// <param name="addingToEntityManager">Is this entity going to end up in an EntityManager
-        /// instance? This has implications on how internal state is managed.</param>
-        public void Restore(SerializedEntity serializedEntity, SerializationConverter converter,
-            out bool hasModification, out bool hasStateChange, bool addingToEntityManager) {
-
-            PrettyName = serializedEntity.PrettyName ?? "";
-            _uniqueId = serializedEntity.UniqueId;
-            _idGenerator.Consume(_uniqueId);
-            _eventProcessor = new EventNotifier();
-
-            DataStateChangeNotifier = new Notifier<Entity>(this);
-            ModificationNotifier = new Notifier<Entity>(this);
-
-            hasModification = false;
-            hasStateChange = false;
-
-            foreach (var data in serializedEntity.Data) {
-                hasStateChange = hasStateChange || data.IsAdding || data.IsRemoving;
-                hasModification = hasModification || data.WasModified;
-
-                if (data.IsAdding) {
-                    IData current = data.GetDeserializedCurrentState(converter);
-                    _toAdd.Add(current);
-                }
-
-                else {
-                    IData current = data.GetDeserializedCurrentState(converter);
-                    IData previous = data.GetDeserializedPreviousState(converter);
-
-                    int id = DataAccessorFactory.GetId(current.GetType());
-                    _data[id] = new DataContainer(previous, current, current.Duplicate());
-
-                    // There is going to be an ApplyModification call before systems actually view
-                    // this Entity instance. With that in mind, we can treat our data initialization
-                    // as if if were operating on the previous frame.
-
-                    if (data.WasModified) {
-                        // This is kind of an ugly hack, because to get the correct Previous/Current
-                        // data we need to move Previous into Current so that Previous will reflect
-                        // the true Previous value, not the Current one.
-
-                        // Internal signal that a modification is going to take place
-                        ((IEntity)this).Modify(new DataAccessor(id));
-
-                        // Move Previous into Current, so that after the ApplyModification we have
-                        // the correct data values
-                        _data[id].Current.CopyFrom(_data[id].Previous);
-                    }
-
-                    if (data.IsRemoving) {
-                        ((IEntity)this).RemoveData(new DataAccessor(id));
-                    }
-                }
-            }
-
-            // if we're not going to be added to an entity manager, then we should apply
-            // modifications so that previous and current map to the correct values
-            if (addingToEntityManager == false) {
-                ApplyModifications();
-                DataStateChangeUpdate();
-            }
-        }
-
-        public Entity()
-            : this(_idGenerator.Next(), "") {
-        }
-
-        public Entity(int uniqueId, string prettyName) {
-            PrettyName = prettyName;
-            _uniqueId = uniqueId;
-            _idGenerator.Consume(uniqueId);
-
-            _eventProcessor = new EventNotifier();
-
-            DataStateChangeNotifier = new Notifier<Entity>(this);
-            ModificationNotifier = new Notifier<Entity>(this);
-        }
-        */
-
         #region Private EntityManager only API
         public Notifier<RuntimeEntity> DataStateChangeNotifier;
         public Notifier<RuntimeEntity> ModificationNotifier;
 
         public GameEngine GameEngine;
-
-        /// <summary>
-        /// Removes all data instances from the Entity.
-        /// </summary>
-        internal void RemoveAllData() {
-            // TODO: potentially optimize this method
-            foreach (var tuple in _data) {
-                DataAccessor accessor = new DataAccessor(tuple.Value.Current.GetType());
-                ((IEntity)this).RemoveData(accessor);
-            }
-        }
 
         private void DoModifications() {
             _modifiedLastFrame.Clear();
@@ -449,7 +292,7 @@ namespace Neon.Entities.Implementation.Runtime {
         }
         #endregion
 
-        IData IEntity.AddOrModify(DataAccessor accessor) {
+        public IData AddOrModify(DataAccessor accessor) {
             if (((IEntity)this).ContainsData(accessor) == false) {
                 lock (_toAddStage1) {
                     IData added = GetAddedData_unlocked(accessor);
@@ -464,7 +307,8 @@ namespace Neon.Entities.Implementation.Runtime {
             return ((IEntity)this).Modify(accessor);
         }
 
-        ICollection<IData> IQueryableEntity.SelectCurrentData(Predicate<IData> filter, ICollection<IData> storage) {
+        public ICollection<IData> SelectCurrentData(Predicate<IData> filter = null,
+            ICollection<IData> storage = null) {
             if (storage == null) {
                 storage = new List<IData>();
             }
@@ -499,7 +343,7 @@ namespace Neon.Entities.Implementation.Runtime {
             return data;
         }
 
-        IData IEntity.AddData(DataAccessor accessor) {
+        public IData AddData(DataAccessor accessor) {
             lock (_toAddStage1) {
                 return AddData_unlocked(accessor);
             }
@@ -507,7 +351,7 @@ namespace Neon.Entities.Implementation.Runtime {
         #endregion
 
         #region RemoveData
-        void IEntity.RemoveData(DataAccessor accessor) {
+        public void RemoveData(DataAccessor accessor) {
             lock (_toRemoveStage1) {
                 _toRemoveStage1.Add(accessor);
             }
@@ -518,7 +362,7 @@ namespace Neon.Entities.Implementation.Runtime {
         #endregion
 
         #region Modify
-        IData IEntity.Modify(DataAccessor accessor) {
+        public IData Modify(DataAccessor accessor) {
             var id = accessor.Id;
 
             if (((IEntity)this).ContainsData(accessor) == false) {
@@ -542,7 +386,7 @@ namespace Neon.Entities.Implementation.Runtime {
         }
         #endregion
 
-        IData IQueryableEntity.Current(DataAccessor accessor) {
+        public IData Current(DataAccessor accessor) {
             if (_data.Contains(accessor.Id) == false) {
                 throw new NoSuchDataException(this, accessor);
             }
@@ -550,7 +394,7 @@ namespace Neon.Entities.Implementation.Runtime {
             return _data[accessor.Id].Current;
         }
 
-        IData IQueryableEntity.Previous(DataAccessor accessor) {
+        public IData Previous(DataAccessor accessor) {
             if (((IEntity)this).ContainsData(accessor) == false) {
                 throw new NoSuchDataException(this, accessor);
             }
@@ -559,22 +403,22 @@ namespace Neon.Entities.Implementation.Runtime {
         }
 
         #region ContainsData
-        bool IQueryableEntity.ContainsData(DataAccessor accessor) {
+        public bool ContainsData(DataAccessor accessor) {
             // We contain data if a) data contains it and b) it was not removed in the last frame
             int id = accessor.Id;
             return _data.Contains(id) && _removedLastFrame.Contains(id) == false;
         }
         #endregion
 
-        bool IEntity.WasModified(DataAccessor accessor) {
+        public bool WasModified(DataAccessor accessor) {
             return _modifiedLastFrame.Contains(accessor.Id);
         }
 
-        bool IEntity.WasAdded(DataAccessor accessor) {
+        public bool WasAdded(DataAccessor accessor) {
             return _addedLastFrame.Contains(accessor.Id);
         }
 
-        bool IEntity.WasRemoved(DataAccessor accessor) {
+        public bool WasRemoved(DataAccessor accessor) {
             return _removedLastFrame.Contains(accessor.Id);
         }
 

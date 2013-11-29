@@ -155,8 +155,6 @@ namespace Neon.Entities.Implementation.Runtime {
                 tem.GameEngine = this;
             }
 
-            // TODO: ensure that we send out systems send out state change removal notifications
-
             SystemDoneEvent = new CountdownEvent(0);
             _eventProcessors.BeginMonitoring((EventNotifier)EventNotifier);
 
@@ -291,7 +289,9 @@ namespace Neon.Entities.Implementation.Runtime {
                 _eventProcessors.StopMonitoring((EventNotifier)((IEntity)toRemove).EventNotifier);
 
                 // remove all data from the entity and then push said changes out
-                toRemove.RemoveAllData();
+                foreach (var data in toRemove.SelectCurrentData()) {
+                    toRemove.RemoveData(new DataAccessor(data));
+                }
                 toRemove.DataStateChangeUpdate();
 
                 // remove the entity from the list of entities
