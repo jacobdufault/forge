@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Neon.Entities.Implementation.Content {
     internal class GameSnapshot : IGameSnapshot {
-        public static IGameSnapshot Read(SerializedData data, SerializationConverter converter, List<ITemplate> templates, List<ISystem> systems) {
+        public static IGameSnapshot Read(SerializedData data, SerializationConverter converter, List<ISystem> systems) {
             GameSnapshot contentDatabase = new GameSnapshot();
 
             var dict = data.AsDictionary;

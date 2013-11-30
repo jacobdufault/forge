@@ -32,6 +32,15 @@ namespace Neon.Entities.Implementation.Content {
             Restore(specification, converter);
         }
 
+        public override string ToString() {
+            if (PrettyName.Length > 0) {
+                return string.Format("Entity [uid={0}, name={1}]", UniqueId, PrettyName);
+            }
+            else {
+                return string.Format("Entity [uid={0}]", UniqueId);
+            }
+        }
+
         public void Restore(EntitySpecification specification, SerializationConverter converter) {
             foreach (EntityDataSpecification data in specification.Data) {
                 Type dataType = TypeCache.FindType(data.DataType);

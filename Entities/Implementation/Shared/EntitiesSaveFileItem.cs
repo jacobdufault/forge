@@ -74,11 +74,11 @@ namespace Neon.Entities.Implementation.Shared {
             // load templates
             TemplateDeserializer templateDeserializer = new TemplateDeserializer(
                 data.AsDictionary["Templates"].AsList, converter);
-            List<ITemplate> templates = templateDeserializer.ToList();
+            Templates = templateDeserializer.ToList();
 
             // load the two content databases
-            CurrentState = GameSnapshot.Read(data.AsDictionary["Current"], converter, templates, systems);
-            OriginalState = GameSnapshot.Read(data.AsDictionary["Original"], converter, templates, systems);
+            CurrentState = GameSnapshot.Read(data.AsDictionary["Current"], converter, systems);
+            OriginalState = GameSnapshot.Read(data.AsDictionary["Original"], converter, systems);
 
             // get input
             Input = converter.Import<List<IssuedInput>>(data.AsDictionary["Input"]);
