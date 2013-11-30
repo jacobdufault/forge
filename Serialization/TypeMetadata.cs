@@ -139,7 +139,18 @@ namespace Neon.Serialization {
                 return Array.CreateInstance(ElementType, 0);
             }
 
-            return Activator.CreateInstance(ReflectedType);
+            try {
+                return Activator.CreateInstance(ReflectedType);
+            }
+            catch (MissingMethodException e) {
+                throw new InvalidOperationException("Unable to create instance of " + ReflectedType.FullName + "; there is no default constructor", e);
+            }
+            catch (TargetInvocationException e) {
+                throw new InvalidOperationException("Constructor of " + ReflectedType.FullName + " threw an exception when creating an instance", e);
+            }
+            catch (MemberAccessException e) {
+                throw new InvalidOperationException("Unable to access constructor of " + ReflectedType.FullName, e);
+            }
         }
 
         /// <summary>
@@ -163,8 +174,7 @@ namespace Neon.Serialization {
                 context = array;
             }
             else if (IsCollection) {
-                _collectionAddMethod.Invoke(context, BindingFlags.ExactBinding, null,
-                    new object[] { value }, null);
+                _collectionAddMethod.Invoke(context, new object[] { value });
             }
             else {
                 throw new InvalidOperationException("Cannot assign a list slot to a non-list type");
@@ -222,6 +232,9 @@ namespace Neon.Serialization {
 
                 _elementType = collectionType.GetGenericArguments()[0];
                 _collectionAddMethod = collectionType.GetMethod("Add");
+                if (_collectionAddMethod == null) {
+                    throw new InvalidOperationException("Unable to get Add method for type " + collectionType);
+                }
             }
             else if (IsArray) {
                 _elementType = type.GetElementType();
