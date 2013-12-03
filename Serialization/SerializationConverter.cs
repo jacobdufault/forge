@@ -236,7 +236,8 @@ namespace Neon.Serialization {
         /// serializedData.
         /// </summary>
         public object Import(Type type, SerializedData serializedData) {
-            Log<SerializationConverter>.Info("Exporting " + serializedData.PrettyPrinted + " with type " + type);
+            Log<SerializationConverter>.Info("Exporting " + serializedData.PrettyPrinted +
+                " with type " + type);
 
             // special case for null values
             if (serializedData.IsNull) {

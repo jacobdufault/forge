@@ -62,7 +62,7 @@ namespace Neon.Entities.Implementation.Content {
 
             // actually deserialize the entities
             foreach (var tuple in _entities) {
-                RestoreEntity(tuple.Value.Item1, tuple.Value.Item2, _converter);
+                RestoreEntity(tuple.Value.Item1, tuple.Value.Item2);
             }
 
             // clean up our importer from the converter
@@ -73,9 +73,8 @@ namespace Neon.Entities.Implementation.Content {
             converter.AddExporter<IEntity>(entity => new SerializedData(entity.UniqueId));
         }
 
-        public static void RestoreEntity(ContentEntity entity, EntitySpecification savedState,
-            SerializationConverter converter) {
-            entity.Restore(savedState, converter);
+        private void RestoreEntity(ContentEntity entity, EntitySpecification savedState) {
+            entity.Restore(savedState, _converter);
         }
 
         public IEnumerator<IEntity> GetEnumerator() {

@@ -70,7 +70,7 @@ namespace Neon.Entities.Implementation.Content {
                         "found with TemplateId=" + id);
                 };
 
-                return _templates[id];
+                return _templates[id].Item1;
             });
         }
 
