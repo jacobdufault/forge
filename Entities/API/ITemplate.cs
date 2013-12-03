@@ -26,7 +26,23 @@ namespace Neon.Entities {
         /// Adds a default data instance to the template. The template "owns" the passed data
         /// instance; a copy is not made of it.
         /// </summary>
+        /// <remarks>
+        /// If the ITemplate is currently being backed by an IGameEngine, this will throw an
+        /// InvalidOperationException.
+        /// </remarks>
         /// <param name="data">The data instance to copy from.</param>
         void AddDefaultData(IData data);
+
+        /// <summary>
+        /// Remove the given type of data from the template instance. New instances will not longer
+        /// have this added to the template.
+        /// </summary>
+        /// <remarks>
+        /// If the ITemplate is currently being backed by an IGameEngine, this will throw an
+        /// InvalidOperationException.
+        /// </remarks>
+        /// <param name="accessor">The type of data to remove.</param>
+        /// <returns>True if the data was removed.</returns>
+        bool RemoveDefaultData(DataAccessor accessor);
     }
 }
