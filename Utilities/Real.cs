@@ -3,62 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 
 namespace Neon.Utilities {
-    /// <summary>
-    /// A Real that can be serialized.
-    /// </summary>
-    [Serializable]
-    public class SerializedReal {
-        public static implicit operator SerializedReal(float value) {
-            SerializedReal serialized = new SerializedReal();
-            serialized.Real = Real.Create(value);
-            return serialized;
-        }
-
-        /// <summary>
-        /// The high 32 bits in the long value
-        /// </summary>
-        public int LongHigh;
-
-        /// <summary>
-        /// The lower 32 bits in the long value
-        /// </summary>
-        public int LongLow;
-
-        /// <summary>
-        /// Converts a set of low and a set of high bits to a long.
-        /// </summary>
-        public static long ToLong(int longHigh, int longLow) {
-            return (long)(longHigh * uint.MaxValue) + longLow;
-        }
-
-        /// <summary>
-        /// Returns the high 32 bits of a long.
-        /// </summary>
-        public static int LongToHigh(long value) {
-            return (int)(value / uint.MaxValue);
-        }
-
-        /// <summary>
-        /// Returns the low 32 bits of a long.
-        /// </summary>
-        public static int LongToLow(long value) {
-            return (int)value;
-        }
-
-        /// <summary>
-        /// Returns the Real instance from the SerializedLong.
-        /// </summary>
-        public Real Real {
-            get {
-                return Real.Create(ToLong(LongHigh, LongLow), false);
-            }
-            set {
-                LongHigh = LongToHigh(value.RawValue);
-                LongLow = LongToLow(value.RawValue);
-            }
-        }
-    }
-
     [Serializable]
     public struct Real {
         public long RawValue;
@@ -99,8 +43,8 @@ namespace Neon.Utilities {
         }
 
         /// <summary>
-        /// Returns the number of digits in the given value. The negative sign is not considered
-        /// a digit.
+        /// Returns the number of digits in the given value. The negative sign is not considered a
+        /// digit.
         /// </summary>
         private static int GetDigitCount(int number) {
             // remark: we compare against 10, and not 0, in this function because 0 has one digit
@@ -118,8 +62,7 @@ namespace Neon.Utilities {
         /// a real value that is equal to "0.123".
         /// </summary>
         /// <remarks>
-        /// CreateDecimal(1, 0005, 4) will create 1.0005
-        /// CreateDecimal(1, 5, 4) will create 1.0005
+        /// CreateDecimal(1, 0005, 4) will create 1.0005 CreateDecimal(1, 5, 4) will create 1.0005
         /// </remarks>
         /// <returns></returns>
         public static Real CreateDecimal(long beforeDecimal, int afterDecimal, int afterDigits) {
@@ -174,11 +117,11 @@ namespace Neon.Utilities {
 
         #region FromParts
         /// <summary>
-        /// Create a fixed-int number from parts.  For example, to create 1.5 pass in 1 and 500.
+        /// Create a fixed-int number from parts. For example, to create 1.5 pass in 1 and 500.
         /// </summary>
-        /// <param name="PreDecimal">The number above the decimal.  For 1.5, this would be 1.</param>
-        /// <param name="PostDecimal">The number below the decimal, to three digits.  
-        /// For 1.5, this would be 500. For 1.005, this would be 5.</param>
+        /// <param name="PreDecimal">The number above the decimal. For 1.5, this would be 1.</param>
+        /// <param name="PostDecimal">The number below the decimal, to three digits. For 1.5, this
+        /// would be 500. For 1.005, this would be 5.</param>
         /// <returns>A fixed-int representation of the number parts</returns>
         public static Real FromParts(int PreDecimal, int PostDecimal) {
             Real f = Real.Create(PreDecimal, true);
@@ -459,15 +402,15 @@ namespace Neon.Utilities {
         }
 
         private static int[] SIN_TABLE = {
-        0, 71, 142, 214, 285, 357, 428, 499, 570, 641, 
-        711, 781, 851, 921, 990, 1060, 1128, 1197, 1265, 1333, 
-        1400, 1468, 1534, 1600, 1665, 1730, 1795, 1859, 1922, 1985, 
-        2048, 2109, 2170, 2230, 2290, 2349, 2407, 2464, 2521, 2577, 
-        2632, 2686, 2740, 2793, 2845, 2896, 2946, 2995, 3043, 3091, 
-        3137, 3183, 3227, 3271, 3313, 3355, 3395, 3434, 3473, 3510, 
-        3547, 3582, 3616, 3649, 3681, 3712, 3741, 3770, 3797, 3823, 
-        3849, 3872, 3895, 3917, 3937, 3956, 3974, 3991, 4006, 4020, 
-        4033, 4045, 4056, 4065, 4073, 4080, 4086, 4090, 4093, 4095, 
+        0, 71, 142, 214, 285, 357, 428, 499, 570, 641,
+        711, 781, 851, 921, 990, 1060, 1128, 1197, 1265, 1333,
+        1400, 1468, 1534, 1600, 1665, 1730, 1795, 1859, 1922, 1985,
+        2048, 2109, 2170, 2230, 2290, 2349, 2407, 2464, 2521, 2577,
+        2632, 2686, 2740, 2793, 2845, 2896, 2946, 2995, 3043, 3091,
+        3137, 3183, 3227, 3271, 3313, 3355, 3395, 3434, 3473, 3510,
+        3547, 3582, 3616, 3649, 3681, 3712, 3741, 3770, 3797, 3823,
+        3849, 3872, 3895, 3917, 3937, 3956, 3974, 3991, 4006, 4020,
+        4033, 4045, 4056, 4065, 4073, 4080, 4086, 4090, 4093, 4095,
         4096
     };
         #endregion

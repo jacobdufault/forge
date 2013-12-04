@@ -3,26 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 
 namespace Neon.Utilities {
-    /// <summary>
-    /// A Vector2r that can be serialized
-    /// </summary>
-    [Serializable]
-    public class SerializedVector2r {
-        public SerializedReal X;
-        public SerializedReal Z;
-
-        public Vector2r AsVector2r {
-            get {
-                return new Vector2r(X.Real, Z.Real);
-            }
-            set {
-                X.Real = value.X;
-                Z.Real = value.Z;
-            }
-        }
-    }
-
-
     [Serializable]
     public struct Vector2r {
         public Real X;
@@ -93,7 +73,6 @@ namespace Neon.Utilities {
                 Z = a.Z * v
             };
         }
-
 
         public override bool Equals(System.Object obj) {
             // If parameter is null return false.
