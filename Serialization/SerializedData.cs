@@ -1,4 +1,4 @@
-﻿//#define ALLOW_IMPLICITS
+﻿//#define ENABLE_IMPLICIT_CONVERSIONS
 
 using Neon.Utilities;
 using System;
@@ -8,8 +8,8 @@ using System.Text;
 
 namespace Neon.Serialization {
     /// <summary>
-    /// A union type that stores a serialized value. The stored type can be one of five different
-    /// types; a boolean, a Real, a string, a Dictionary, or a List.
+    /// A union type that stores a serialized value. The stored type can be one of six different
+    /// types: null, boolean, Real, string, Dictionary, or List.
     /// </summary>
     public class SerializedData {
         /// <summary>
@@ -198,7 +198,7 @@ namespace Neon.Serialization {
         }
         #endregion
 
-#if ALLOW_IMPLICITS
+#if ENABLE_IMPLICIT_CONVERSIONS
         #region Implicit Casts (if enabled)
         public static implicit operator SerializedData(bool boolean) {
             return new SerializedData(boolean);
@@ -271,8 +271,7 @@ namespace Neon.Serialization {
             }
 
             else if (IsBool) {
-                bool b = (bool)_value;
-                if (b) {
+                if (AsBool) {
                     builder.Append("true");
                 }
                 else {
@@ -283,13 +282,13 @@ namespace Neon.Serialization {
             else if (IsReal) {
                 // We can convert the real to a float and export it that way, because upon import
                 // all computers will parse the same string the same way.
-                builder.Append(((Real)_value).AsFloat);
+                builder.Append(AsReal.AsFloat);
             }
 
             else if (IsString) {
                 // we don't support escaping
                 builder.Append('"');
-                builder.Append((string)_value);
+                builder.Append(AsString);
                 builder.Append('"');
             }
 
