@@ -205,10 +205,26 @@ namespace Neon.Serialization {
             return new SerializedData(Real.CreateDecimal(leftValue, rightValue, end - start));
         }
 
-        private string ParseKey() {
-            StringBuilder result = new StringBuilder();
+        private int ParsePositiveInt() {
+            int start = _start;
 
-            while (CurrentCharacter() != ':') {
+            if (HasValue() == false || char.IsNumber(CurrentCharacter()) == false) {
+                throw new ParseException("Attempt to parse positive int failed; no integer", this);
+            }
+
+            while (HasValue() && char.IsNumber(CurrentCharacter())) {
+                MoveNext();
+            }
+
+            return Int32.Parse(_input.Substring(start, _start - start));
+        }
+
+        private Tuple<string, Maybe<int>> ParseKey() {
+            StringBuilder result = new StringBuilder();
+            Maybe<int> objectref = Maybe<int>.Empty;
+
+            while (CurrentCharacter() != ':' && CurrentCharacter() != '`' &&
+                char.IsWhiteSpace(CurrentCharacter()) == false) {
                 char c = CurrentCharacter();
 
                 if (c == '\\') {
@@ -222,7 +238,14 @@ namespace Neon.Serialization {
                 MoveNext();
             }
 
-            return result.ToString();
+            SkipSpace();
+
+            if (CurrentCharacter() == '`') {
+                MoveNext();
+                objectref = Maybe.Just(ParsePositiveInt());
+            }
+
+            return Tuple.Create(result.ToString(), objectref);
         }
 
         private SerializedData ParseString() {
@@ -285,7 +308,7 @@ namespace Neon.Serialization {
 
             while (CurrentCharacter() != '}') {
                 SkipSpace();
-                string key = ParseKey();
+                Tuple<string, Maybe<int>> key = ParseKey();
                 SkipSpace();
 
                 if (CurrentCharacter() != ':') {
@@ -297,7 +320,11 @@ namespace Neon.Serialization {
                 SkipSpace();
 
                 SerializedData value = RunParse();
-                result.Add(key, value);
+                if (key.Item2.Exists) {
+                    value.SetObjectDefinition(key.Item2.Value);
+                }
+
+                result.Add(key.Item1, value);
 
                 SkipSpace();
             }
@@ -305,6 +332,19 @@ namespace Neon.Serialization {
             /* skip '}' */
             MoveNext();
             return new SerializedData(result);
+        }
+
+        private SerializedData ParseObjectReference() {
+            if (CurrentCharacter() != '`') {
+                throw new ParseException("Expected object reference; failed", this);
+            }
+
+            // skip the `
+            MoveNext();
+
+            int objectref = ParsePositiveInt();
+
+            return SerializedData.CreateObjectReference(objectref);
         }
 
         /// <summary>
@@ -339,6 +379,7 @@ namespace Neon.Serialization {
                 case '7':
                 case '8':
                 case '9': return ParseNumber();
+                case '`': return ParseObjectReference();
                 case '"': return ParseString();
                 case '[': return ParseArray();
                 case '{': return ParseObject();

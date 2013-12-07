@@ -14,7 +14,7 @@ namespace Neon.Serialization {
             int start = Math.Max(0, context._start - 10);
             int length = Math.Min(20, context._input.Length - start);
 
-            return "Error while parsing : " + message + "; context = \"" +
+            return "Error while parsing: " + message + "; context = \"" +
                 context._input.Substring(start, length) + "\"";
         }
 

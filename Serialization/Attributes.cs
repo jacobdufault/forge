@@ -2,6 +2,17 @@
 
 namespace Neon.Serialization {
     /// <summary>
+    /// Changes the serialization format of an object so that it will support cyclic references.
+    /// This annotation has a large change on the serialization format (making it less clear) and
+    /// has potential performance implications, and additionally requires the converter to
+    /// export/import metadata, so try to minimize the number of types which need to support cyclic
+    /// references.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, Inherited = true,
+        AllowMultiple = false)]
+    public sealed class SerializationSupportCyclicReferencesAttribute : Attribute { }
+
+    /// <summary>
     /// A type that is has a [SerializationRequireCustomConverter] attribute will cause the
     /// SerializationConverter to throw an exception if there is no custom converter registered for
     /// importing/exporting the type. Stated differently, the annotated with will not be imported or

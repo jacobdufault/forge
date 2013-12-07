@@ -30,12 +30,20 @@ namespace Neon.Serialization {
         /// </summary>
         private Dictionary<Type, Exporter> _exporters = new Dictionary<Type, Exporter>();
 
+        public SerializationGraphImporter ImportGraph;
+        public SerializationGraphExporter ExportGraph;
+
         /// <summary>
         /// Initializes a new instance of the SerializationConverter class. Adds default importers
         /// and exporters by default; the default converters are used for converting the primitive
         /// types that SerializedData maps directly to.
         /// </summary>
-        public SerializationConverter(bool addDefaultConverters = true) {
+        public SerializationConverter(SerializedData importGraph = null,
+            bool addDefaultConverters = true) {
+            // Create empty import and export graphs
+            ImportGraph = new SerializationGraphImporter(importGraph ?? SerializedData.CreateDictionary());
+            ExportGraph = new SerializationGraphExporter();
+
             // Register default converters
             if (addDefaultConverters) {
                 // add importers for some of the primitive types
@@ -144,7 +152,9 @@ namespace Neon.Serialization {
         /// instance (for example, it could be typeof(object).</param>
         /// <param name="instance">The object instance to export. If it is not null, then it must be
         /// an instance of instanceType</param>
-        public SerializedData Export(Type instanceType, object instance) {
+        /// <param name="forceCyclic">If this is true, then object references will not be generated
+        /// for the first-level export recursion.</param>
+        public SerializedData Export(Type instanceType, object instance, bool forceCyclic = false) {
             Log<SerializationConverter>.Info("Exporting " + instance + " with type " + instanceType);
 
             // special case for null values
@@ -155,6 +165,14 @@ namespace Neon.Serialization {
             if (instanceType.IsInstanceOfType(instance) == false) {
                 throw new ArgumentException("The instance is not an instance of the export type; " +
                     "instance=" + instance + ", instanceType=" + instanceType);
+            }
+
+            TypeMetadata metadata = TypeCache.GetMetadata(instanceType);
+
+            // if this object supports cyclic references, then we're just going to export the
+            // reference to the actual definition, which will be contained in the graph itself
+            if (forceCyclic == false && metadata.SupportsCyclicReferences) {
+                return ExportGraph.GetReferenceForObject(instanceType, instance);
             }
 
             // If there is a user-defined exporter for the given type, then use it instead of doing
@@ -170,8 +188,6 @@ namespace Neon.Serialization {
 
             // There is no user-defined exporting function. We'll have to use reflection to populate
             // the fields of the serialized value and hope that we did a good enough job.
-
-            TypeMetadata metadata = TypeCache.GetMetadata(instanceType);
 
             // If the type needs to support inheritance, and there was not an exporter, then
             // register the automatic one and rerun the export process.
@@ -235,13 +251,23 @@ namespace Neon.Serialization {
         /// on the return value with given will result in an object that is identical to
         /// serializedData.
         /// </summary>
-        public object Import(Type type, SerializedData serializedData) {
-            Log<SerializationConverter>.Info("Exporting " + serializedData.PrettyPrinted +
+        /// <param name="type">The type of data to import.</param>
+        /// <param name="serializedData">The data to use when importing the object.</param>
+        /// <param name="instance">An optional instance of the given type to allocate data
+        /// into.</param>
+        public object Import(Type type, SerializedData serializedData, object instance = null) {
+            Log<SerializationConverter>.Info("Importing " + serializedData.PrettyPrinted +
                 " with type " + type);
 
             // special case for null values
             if (serializedData.IsNull) {
                 return null;
+            }
+
+            // if the data is an object reference, then we need to lookup the actual definition in
+            // the graph and return that
+            if (serializedData.IsObjectReference) {
+                return ImportGraph.GetObjectInstance(type, serializedData.AsObjectReference);
             }
 
             // If there is a user-defined importer for the given type, then use it instead of doing
@@ -264,7 +290,7 @@ namespace Neon.Serialization {
             // register the automatic one and rerun the import process.
             if (metadata.SupportsInheritance) {
                 EnableSupportForInheritance(type);
-                return Import(type, serializedData);
+                return Import(type, serializedData, instance);
             }
 
             // Oops, the type requires a custom converter. We can't process this.
@@ -272,7 +298,9 @@ namespace Neon.Serialization {
                 throw new RequiresCustomConverterException(type, importing: true);
             }
 
-            object instance = metadata.CreateInstance();
+            if (instance == null) {
+                instance = metadata.CreateInstance();
+            }
 
             // If it's an array or a collection, we have special logic for processing
             if (metadata.IsArray || metadata.IsCollection) {

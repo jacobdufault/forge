@@ -6,6 +6,13 @@ using System.Collections;
 using System.Collections.Generic;
 
 namespace Neon.Serialization.Tests {
+    [SerializationSupportCyclicReferences]
+    internal class CyclicReference {
+        public CyclicReference Reference;
+        public int A;
+        public MyEnum B;
+    }
+
     internal enum MyEnum {
         MyEnum0,
         MyEnum1,
@@ -460,5 +467,78 @@ namespace Neon.Serialization.Tests {
             Assert.IsFalse(originalEnumerator.MoveNext(), "Not enough elements in the imported collection");
             Assert.IsFalse(importedEnumerator.MoveNext(), "Too many elements in the imported collection");
         }
+
+        [TestMethod]
+        public void CyclicReferenceTest() {
+            CyclicReference a = new CyclicReference();
+            CyclicReference b = new CyclicReference();
+
+            a.Reference = b;
+            a.A = 1;
+            a.B = MyEnum.MyEnum0;
+
+            b.Reference = a;
+            b.A = 2;
+            b.B = MyEnum.MyEnum1;
+
+            SerializationConverter importConverter = new SerializationConverter();
+            SerializedData dataA = importConverter.Export<CyclicReference>(a);
+            SerializedData dataB = importConverter.Export<CyclicReference>(b);
+            SerializedData graph = importConverter.ExportGraph.Export(importConverter);
+
+            SerializationConverter exportConverter = new SerializationConverter(graph);
+            CyclicReference newA = exportConverter.Import<CyclicReference>(dataA);
+            CyclicReference newB = exportConverter.Import<CyclicReference>(dataB);
+            exportConverter.ImportGraph.RestoreGraph(exportConverter);
+
+            Assert.AreEqual(a.A, newA.A);
+            Assert.AreEqual(a.B, newA.B);
+            Assert.AreEqual(b.A, newB.A);
+            Assert.AreEqual(b.B, newB.B);
+
+            Assert.IsTrue(newA.Reference == newB);
+            Assert.IsTrue(newB.Reference == newA);
+        }
+
+        [TestMethod]
+        public void CyclicReferenceTestUsingSupportMethods() {
+            CyclicReference a = new CyclicReference();
+            CyclicReference b = new CyclicReference();
+
+            a.Reference = b;
+            a.A = 1;
+            a.B = MyEnum.MyEnum0;
+
+            b.Reference = a;
+            b.A = 2;
+            b.B = MyEnum.MyEnum1;
+
+            SerializedData exportedData = ExportWithCyclicSupport(a);
+            CyclicReference imported = ImportWithCyclicSupport<CyclicReference>(exportedData);
+
+            Assert.AreEqual(a.A, imported.A);
+            Assert.AreEqual(a.B, imported.B);
+            Assert.AreEqual(b.A, imported.Reference.A);
+            Assert.AreEqual(b.B, imported.Reference.B);
+            Assert.AreEqual(imported, imported.Reference.Reference);
+        }
+
+        public SerializedData ExportWithCyclicSupport<T>(T instance) {
+            Dictionary<string, SerializedData> data = new Dictionary<string, SerializedData>();
+
+            SerializationConverter converter = new SerializationConverter();
+            data["UserData"] = converter.Export(instance);
+            data["Graph"] = converter.ExportGraph.Export(converter);
+
+            return new SerializedData(data);
+        }
+
+        public T ImportWithCyclicSupport<T>(SerializedData data) {
+            SerializationConverter converter = new SerializationConverter(data.AsDictionary["Graph"]);
+            converter.ImportGraph.RestoreGraph(converter);
+
+            return converter.Import<T>(data.AsDictionary["UserData"]);
+        }
+
     }
 }

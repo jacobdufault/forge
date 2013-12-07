@@ -189,10 +189,13 @@ namespace Neon.Serialization {
             ReflectedType = type;
 
             // Iterate over all attributes in the type to check for the requirement of a custom
-            // converter
+            // converter or if it needs to support cyclic references
             foreach (var attribute in ReflectedType.GetCustomAttributes(inherit: true)) {
                 if (attribute is SerializationRequireCustomConverterAttribute) {
                     RequiresCustomConverter = true;
+                }
+                if (attribute is SerializationSupportCyclicReferencesAttribute) {
+                    SupportsCyclicReferences = true;
                 }
             }
 
@@ -338,6 +341,14 @@ namespace Neon.Serialization {
             if (type.BaseType != null) {
                 CollectProperties(type.BaseType, properties);
             }
+        }
+
+        /// <summary>
+        /// Does this type need to support cyclic references?
+        /// </summary>
+        public bool SupportsCyclicReferences {
+            get;
+            private set;
         }
 
         /// <summary>

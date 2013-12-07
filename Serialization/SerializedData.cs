@@ -12,11 +12,25 @@ namespace Neon.Serialization {
     /// types: null, boolean, Real, string, Dictionary, or List.
     /// </summary>
     public class SerializedData {
+        private struct ObjectReference {
+            public int Id;
+
+            public ObjectReference(int id) {
+                Id = id;
+            }
+        }
+
         /// <summary>
-        /// The raw value that this serialized data stores. It can be one of five different types; a
-        /// boolean, a Real, a string, a Dictionary, or a List.
+        /// The raw value that this serialized data stores. It can be one of six different types; a
+        /// boolean, a Real, a string, an object reference, a Dictionary, or a List.
         /// </summary>
         private object _value;
+
+        /// <summary>
+        /// If this data is an object reference definition, then this maybe will contain the id for
+        /// the object reference we are a definition of.
+        /// </summary>
+        private Maybe<int> _objectDefinition;
 
         #region Constructors
         /// <summary>
@@ -62,6 +76,16 @@ namespace Neon.Serialization {
         }
 
         /// <summary>
+        /// Creates a new SerializedData instance that contains an object reference.
+        /// </summary>
+        /// <param name="objectId">The id of the object that this data references</param>
+        public static SerializedData CreateObjectReference(int objectId) {
+            SerializedData data = new SerializedData();
+            data._value = new ObjectReference(objectId);
+            return data;
+        }
+
+        /// <summary>
         /// Helper method to create a SerialziedData instance that holds a dictionary.
         /// </summary>
         public static SerializedData CreateDictionary() {
@@ -73,6 +97,15 @@ namespace Neon.Serialization {
         /// </summary>
         public static SerializedData CreateList() {
             return new SerializedData(new List<SerializedData>());
+        }
+
+        /// <summary>
+        /// Sets this SerializedData instance so that it acts as an object definition for the object
+        /// reference with the given objectId.
+        /// </summary>
+        /// <param name="objectId">The object id to act as a definition for.</param>
+        public void SetObjectDefinition(int objectId) {
+            _objectDefinition = Maybe.Just(objectId);
         }
         #endregion
 
@@ -110,6 +143,26 @@ namespace Neon.Serialization {
         public bool IsString {
             get {
                 return _value is string;
+            }
+        }
+
+        /// <summary>
+        /// Returns true if the SerializedData instance maps contains no actual data and merely is a
+        /// reference to another object.
+        /// </summary>
+        public bool IsObjectReference {
+            get {
+                return _value is ObjectReference;
+            }
+        }
+
+        /// <summary>
+        /// Returns true if this serialized data acts as an instance that other data can reference
+        /// for content.
+        /// </summary>
+        public bool IsObjectDefinition {
+            get {
+                return _objectDefinition.Exists;
             }
         }
 
@@ -160,6 +213,33 @@ namespace Neon.Serialization {
         public string AsString {
             get {
                 return Cast<string>();
+            }
+        }
+
+        /// <summary>
+        /// Casts this SerializedData to an object reference. Throws an exception if is not an
+        /// object reference.
+        /// </summary>
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        public int AsObjectReference {
+            get {
+                return Cast<ObjectReference>().Id;
+            }
+        }
+
+        /// <summary>
+        /// Returns the object definition id that this serialized data instance maps to. Throws an
+        /// exception if this data is not an object definition.
+        /// </summary>
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        public int AsObjectDefinition {
+            get {
+                if (_objectDefinition.IsEmpty) {
+                    throw new InvalidOperationException("The SerializedData instance is not an " +
+                        "object definition (this=" + PrettyPrinted + ")");
+                }
+
+                return _objectDefinition.Value;
             }
         }
 
@@ -229,7 +309,7 @@ namespace Neon.Serialization {
             }
         }
 
-        public SerializedData this[string key] {
+        public SerializedData this[DataKey key] {
             get {
                 return AsDictionary[key];
             }
@@ -292,12 +372,21 @@ namespace Neon.Serialization {
                 builder.Append('"');
             }
 
+            else if (IsObjectReference) {
+                builder.Append('`');
+                builder.Append(AsObjectReference);
+            }
+
             else if (IsDictionary) {
                 builder.Append('{');
                 builder.AppendLine();
                 foreach (var entry in AsDictionary) {
                     InsertSpacing(builder, depth + 1);
                     builder.Append(entry.Key);
+                    if (entry.Value.IsObjectDefinition) {
+                        builder.Append('`');
+                        builder.Append(entry.Value._objectDefinition.Value);
+                    }
                     builder.Append(": ");
                     entry.Value.BuildString(builder, depth + 1);
                     builder.AppendLine();
