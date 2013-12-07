@@ -30,20 +30,26 @@ namespace Neon.Serialization {
         /// </summary>
         private Dictionary<Type, Exporter> _exporters = new Dictionary<Type, Exporter>();
 
-        public SerializationGraphImporter ImportGraph;
-        public SerializationGraphExporter ExportGraph;
+        /// <summary>
+        /// The import graph that we are currently using. If we do not currently have an import
+        /// graph, then this value is set to null. We only have an import graph when ImportGraph is
+        /// being called instead of Import.
+        /// </summary>
+        private SerializationGraphImporter _importGraph;
+
+        /// <summary>
+        /// The export graph that we are currently using. If we do not currently have an export
+        /// graph, then this value is set to null. We only have an export graph when ExportGraph is
+        /// being called instead of Export.
+        /// </summary>
+        private SerializationGraphExporter _exportGraph;
 
         /// <summary>
         /// Initializes a new instance of the SerializationConverter class. Adds default importers
         /// and exporters by default; the default converters are used for converting the primitive
         /// types that SerializedData maps directly to.
         /// </summary>
-        public SerializationConverter(SerializedData importGraph = null,
-            bool addDefaultConverters = true) {
-            // Create empty import and export graphs
-            ImportGraph = new SerializationGraphImporter(importGraph);
-            ExportGraph = new SerializationGraphExporter();
-
+        public SerializationConverter(bool addDefaultConverters = true) {
             // Register default converters
             if (addDefaultConverters) {
                 // add importers for some of the primitive types
@@ -142,6 +148,44 @@ namespace Neon.Serialization {
             return Export(typeof(T), instance);
         }
 
+        public SerializedData ExportGraph(Type type, object instance) {
+            if (_exportGraph == null) {
+                _exportGraph = new SerializationGraphExporter();
+
+                try {
+                    SerializedData data = Export(type, instance);
+
+                    SerializedData result = SerializedData.CreateDictionary();
+                    result.AsDictionary["PrimaryData"] = data;
+                    result.AsDictionary["SupportGraph"] = _exportGraph.Export(this);
+
+                    return result;
+                }
+                finally {
+                    _exportGraph = null;
+                }
+            }
+
+            return Export(type, instance);
+        }
+
+        public object ImportGraph(Type type, SerializedData data) {
+            if (_importGraph == null) {
+                _importGraph = new SerializationGraphImporter(data.AsDictionary["SupportGraph"]);
+
+                try {
+                    object result = Import(type, data.AsDictionary["PrimaryData"]);
+                    _importGraph.RestoreGraph(this);
+                    return result;
+                }
+                finally {
+                    _importGraph = null;
+                }
+            }
+
+            return Import(type, data);
+        }
+
         /// <summary>
         /// Converts a general object instance into SerializedData. Assuming serialization is
         /// working as expected and custom importers/exporters are written correctly, calling Import
@@ -172,7 +216,12 @@ namespace Neon.Serialization {
             // if this object supports cyclic references, then we're just going to export the
             // reference to the actual definition, which will be contained in the graph itself
             if (forceCyclic == false && metadata.SupportsCyclicReferences) {
-                return ExportGraph.GetReferenceForObject(instanceType, instance);
+                if (_exportGraph == null) {
+                    throw new InvalidOperationException("Cycle support required in serialization " +
+                        "graph; use GraphExport instead of Export");
+                }
+
+                return _exportGraph.GetReferenceForObject(instanceType, instance);
             }
 
             // If there is a user-defined exporter for the given type, then use it instead of doing
@@ -267,7 +316,12 @@ namespace Neon.Serialization {
             // if the data is an object reference, then we need to lookup the actual definition in
             // the graph and return that
             if (serializedData.IsObjectReference) {
-                return ImportGraph.GetObjectInstance(type, serializedData.AsObjectReference);
+                if (_importGraph == null) {
+                    throw new InvalidOperationException("Cycle support required in serialization " +
+                        "graph; use GraphImport instead of Import");
+                }
+
+                return _importGraph.GetObjectInstance(type, serializedData.AsObjectReference);
             }
 
             // If there is a user-defined importer for the given type, then use it instead of doing

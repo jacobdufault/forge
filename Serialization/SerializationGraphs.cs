@@ -10,7 +10,7 @@ namespace Neon.Serialization {
     /// exporting references which, via internal data, reference themselves across some reference
     /// chain.
     /// </summary>
-    public class SerializationGraphExporter {
+    internal class SerializationGraphExporter {
         /// <summary>
         /// Each type has its own id generator. This dictionary contains the id generator for each
         /// type.
@@ -125,7 +125,7 @@ namespace Neon.Serialization {
     /// Helper code that supports restoring an object graph that contains cycles; that is, an object
     /// graph that contains a set of cyclic references.
     /// </summary>
-    public class SerializationGraphImporter {
+    internal class SerializationGraphImporter {
         /// <summary>
         /// Stores an object that we are restoring. We first have to create an object reference
         /// before actually restoring the object, so initially the reference inside of
@@ -147,27 +147,25 @@ namespace Neon.Serialization {
         /// </summary>
         /// <param name="data">The object graph that was exported using the
         /// SerializationGraphExporter.</param>
-        public SerializationGraphImporter(SerializedData data = null) {
+        public SerializationGraphImporter(SerializedData data) {
             _objects = new Dictionary<Type, Dictionary<int, RestoredObject>>();
 
-            if (data != null) {
-                foreach (var entry in data.AsDictionary) {
-                    // get the type of the current set of objects
-                    Type type = TypeCache.FindType(entry.Key);
-                    TypeMetadata metadata = TypeCache.GetMetadata(type);
+            foreach (var entry in data.AsDictionary) {
+                // get the type of the current set of objects
+                Type type = TypeCache.FindType(entry.Key);
+                TypeMetadata metadata = TypeCache.GetMetadata(type);
 
-                    _objects[type] = new Dictionary<int, RestoredObject>();
+                _objects[type] = new Dictionary<int, RestoredObject>();
 
-                    // create our initial references for the given objects in the graph
-                    foreach (var item in entry.Value.AsDictionary) {
-                        int id = item.Value.AsObjectDefinition;
-                        object instance = metadata.CreateInstance();
+                // create our initial references for the given objects in the graph
+                foreach (var item in entry.Value.AsDictionary) {
+                    int id = item.Value.AsObjectDefinition;
+                    object instance = metadata.CreateInstance();
 
-                        _objects[type][id] = new RestoredObject() {
-                            Reference = instance,
-                            SerializedState = item.Value
-                        };
-                    }
+                    _objects[type][id] = new RestoredObject() {
+                        Reference = instance,
+                        SerializedState = item.Value
+                    };
                 }
             }
         }

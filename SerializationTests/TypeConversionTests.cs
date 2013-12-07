@@ -1,7 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neon.Collections;
 using Neon.Utilities;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -11,6 +10,20 @@ namespace Neon.Serialization.Tests {
         public CyclicReference Reference;
         public int A;
         public MyEnum B;
+    }
+
+    [SerializationSupportCyclicReferences]
+    internal class CyclicReference1 {
+        public CyclicReference1 Reference1;
+        public CyclicReference2 Reference2;
+        public int A;
+    }
+
+    [SerializationSupportCyclicReferences]
+    internal class CyclicReference2 {
+        public CyclicReference1 Reference1;
+        public CyclicReference2 Reference2;
+        public int B;
     }
 
     internal enum MyEnum {
@@ -469,38 +482,6 @@ namespace Neon.Serialization.Tests {
         }
 
         [TestMethod]
-        public void CyclicReferenceTest() {
-            CyclicReference a = new CyclicReference();
-            CyclicReference b = new CyclicReference();
-
-            a.Reference = b;
-            a.A = 1;
-            a.B = MyEnum.MyEnum0;
-
-            b.Reference = a;
-            b.A = 2;
-            b.B = MyEnum.MyEnum1;
-
-            SerializationConverter importConverter = new SerializationConverter();
-            SerializedData dataA = importConverter.Export<CyclicReference>(a);
-            SerializedData dataB = importConverter.Export<CyclicReference>(b);
-            SerializedData graph = importConverter.ExportGraph.Export(importConverter);
-
-            SerializationConverter exportConverter = new SerializationConverter(graph);
-            CyclicReference newA = exportConverter.Import<CyclicReference>(dataA);
-            CyclicReference newB = exportConverter.Import<CyclicReference>(dataB);
-            exportConverter.ImportGraph.RestoreGraph(exportConverter);
-
-            Assert.AreEqual(a.A, newA.A);
-            Assert.AreEqual(a.B, newA.B);
-            Assert.AreEqual(b.A, newB.A);
-            Assert.AreEqual(b.B, newB.B);
-
-            Assert.IsTrue(newA.Reference == newB);
-            Assert.IsTrue(newB.Reference == newA);
-        }
-
-        [TestMethod]
         public void CyclicReferenceTestUsingSupportMethods() {
             CyclicReference a = new CyclicReference();
             CyclicReference b = new CyclicReference();
@@ -513,8 +494,8 @@ namespace Neon.Serialization.Tests {
             b.A = 2;
             b.B = MyEnum.MyEnum1;
 
-            SerializedData exportedData = ExportWithCyclicSupport(a);
-            CyclicReference imported = ImportWithCyclicSupport<CyclicReference>(exportedData);
+            SerializedData exportedData = (new SerializationConverter()).ExportGraph(typeof(CyclicReference), a);
+            CyclicReference imported = (CyclicReference)(new SerializationConverter()).ImportGraph(typeof(CyclicReference), exportedData);
 
             Assert.AreEqual(a.A, imported.A);
             Assert.AreEqual(a.B, imported.B);
@@ -523,22 +504,46 @@ namespace Neon.Serialization.Tests {
             Assert.AreEqual(imported, imported.Reference.Reference);
         }
 
-        public SerializedData ExportWithCyclicSupport<T>(T instance) {
-            Dictionary<string, SerializedData> data = new Dictionary<string, SerializedData>();
+        [TestMethod]
+        public void CyclicGraphComplex() {
+            // significantly more complex object graph than the previous object graph serialization
+            // test... this one involves multiple types and cycles within cycles
 
-            SerializationConverter converter = new SerializationConverter();
-            data["UserData"] = converter.Export(instance);
-            data["Graph"] = converter.ExportGraph.Export(converter);
+            CyclicReference1 ref1a = new CyclicReference1() {
+                A = 1
+            };
+            CyclicReference1 ref1b = new CyclicReference1() {
+                A = 2
+            };
+            CyclicReference2 ref2a = new CyclicReference2() {
+                B = 3
+            };
+            CyclicReference2 ref2b = new CyclicReference2() {
+                B = 4
+            };
 
-            return new SerializedData(data);
+            ref1a.Reference1 = ref1b;
+            ref1b.Reference1 = ref1a;
+
+            ref2a.Reference2 = ref2b;
+            ref2b.Reference2 = ref2b;
+
+            ref1a.Reference2 = ref2a;
+            ref1b.Reference2 = ref2b;
+            ref2a.Reference1 = ref1a;
+            ref2b.Reference1 = ref1b;
+
+            SerializedData exportedData = (new SerializationConverter()).ExportGraph(typeof(CyclicReference1), ref1a);
+            CyclicReference1 iref1a = (CyclicReference1)(new SerializationConverter()).ImportGraph(typeof(CyclicReference1), exportedData);
+
+            Assert.AreEqual(ref1a.A, iref1a.A);
+            Assert.AreEqual(ref1b.A, iref1a.Reference1.A);
+            Assert.AreEqual(ref2a.B, iref1a.Reference2.B);
+            Assert.AreEqual(ref2b.B, iref1a.Reference2.Reference2.B);
+
+            Assert.AreEqual(iref1a, iref1a.Reference1.Reference1);
+            Assert.AreEqual(iref1a, iref1a.Reference2.Reference1);
+            Assert.AreEqual(iref1a, iref1a.Reference2.Reference2.Reference1.Reference1);
         }
-
-        public T ImportWithCyclicSupport<T>(SerializedData data) {
-            SerializationConverter converter = new SerializationConverter(data.AsDictionary["Graph"]);
-            converter.ImportGraph.RestoreGraph(converter);
-
-            return converter.Import<T>(data.AsDictionary["UserData"]);
-        }
-
     }
 }
