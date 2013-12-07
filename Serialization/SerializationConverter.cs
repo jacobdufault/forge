@@ -41,7 +41,7 @@ namespace Neon.Serialization {
         public SerializationConverter(SerializedData importGraph = null,
             bool addDefaultConverters = true) {
             // Create empty import and export graphs
-            ImportGraph = new SerializationGraphImporter(importGraph ?? SerializedData.CreateDictionary());
+            ImportGraph = new SerializationGraphImporter(importGraph);
             ExportGraph = new SerializationGraphExporter();
 
             // Register default converters
