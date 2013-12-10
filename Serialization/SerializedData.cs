@@ -351,7 +351,7 @@ namespace Neon.Serialization {
         /// </summary>
         private void BuildString(StringBuilder builder, int depth) {
             if (IsObjectDefinition) {
-                builder.Append('`');
+                builder.Append("&d");
                 builder.Append(AsObjectDefinition);
                 builder.Append(' ');
             }
@@ -383,7 +383,7 @@ namespace Neon.Serialization {
             }
 
             else if (IsObjectReference) {
-                builder.Append('~');
+                builder.Append("&r");
                 builder.Append(AsObjectReference);
             }
 

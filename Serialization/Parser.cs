@@ -324,28 +324,29 @@ namespace Neon.Serialization {
             return new SerializedData(result);
         }
 
-        private SerializedData ParseObjectDefinition() {
-            // skip the `
+        private SerializedData ParseObjectDefinitionOrReference() {
+            // skip the &
             MoveNext();
 
-            int objectId = ParsePositiveInt();
+            char c = CurrentCharacter();
+            MoveNext();
 
-            SerializedData obj = RunParse();
-            obj.SetObjectDefinition(objectId);
-            return obj;
-        }
-
-        private SerializedData ParseObjectReference() {
-            if (CurrentCharacter() != '~') {
-                throw new ParseException("Expected object reference; failed", this);
+            if (c == 'd') {
+                int objectId = ParsePositiveInt();
+                SerializedData obj = RunParse();
+                obj.SetObjectDefinition(objectId);
+                return obj;
             }
 
-            // skip the ~
-            MoveNext();
+            else if (c == 'r') {
+                int objectId = ParsePositiveInt();
+                return SerializedData.CreateObjectReference(objectId);
+            }
 
-            int objectref = ParsePositiveInt();
-
-            return SerializedData.CreateObjectReference(objectref);
+            else {
+                throw new ParseException("Invalid character following &; expected 'd' " +
+                    "(for definition) or 'r' (for reference), not " + c, this);
+            }
         }
 
         /// <summary>
@@ -380,8 +381,7 @@ namespace Neon.Serialization {
                 case '7':
                 case '8':
                 case '9': return ParseNumber();
-                case '~': return ParseObjectReference();
-                case '`': return ParseObjectDefinition();
+                case '&': return ParseObjectDefinitionOrReference();
                 case '"': return ParseString();
                 case '[': return ParseArray();
                 case '{': return ParseObject();

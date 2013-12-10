@@ -52,9 +52,9 @@ namespace Neon.Serialization.Tests {
             {
                 var result = Parser.Parse(@"
                 {
-                    a:`0 -1
-                    b:  `1 -2
-                    c:  `3   -3
+                    a:&d0 -1
+                    b:  &d1 -2
+                    c:  &d3   -3
                 }");
 
                 Assert.AreEqual(-1, result.AsDictionary["a"].AsReal.AsInt);
@@ -64,37 +64,44 @@ namespace Neon.Serialization.Tests {
                 Assert.IsTrue(result.AsDictionary["a"].IsObjectDefinition);
                 Assert.IsTrue(result.AsDictionary["b"].IsObjectDefinition);
                 Assert.IsTrue(result.AsDictionary["c"].IsObjectDefinition);
+
+                try {
+                    Parser.Parse("&0");
+                    Assert.Fail("Parse accepted bad object reference");
+                }
+                catch (ParseException) {
+                }
             }
         }
 
         [TestMethod]
         public void TestObjectReferences() {
             {
-                var result = Parser.Parse("~1");
+                var result = Parser.Parse("&r1");
                 Assert.IsTrue(result.IsObjectReference);
                 Assert.AreEqual(1, result.AsObjectReference);
             }
 
             {
-                var result = Parser.Parse("~123 ");
+                var result = Parser.Parse("&r123 ");
                 Assert.IsTrue(result.IsObjectReference);
                 Assert.AreEqual(123, result.AsObjectReference);
             }
 
             {
-                var result = Parser.Parse("~123");
+                var result = Parser.Parse("&r123");
                 Assert.IsTrue(result.IsObjectReference);
                 Assert.AreEqual(123, result.AsObjectReference);
             }
 
             {
-                var result = Parser.Parse("~123ab");
+                var result = Parser.Parse("&r123ab");
                 Assert.IsTrue(result.IsObjectReference);
                 Assert.AreEqual(123, result.AsObjectReference);
             }
 
             {
-                var result = Parser.Parse("~005123  ");
+                var result = Parser.Parse("&r005123  ");
                 Assert.IsTrue(result.IsObjectReference);
                 Assert.AreEqual(5123, result.AsObjectReference);
             }
@@ -116,7 +123,7 @@ namespace Neon.Serialization.Tests {
         some: 3
         ab: 32
     }
-    objectref: ~3
+    objectref: &r3
 }
 ");
             Assert.AreEqual(Real.CreateDecimal(3), result.AsDictionary["hi"].AsReal);
