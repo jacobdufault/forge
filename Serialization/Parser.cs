@@ -219,9 +219,8 @@ namespace Neon.Serialization {
             return Int32.Parse(_input.Substring(start, _start - start));
         }
 
-        private Tuple<string, Maybe<int>> ParseKey() {
+        private string ParseKey() {
             StringBuilder result = new StringBuilder();
-            Maybe<int> objectref = Maybe<int>.Empty;
 
             while (CurrentCharacter() != ':' && CurrentCharacter() != '`' &&
                 char.IsWhiteSpace(CurrentCharacter()) == false) {
@@ -240,12 +239,7 @@ namespace Neon.Serialization {
 
             SkipSpace();
 
-            if (CurrentCharacter() == '`') {
-                MoveNext();
-                objectref = Maybe.Just(ParsePositiveInt());
-            }
-
-            return Tuple.Create(result.ToString(), objectref);
+            return result.ToString();
         }
 
         private SerializedData ParseString() {
@@ -308,7 +302,7 @@ namespace Neon.Serialization {
 
             while (CurrentCharacter() != '}') {
                 SkipSpace();
-                Tuple<string, Maybe<int>> key = ParseKey();
+                string key = ParseKey();
                 SkipSpace();
 
                 if (CurrentCharacter() != ':') {
@@ -320,11 +314,7 @@ namespace Neon.Serialization {
                 SkipSpace();
 
                 SerializedData value = RunParse();
-                if (key.Item2.Exists) {
-                    value.SetObjectDefinition(key.Item2.Value);
-                }
-
-                result.Add(key.Item1, value);
+                result.Add(key, value);
 
                 SkipSpace();
             }
@@ -334,12 +324,23 @@ namespace Neon.Serialization {
             return new SerializedData(result);
         }
 
+        private SerializedData ParseObjectDefinition() {
+            // skip the `
+            MoveNext();
+
+            int objectId = ParsePositiveInt();
+
+            SerializedData obj = RunParse();
+            obj.SetObjectDefinition(objectId);
+            return obj;
+        }
+
         private SerializedData ParseObjectReference() {
-            if (CurrentCharacter() != '`') {
+            if (CurrentCharacter() != '~') {
                 throw new ParseException("Expected object reference; failed", this);
             }
 
-            // skip the `
+            // skip the ~
             MoveNext();
 
             int objectref = ParsePositiveInt();
@@ -379,7 +380,8 @@ namespace Neon.Serialization {
                 case '7':
                 case '8':
                 case '9': return ParseNumber();
-                case '`': return ParseObjectReference();
+                case '~': return ParseObjectReference();
+                case '`': return ParseObjectDefinition();
                 case '"': return ParseString();
                 case '[': return ParseArray();
                 case '{': return ParseObject();

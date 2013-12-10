@@ -350,6 +350,12 @@ namespace Neon.Serialization {
         /// Formats this data into the given builder.
         /// </summary>
         private void BuildString(StringBuilder builder, int depth) {
+            if (IsObjectDefinition) {
+                builder.Append('`');
+                builder.Append(AsObjectDefinition);
+                builder.Append(' ');
+            }
+
             if (IsNull) {
                 builder.Append("null");
             }
@@ -377,7 +383,7 @@ namespace Neon.Serialization {
             }
 
             else if (IsObjectReference) {
-                builder.Append('`');
+                builder.Append('~');
                 builder.Append(AsObjectReference);
             }
 
@@ -387,10 +393,6 @@ namespace Neon.Serialization {
                 foreach (var entry in AsDictionary) {
                     InsertSpacing(builder, depth + 1);
                     builder.Append(entry.Key);
-                    if (entry.Value.IsObjectDefinition) {
-                        builder.Append('`');
-                        builder.Append(entry.Value._objectDefinition.Value);
-                    }
                     builder.Append(": ");
                     entry.Value.BuildString(builder, depth + 1);
                     builder.AppendLine();
