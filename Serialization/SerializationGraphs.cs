@@ -110,11 +110,11 @@ namespace Neon.Serialization {
 
                 SerializedData items;
                 if (result.TryGetValue(type.FullName, out items) == false) {
-                    items = SerializedData.CreateDictionary();
+                    items = SerializedData.CreateList();
                     result[type.FullName] = items;
                 }
 
-                items.AsDictionary[id.ToString()] = definition;
+                items.AsList.Add(definition);
             }
 
             return new SerializedData(result);
@@ -158,13 +158,13 @@ namespace Neon.Serialization {
                 _objects[type] = new Dictionary<int, RestoredObject>();
 
                 // create our initial references for the given objects in the graph
-                foreach (var item in entry.Value.AsDictionary) {
-                    int id = item.Value.AsObjectDefinition;
+                foreach (var item in entry.Value.AsList) {
+                    int id = item.AsObjectDefinition;
                     object instance = metadata.CreateInstance();
 
                     _objects[type][id] = new RestoredObject() {
                         Reference = instance,
-                        SerializedState = item.Value
+                        SerializedState = item
                     };
                 }
             }
