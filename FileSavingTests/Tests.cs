@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neon.FileSaving;
 using Neon.Serialization;
+using System.Diagnostics;
 
 namespace FileSavingTests {
     internal class FileItem0 : ISaveFileItem {
@@ -97,12 +98,14 @@ namespace FileSavingTests {
             writer.WriteFileItem(new FileItem0());
         }
 
+#if DEBUG
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
         public void WriteNullItem() {
             SavedStateWriter writer = new SavedStateWriter();
             writer.WriteFileItem(null);
         }
+#endif
 
         [TestMethod]
         public void WriteInvalidItem() {

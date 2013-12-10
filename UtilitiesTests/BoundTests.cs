@@ -50,7 +50,7 @@ namespace Neon.Utilities.Tests {
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception))]
+        [ExpectedException(typeof(ArgumentException))]
         public void ZeroRadius() {
             Bound b2 = new Bound(0, 0, 0);
         }

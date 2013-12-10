@@ -3,10 +3,9 @@ using System.Diagnostics;
 
 namespace Neon.Utilities {
     public static class Contract {
-        [Conditional("DEBUG")]
         public static void Requires(bool condition, string message = "") {
             if (condition == false) {
-                throw new Exception(message);
+                throw new ArgumentException(message);
             }
         }
 

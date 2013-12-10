@@ -10,7 +10,7 @@ namespace Neon.Utilities {
         private readonly Real RadiusSq;
 
         public Bound(Real x, Real z, Real radius) {
-            Contract.Requires(radius > 0);
+            Contract.Requires(radius > 0, "Radius must be > 0");
 
             X = x;
             Z = z;
