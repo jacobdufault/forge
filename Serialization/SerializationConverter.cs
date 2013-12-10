@@ -148,6 +148,14 @@ namespace Neon.Serialization {
             return Export(typeof(T), instance);
         }
 
+        /// <summary>
+        /// Converts a general object instance into SerializedData. The object instance may
+        /// internally store a set of circular references.
+        /// </summary>
+        /// <param name="type">The type of object to export.</param>
+        /// <param name="instance">The instance itself.</param>
+        /// <returns>A serialized data instance that can fully restore the given object graph as
+        /// defined by the given object instance.</returns>
         public SerializedData ExportGraph(Type type, object instance) {
             if (_exportGraph == null) {
                 _exportGraph = new SerializationGraphExporter();

@@ -505,6 +505,60 @@ namespace Neon.Serialization.Tests {
         }
 
         [TestMethod]
+        public void ListOfCyclicReferences() {
+            CyclicReference a = new CyclicReference() {
+                A = 1,
+                B = MyEnum.MyEnum0
+            };
+            CyclicReference b = new CyclicReference() {
+                A = 2,
+                B = MyEnum.MyEnum1
+            };
+            CyclicReference c = new CyclicReference() {
+                A = 3,
+                B = MyEnum.MyEnum2
+            };
+            CyclicReference d = new CyclicReference() {
+                A = 4,
+                B = MyEnum.MyEnum3
+            };
+            CyclicReference e = new CyclicReference() {
+                A = 5,
+                B = MyEnum.MyEnum4
+            };
+
+            a.Reference = b;
+            b.Reference = c;
+            c.Reference = d;
+            d.Reference = e;
+            e.Reference = a;
+
+            List<CyclicReference> exportedReferences = new List<CyclicReference>() {
+                a, b, c, d, e
+            };
+
+            SerializedData exportedData = (new SerializationConverter()).ExportGraph(exportedReferences.GetType(), exportedReferences);
+            List<CyclicReference> importedReferences = (List<CyclicReference>)(new SerializationConverter()).ImportGraph(exportedReferences.GetType(), exportedData);
+
+            Assert.AreEqual(exportedReferences[0].A, importedReferences[0].A);
+            Assert.AreEqual(exportedReferences[0].B, importedReferences[0].B);
+            Assert.AreEqual(exportedReferences[1].A, importedReferences[1].A);
+            Assert.AreEqual(exportedReferences[1].B, importedReferences[1].B);
+            Assert.AreEqual(exportedReferences[2].A, importedReferences[2].A);
+            Assert.AreEqual(exportedReferences[2].B, importedReferences[2].B);
+            Assert.AreEqual(exportedReferences[3].A, importedReferences[3].A);
+            Assert.AreEqual(exportedReferences[3].B, importedReferences[3].B);
+            Assert.AreEqual(exportedReferences[4].A, importedReferences[4].A);
+            Assert.AreEqual(exportedReferences[4].B, importedReferences[4].B);
+
+            Assert.IsTrue(importedReferences[0].Reference == importedReferences[1]);
+            Assert.IsTrue(importedReferences[1].Reference == importedReferences[2]);
+            Assert.IsTrue(importedReferences[2].Reference == importedReferences[3]);
+            Assert.IsTrue(importedReferences[3].Reference == importedReferences[4]);
+            Assert.IsTrue(importedReferences[4].Reference == importedReferences[0]);
+        }
+
+        [TestMethod]
         public void CyclicGraphComplex() {
             // significantly more complex object graph than the previous object graph serialization
             // test... this one involves multiple types and cycles within cycles

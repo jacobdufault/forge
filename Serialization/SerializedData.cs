@@ -12,6 +12,10 @@ namespace Neon.Serialization {
     /// types: null, boolean, Real, string, Dictionary, or List.
     /// </summary>
     public class SerializedData {
+        /// <summary>
+        /// Type used internally to disambiguate that we are storing an object reference, not a
+        /// number.
+        /// </summary>
         private struct ObjectReference {
             public int Id;
 
@@ -309,7 +313,7 @@ namespace Neon.Serialization {
             }
         }
 
-        public SerializedData this[DataKey key] {
+        public SerializedData this[string key] {
             get {
                 return AsDictionary[key];
             }
