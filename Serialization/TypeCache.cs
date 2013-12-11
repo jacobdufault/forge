@@ -13,9 +13,9 @@ namespace Neon.Serialization {
         private static Dictionary<string, Type> _cachedTypes = new Dictionary<string, Type>();
 
         /// <summary>
-        /// Cache from types to its associated metadata.
+        /// Cache from types to its associated model.
         /// </summary>
-        private static Dictionary<Type, TypeMetadata> _cachedMetadata = new Dictionary<Type, TypeMetadata>();
+        private static Dictionary<Type, TypeModel> _cachedTypeModels = new Dictionary<Type, TypeModel>();
 
         /// <summary>
         /// Find a type with the given name. An exception is thrown if no type with the given name
@@ -46,17 +46,17 @@ namespace Neon.Serialization {
         }
 
         /// <summary>
-        /// Finds the type metadata associated with the given type. If there is currently no
-        /// metadata, then this method creates it. Otherwise, it returns a cached instance.
+        /// Finds the type model associated with the given type. If there is currently no model,
+        /// then this method creates it. Otherwise, it returns a cached instance.
         /// </summary>
-        public static TypeMetadata GetMetadata(Type type) {
-            TypeMetadata metadata;
-            if (_cachedMetadata.TryGetValue(type, out metadata) == false) {
-                metadata = new TypeMetadata(type);
-                _cachedMetadata[type] = metadata;
+        public static TypeModel GetTypeModel(Type type) {
+            TypeModel model;
+            if (_cachedTypeModels.TryGetValue(type, out model) == false) {
+                model = new TypeModel(type);
+                _cachedTypeModels[type] = model;
             }
 
-            return metadata;
+            return model;
         }
     }
 }

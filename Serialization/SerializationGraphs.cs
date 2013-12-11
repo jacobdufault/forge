@@ -153,14 +153,14 @@ namespace Neon.Serialization {
             foreach (var entry in data.AsDictionary) {
                 // get the type of the current set of objects
                 Type type = TypeCache.FindType(entry.Key);
-                TypeMetadata metadata = TypeCache.GetMetadata(type);
+                TypeModel model = TypeCache.GetTypeModel(type);
 
                 _objects[type] = new Dictionary<int, RestoredObject>();
 
                 // create our initial references for the given objects in the graph
                 foreach (var item in entry.Value.AsList) {
                     int id = item.AsObjectDefinition;
-                    object instance = metadata.CreateInstance();
+                    object instance = model.CreateInstance();
 
                     _objects[type][id] = new RestoredObject() {
                         Reference = instance,

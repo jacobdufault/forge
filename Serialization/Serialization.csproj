@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PropertyModel.cs" />
     <Compile Include="SerializationGraphs.cs" />
     <Compile Include="Exceptions.cs" />
     <Compile Include="Parser.cs" />
@@ -52,7 +53,7 @@
     <Compile Include="SerializationConverter.cs" />
     <Compile Include="TypeCache.cs" />
     <Compile Include="TypeExtensions.cs" />
-    <Compile Include="TypeMetadata.cs" />
+    <Compile Include="TypeModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Utilities\Utilities.csproj">

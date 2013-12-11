@@ -4,133 +4,18 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-// This file contains a number of classes which make reflection easier. These are used heavily by
-// the SerializationConverter, but are exposed publicly so that all code can use the same reflection
-// base for serialization related purposes.
-
 namespace Neon.Serialization {
     /// <summary>
-    /// Metadata for an annotated item inside of an object. This abstracts PropertyInfo and
-    /// FieldInfo into a common interface that supports writing and reading.
+    /// Provides a view of an arbitrary type that unifies a number of discrete concepts in the CLR.
+    /// Arrays and Collection types have special support, but their APIs are unified by the
+    /// TypeModel so that they can be treated as if they were a regular type.
     /// </summary>
-    public class PropertyMetadata {
+    public class TypeModel {
         /// <summary>
-        /// The member info that we read to and write from.
-        /// </summary>
-        public MemberInfo MemberInfo {
-            get;
-            private set;
-        }
-
-        /// <summary>
-        /// The cached name of the property/field.
-        /// </summary>
-        public string Name;
-
-        /// <summary>
-        /// Writes a value to the given object instance using the cached member info stored inside
-        /// of this metadata structure.
-        /// </summary>
-        public void Write(object context, object value) {
-            if (MemberInfo is PropertyInfo) {
-                ((PropertyInfo)MemberInfo).SetValue(context, value, new object[] { });
-            }
-
-            else {
-                ((FieldInfo)MemberInfo).SetValue(context, value);
-            }
-        }
-
-        /// <summary>
-        /// Reads a value from the given object instance using the cached member info stored inside
-        /// of this metadata structure.
-        /// </summary>
-        public object Read(object context) {
-            if (MemberInfo is PropertyInfo) {
-                return ((PropertyInfo)MemberInfo).GetValue(context, new object[] { });
-            }
-
-            else {
-                return ((FieldInfo)MemberInfo).GetValue(context);
-            }
-        }
-
-        /// <summary>
-        /// The type of value that is stored inside of the property. For example, for an int field,
-        /// StorageType will be typeof(int).
-        /// </summary>
-        public Type StorageType;
-
-        /// <summary>
-        /// Initializes a new instance of the PropertyMetadata class from a property member.
-        /// </summary>
-        public PropertyMetadata(PropertyInfo property) {
-            MemberInfo = property;
-            Name = property.Name;
-            StorageType = property.PropertyType;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the PropertyMetadata class from a field member.
-        /// </summary>
-        public PropertyMetadata(FieldInfo field) {
-            MemberInfo = field;
-            Name = field.Name;
-            StorageType = field.FieldType;
-        }
-
-        /// <summary>
-        /// Determines whether the specified object is equal to this one.
-        /// </summary>
-        public override bool Equals(System.Object obj) {
-            // If parameter is null return false.
-            if (obj == null) {
-                return false;
-            }
-
-            // If parameter cannot be cast to Point return false.
-            PropertyMetadata p = obj as PropertyMetadata;
-            if ((System.Object)p == null) {
-                return false;
-            }
-
-            // Return true if the fields match:
-            return (StorageType == p.StorageType) && (Name == p.Name);
-        }
-
-        /// <summary>
-        /// Determines whether the specified object is equal to this one.
-        /// </summary>
-        public bool Equals(PropertyMetadata p) {
-            // If parameter is null return false:
-            if ((object)p == null) {
-                return false;
-            }
-
-            // Return true if the fields match:
-            return (StorageType == p.StorageType) && (Name == p.Name);
-        }
-
-        /// <summary>
-        /// Returns a hash code for this instance.
-        /// </summary>
-        /// <returns>A hash code for this instance, suitable for use in hashing algorithms and data
-        /// structures like a hash table.</returns>
-        public override int GetHashCode() {
-            return StorageType.GetHashCode() ^ Name.GetHashCode();
-        }
-    }
-
-    /// <summary>
-    /// Metadata for an type instance. The type can point to a regular type, an array, a list, or a
-    /// dictionary. Use TypeCache to get instances of TypeMetadata; do not construct it directly.
-    /// </summary>
-    public class TypeMetadata {
-        /// <summary>
-        /// Creates a new instance of the type that this metadata points back to.
+        /// Creates a new instance of the type that this model points back to.
         /// </summary>
         /// <remarks>
-        /// Activator.CreateInstance cannot be used because TypeMetadata can point to an Array.
+        /// Activator.CreateInstance cannot be used because TypeModel can point to an Array.
         /// </remarks>
         public object CreateInstance() {
             if (IsArray) {
@@ -154,9 +39,8 @@ namespace Neon.Serialization {
         }
 
         /// <summary>
-        /// Appends a value to the end of the array or collection. If the metadata is modeling an
-        /// array, then the value is inserted at indexHint, which *should* be equal to
-        /// ((Array)context).Length.
+        /// Appends a value to the end of the array or collection. If we are modeling an array, then
+        /// the value is inserted at indexHint, which *should* be equal to ((Array)context).Length.
         /// </summary>
         public void AppendValue(ref object context, object value, int indexHint) {
             if (IsArray) {
@@ -182,10 +66,10 @@ namespace Neon.Serialization {
         }
 
         /// <summary>
-        /// Initializes a new instance of the TypeMetadata class from a type. Use TypeCache to get
-        /// instances of TypeMetadata; do not use this constructor directly.
+        /// Initializes a new instance of the TypeModel class from a type. Use TypeCache to get
+        /// instances of TypeModel; do not use this constructor directly.
         /// </summary>
-        internal TypeMetadata(Type type) {
+        internal TypeModel(Type type) {
             ReflectedType = type;
 
             // Iterate over all attributes in the type to check for the requirement of a custom
@@ -217,6 +101,7 @@ namespace Neon.Serialization {
 
             // determine if we are a collection or array; recall that arrays implement the
             // ICollection interface, however
+
             IsArray = type.IsArray;
             IsCollection = IsArray == false && type.IsImplementationOf(typeof(ICollection<>));
 
@@ -238,9 +123,9 @@ namespace Neon.Serialization {
             // If we're not one of those three types, then we will be using Properties to assign
             // data to ourselves, so we want to lookup said information
             else {
-                HashSet<PropertyMetadata> properties = new HashSet<PropertyMetadata>();
+                HashSet<PropertyModel> properties = new HashSet<PropertyModel>();
                 CollectProperties(type, properties);
-                _properties = new List<PropertyMetadata>(properties);
+                _properties = new List<PropertyModel>(properties);
             }
         }
 
@@ -251,13 +136,13 @@ namespace Neon.Serialization {
         /// <param name="type">The type to process. This method will recurse up the type's
         /// inheritance hierarchy</param>
         /// <param name="properties">The list of properties that should be appended to</param>
-        private static void CollectProperties(Type type, HashSet<PropertyMetadata> properties) {
+        private static void CollectProperties(Type type, HashSet<PropertyModel> properties) {
             BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance;
 
             foreach (PropertyInfo property in type.GetProperties(flags)) {
                 // We don't serialize delegates
                 if (typeof(Delegate).IsAssignableFrom(property.PropertyType)) {
-                    Log<TypeMetadata>.Info("Ignoring property {0}.{1} because it is a delegate",
+                    Log<TypeModel>.Info("Ignoring property {0}.{1} because it is a delegate",
                         type.FullName, property.Name);
                     continue;
                 }
@@ -265,7 +150,7 @@ namespace Neon.Serialization {
                 // We don't serialize properties marked with [NonSerialized] or [NotSerializable]
                 foreach (var attribute in property.GetCustomAttributes(true)) {
                     if (attribute is NonSerializedAttribute || attribute is NotSerializableAttribute) {
-                        Log<TypeMetadata>.Info("Ignoring property {0}.{1} because it has a " +
+                        Log<TypeModel>.Info("Ignoring property {0}.{1} because it has a " +
                             "NonSerialized or a NotSerializable attribute", type.FullName,
                             property.Name);
                         goto loop_end;
@@ -274,7 +159,7 @@ namespace Neon.Serialization {
 
                 // If the property cannot be both read and written to, we don't serialize it
                 if (property.CanRead == false || property.CanWrite == false) {
-                    Log<TypeMetadata>.Info("Ignoring property {0}.{1} because it cannot both be " +
+                    Log<TypeModel>.Info("Ignoring property {0}.{1} because it cannot both be " +
                         "read from and written to", type.FullName, property.Name);
                     continue;
                 }
@@ -289,7 +174,7 @@ namespace Neon.Serialization {
                     }
                 }
 
-                properties.Add(new PropertyMetadata(property));
+                properties.Add(new PropertyModel(property));
 
             loop_end: { }
             }
@@ -297,14 +182,14 @@ namespace Neon.Serialization {
             foreach (FieldInfo field in type.GetFields(flags)) {
                 // We don't serialize delegates
                 if (typeof(Delegate).IsAssignableFrom(field.FieldType)) {
-                    Log<TypeMetadata>.Info("Ignoring field {0}.{1} because it is a delegate",
+                    Log<TypeModel>.Info("Ignoring field {0}.{1} because it is a delegate",
                         type.FullName, field.Name);
                     continue;
                 }
 
                 // We don't serialize non-serializable properties
                 if (field.IsNotSerialized) {
-                    Log<TypeMetadata>.Info("Ignoring field {0}.{1} because it is marked " +
+                    Log<TypeModel>.Info("Ignoring field {0}.{1} because it is marked " +
                         "NoNSerialized", type.FullName, field.Name);
                     continue;
                 }
@@ -312,7 +197,7 @@ namespace Neon.Serialization {
                 // We don't serialize fields marked with [NonSerialized] or [NotSerializable]
                 foreach (var attribute in field.GetCustomAttributes(true)) {
                     if (attribute is NonSerializedAttribute || attribute is NotSerializableAttribute) {
-                        Log<TypeMetadata>.Info("Ignoring field {0}.{1} because it has a " +
+                        Log<TypeModel>.Info("Ignoring field {0}.{1} because it has a " +
                             "NonSerialized or a NotSerializable attribute", type.FullName,
                             field.Name);
                         goto loop_end;
@@ -325,7 +210,7 @@ namespace Neon.Serialization {
                     continue;
                 }
 
-                properties.Add(new PropertyMetadata(field));
+                properties.Add(new PropertyModel(field));
 
             loop_end: { }
             }
@@ -353,8 +238,8 @@ namespace Neon.Serialization {
         }
 
         /// <summary>
-        /// The type that this metadata is modeling, ie, the type that the metadata was constructed
-        /// off of.
+        /// The type that this model is modeling, ie, the type that the model was constructed off
+        /// of.
         /// </summary>
         public Type ReflectedType {
             get;
@@ -362,16 +247,15 @@ namespace Neon.Serialization {
         }
 
         /// <summary>
-        /// Iff this metadata maps back to a List or an Array type, then this is the type of element
-        /// stored inside the array. If this metadata maps back to a Dictionary type, this this is
-        /// the type of element stored inside of the value slot. Otherwise, this method throws an
+        /// Iff this model maps back to a Collection or an Array type, then this is the type of
+        /// element stored inside the array or collection. Otherwise, this method throws an
         /// exception.
         /// </summary>
         public Type ElementType {
             get {
                 if (IsCollection == false && IsArray == false) {
                     throw new InvalidOperationException("Unable to get the ElementType of a " +
-                        "metadata object that is not a collection or an array");
+                        "type model object that is not a collection or an array");
                 }
 
                 return _elementType;
@@ -407,16 +291,16 @@ namespace Neon.Serialization {
         /// The properties on the type. This is used when importing/exporting a type that does not
         /// have a user-defined importer/exporter.
         /// </summary>
-        public List<PropertyMetadata> Properties {
+        public List<PropertyModel> Properties {
             get {
                 if (IsCollection || IsArray) {
                     throw new InvalidOperationException("A type that is a collection or an array " +
-                        "does not have properties (for metadata on type " + ReflectedType + ")");
+                        "does not have properties (for the model on type " + ReflectedType + ")");
                 }
 
                 return _properties;
             }
         }
-        private List<PropertyMetadata> _properties;
+        private List<PropertyModel> _properties;
     }
 }

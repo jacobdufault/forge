@@ -11,7 +11,7 @@ namespace Neon.Serialization {
         /// <param name="type">The type to examine</param>
         /// <returns>True if this converter can import and export the given type, otherwise
         /// false.</returns>
-        bool CanConvert(TypeMetadata type);
+        bool CanConvert(TypeModel type);
 
         /// <summary>
         /// Import an instance of the given type from the given data that was emitted using Export.
@@ -20,7 +20,7 @@ namespace Neon.Serialization {
         /// <param name="data">The data that was previously exported.</param>
         /// <param name="instance">An optional preallocated instance to populate.</param>
         /// <returns>An instance of the given data.</returns>
-        object Import(TypeMetadata type, SerializedData data, object instance = null);
+        object Import(TypeModel type, SerializedData data, object instance = null);
 
         /// <summary>
         /// Exports an instance of the given type to a serialized state.
@@ -28,12 +28,12 @@ namespace Neon.Serialization {
         /// <param name="type">The type of object to export the instance as.</param>
         /// <param name="instance">The instance to export.</param>
         /// <returns>The serialized state.</returns>
-        SerializedData Export(TypeMetadata type, object instance);
+        SerializedData Export(TypeModel type, object instance);
     }
 
     internal class PrimitiveTypeConverter : ITypeConverter {
 
-        public bool CanConvert(TypeMetadata type) {
+        public bool CanConvert(TypeModel type) {
             Type t = type.ReflectedType;
             return
                 t == typeof(byte) ||
@@ -45,7 +45,7 @@ namespace Neon.Serialization {
                 t == typeof(SerializedData);
         }
 
-        public object Import(TypeMetadata type, SerializedData data, object instance) {
+        public object Import(TypeModel type, SerializedData data, object instance) {
             if (instance != null) {
                 throw new InvalidOperationException("PrimitiveTypeConverter cannot handle " +
                     "preallocated object instances");
@@ -79,7 +79,7 @@ namespace Neon.Serialization {
             throw new InvalidOperationException("Bad type");
         }
 
-        public SerializedData Export(TypeMetadata type, object instance) {
+        public SerializedData Export(TypeModel type, object instance) {
             Type t = type.ReflectedType;
 
             if (t == typeof(int)) {
@@ -119,11 +119,11 @@ namespace Neon.Serialization {
             _converter = converter;
         }
 
-        public bool CanConvert(TypeMetadata type) {
+        public bool CanConvert(TypeModel type) {
             return Enabled && type.SupportsCyclicReferences;
         }
 
-        public object Import(TypeMetadata type, SerializedData data, object instance) {
+        public object Import(TypeModel type, SerializedData data, object instance) {
             if (ImportGraph == null) {
                 throw new InvalidOperationException("Cycle support required in serialization " +
                     "graph; use GraphImport instead of Import");
@@ -136,7 +136,7 @@ namespace Neon.Serialization {
             return ImportGraph.GetObjectInstance(type.ReflectedType, data.AsObjectReference);
         }
 
-        public SerializedData Export(TypeMetadata type, object instance) {
+        public SerializedData Export(TypeModel type, object instance) {
             if (ExportGraph == null) {
                 throw new InvalidOperationException("Cycle support required in serialization " +
                     "graph; use GraphExport instead of Export");
@@ -147,11 +147,11 @@ namespace Neon.Serialization {
     }
 
     internal class EnumTypeConverter : ITypeConverter {
-        public bool CanConvert(TypeMetadata type) {
+        public bool CanConvert(TypeModel type) {
             return type.ReflectedType.IsEnum;
         }
 
-        public object Import(TypeMetadata type, SerializedData data, object instance) {
+        public object Import(TypeModel type, SerializedData data, object instance) {
             if (instance != null) {
                 throw new InvalidOperationException("EnumTypeConverter cannot handle " +
                     "preallocated object instances");
@@ -160,7 +160,7 @@ namespace Neon.Serialization {
             return Enum.Parse(type.ReflectedType, data.AsString);
         }
 
-        public SerializedData Export(TypeMetadata type, object instance) {
+        public SerializedData Export(TypeModel type, object instance) {
             return new SerializedData(instance.ToString());
         }
     }
@@ -172,16 +172,16 @@ namespace Neon.Serialization {
             _converter = converter;
         }
 
-        public bool CanConvert(TypeMetadata type) {
+        public bool CanConvert(TypeModel type) {
             return type.SupportsInheritance;
         }
 
-        public object Import(TypeMetadata type, SerializedData data, object instance) {
+        public object Import(TypeModel type, SerializedData data, object instance) {
             Type instanceType = TypeCache.FindType(data.AsDictionary["InstanceType"].AsString);
             return _converter.Import(instanceType, data.AsDictionary["Data"], instance);
         }
 
-        public SerializedData Export(TypeMetadata type, object instance) {
+        public SerializedData Export(TypeModel type, object instance) {
             SerializedData data = SerializedData.CreateDictionary();
 
             // Export the type so we know what type to import as.
@@ -202,11 +202,11 @@ namespace Neon.Serialization {
             _converter = converter;
         }
 
-        public bool CanConvert(TypeMetadata type) {
+        public bool CanConvert(TypeModel type) {
             return type.IsArray || type.IsCollection;
         }
 
-        public object Import(TypeMetadata type, SerializedData data, object instance) {
+        public object Import(TypeModel type, SerializedData data, object instance) {
             if (instance == null) {
                 instance = type.CreateInstance();
             }
@@ -220,7 +220,7 @@ namespace Neon.Serialization {
             return instance;
         }
 
-        public SerializedData Export(TypeMetadata type, object instance) {
+        public SerializedData Export(TypeModel type, object instance) {
             // If it's an array or a collection, we have special logic for processing
             List<SerializedData> output = new List<SerializedData>();
 
@@ -248,22 +248,22 @@ namespace Neon.Serialization {
             _converter = converter;
         }
 
-        public bool CanConvert(TypeMetadata type) {
+        public bool CanConvert(TypeModel type) {
             return true;
         }
 
-        public object Import(TypeMetadata type, SerializedData data, object instance) {
+        public object Import(TypeModel type, SerializedData data, object instance) {
             if (instance == null) {
                 instance = type.CreateInstance();
             }
 
             Dictionary<string, SerializedData> serializedDataDict = data.AsDictionary;
             for (int i = 0; i < type.Properties.Count; ++i) {
-                PropertyMetadata propertyMetadata = type.Properties[i];
+                PropertyModel property = type.Properties[i];
 
                 // deserialize the property
-                string name = propertyMetadata.Name;
-                Type storageType = propertyMetadata.StorageType;
+                string name = property.Name;
+                Type storageType = property.StorageType;
 
                 // throw if the dictionary is missing a required property
                 if (serializedDataDict.ContainsKey(name) == false) {
@@ -275,24 +275,23 @@ namespace Neon.Serialization {
                 object deserialized = _converter.Import(storageType, serializedDataDict[name]);
 
                 // write it into the instance
-                propertyMetadata.Write(instance, deserialized);
+                property.Write(instance, deserialized);
             }
 
             return instance;
         }
 
-        public SerializedData Export(TypeMetadata type, object instance) {
+        public SerializedData Export(TypeModel type, object instance) {
             var dict = new Dictionary<string, SerializedData>();
 
             for (int i = 0; i < type.Properties.Count; ++i) {
-                PropertyMetadata propertyMetadata = type.Properties[i];
+                PropertyModel property = type.Properties[i];
 
                 // make sure we export under the storage type of the property; if we don't, and say,
                 // the property is an interface, and we export under the instance type, then
                 // deserialization will not work as expected (because we'll be trying to deserialize
                 // an interface).
-                dict[propertyMetadata.Name] = _converter.Export(propertyMetadata.StorageType,
-                    propertyMetadata.Read(instance));
+                dict[property.Name] = _converter.Export(property.StorageType, property.Read(instance));
             }
 
             return new SerializedData(dict);
@@ -425,15 +424,15 @@ namespace Neon.Serialization {
                 return new SerializedData();
             }
 
-            TypeMetadata metadata = TypeCache.GetMetadata(instanceType);
+            TypeModel model = TypeCache.GetTypeModel(instanceType);
             for (int i = 0; i < _converters.Count; ++i) {
                 ITypeConverter converter = _converters[i];
                 if (disableCyclicExport && converter is CyclicTypeConverter) {
                     continue;
                 }
 
-                if (converter.CanConvert(metadata)) {
-                    return converter.Export(metadata, instance);
+                if (converter.CanConvert(model)) {
+                    return converter.Export(model, instance);
                 }
             }
 
@@ -466,15 +465,15 @@ namespace Neon.Serialization {
                 return null;
             }
 
-            TypeMetadata metadata = TypeCache.GetMetadata(type);
+            TypeModel model = TypeCache.GetTypeModel(type);
             for (int i = 0; i < _converters.Count; ++i) {
                 ITypeConverter converter = _converters[i];
                 if (disableCyclic && converter is CyclicTypeConverter) {
                     continue;
                 }
 
-                if (converter.CanConvert(metadata)) {
-                    return converter.Import(metadata, serializedData, instance);
+                if (converter.CanConvert(model)) {
+                    return converter.Import(model, serializedData, instance);
                 }
             }
 
