@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Neon.Utilities;
+using System;
 
 namespace Neon.Serialization {
     /// <summary>
@@ -49,9 +50,12 @@ namespace Neon.Serialization {
         /// <param name="interfaceType">The interface type to search for</param>
         /// <returns></returns>
         public static bool IsImplementationOf(this Type type, Type interfaceType) {
-            if (interfaceType.IsGenericType) {
-                interfaceType = interfaceType.GetGenericTypeDefinition();
-            }
+            if (interfaceType.IsGenericType && interfaceType.IsGenericTypeDefinition == false) {
+                throw new ArgumentException("IsImplementationOf requires that if the interface " +
+                    "type is generic, then it must be the generic type definition, not a " +
+                    "specific generic type instantiation");
+            };
+
             if (type.IsGenericType) {
                 type = type.GetGenericTypeDefinition();
             }

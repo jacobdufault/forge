@@ -58,6 +58,7 @@
     <Compile Include="TypeConversionPrivateTests.cs" />
     <Compile Include="TypeConversionTests.cs" />
     <Compile Include="TypeConversionVirtualTests.cs" />
+    <Compile Include="TypeExtensionTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Collections\Collections.csproj">
