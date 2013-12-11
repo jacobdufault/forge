@@ -27,20 +27,4 @@ namespace Neon.Serialization {
             : base(CreateMessage(message, context)) {
         }
     }
-
-    /// <summary>
-    /// Exception thrown when a type that was imported/exported requires a custom converter, but one
-    /// was not registered.
-    /// </summary>
-    public sealed class RequiresCustomConverterException : Exception {
-        private static string CreateMessage(Type type, bool importing) {
-            return "The given type " + type + " requires a custom " +
-                (importing ? "importer" : "exporter") + " (based on annotations), but one was " +
-                "not found.";
-        }
-
-        internal RequiresCustomConverterException(Type type, bool importing)
-            : base(CreateMessage(type, importing)) {
-        }
-    }
 }

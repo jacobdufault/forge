@@ -105,7 +105,7 @@ namespace Neon.Serialization {
                 int id = tuple.Item2;
                 object reference = _objects[type][id];
 
-                SerializedData definition = converter.Export(type, reference, forceCyclic: true);
+                SerializedData definition = converter.Export(type, reference, disableCyclicExport: true);
                 definition.SetObjectDefinition(id);
 
                 SerializedData items;

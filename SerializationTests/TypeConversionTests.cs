@@ -94,10 +94,6 @@ namespace Neon.Serialization.Tests {
         }
     }
 
-    [SerializationRequireCustomConverter]
-    internal class RequireCustomConverter {
-    }
-
     internal struct CustomConverterOverride {
         public IInterface InterfaceObject;
     }
@@ -146,20 +142,6 @@ namespace Neon.Serialization.Tests {
             where TCollection : ICollection {
             TCollection imported = GetImportedExportedValue(collection, exporter, importer);
             CollectionAssert.AreEqual(collection, imported);
-        }
-
-        [TestMethod]
-        [ExpectedException(typeof(RequiresCustomConverterException))]
-        public void RequireCustomConverterImport() {
-            SerializationConverter converter = new SerializationConverter();
-            converter.Import<RequireCustomConverter>(SerializedData.CreateDictionary());
-        }
-
-        [TestMethod]
-        [ExpectedException(typeof(RequiresCustomConverterException))]
-        public void RequireCustomConverterExport() {
-            SerializationConverter converter = new SerializationConverter();
-            converter.Export(new RequireCustomConverter());
         }
 
         [TestMethod]
@@ -411,47 +393,6 @@ namespace Neon.Serialization.Tests {
         }
 
         [TestMethod]
-        public void ImportExportCustomConverterOverride() {
-            CustomConverterOverride c = new CustomConverterOverride() {
-                InterfaceObject = new DerivedInterfaceB()
-            };
-            SerializationConverter exporter = new SerializationConverter();
-            exporter.AddExporter<CustomConverterOverride>(i => new SerializedData("good data"));
-
-            bool ranImporter = false;
-            SerializationConverter importer = new SerializationConverter();
-            importer.AddImporter<CustomConverterOverride>(data => {
-                Assert.AreEqual("good data", data.AsString);
-                ranImporter = true;
-                return c;
-            });
-
-            RunImportExportTest(c, exporter, importer);
-
-            Assert.IsTrue(ranImporter, "Failed to use custom importer");
-        }
-
-        [TestMethod]
-        public void ImportExportOverrideInterfaceSupport() {
-            IInterface iface = new DerivedInterfaceA();
-
-            SerializationConverter exporter = new SerializationConverter();
-            exporter.AddExporter<IInterface>(i => new SerializedData("good data"));
-
-            bool ranImporter = false;
-            SerializationConverter importer = new SerializationConverter();
-            importer.AddImporter<IInterface>(data => {
-                Assert.AreEqual("good data", data.AsString);
-                ranImporter = true;
-                return iface;
-            });
-
-            RunImportExportTest(iface, exporter, importer);
-
-            Assert.IsTrue(ranImporter, "The generic inheritance importer was used instead of the custom one");
-        }
-
-        [TestMethod]
         public void ImportExportBag() {
             Bag<int> bag = new Bag<int>() {
                 1, 2, 3, 4, 5
@@ -598,6 +539,22 @@ namespace Neon.Serialization.Tests {
             Assert.AreEqual(iref1a, iref1a.Reference1.Reference1);
             Assert.AreEqual(iref1a, iref1a.Reference2.Reference1);
             Assert.AreEqual(iref1a, iref1a.Reference2.Reference2.Reference1.Reference1);
+        }
+
+        //[TestMethod]
+        public void AnonymousTypes() {
+            System.Type t = new { }.GetType();
+
+            RunImportExportTest(new {
+                Hello = 3,
+                Yes = true,
+                No = false,
+                Maybe = new {
+                    Fun = "hello",
+                    MoreFun = "no",
+                    MoreMore = 3
+                }
+            });
         }
     }
 }

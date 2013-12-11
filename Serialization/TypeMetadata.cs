@@ -191,9 +191,6 @@ namespace Neon.Serialization {
             // Iterate over all attributes in the type to check for the requirement of a custom
             // converter or if it needs to support cyclic references
             foreach (var attribute in ReflectedType.GetCustomAttributes(inherit: true)) {
-                if (attribute is SerializationRequireCustomConverterAttribute) {
-                    RequiresCustomConverter = true;
-                }
                 if (attribute is SerializationSupportCyclicReferencesAttribute) {
                     SupportsCyclicReferences = true;
                 }
@@ -216,11 +213,6 @@ namespace Neon.Serialization {
                         SupportsInheritance = false;
                     }
                 }
-            }
-
-            if (RequiresCustomConverter && SupportsInheritance) {
-                throw new InvalidOperationException("A type cannot both support inheritance and " +
-                    "have a custom converter; inheritance support consumes the converter");
             }
 
             // determine if we are a collection or array; recall that arrays implement the
@@ -347,15 +339,6 @@ namespace Neon.Serialization {
         /// Does this type need to support cyclic references?
         /// </summary>
         public bool SupportsCyclicReferences {
-            get;
-            private set;
-        }
-
-        /// <summary>
-        /// If this type requires a custom converter, then this will be true. Generic reflection
-        /// should not be done if this is true.
-        /// </summary>
-        public bool RequiresCustomConverter {
             get;
             private set;
         }
