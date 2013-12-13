@@ -94,6 +94,7 @@ namespace Neon.Serialization {
             // support cyclic references
             SupportsCyclicReferences = Attribute.IsDefined(type,
                 typeof(SerializationSupportCyclicReferencesAttribute), inherit: true);
+            SupportsCyclicReferences = type.IsArray == false && type.IsClass;
 
             // Determine if the type needs to support inheritance
             SupportsInheritance = type.IsInterface || type.IsAbstract || type.IsSealed == false ||

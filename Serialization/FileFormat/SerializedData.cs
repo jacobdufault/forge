@@ -7,23 +7,21 @@ using System.Diagnostics;
 using System.Text;
 
 namespace Neon.Serialization {
+    public struct ObjectReference {
+        public int Id;
+        public Type Type;
+
+        internal ObjectReference(int id, Type type) {
+            Id = id;
+            Type = type;
+        }
+    }
+
     /// <summary>
     /// A union type that stores a serialized value. The stored type can be one of six different
     /// types: null, boolean, Real, string, Dictionary, or List.
     /// </summary>
     public class SerializedData {
-        /// <summary>
-        /// Type used internally to disambiguate that we are storing an object reference, not a
-        /// number.
-        /// </summary>
-        private struct ObjectReference {
-            public int Id;
-
-            public ObjectReference(int id) {
-                Id = id;
-            }
-        }
-
         /// <summary>
         /// The raw value that this serialized data stores. It can be one of six different types; a
         /// boolean, a Real, a string, an object reference, a Dictionary, or a List.
@@ -83,9 +81,9 @@ namespace Neon.Serialization {
         /// Creates a new SerializedData instance that contains an object reference.
         /// </summary>
         /// <param name="objectId">The id of the object that this data references</param>
-        public static SerializedData CreateObjectReference(int objectId) {
+        public static SerializedData CreateObjectReference(int objectId, Type type) {
             SerializedData data = new SerializedData();
-            data._value = new ObjectReference(objectId);
+            data._value = new ObjectReference(objectId, type);
             return data;
         }
 
@@ -225,9 +223,9 @@ namespace Neon.Serialization {
         /// object reference.
         /// </summary>
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        public int AsObjectReference {
+        public ObjectReference AsObjectReference {
             get {
-                return Cast<ObjectReference>().Id;
+                return Cast<ObjectReference>();
             }
         }
 
@@ -384,7 +382,10 @@ namespace Neon.Serialization {
 
             else if (IsObjectReference) {
                 builder.Append("&r");
-                builder.Append(AsObjectReference);
+                builder.Append(AsObjectReference.Id);
+                builder.Append('<');
+                builder.Append(AsObjectReference.Type);
+                builder.Append('>');
             }
 
             else if (IsDictionary) {

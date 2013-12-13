@@ -76,13 +76,14 @@ namespace Neon.Serialization {
         /// <param name="objectReference">The reference identifier.</param>
         /// <returns>An object reference.</returns>
         internal object GetObjectInstance(TypeModel model, SerializedData data) {
-            Type type = model.ReflectedType;
-
             if (data.IsObjectDefinition) {
-                return _objects[type][data.AsObjectDefinition].Reference;
+                // TODO: throw exception here, we can only use GetObjectInstance on references?
+                return _objects[model.ReflectedType][data.AsObjectDefinition].Reference;
             }
             if (data.IsObjectReference) {
-                return _objects[type][data.AsObjectReference].Reference;
+                ObjectReference reference = data.AsObjectReference;
+
+                return _objects[reference.Type][reference.Id].Reference;
             }
 
             return model.CreateInstance();
@@ -171,7 +172,10 @@ namespace Neon.Serialization {
         /// <param name="reference">The object instance to reference.</param>
         /// <returns>A SerializedData instance that is an object reference.</returns>
         internal SerializedData GetObjectReference(object instance) {
-            return SerializedData.CreateObjectReference(GetId(instance.GetType(), instance));
+            Type type = instance.GetType();
+            int id = GetId(type, instance);
+
+            return SerializedData.CreateObjectReference(id, type);
         }
 
         /// <summary>

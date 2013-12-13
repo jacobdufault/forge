@@ -77,37 +77,66 @@ namespace Neon.Serialization.Tests {
         [TestMethod]
         public void TestObjectReferences() {
             {
-                var result = Parser.Parse("&r1");
+                var result = Parser.Parse("&r1<System.Int32>");
                 Assert.IsTrue(result.IsObjectReference);
-                Assert.AreEqual(1, result.AsObjectReference);
+                Assert.AreEqual(1, result.AsObjectReference.Id);
+                Assert.AreEqual(typeof(System.Int32), result.AsObjectReference.Type);
             }
 
             {
-                var result = Parser.Parse("&r123 ");
+                var result = Parser.Parse("&r123<System.Int32> ");
                 Assert.IsTrue(result.IsObjectReference);
-                Assert.AreEqual(123, result.AsObjectReference);
+                Assert.AreEqual(123, result.AsObjectReference.Id);
+                Assert.AreEqual(typeof(System.Int32), result.AsObjectReference.Type);
             }
 
             {
-                var result = Parser.Parse("&r123");
+                var result = Parser.Parse("&r123<System.Int32>");
                 Assert.IsTrue(result.IsObjectReference);
-                Assert.AreEqual(123, result.AsObjectReference);
+                Assert.AreEqual(123, result.AsObjectReference.Id);
+                Assert.AreEqual(typeof(System.Int32), result.AsObjectReference.Type);
             }
 
             {
-                var result = Parser.Parse("&r123ab");
+                var result = Parser.Parse("&r123<System.Int32>ab");
                 Assert.IsTrue(result.IsObjectReference);
-                Assert.AreEqual(123, result.AsObjectReference);
+                Assert.AreEqual(123, result.AsObjectReference.Id);
+                Assert.AreEqual(typeof(System.Int32), result.AsObjectReference.Type);
             }
 
             {
-                var result = Parser.Parse("&r005123  ");
+                var result = Parser.Parse("&r00123<System.Int32> ");
                 Assert.IsTrue(result.IsObjectReference);
-                Assert.AreEqual(5123, result.AsObjectReference);
+                Assert.AreEqual(123, result.AsObjectReference.Id);
+                Assert.AreEqual(typeof(System.Int32), result.AsObjectReference.Type);
             }
 
             try {
-                Parser.Parse("~");
+                Parser.Parse("&");
+                Assert.Fail("Should have failed to parse object reference");
+            }
+            catch (ParseException) { }
+
+            try {
+                Parser.Parse("&r");
+                Assert.Fail("Should have failed to parse object reference");
+            }
+            catch (ParseException) { }
+
+            try {
+                Parser.Parse("&d");
+                Assert.Fail("Should have failed to parse object reference");
+            }
+            catch (ParseException) { }
+
+            try {
+                Parser.Parse("&r132");
+                Assert.Fail("Should have failed to parse object reference");
+            }
+            catch (ParseException) { }
+
+            try {
+                Parser.Parse("&r1<badtype>");
                 Assert.Fail("Should have failed to parse object reference");
             }
             catch (ParseException) { }
@@ -123,14 +152,15 @@ namespace Neon.Serialization.Tests {
         some: 3
         ab: 32
     }
-    objectref: &r3
+    objectref: &r3<System.Int32>
 }
 ");
             Assert.AreEqual(Real.CreateDecimal(3), result.AsDictionary["hi"].AsReal);
             Assert.AreEqual(true, result.AsDictionary["no"].AsBool);
             Assert.AreEqual(Real.CreateDecimal(3), result.AsDictionary["something"].AsDictionary["some"].AsReal);
             Assert.AreEqual(Real.CreateDecimal(32), result.AsDictionary["something"].AsDictionary["ab"].AsReal);
-            Assert.AreEqual(3, result.AsDictionary["objectref"].AsObjectReference);
+            Assert.AreEqual(3, result.AsDictionary["objectref"].AsObjectReference.Id);
+            Assert.AreEqual(typeof(System.Int32), result.AsDictionary["objectref"].AsObjectReference.Type);
         }
 
         [TestMethod]

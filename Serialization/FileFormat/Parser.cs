@@ -219,6 +219,32 @@ namespace Neon.Serialization {
             return Int32.Parse(_input.Substring(start, _start - start));
         }
 
+        private Type ParseType() {
+            int found = 1;
+            MoveNext(); // skip the <
+
+            int start = _start;
+
+            while (found > 0) {
+                if (CurrentCharacter() == '>') {
+                    --found;
+                }
+
+                else if (CurrentCharacter() == '<') {
+                    ++found;
+                }
+
+                MoveNext();
+            }
+
+            string type = _input.Substring(start, _start - start - 1);
+            Type t = Type.GetType(type);
+            if (t == null) {
+                throw new ParseException("Unable to find type " + type, this);
+            }
+            return t;
+        }
+
         private string ParseKey() {
             StringBuilder result = new StringBuilder();
 
@@ -328,25 +354,28 @@ namespace Neon.Serialization {
             // skip the &
             MoveNext();
 
+            if (HasValue() == false || (CurrentCharacter() != 'd' && CurrentCharacter() != 'r')) {
+                throw new ParseException("Invalid character following &; expected 'd' " +
+                    "(for definition) or 'r' (for reference)", this);
+            }
+
             char c = CurrentCharacter();
             MoveNext();
 
+            int objectId = ParsePositiveInt();
+
             if (c == 'd') {
-                int objectId = ParsePositiveInt();
                 SerializedData obj = RunParse();
                 obj.SetObjectDefinition(objectId);
                 return obj;
             }
 
             else if (c == 'r') {
-                int objectId = ParsePositiveInt();
-                return SerializedData.CreateObjectReference(objectId);
+                Type type = ParseType();
+                return SerializedData.CreateObjectReference(objectId, type);
             }
 
-            else {
-                throw new ParseException("Invalid character following &; expected 'd' " +
-                    "(for definition) or 'r' (for reference), not " + c, this);
-            }
+            throw new InvalidOperationException("Impossible state");
         }
 
         /// <summary>
