@@ -33,11 +33,10 @@ namespace Neon.Serialization {
 
             // cache lookup failed; search all loaded assemblies
             foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies()) {
-                foreach (Type type in assembly.GetTypes()) {
-                    if (type.FullName == name) {
-                        _cachedTypes[name] = type;
-                        return type;
-                    }
+                Type type = assembly.GetType(name);
+                if (type != null) {
+                    _cachedTypes[name] = type;
+                    return type;
                 }
             }
 

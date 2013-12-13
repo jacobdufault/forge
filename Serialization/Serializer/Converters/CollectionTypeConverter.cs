@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text;
 
 namespace Neon.Serialization.Converters {
-    // TODO: can we treat arrays as collections?
     internal class CollectionTypeConverter : ITypeConverter {
         private TypeModel _model;
         private ITypeConverter _elementConverter;

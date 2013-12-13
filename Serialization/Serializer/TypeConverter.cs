@@ -1,4 +1,5 @@
 ﻿using Neon.Serialization.Converters;
+using Neon.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,42 +7,43 @@ using System.Text;
 
 namespace Neon.Serialization {
     internal static class TypeConverterResolver {
-        private static Dictionary<Type, ITypeConverter> _cachedCyclicConverters = new Dictionary<Type, ITypeConverter>();
+        private static Dictionary<Type, ITypeConverter> _cachedAllowAllConverters = new Dictionary<Type, ITypeConverter>();
         private static Dictionary<Type, ITypeConverter> _cachedNonCyclicConverters = new Dictionary<Type, ITypeConverter>();
+        private static Dictionary<Type, ITypeConverter> _cachedNonInheritanceConverters = new Dictionary<Type, ITypeConverter>();
 
-        private static ITypeConverter CreateTypeConverter(Type type, bool allowCyclic) {
+        private static ITypeConverter CreateTypeConverter(Dictionary<Type, ITypeConverter> cache,
+            Type type, bool allowCyclic, bool allowInheritance) {
             ITypeConverter converter = null;
-            if (converter == null) converter = ProxyTypeConverter.TryCreate(type);
-            if (converter == null) converter = PrimitiveTypeConverter.TryCreate(type);
-            if (converter == null) converter = EnumTypeConverter.TryCreate(type);
-            if (allowCyclic && converter == null) converter = CyclicTypeConverter.TryCreate(type);
-            if (converter == null) converter = InheritanceTypeConverter.TryCreate(type);
-            if (converter == null) converter = CollectionTypeConverter.TryCreate(type);
-            if (converter == null) converter = ReflectedTypeConverter.TryCreate(type);
+
+            if (cache.TryGetValue(type, out converter) == false) {
+                if (converter == null) converter = ProxyTypeConverter.TryCreate(type);
+                if (converter == null) converter = PrimitiveTypeConverter.TryCreate(type);
+                if (converter == null) converter = EnumTypeConverter.TryCreate(type);
+                if (allowCyclic && converter == null) converter = CyclicTypeConverter.TryCreate(type);
+                if (allowInheritance && converter == null) converter = InheritanceTypeConverter.TryCreate(type);
+                if (converter == null) converter = CollectionTypeConverter.TryCreate(type);
+                if (converter == null) converter = ReflectedTypeConverter.TryCreate(type);
+
+                cache[type] = converter;
+            }
 
             return converter;
         }
 
-        public static ITypeConverter GetTypeConverter(Type type, bool allowCyclic = true) {
-            if (allowCyclic) {
-                ITypeConverter converter;
-                if (_cachedCyclicConverters.TryGetValue(type, out converter) == false) {
-                    converter = CreateTypeConverter(type, allowCyclic);
-                    _cachedCyclicConverters[type] = converter;
-                }
-
-                return converter;
+        public static ITypeConverter GetTypeConverter(Type type, bool allowCyclic = true, bool allowInheritance = true) {
+            if (allowCyclic && allowInheritance) {
+                return CreateTypeConverter(_cachedAllowAllConverters, type, allowCyclic, allowInheritance);
             }
 
-            else {
-                ITypeConverter converter;
-                if (_cachedNonCyclicConverters.TryGetValue(type, out converter) == false) {
-                    converter = CreateTypeConverter(type, allowCyclic);
-                    _cachedNonCyclicConverters[type] = converter;
-                }
-
-                return converter;
+            else if (allowCyclic == false) {
+                return CreateTypeConverter(_cachedNonCyclicConverters, type, allowCyclic, allowInheritance);
             }
+
+            else if (allowInheritance == false) {
+                return CreateTypeConverter(_cachedNonInheritanceConverters, type, allowCyclic, allowInheritance);
+            }
+
+            throw new InvalidOperationException("Cannot have both allowCyclic and allowInheritance as false");
         }
     }
 

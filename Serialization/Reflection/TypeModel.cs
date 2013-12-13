@@ -96,8 +96,8 @@ namespace Neon.Serialization {
                 typeof(SerializationSupportCyclicReferencesAttribute), inherit: true);
 
             // Determine if the type needs to support inheritance
-            SupportsInheritance = type.IsInterface || type.IsAbstract || Attribute.IsDefined(type,
-                typeof(SerializationSupportInheritance), inherit: false);
+            SupportsInheritance = type.IsInterface || type.IsAbstract || type.IsSealed == false ||
+                Attribute.IsDefined(type, typeof(SerializationSupportInheritance), inherit: false);
 
             // But do not support it if inheritance is explicitly denied
             if (SupportsInheritance) {
