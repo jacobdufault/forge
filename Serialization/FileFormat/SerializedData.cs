@@ -1,4 +1,23 @@
-﻿//#define ENABLE_IMPLICIT_CONVERSIONS
+﻿// The MIT License (MIT)
+//
+// Copyright (c) 2013 Jacob Dufault
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+// associated documentation files (the "Software"), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute,
+// sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all copies or
+// substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+// NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+//#define ENABLE_IMPLICIT_CONVERSIONS
 
 using Neon.Utilities;
 using System;
@@ -21,7 +40,7 @@ namespace Neon.Serialization {
     /// A union type that stores a serialized value. The stored type can be one of six different
     /// types: null, boolean, Real, string, Dictionary, or List.
     /// </summary>
-    public class SerializedData {
+    public sealed class SerializedData {
         /// <summary>
         /// The raw value that this serialized data stores. It can be one of six different types; a
         /// boolean, a Real, a string, an object reference, a Dictionary, or a List.
@@ -88,14 +107,14 @@ namespace Neon.Serialization {
         }
 
         /// <summary>
-        /// Helper method to create a SerialziedData instance that holds a dictionary.
+        /// Helper method to create a SerializedData instance that holds a dictionary.
         /// </summary>
         public static SerializedData CreateDictionary() {
             return new SerializedData(new Dictionary<string, SerializedData>());
         }
 
         /// <summary>
-        /// Helper method to create a SerialziedData instance that holds a list.
+        /// Helper method to create a SerializedData instance that holds a list.
         /// </summary>
         public static SerializedData CreateList() {
             return new SerializedData(new List<SerializedData>());

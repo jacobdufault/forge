@@ -1,3 +1,22 @@
+// The MIT License (MIT)
+//
+// Copyright (c) 2013 Jacob Dufault
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+// associated documentation files (the "Software"), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute,
+// sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all copies or
+// substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+// NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 using log4net;
 using Neon.Collections;
 using Neon.Utilities;
@@ -38,7 +57,7 @@ namespace Neon.Collections {
         void OnExit(T item);
     }
 
-    struct Rect {
+    internal struct Rect {
         public int X0, Z0, X1, Z1;
 
         public Rect(int x0, int z0, int x1, int z1) {
@@ -105,8 +124,8 @@ namespace Neon.Collections {
         }
 
         /// <summary>
-        /// Returns true if this rect is either intersecting with or fully
-        /// contains the parameter rect.
+        /// Returns true if this rect is either intersecting with or fully contains the parameter
+        /// rect.
         /// </summary>
         public bool Colliding(Rect rect) {
             bool xCollides =
@@ -121,8 +140,8 @@ namespace Neon.Collections {
     }
 
     // TODO: the linear searches in this class can be removed by using metadata
-    class Node<T> {
-        class StoredMonitor {
+    internal class Node<T> {
+        private class StoredMonitor {
             public IQuadTreeMonitor<T> Monitor;
             public Bound Region;
 
@@ -132,7 +151,7 @@ namespace Neon.Collections {
             }
         }
 
-        class StoredItem {
+        private class StoredItem {
             public T Item;
             public Vector2r Position;
 
@@ -284,7 +303,6 @@ namespace Neon.Collections {
             }
         }
     }
-
 
     public class QuadTree<T> {
         internal static ILog Log = LogManager.GetLogger(typeof(QuadTree<T>));
@@ -479,15 +497,11 @@ namespace Neon.Collections {
         }
 
         private void MapIndex(ref int v) {
-            // -4 -> 7
-            // -3 -> 5
-            // -2 -> 3
-            // -1 -> 1
-            // 0 -> 0
-            // 1 -> 2
-            // 2 -> 4
-            // 3 -> 6
-            // 4 -> 8
+            // - 4 -> 7
+            // - 3 -> 5
+            // - 2 -> 3
+            // - 1 -> 1
+            // 0 -> 0 1 -> 2 2 -> 4 3 -> 6 4 -> 8
 
             if (v >= 0) {
                 v = (v * 2);
@@ -498,15 +512,7 @@ namespace Neon.Collections {
         }
 
         private void UnmapIndex(ref int v) {
-            // 0 -> 0
-            // 1 -> -1
-            // 2 -> 1
-            // 3 -> -2
-            // 4 -> 2
-            // 5 -> -3
-            // 6 -> 3
-            // 7 -> -4
-            // 8 -> 4
+            // 0 -> 0 1 -> -1 2 -> 1 3 -> -2 4 -> 2 5 -> -3 6 -> 3 7 -> -4 8 -> 4
 
             // positive
             if (v % 2 == 0) {
