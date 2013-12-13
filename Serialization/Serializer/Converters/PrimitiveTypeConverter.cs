@@ -75,7 +75,11 @@ namespace Neon.Serialization.Converters {
             return null;
         }
 
-        public object Import(SerializedData data, ObjectGraphReader graph) {
+        public object Import(SerializedData data, ObjectGraphReader graph, object instance) {
+            if (instance != null) {
+                throw new InvalidOperationException("Cannot handle preallocated objects");
+            }
+
             return _importer(data);
         }
 

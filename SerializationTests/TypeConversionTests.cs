@@ -6,6 +6,7 @@ using System.Collections.Generic;
 
 namespace Neon.Serialization.Tests {
     [SerializationSupportCyclicReferences]
+    [SerializationNoAutoInheritance]
     internal class CyclicReference {
         public CyclicReference Reference;
         public int A;
@@ -305,7 +306,22 @@ namespace Neon.Serialization.Tests {
         }
 
         [TestMethod]
-        public void CyclicReferenceTestUsingSupportMethods() {
+        public void CyclicReferenceSelfReferential() {
+            CyclicReference c = new CyclicReference();
+            c.A = 1;
+            c.B = MyEnum.MyEnum1;
+            c.Reference = c;
+
+            SerializedData exportedData = ObjectSerializer.Export(c);
+            CyclicReference imported = ObjectSerializer.Import<CyclicReference>(exportedData);
+
+            Assert.AreEqual(c.A, imported.A);
+            Assert.AreEqual(c.B, imported.B);
+            Assert.AreEqual(imported, imported.Reference);
+        }
+
+        [TestMethod]
+        public void CyclicReferenceSimple() {
             CyclicReference a = new CyclicReference();
             CyclicReference b = new CyclicReference();
 

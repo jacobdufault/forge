@@ -63,6 +63,7 @@
     <Compile Include="Serializer\TypeConverter.cs" />
     <Compile Include="Reflection\TypeExtensions.cs" />
     <Compile Include="Reflection\TypeModel.cs" />
+    <Compile Include="Serializer\TypeConverterResolver.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Utilities\Utilities.csproj">

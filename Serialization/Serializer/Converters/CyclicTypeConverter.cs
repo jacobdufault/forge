@@ -21,7 +21,7 @@ namespace Neon.Serialization.Converters {
             return null;
         }
 
-        public object Import(SerializedData data, ObjectGraphReader graph) {
+        public object Import(SerializedData data, ObjectGraphReader graph, object instance) {
             return graph.GetObjectInstance(_model, data);
         }
 

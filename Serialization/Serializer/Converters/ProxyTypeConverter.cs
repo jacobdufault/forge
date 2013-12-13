@@ -46,7 +46,11 @@ namespace Neon.Serialization.Converters {
             _proxy = proxy;
         }
 
-        public object Import(SerializedData data, ObjectGraphReader graph) {
+        public object Import(SerializedData data, ObjectGraphReader graph, object instance) {
+            if (instance != null) {
+                throw new InvalidOperationException("Cannot handle preallocated objects");
+            }
+
             return _proxy.Import(data);
         }
 

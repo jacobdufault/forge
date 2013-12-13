@@ -14,7 +14,7 @@ namespace Neon.Serialization {
             graph.RestoreGraph();
 
             ITypeConverter converter = TypeConverterResolver.GetTypeConverter(type);
-            return converter.Import(data.AsDictionary["Data"], graph);
+            return converter.Import(data.AsDictionary["Data"], graph, null);
         }
 
         public static SerializedData Export<T>(T instance) {

@@ -24,14 +24,16 @@ namespace Neon.Serialization.Converters {
             return null;
         }
 
-        public object Import(SerializedData data, ObjectGraphReader graph) {
-            object instance = graph.GetObjectInstance(_model, data);
+        public object Import(SerializedData data, ObjectGraphReader graph, object instance) {
+            if (instance == null) {
+                instance = graph.GetObjectInstance(_model, data);
+            }
 
             IList<SerializedData> items = data.AsList;
 
             _model.CollectionSizeHint(ref instance, items.Count);
             for (int i = 0; i < items.Count; ++i) {
-                object indexedObject = _elementConverter.Import(items[i], graph);
+                object indexedObject = _elementConverter.Import(items[i], graph, null);
                 _model.AppendValue(ref instance, indexedObject, i);
             }
 

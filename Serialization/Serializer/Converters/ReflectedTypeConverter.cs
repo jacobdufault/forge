@@ -15,8 +15,10 @@ namespace Neon.Serialization.Converters {
             return new ReflectedTypeConverter(type);
         }
 
-        public object Import(SerializedData data, ObjectGraphReader graph) {
-            object instance = graph.GetObjectInstance(_model, data);
+        public object Import(SerializedData data, ObjectGraphReader graph, object instance) {
+            if (instance == null) {
+                instance = graph.GetObjectInstance(_model, data);
+            }
 
             Dictionary<string, SerializedData> serializedDataDict = data.AsDictionary;
             for (int i = 0; i < _model.Properties.Count; ++i) {
@@ -34,7 +36,7 @@ namespace Neon.Serialization.Converters {
                 }
 
                 ITypeConverter converter = TypeConverterResolver.GetTypeConverter(storageType);
-                object deserialized = converter.Import(serializedDataDict[name], graph);
+                object deserialized = converter.Import(serializedDataDict[name], graph, null);
 
                 // write it into the instance
                 property.Write(instance, deserialized);

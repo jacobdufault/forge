@@ -18,11 +18,10 @@ namespace Neon.Serialization.Converters {
             return null;
         }
 
-        public object Import(SerializedData data, ObjectGraphReader graph) {
+        public object Import(SerializedData data, ObjectGraphReader graph, object instance) {
             Type instanceType = TypeCache.FindType(data.AsDictionary["InstanceType"].AsString);
-            ITypeConverter converter = TypeConverterResolver.GetTypeConverter(instanceType, allowInheritance: false);
-
-            return converter.Import(data.AsDictionary["Data"], graph);
+            ITypeConverter converter = TypeConverterResolver.GetNextConverter<InheritanceTypeConverter>(instanceType);
+            return converter.Import(data.AsDictionary["Data"], graph, instance);
         }
 
         public SerializedData Export(object instance, ObjectGraphWriter graph) {
@@ -34,7 +33,7 @@ namespace Neon.Serialization.Converters {
 
             // we want to make sure we export under the direct instance type, otherwise we'll go
             // into an infinite loop of reexporting the interface metadata.
-            ITypeConverter converter = TypeConverterResolver.GetTypeConverter(instanceType, allowInheritance: false);
+            ITypeConverter converter = TypeConverterResolver.GetNextConverter<InheritanceTypeConverter>(instanceType);
             data["Data"] = converter.Export(instance, graph);
 
             return new SerializedData(data);

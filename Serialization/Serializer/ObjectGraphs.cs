@@ -1,4 +1,5 @@
-﻿using Neon.Utilities;
+﻿using Neon.Serialization.Converters;
+using Neon.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
@@ -59,11 +60,11 @@ namespace Neon.Serialization {
         public void RestoreGraph() {
             foreach (var entry in _objects) {
                 Type type = entry.Key;
-                ITypeConverter converter = TypeConverterResolver.GetTypeConverter(type, allowCyclic: false);
+                ITypeConverter converter = TypeConverterResolver.GetNextConverter<CyclicTypeConverter>(type);
 
                 foreach (var item in entry.Value) {
                     RestoredObject restored = item.Value;
-                    converter.Import(restored.SerializedState, this);
+                    converter.Import(restored.SerializedState, this, item.Value.Reference);
                 }
             }
         }
@@ -189,7 +190,7 @@ namespace Neon.Serialization {
                 int id = tuple.Item2;
                 object reference = _objects[type][id];
 
-                ITypeConverter converter = TypeConverterResolver.GetTypeConverter(type, allowCyclic: false);
+                ITypeConverter converter = TypeConverterResolver.GetNextConverter<CyclicTypeConverter>(type);
                 SerializedData definition = converter.Export(reference, this);
                 definition.SetObjectDefinition(id);
 

@@ -117,13 +117,8 @@ namespace Neon.Serialization.Tests {
             instance.FieldDelegate = () => { };
             instance.PropertyDelegate = () => { };
 
-            SerializedData exported = ObjectSerializer.Export(instance);
-
-            Assert.IsTrue(exported.IsDictionary);
-            foreach (var data in exported.AsDictionary) {
-                Assert.IsTrue(data.Value.IsDictionary);
-                Assert.AreEqual(0, data.Value.AsDictionary.Count);
-            }
+            // if we're serializing a delegate, then this method will throw an exception
+            SerializationHelpers.ImportExport(instance);
         }
 
         [TestMethod]
