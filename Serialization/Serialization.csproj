@@ -43,17 +43,26 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="PropertyModel.cs" />
-    <Compile Include="SerializationGraphs.cs" />
-    <Compile Include="Exceptions.cs" />
-    <Compile Include="Parser.cs" />
+    <Compile Include="Serializer\Converters\ArrayOrCollectionTypeConverter.cs" />
+    <Compile Include="Serializer\Converters\CyclicTypeConverter.cs" />
+    <Compile Include="Serializer\Converters\EnumTypeConverter.cs" />
+    <Compile Include="Serializer\Converters\InheritanceTypeConverter.cs" />
+    <Compile Include="Serializer\Converters\PrimitiveTypeConverter.cs" />
+    <Compile Include="Serializer\Converters\ProxyTypeConverter.cs" />
+    <Compile Include="Serializer\Converters\ReflectedTypeConverter.cs" />
+    <Compile Include="Serializer\ObjectSerializer.cs" />
+    <Compile Include="Reflection\PropertyModel.cs" />
+    <Compile Include="Serializer\ObjectGraphs.cs" />
+    <Compile Include="FileFormat\ParseException.cs" />
+    <Compile Include="FileFormat\Parser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Attributes.cs" />
-    <Compile Include="SerializedData.cs" />
-    <Compile Include="SerializationConverter.cs" />
-    <Compile Include="TypeCache.cs" />
-    <Compile Include="TypeExtensions.cs" />
-    <Compile Include="TypeModel.cs" />
+    <Compile Include="Serializer\Attributes.cs" />
+    <Compile Include="Serializer\SerializationProxy.cs" />
+    <Compile Include="FileFormat\SerializedData.cs" />
+    <Compile Include="Reflection\TypeCache.cs" />
+    <Compile Include="Serializer\TypeConverter.cs" />
+    <Compile Include="Reflection\TypeExtensions.cs" />
+    <Compile Include="Reflection\TypeModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Utilities\Utilities.csproj">

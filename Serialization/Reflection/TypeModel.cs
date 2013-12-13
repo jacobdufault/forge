@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Linq;
 
 namespace Neon.Serialization {
     /// <summary>
@@ -42,6 +43,7 @@ namespace Neon.Serialization {
         /// Appends a value to the end of the array or collection. If we are modeling an array, then
         /// the value is inserted at indexHint, which *should* be equal to ((Array)context).Length.
         /// </summary>
+        // TODO: remove indexHint
         public void AppendValue(ref object context, object value, int indexHint) {
             if (IsArray) {
                 Array array = (Array)context;
@@ -72,23 +74,14 @@ namespace Neon.Serialization {
         internal TypeModel(Type type) {
             ReflectedType = type;
 
-            // Iterate over all attributes in the type to check for the requirement of a custom
-            // converter or if it needs to support cyclic references
-            foreach (var attribute in ReflectedType.GetCustomAttributes(inherit: true)) {
-                if (attribute is SerializationSupportCyclicReferencesAttribute) {
-                    SupportsCyclicReferences = true;
-                }
-            }
+            // If the type has a SerializaitonSupportsCyclicReferencesAttribute, then we need to
+            // support cyclic references
+            SupportsCyclicReferences = Attribute.IsDefined(type,
+                typeof(SerializationSupportCyclicReferencesAttribute), inherit: true);
 
             // Determine if the type needs to support inheritance
-            SupportsInheritance = type.IsInterface || type.IsAbstract;
-            if (!SupportsInheritance) {
-                foreach (var attribute in ReflectedType.GetCustomAttributes(inherit: false)) {
-                    if (attribute is SerializationSupportInheritance) {
-                        SupportsInheritance = true;
-                    }
-                }
-            }
+            SupportsInheritance = type.IsInterface || type.IsAbstract || Attribute.IsDefined(type,
+                typeof(SerializationSupportInheritance), inherit: false);
 
             // But do not support it if inheritance is explicitly denied
             if (SupportsInheritance) {
@@ -131,7 +124,7 @@ namespace Neon.Serialization {
 
         /// <summary>
         /// Recursive method that adds all of the properties and fields from the given type into the
-        /// given list.
+        /// given list. This method recurses up on the inheritance hierarchy.
         /// </summary>
         /// <param name="type">The type to process. This method will recurse up the type's
         /// inheritance hierarchy</param>

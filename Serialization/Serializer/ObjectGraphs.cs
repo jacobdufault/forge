@@ -5,12 +5,97 @@ using System.Runtime.Serialization;
 
 namespace Neon.Serialization {
     /// <summary>
+    /// Helper code that supports restoring an object graph that contains cycles; that is, an object
+    /// graph that contains a set of cyclic references.
+    /// </summary>
+    internal class ObjectGraphReader {
+        /// <summary>
+        /// Stores an object that we are restoring. We first have to create an object reference
+        /// before actually restoring the object, so initially the reference inside of
+        /// RestoredObject is not initialized.
+        /// </summary>
+        private struct RestoredObject {
+            public object Reference;
+            public SerializedData SerializedState;
+        }
+
+        /// <summary>
+        /// The objects to restore. The dictionary is indexed by the type of object and then by the
+        /// object id.
+        /// </summary>
+        private Dictionary<Type, Dictionary<int, RestoredObject>> _objects;
+
+        /// <summary>
+        /// Creates a new empty serialization graph importer.
+        /// </summary>
+        /// <param name="data">The object graph that was exported using the
+        /// SerializationGraphExporter.</param>
+        public ObjectGraphReader(SerializedData data) {
+            _objects = new Dictionary<Type, Dictionary<int, RestoredObject>>();
+
+            foreach (var entry in data.AsDictionary) {
+                // get the type of the current set of objects
+                Type type = TypeCache.FindType(entry.Key);
+                TypeModel model = TypeCache.GetTypeModel(type);
+
+                _objects[type] = new Dictionary<int, RestoredObject>();
+
+                // create our initial references for the given objects in the graph
+                foreach (var item in entry.Value.AsList) {
+                    int id = item.AsObjectDefinition;
+                    object instance = model.CreateInstance();
+
+                    _objects[type][id] = new RestoredObject() {
+                        Reference = instance,
+                        SerializedState = item
+                    };
+                }
+            }
+        }
+
+        /// <summary>
+        /// Restores all object references in the graph.
+        /// </summary>
+        public void RestoreGraph() {
+            foreach (var entry in _objects) {
+                Type type = entry.Key;
+                ITypeConverter converter = TypeConverterResolver.GetTypeConverter(type, allowCyclic: false);
+
+                foreach (var item in entry.Value) {
+                    RestoredObject restored = item.Value;
+                    converter.Import(restored.SerializedState, this);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns the object reference for the given type with the given reference value.
+        /// </summary>
+        /// <param name="model">The type of the object we are retrieving the reference for.</param>
+        /// <param name="objectReference">The reference identifier.</param>
+        /// <returns>An object reference.</returns>
+        internal object GetObjectInstance(TypeModel model, SerializedData data) {
+            Type type = model.ReflectedType;
+
+            if (data.IsObjectDefinition) {
+                return _objects[type][data.AsObjectDefinition].Reference;
+            }
+            if (data.IsObjectReference) {
+                return _objects[type][data.AsObjectReference].Reference;
+            }
+
+            return model.CreateInstance();
+        }
+
+    }
+
+    /// <summary>
     /// Helper code that supports the serialization of object graphs which have reference cycles
     /// within them. Stated differently, this class assists the serialization converter for
     /// exporting references which, via internal data, reference themselves across some reference
     /// chain.
     /// </summary>
-    internal class SerializationGraphExporter {
+    internal class ObjectGraphWriter {
         /// <summary>
         /// Each type has its own id generator. This dictionary contains the id generator for each
         /// type.
@@ -35,7 +120,7 @@ namespace Neon.Serialization {
         /// <summary>
         /// Creates a new empty serialization export graph.
         /// </summary>
-        public SerializationGraphExporter() {
+        public ObjectGraphWriter() {
             _ids = new Dictionary<Type, ObjectIDGenerator>();
             _objects = new Dictionary<Type, Dictionary<int, object>>();
             _toExport = new Stack<Tuple<Type, int>>();
@@ -82,11 +167,10 @@ namespace Neon.Serialization {
         /// <summary>
         /// Returns a SerializedData instance that is a reference to the given object instance.
         /// </summary>
-        /// <param name="type">The type of the object instance.</param>
         /// <param name="reference">The object instance to reference.</param>
         /// <returns>A SerializedData instance that is an object reference.</returns>
-        public SerializedData GetReferenceForObject(Type type, object reference) {
-            return SerializedData.CreateObjectReference(GetId(type, reference));
+        internal SerializedData GetObjectReference(object instance) {
+            return SerializedData.CreateObjectReference(GetId(instance.GetType(), instance));
         }
 
         /// <summary>
@@ -96,7 +180,7 @@ namespace Neon.Serialization {
         /// <param name="converter">The serialization converter to use when exporting the
         /// graph.</param>
         /// <returns>The serialized graph.</returns>
-        public SerializedData Export(SerializationConverter converter) {
+        public SerializedData Export() {
             Dictionary<string, SerializedData> result = new Dictionary<string, SerializedData>();
 
             while (_toExport.Count > 0) {
@@ -105,7 +189,8 @@ namespace Neon.Serialization {
                 int id = tuple.Item2;
                 object reference = _objects[type][id];
 
-                SerializedData definition = converter.Export(type, reference, disableCyclicExport: true);
+                ITypeConverter converter = TypeConverterResolver.GetTypeConverter(type, allowCyclic: false);
+                SerializedData definition = converter.Export(reference, this);
                 definition.SetObjectDefinition(id);
 
                 SerializedData items;
@@ -118,79 +203,6 @@ namespace Neon.Serialization {
             }
 
             return new SerializedData(result);
-        }
-    }
-
-    /// <summary>
-    /// Helper code that supports restoring an object graph that contains cycles; that is, an object
-    /// graph that contains a set of cyclic references.
-    /// </summary>
-    internal class SerializationGraphImporter {
-        /// <summary>
-        /// Stores an object that we are restoring. We first have to create an object reference
-        /// before actually restoring the object, so initially the reference inside of
-        /// RestoredObject is not initialized.
-        /// </summary>
-        private struct RestoredObject {
-            public object Reference;
-            public SerializedData SerializedState;
-        }
-
-        /// <summary>
-        /// The objects to restore. The dictionary is indexed by the type of object and then by the
-        /// object id.
-        /// </summary>
-        private Dictionary<Type, Dictionary<int, RestoredObject>> _objects;
-
-        /// <summary>
-        /// Creates a new empty serialization graph importer.
-        /// </summary>
-        /// <param name="data">The object graph that was exported using the
-        /// SerializationGraphExporter.</param>
-        public SerializationGraphImporter(SerializedData data) {
-            _objects = new Dictionary<Type, Dictionary<int, RestoredObject>>();
-
-            foreach (var entry in data.AsDictionary) {
-                // get the type of the current set of objects
-                Type type = TypeCache.FindType(entry.Key);
-                TypeModel model = TypeCache.GetTypeModel(type);
-
-                _objects[type] = new Dictionary<int, RestoredObject>();
-
-                // create our initial references for the given objects in the graph
-                foreach (var item in entry.Value.AsList) {
-                    int id = item.AsObjectDefinition;
-                    object instance = model.CreateInstance();
-
-                    _objects[type][id] = new RestoredObject() {
-                        Reference = instance,
-                        SerializedState = item
-                    };
-                }
-            }
-        }
-
-        /// <summary>
-        /// Restores all object references in the graph.
-        /// </summary>
-        public void RestoreGraph(SerializationConverter converter) {
-            foreach (var entry in _objects) {
-                Type type = entry.Key;
-                foreach (var item in entry.Value) {
-                    RestoredObject restored = item.Value;
-                    converter.Import(type, restored.SerializedState, restored.Reference);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Returns the object reference for the given type with the given reference value.
-        /// </summary>
-        /// <param name="type">The type of the object we are retrieving the reference for.</param>
-        /// <param name="objectReference">The reference identifier.</param>
-        /// <returns>An object reference.</returns>
-        public object GetObjectInstance(Type type, int objectReference) {
-            return _objects[type][objectReference].Reference;
         }
     }
 }

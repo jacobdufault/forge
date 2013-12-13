@@ -14,10 +14,14 @@ namespace Neon.Serialization.Tests {
             A = a;
         }
 
-        private void Method0() {}
-        protected virtual void Method1() {}
-        internal protected virtual void Method2() { }
-        public virtual void Method3() { }
+        private void Method0() {
+        }
+        protected virtual void Method1() {
+        }
+        protected internal virtual void Method2() {
+        }
+        public virtual void Method3() {
+        }
     }
 
     internal class ClassWithPrivateField {
@@ -67,26 +71,19 @@ namespace Neon.Serialization.Tests {
 
     internal class TypeWithNonSerialized {
         [NotSerializable]
-        public int this[int index] {
-            get {
-                return 0;
-            }
-            set {
-            }
-        }
+        public int A;
     }
 
     [TestClass]
     public class TypeConversionPrivateTests {
         [TestMethod]
         public void ImportPrivateFields() {
-            SerializedData serialized = SerializedData.CreateDictionary();
-            serialized.AsDictionary["A"] = new SerializedData(Real.CreateDecimal(3));
+            ClassWithPrivateField original = new ClassWithPrivateField();
+            original.SetA(3);
 
-            SerializationConverter converter = new SerializationConverter();
-            ClassWithPrivateField obj = converter.Import<ClassWithPrivateField>(serialized);
+            ClassWithPrivateField imported = ObjectSerializer.Import<ClassWithPrivateField>(ObjectSerializer.Export(original));
 
-            Assert.AreEqual((Real)3, obj.GetA());
+            Assert.AreEqual(original.GetA(), imported.GetA());
         }
 
         [TestMethod]
@@ -95,8 +92,8 @@ namespace Neon.Serialization.Tests {
             instance.SetA(33);
             instance.SetB(44);
 
-            SerializedData exported = (new SerializationConverter()).Export(instance);
-            PrivateDerived imported = (new SerializationConverter()).Import<PrivateDerived>(exported);
+            SerializedData exported = ObjectSerializer.Export(instance);
+            PrivateDerived imported = ObjectSerializer.Import<PrivateDerived>(exported);
 
             Assert.AreEqual(instance.GetA(), imported.GetA());
             Assert.AreEqual(instance.GetB(), imported.GetB());
@@ -107,8 +104,8 @@ namespace Neon.Serialization.Tests {
             ClassWithPrivateMethods instance = new ClassWithPrivateMethods();
             instance.SetA(33);
 
-            SerializedData exported = (new SerializationConverter()).Export(instance);
-            ClassWithPrivateMethods imported = (new SerializationConverter()).Import<ClassWithPrivateMethods>(exported);
+            SerializedData exported = ObjectSerializer.Export(instance);
+            ClassWithPrivateMethods imported = ObjectSerializer.Import<ClassWithPrivateMethods>(exported);
 
             Assert.AreEqual(instance.GetA(), imported.GetA());
         }
@@ -120,22 +117,29 @@ namespace Neon.Serialization.Tests {
             instance.FieldDelegate = () => { };
             instance.PropertyDelegate = () => { };
 
-            SerializedData exported = (new SerializationConverter()).Export(instance);
+            SerializedData exported = ObjectSerializer.Export(instance);
 
             Assert.IsTrue(exported.IsDictionary);
-            Assert.AreEqual(0, exported.AsDictionary.Count);
+            foreach (var data in exported.AsDictionary) {
+                Assert.IsTrue(data.Value.IsDictionary);
+                Assert.AreEqual(0, data.Value.AsDictionary.Count);
+            }
         }
 
         [TestMethod]
         public void TypeWithNonSerializedAttribute() {
-            (new SerializationConverter()).Export(new TypeWithNonSerialized());
-            (new SerializationConverter()).Import<TypeWithNonSerialized>(SerializedData.CreateDictionary());
+            TypeWithNonSerialized t = new TypeWithNonSerialized() {
+                A = 5
+            };
+
+            TypeWithNonSerialized imported = ObjectSerializer.Import<TypeWithNonSerialized>(ObjectSerializer.Export(t));
+            Assert.AreEqual(default(int), imported.A);
         }
 
         [TestMethod]
         public void BagTest() {
-            SerializedData data = (new SerializationConverter()).Export(new Bag<int>());
-            (new SerializationConverter()).Import<Bag<int>>(data);
+            SerializedData data = ObjectSerializer.Export(new Bag<int>());
+            ObjectSerializer.Import<Bag<int>>(data);
         }
     }
 }

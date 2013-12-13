@@ -18,9 +18,11 @@ namespace Neon.Serialization {
         /// <returns>The actual interface type that the type contains, or null if there is no
         /// implementation of the given interfaceType on type.</returns>
         public static Type GetInterface(this Type type, Type interfaceType) {
-            if (interfaceType.IsGenericType) {
-                interfaceType = interfaceType.GetGenericTypeDefinition();
-            }
+            if (interfaceType.IsGenericType && interfaceType.IsGenericTypeDefinition == false) {
+                throw new ArgumentException("GetInterface requires that if the interface " +
+                    "type is generic, then it must be the generic type definition, not a " +
+                    "specific generic type instantiation");
+            };
 
             while (type != null) {
                 foreach (var iface in type.GetInterfaces()) {

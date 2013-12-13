@@ -41,8 +41,8 @@ namespace Neon.Serialization.Tests {
             VirtualBase instance = new InstanceVirtualBase();
             instance.A = 3;
 
-            SerializedData exported = (new SerializationConverter()).Export(instance);
-            VirtualBase imported = (new SerializationConverter()).Import<VirtualBase>(exported);
+            SerializedData exported = ObjectSerializer.Export(instance);
+            VirtualBase imported = ObjectSerializer.Import<VirtualBase>(exported);
 
             Assert.AreEqual(instance.A, imported.A);
         }
@@ -52,8 +52,8 @@ namespace Neon.Serialization.Tests {
             AbstractBase instance = new InstanceAbstractBase();
             instance.A = 3;
 
-            SerializedData exported = (new SerializationConverter()).Export(instance);
-            AbstractBase imported = (new SerializationConverter()).Import<AbstractBase>(exported);
+            SerializedData exported = ObjectSerializer.Export(instance);
+            AbstractBase imported = ObjectSerializer.Import<AbstractBase>(exported);
 
             Assert.AreEqual(instance.A, imported.A);
         }
