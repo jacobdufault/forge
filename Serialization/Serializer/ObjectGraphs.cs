@@ -70,19 +70,21 @@ namespace Neon.Serialization {
         }
 
         /// <summary>
-        /// Returns the object reference for the given type with the given reference value.
+        /// Returns the object reference for the given type with the given reference value. If the
+        /// given serialized data is not an object reference, then a new object instance is
+        /// allocated and returned.
         /// </summary>
         /// <param name="model">The type of the object we are retrieving the reference for.</param>
         /// <param name="objectReference">The reference identifier.</param>
         /// <returns>An object reference.</returns>
         internal object GetObjectInstance(TypeModel model, SerializedData data) {
             if (data.IsObjectDefinition) {
-                // TODO: throw exception here, we can only use GetObjectInstance on references?
-                return _objects[model.ReflectedType][data.AsObjectDefinition].Reference;
+                throw new InvalidOperationException("Cannot get an object reference for an " +
+                    "object definition instance; there is likely a bad recursion happening");
             }
+
             if (data.IsObjectReference) {
                 ObjectReference reference = data.AsObjectReference;
-
                 return _objects[reference.Type][reference.Id].Reference;
             }
 
