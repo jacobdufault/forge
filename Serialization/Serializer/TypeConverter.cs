@@ -16,7 +16,7 @@ namespace Neon.Serialization {
             if (converter == null) converter = EnumTypeConverter.TryCreate(type);
             if (allowCyclic && converter == null) converter = CyclicTypeConverter.TryCreate(type);
             if (converter == null) converter = InheritanceTypeConverter.TryCreate(type);
-            if (converter == null) converter = ArrayOrCollectionTypeConverter.TryCreate(type);
+            if (converter == null) converter = CollectionTypeConverter.TryCreate(type);
             if (converter == null) converter = ReflectedTypeConverter.TryCreate(type);
 
             return converter;

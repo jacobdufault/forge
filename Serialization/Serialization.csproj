@@ -43,7 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Serializer\Converters\ArrayOrCollectionTypeConverter.cs" />
+    <Compile Include="Serializer\Converters\CollectionTypeConverter.cs" />
     <Compile Include="Serializer\Converters\CyclicTypeConverter.cs" />
     <Compile Include="Serializer\Converters\EnumTypeConverter.cs" />
     <Compile Include="Serializer\Converters\InheritanceTypeConverter.cs" />

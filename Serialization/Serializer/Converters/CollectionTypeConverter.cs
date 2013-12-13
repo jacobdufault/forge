@@ -6,20 +6,20 @@ using System.Text;
 
 namespace Neon.Serialization.Converters {
     // TODO: can we treat arrays as collections?
-    internal class ArrayOrCollectionTypeConverter : ITypeConverter {
+    internal class CollectionTypeConverter : ITypeConverter {
         private TypeModel _model;
         private ITypeConverter _elementConverter;
 
-        public ArrayOrCollectionTypeConverter(TypeModel model) {
+        public CollectionTypeConverter(TypeModel model) {
             _model = model;
             _elementConverter = TypeConverterResolver.GetTypeConverter(model.ElementType);
         }
 
-        public static ArrayOrCollectionTypeConverter TryCreate(Type type) {
+        public static CollectionTypeConverter TryCreate(Type type) {
             TypeModel model = TypeCache.GetTypeModel(type);
 
-            if (model.IsArray || model.IsCollection) {
-                return new ArrayOrCollectionTypeConverter(model);
+            if (model.IsCollection) {
+                return new CollectionTypeConverter(model);
             }
 
             return null;
@@ -29,6 +29,8 @@ namespace Neon.Serialization.Converters {
             object instance = graph.GetObjectInstance(_model, data);
 
             IList<SerializedData> items = data.AsList;
+
+            _model.CollectionSizeHint(ref instance, items.Count);
             for (int i = 0; i < items.Count; ++i) {
                 object indexedObject = _elementConverter.Import(items[i], graph);
                 _model.AppendValue(ref instance, indexedObject, i);

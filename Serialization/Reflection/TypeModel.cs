@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Linq;
 
 namespace Neon.Serialization {
     /// <summary>
@@ -19,7 +18,7 @@ namespace Neon.Serialization {
         /// Activator.CreateInstance cannot be used because TypeModel can point to an Array.
         /// </remarks>
         public object CreateInstance() {
-            if (IsArray) {
+            if (_isArray) {
                 // we have to start with a size zero array otherwise it will have invalid data
                 // inside of it
                 return Array.CreateInstance(ElementType, 0);
@@ -40,30 +39,47 @@ namespace Neon.Serialization {
         }
 
         /// <summary>
-        /// Appends a value to the end of the array or collection. If we are modeling an array, then
-        /// the value is inserted at indexHint, which *should* be equal to ((Array)context).Length.
+        /// Hint that there will be size number of elements stored in the given collection. This
+        /// method is completely optional, but if the collection is an array then it will improve
+        /// the performance of AppendValue.
         /// </summary>
-        // TODO: remove indexHint
-        public void AppendValue(ref object context, object value, int indexHint) {
-            if (IsArray) {
+        /// <param name="context">The collection type.</param>
+        /// <param name="size">The size hint to use for the collection</param>
+        public void CollectionSizeHint(ref object context, int size) {
+            if (_isArray) {
                 Array array = (Array)context;
 
                 // If we don't have storage in the allocated array, then allocate storage.
-                if (indexHint >= array.Length) {
-                    Array newArray = Array.CreateInstance(ElementType, indexHint + 1);
+                if (size > array.Length) {
+                    Array newArray = Array.CreateInstance(ElementType, size);
                     Array.Copy(array, newArray, array.Length);
-                    array = newArray;
+                    context = newArray;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Appends a value to the end of the array or collection. If the collection is an array,
+        /// then the item is added to array[indexHint]. If it is a collection, then the item is just
+        /// appended to the end of the collection.
+        /// </summary>
+        public void AppendValue(ref object context, object value, int indexHint) {
+            if (IsCollection == false) {
+                throw new InvalidOperationException("Cannot append a value to a non-collection type");
+            }
+
+            if (_isArray) {
+                Array array = (Array)context;
+
+                // Ensure that we have storage at the given index
+                CollectionSizeHint(ref context, indexHint + 1);
 
                 // Assign the array index
                 array.SetValue(value, indexHint);
                 context = array;
             }
-            else if (IsCollection) {
-                _collectionAddMethod.Invoke(context, new object[] { value });
-            }
             else {
-                throw new InvalidOperationException("Cannot assign a list slot to a non-list type");
+                _collectionAddMethod.Invoke(context, new object[] { value });
             }
         }
 
@@ -95,12 +111,12 @@ namespace Neon.Serialization {
             // determine if we are a collection or array; recall that arrays implement the
             // ICollection interface, however
 
-            IsArray = type.IsArray;
-            IsCollection = IsArray == false && type.IsImplementationOf(typeof(ICollection<>));
+            _isArray = type.IsArray;
+            IsCollection = _isArray || type.IsImplementationOf(typeof(ICollection<>));
 
             // If we're a collection or array, get the generic type definition so that client code
             // can determine how to deserialize child elements
-            if (IsCollection) {
+            if (_isArray == false && IsCollection) {
                 Type collectionType = type.GetInterface(typeof(ICollection<>));
 
                 _elementType = collectionType.GetGenericArguments()[0];
@@ -109,7 +125,7 @@ namespace Neon.Serialization {
                     throw new InvalidOperationException("Unable to get Add method for type " + collectionType);
                 }
             }
-            else if (IsArray) {
+            else if (_isArray) {
                 _elementType = type.GetElementType();
             }
 
@@ -246,9 +262,9 @@ namespace Neon.Serialization {
         /// </summary>
         public Type ElementType {
             get {
-                if (IsCollection == false && IsArray == false) {
+                if (IsCollection == false) {
                     throw new InvalidOperationException("Unable to get the ElementType of a " +
-                        "type model object that is not a collection or an array");
+                        "type model object that is not a collection");
                 }
 
                 return _elementType;
@@ -273,12 +289,9 @@ namespace Neon.Serialization {
 
         /// <summary>
         /// True if the base type is an array. If true, accessing Properties will throw an
-        /// exception.
+        /// exception. IsCollection is also true if _isArray is true.
         /// </summary>
-        public bool IsArray {
-            get;
-            private set;
-        }
+        private bool _isArray;
 
         /// <summary>
         /// The properties on the type. This is used when importing/exporting a type that does not
@@ -286,7 +299,7 @@ namespace Neon.Serialization {
         /// </summary>
         public List<PropertyModel> Properties {
             get {
-                if (IsCollection || IsArray) {
+                if (IsCollection) {
                     throw new InvalidOperationException("A type that is a collection or an array " +
                         "does not have properties (for the model on type " + ReflectedType + ")");
                 }
