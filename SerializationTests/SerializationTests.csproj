@@ -55,6 +55,8 @@
   <ItemGroup>
     <Compile Include="ParsingTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SerializationHelpers.cs" />
+    <Compile Include="SerializationProxyTests.cs" />
     <Compile Include="TypeConversionPrivateTests.cs" />
     <Compile Include="TypeConversionTests.cs" />
     <Compile Include="TypeConversionVirtualTests.cs" />

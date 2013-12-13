@@ -110,37 +110,6 @@ namespace Neon.Serialization.Tests {
 
     [TestClass]
     public class TypeConversionTests {
-        /// <summary>
-        /// Exports the value using a serialization converter, then reimports it using a new
-        /// serialization converter. Returns the reimported value.
-        /// </summary>
-        private T GetImportedExportedValue<T>(T t0) {
-            SerializedData exported = ObjectSerializer.Export(t0);
-            T imported = ObjectSerializer.Import<T>(exported);
-            return imported;
-        }
-
-        /// <summary>
-        /// Helper method that exports the given instance, imports the exported data, and then
-        /// asserts that the imported instance is equal to the original instance using
-        /// Assert.AreEqual.
-        /// </summary>
-        private void RunImportExportTest<T>(T t0) {
-            T imported = GetImportedExportedValue(t0);
-            Assert.AreEqual(t0, imported);
-        }
-
-        /// <summary>
-        /// Helper method that exports the given instance, imports the exported data, and then
-        /// asserts that the imported instance is equal to the original instance using
-        /// CollectionAssert.AreEqual.
-        /// </summary>
-        private void RunCollectionImportExportTest<TCollection>(TCollection collection)
-            where TCollection : ICollection {
-            TCollection imported = GetImportedExportedValue(collection);
-            CollectionAssert.AreEqual(collection, imported);
-        }
-
         [TestMethod]
         public void ImportExportComplexArray() {
             ClassWithArray c = new ClassWithArray() {
@@ -162,7 +131,7 @@ namespace Neon.Serialization.Tests {
                     }
                 }
             };
-            ClassWithArray imported = GetImportedExportedValue(c);
+            ClassWithArray imported = SerializationHelpers.ImportExport(c);
 
             Assert.AreEqual(c.Items.Length, imported.Items.Length);
             for (int i = 0; i < c.Items.Length; ++i) {
@@ -174,15 +143,15 @@ namespace Neon.Serialization.Tests {
 
         [TestMethod]
         public void ImportExportPrimitives() {
-            RunImportExportTest(3);
-            RunImportExportTest(true);
-            RunImportExportTest(false);
-            RunImportExportTest("hello");
+            SerializationHelpers.RunImportExportTest(3);
+            SerializationHelpers.RunImportExportTest(true);
+            SerializationHelpers.RunImportExportTest(false);
+            SerializationHelpers.RunImportExportTest("hello");
         }
 
         [TestMethod]
         public void ImportExportStructs() {
-            RunImportExportTest(new SimpleStruct() {
+            SerializationHelpers.RunImportExportTest(new SimpleStruct() {
                 A = 3,
                 B = true,
                 C = "hi"
@@ -191,32 +160,32 @@ namespace Neon.Serialization.Tests {
 
         [TestMethod]
         public void ImportExportEnums() {
-            RunImportExportTest(MyEnum.MyEnum0);
-            RunImportExportTest(MyEnum.MyEnum1);
-            RunImportExportTest(MyEnum.MyEnum2);
-            RunImportExportTest(MyEnum.MyEnum3);
-            RunImportExportTest(MyEnum.MyEnum4);
+            SerializationHelpers.RunImportExportTest(MyEnum.MyEnum0);
+            SerializationHelpers.RunImportExportTest(MyEnum.MyEnum1);
+            SerializationHelpers.RunImportExportTest(MyEnum.MyEnum2);
+            SerializationHelpers.RunImportExportTest(MyEnum.MyEnum3);
+            SerializationHelpers.RunImportExportTest(MyEnum.MyEnum4);
 
-            RunImportExportTest(new EnumContainer() {
+            SerializationHelpers.RunImportExportTest(new EnumContainer() {
                 EnumA = MyEnum.MyEnum0,
                 EnumB = MyEnum.MyEnum1
             });
-            RunImportExportTest(new EnumContainer() {
+            SerializationHelpers.RunImportExportTest(new EnumContainer() {
                 EnumA = MyEnum.MyEnum1,
                 EnumB = MyEnum.MyEnum1
             });
-            RunImportExportTest(new EnumContainer() {
+            SerializationHelpers.RunImportExportTest(new EnumContainer() {
                 EnumA = MyEnum.MyEnum4,
                 EnumB = MyEnum.MyEnum2
             });
-            RunImportExportTest(new EnumContainer() {
+            SerializationHelpers.RunImportExportTest(new EnumContainer() {
                 EnumA = MyEnum.MyEnum0,
                 EnumB = MyEnum.MyEnum0
             });
 
             Dictionary<MyEnum, string> dict = new Dictionary<MyEnum, string>();
             dict.Add(MyEnum.MyEnum0, "OK");
-            RunCollectionImportExportTest(dict);
+            SerializationHelpers.RunCollectionImportExportTest(dict);
         }
 
         /// <summary>
@@ -275,7 +244,7 @@ namespace Neon.Serialization.Tests {
             dict["3"] = 3;
             dict["4"] = 4;
             dict["5"] = 5;
-            RunCollectionImportExportTest(dict);
+            SerializationHelpers.RunCollectionImportExportTest(dict);
 
             Dictionary<MyEnum, string> dict2 = new Dictionary<MyEnum, string>();
             dict2[MyEnum.MyEnum0] = "0";
@@ -283,7 +252,7 @@ namespace Neon.Serialization.Tests {
             dict2[MyEnum.MyEnum2] = "2";
             dict2[MyEnum.MyEnum3] = "3";
             dict2[MyEnum.MyEnum4] = "4";
-            RunCollectionImportExportTest(dict2);
+            SerializationHelpers.RunCollectionImportExportTest(dict2);
         }
 
         [TestMethod]
@@ -294,7 +263,7 @@ namespace Neon.Serialization.Tests {
             dict[3] = "3";
             dict[4] = "4";
             dict[5] = "5";
-            RunCollectionImportExportTest(dict);
+            SerializationHelpers.RunCollectionImportExportTest(dict);
 
             SortedDictionary<MyEnum, string> dict2 = new SortedDictionary<MyEnum, string>();
             dict2[MyEnum.MyEnum0] = "0";
@@ -302,7 +271,7 @@ namespace Neon.Serialization.Tests {
             dict2[MyEnum.MyEnum2] = "2";
             dict2[MyEnum.MyEnum3] = "3";
             dict2[MyEnum.MyEnum4] = "4";
-            RunCollectionImportExportTest(dict2);
+            SerializationHelpers.RunCollectionImportExportTest(dict2);
         }
 
         [TestMethod]
@@ -310,7 +279,7 @@ namespace Neon.Serialization.Tests {
             Bag<int> bag = new Bag<int>() {
                 1, 2, 3, 4, 5
             };
-            RunCollectionImportExportTest(bag);
+            SerializationHelpers.RunCollectionImportExportTest(bag);
         }
 
         [TestMethod]
@@ -322,7 +291,7 @@ namespace Neon.Serialization.Tests {
             original[6] = "6";
             original[8] = "8";
 
-            SparseArray<string> imported = GetImportedExportedValue(original);
+            SparseArray<string> imported = SerializationHelpers.ImportExport(original);
 
             var originalEnumerator = original.GetEnumerator();
             var importedEnumerator = imported.GetEnumerator();
@@ -455,10 +424,11 @@ namespace Neon.Serialization.Tests {
         }
 
         //[TestMethod]
+        // TODO implement anonymous types
         public void AnonymousTypes() {
             System.Type t = new { }.GetType();
 
-            RunImportExportTest(new {
+            SerializationHelpers.RunImportExportTest(new {
                 Hello = 3,
                 Yes = true,
                 No = false,

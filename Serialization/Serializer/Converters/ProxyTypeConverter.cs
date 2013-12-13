@@ -34,22 +34,24 @@ namespace Neon.Serialization.Converters {
         internal static ProxyTypeConverter TryCreate(Type type) {
             ISerializationProxy proxy;
             if (_proxies.TryGetValue(type, out proxy)) {
-                return new ProxyTypeConverter(type, proxy);
+                return new ProxyTypeConverter(proxy);
             }
 
             return null;
         }
 
-        private ProxyTypeConverter(Type baseType, ISerializationProxy proxy) {
-            throw new NotImplementedException();
+        private ISerializationProxy _proxy;
+
+        private ProxyTypeConverter(ISerializationProxy proxy) {
+            _proxy = proxy;
         }
 
         public object Import(SerializedData data, ObjectGraphReader graph) {
-            throw new NotImplementedException();
+            return _proxy.Import(data);
         }
 
         public SerializedData Export(object instance, ObjectGraphWriter graph) {
-            throw new NotImplementedException();
+            return _proxy.Export(instance);
         }
     }
 }
