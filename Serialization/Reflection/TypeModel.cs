@@ -156,6 +156,33 @@ namespace Neon.Serialization {
                 CollectProperties(type, properties);
                 _properties = new List<PropertyModel>(properties);
             }
+
+            if (IsCollection == false) {
+                HashSet<MethodInfo> methods = new HashSet<MethodInfo>();
+                CollectMethods(type, methods);
+
+                _afterImport = new List<Action<object>>();
+
+                foreach (MethodInfo method in methods) {
+                    if (method.IsDefined(typeof(SerializationAfterImport), inherit: true)) {
+                        _afterImport.Add(instance => {
+                            method.Invoke(instance, null);
+                        });
+                    }
+                }
+            }
+        }
+
+        private static void CollectMethods(Type type, HashSet<MethodInfo> methods) {
+            BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance;
+
+            foreach (MethodInfo method in type.GetMethods(flags)) {
+                methods.Add(method);
+            }
+
+            if (type.BaseType != null) {
+                CollectMethods(type.BaseType, methods);
+            }
         }
 
         /// <summary>
@@ -328,5 +355,21 @@ namespace Neon.Serialization {
             }
         }
         private List<PropertyModel> _properties;
+
+        /// <summary>
+        /// A list of methods that should be invoked after the object has been imported /
+        /// deserialized.
+        /// </summary>
+        public IEnumerable<Action<object>> AfterImport {
+            get {
+                if (IsCollection) {
+                    throw new InvalidOperationException("A type that is a collection does not " +
+                        "have after import methods");
+                }
+
+                return _afterImport;
+            }
+        }
+        private List<Action<object>> _afterImport;
     }
 }

@@ -23,7 +23,7 @@ using System.Linq;
 using System.Text;
 
 namespace Neon.Serialization.Converters {
-    internal class ProxyTypeConverter : ITypeConverter {
+    internal class ProxyTypeConverter : BaseTypeConverter {
         /// <summary>
         /// Map of all types which have proxies to their proxy.
         /// </summary>
@@ -53,7 +53,7 @@ namespace Neon.Serialization.Converters {
         internal static ProxyTypeConverter TryCreate(Type type) {
             ISerializationProxy proxy;
             if (_proxies.TryGetValue(type, out proxy)) {
-                return new ProxyTypeConverter(proxy);
+                return new ProxyTypeConverter(TypeCache.GetTypeModel(type), proxy);
             }
 
             return null;
@@ -61,11 +61,11 @@ namespace Neon.Serialization.Converters {
 
         private ISerializationProxy _proxy;
 
-        private ProxyTypeConverter(ISerializationProxy proxy) {
+        private ProxyTypeConverter(TypeModel model, ISerializationProxy proxy) {
             _proxy = proxy;
         }
 
-        public object Import(SerializedData data, ObjectGraphReader graph, object instance) {
+        protected override object DoImport(SerializedData data, ObjectGraphReader graph, object instance) {
             if (instance != null) {
                 throw new InvalidOperationException("Cannot handle preallocated objects");
             }
@@ -73,7 +73,7 @@ namespace Neon.Serialization.Converters {
             return _proxy.Import(data);
         }
 
-        public SerializedData Export(object instance, ObjectGraphWriter graph) {
+        protected override SerializedData DoExport(object instance, ObjectGraphWriter graph) {
             return _proxy.Export(instance);
         }
     }

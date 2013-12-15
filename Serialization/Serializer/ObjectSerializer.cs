@@ -19,8 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Neon.Serialization {
     public static class ObjectSerializer {
@@ -32,7 +30,14 @@ namespace Neon.Serialization {
             ObjectGraphReader graph = new ObjectGraphReader(data.AsDictionary["Graph"]);
             graph.RestoreGraph();
 
-            ITypeConverter converter = TypeConverterResolver.GetTypeConverter(type);
+            // if the actual exported data is an object reference, then we don't want to deserialize
+            // the object again, so we just return it directly from the graph
+            if (data.AsDictionary["Data"].IsObjectReference) {
+                return graph.GetObjectInstance(TypeCache.GetTypeModel(type), data.AsDictionary["Data"]);
+            }
+
+            // otherwise we need to actually deserialize the object
+            BaseTypeConverter converter = TypeConverterResolver.GetTypeConverter(type);
             return converter.Import(data.AsDictionary["Data"], graph, null);
         }
 
@@ -45,7 +50,7 @@ namespace Neon.Serialization {
 
             ObjectGraphWriter graph = new ObjectGraphWriter();
 
-            ITypeConverter converter = TypeConverterResolver.GetTypeConverter(type);
+            BaseTypeConverter converter = TypeConverterResolver.GetTypeConverter(type);
             data["Data"] = converter.Export(instance, graph);
 
             data["Graph"] = graph.Export();

@@ -27,12 +27,12 @@ namespace Neon.Serialization {
         /// Type converter that doesn't do anything but act as the start of the type conversion
         /// fetch chain.
         /// </summary>
-        private class FakeTypeConverter : ITypeConverter {
-            public object Import(SerializedData data, ObjectGraphReader graph, object instance) {
+        private class FakeTypeConverter : BaseTypeConverter {
+            protected override object DoImport(SerializedData data, ObjectGraphReader graph, object instance) {
                 throw new NotImplementedException();
             }
 
-            public SerializedData Export(object instance, ObjectGraphWriter graph) {
+            protected override SerializedData DoExport(object instance, ObjectGraphWriter graph) {
                 throw new NotImplementedException();
             }
         }
@@ -42,10 +42,10 @@ namespace Neon.Serialization {
         /// in the cache. Creates the secondary dictionary if it does not already exist for the
         /// given type.
         /// </summary>
-        private static bool TryConverterLookup<TCurrentConverter>(Type type, out ITypeConverter converter) {
-            Dictionary<Type, ITypeConverter> converters;
+        private static bool TryConverterLookup<TCurrentConverter>(Type type, out BaseTypeConverter converter) {
+            Dictionary<Type, BaseTypeConverter> converters;
             if (_cachedConverters.TryGetValue(type, out converters) == false) {
-                _cachedConverters[type] = new Dictionary<Type, ITypeConverter>();
+                _cachedConverters[type] = new Dictionary<Type, BaseTypeConverter>();
                 converter = null;
                 return false;
             }
@@ -59,8 +59,8 @@ namespace Neon.Serialization {
         /// <remarks>
         /// cache[baseType][currentConverterType] = nextConverter
         /// </remarks>
-        private static Dictionary<Type, Dictionary<Type, ITypeConverter>> _cachedConverters =
-            new Dictionary<Type, Dictionary<Type, ITypeConverter>>();
+        private static Dictionary<Type, Dictionary<Type, BaseTypeConverter>> _cachedConverters =
+            new Dictionary<Type, Dictionary<Type, BaseTypeConverter>>();
 
         /// <summary>
         /// Returns the first usable type converter for the given type. There maybe be multiple type
@@ -68,7 +68,7 @@ namespace Neon.Serialization {
         /// </summary>
         /// <param name="type">The type to fetch the converter for.</param>
         /// <returns>A type converter.</returns>
-        public static ITypeConverter GetTypeConverter(Type type) {
+        public static BaseTypeConverter GetTypeConverter(Type type) {
             return GetNextConverter<FakeTypeConverter>(type);
         }
 
@@ -79,12 +79,12 @@ namespace Neon.Serialization {
         /// <typeparam name="TCurrentConverter">The type of the current converter.</typeparam>
         /// <param name="type">The type to fetch the next converter for.</param>
         /// <returns>The next type converter for the given type.</returns>
-        public static ITypeConverter GetNextConverter<TCurrentConverter>(Type type)
-            where TCurrentConverter : ITypeConverter {
+        public static BaseTypeConverter GetNextConverter<TCurrentConverter>(Type type)
+            where TCurrentConverter : BaseTypeConverter {
 
             // remarks: if this method is slow, we can use a DataMap type system to speed it up
 
-            ITypeConverter converter;
+            BaseTypeConverter converter;
 
             if (TryConverterLookup<TCurrentConverter>(type, out converter) == false) {
                 bool allow = typeof(TCurrentConverter) == typeof(FakeTypeConverter);

@@ -23,7 +23,7 @@ using System.Linq;
 using System.Text;
 
 namespace Neon.Serialization.Converters {
-    internal class EnumTypeConverter : ITypeConverter {
+    internal class EnumTypeConverter : BaseTypeConverter {
         private Type _type;
 
         private EnumTypeConverter(Type type) {
@@ -38,7 +38,7 @@ namespace Neon.Serialization.Converters {
             return null;
         }
 
-        public object Import(SerializedData data, ObjectGraphReader graph, object instance) {
+        protected override object DoImport(SerializedData data, ObjectGraphReader graph, object instance) {
             if (instance != null) {
                 throw new InvalidOperationException("Cannot handle preallocated objects");
             }
@@ -46,7 +46,7 @@ namespace Neon.Serialization.Converters {
             return Enum.Parse(_type, data.AsString);
         }
 
-        public SerializedData Export(object instance, ObjectGraphWriter graph) {
+        protected override SerializedData DoExport(object instance, ObjectGraphWriter graph) {
             return new SerializedData(instance.ToString());
         }
     }

@@ -21,6 +21,13 @@ using System;
 
 namespace Neon.Serialization {
     /// <summary>
+    /// Mark a method that should be called after the given object has been imported. The method
+    /// cannot take a parameter.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method)]
+    public sealed class SerializationAfterImport : Attribute { }
+
+    /// <summary>
     /// Changes the serialization format of an object so that it will support cyclic references.
     /// This annotation has a large change on the serialization format (making it less clear) and
     /// has potential performance implications, and additionally requires the converter to

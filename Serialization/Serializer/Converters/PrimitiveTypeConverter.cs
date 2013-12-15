@@ -24,7 +24,7 @@ using System.Linq;
 using System.Text;
 
 namespace Neon.Serialization.Converters {
-    internal class PrimitiveTypeConverter : ITypeConverter {
+    internal class PrimitiveTypeConverter : BaseTypeConverter {
         private Func<SerializedData, object> _importer;
         private Func<object, SerializedData> _exporter;
 
@@ -94,7 +94,7 @@ namespace Neon.Serialization.Converters {
             return null;
         }
 
-        public object Import(SerializedData data, ObjectGraphReader graph, object instance) {
+        protected override object DoImport(SerializedData data, ObjectGraphReader graph, object instance) {
             if (instance != null) {
                 throw new InvalidOperationException("Cannot handle preallocated objects");
             }
@@ -102,7 +102,7 @@ namespace Neon.Serialization.Converters {
             return _importer(data);
         }
 
-        public SerializedData Export(object instance, ObjectGraphWriter graph) {
+        protected override SerializedData DoExport(object instance, ObjectGraphWriter graph) {
             return _exporter(instance);
         }
     }

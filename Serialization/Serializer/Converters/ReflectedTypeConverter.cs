@@ -23,18 +23,18 @@ using System.Linq;
 using System.Text;
 
 namespace Neon.Serialization.Converters {
-    internal class ReflectedTypeConverter : ITypeConverter {
+    internal class ReflectedTypeConverter : BaseTypeConverter {
         private TypeModel _model;
 
-        private ReflectedTypeConverter(Type type) {
-            _model = TypeCache.GetTypeModel(type);
+        private ReflectedTypeConverter(TypeModel model) {
+            _model = model;
         }
 
         public static ReflectedTypeConverter TryCreate(Type type) {
-            return new ReflectedTypeConverter(type);
+            return new ReflectedTypeConverter(TypeCache.GetTypeModel(type));
         }
 
-        public object Import(SerializedData data, ObjectGraphReader graph, object instance) {
+        protected override object DoImport(SerializedData data, ObjectGraphReader graph, object instance) {
             if (instance == null) {
                 instance = graph.GetObjectInstance(_model, data);
             }
@@ -54,7 +54,7 @@ namespace Neon.Serialization.Converters {
                         _model);
                 }
 
-                ITypeConverter converter = TypeConverterResolver.GetTypeConverter(storageType);
+                BaseTypeConverter converter = TypeConverterResolver.GetTypeConverter(storageType);
                 object deserialized = converter.Import(serializedDataDict[name], graph, null);
 
                 // write it into the instance
@@ -64,7 +64,7 @@ namespace Neon.Serialization.Converters {
             return instance;
         }
 
-        public SerializedData Export(object instance, ObjectGraphWriter graph) {
+        protected override SerializedData DoExport(object instance, ObjectGraphWriter graph) {
             var dict = new Dictionary<string, SerializedData>();
 
             for (int i = 0; i < _model.Properties.Count; ++i) {
@@ -74,7 +74,7 @@ namespace Neon.Serialization.Converters {
                 // the property is an interface, and we export under the instance type, then
                 // deserialization will not work as expected (because we'll be trying to deserialize
                 // an interface).
-                ITypeConverter converter = TypeConverterResolver.GetTypeConverter(property.StorageType);
+                BaseTypeConverter converter = TypeConverterResolver.GetTypeConverter(property.StorageType);
                 dict[property.Name] = converter.Export(property.Read(instance), graph);
             }
 

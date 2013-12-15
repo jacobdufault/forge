@@ -24,9 +24,9 @@ using System.Linq;
 using System.Text;
 
 namespace Neon.Serialization.Converters {
-    internal class CollectionTypeConverter : ITypeConverter {
+    internal class CollectionTypeConverter : BaseTypeConverter {
         private TypeModel _model;
-        private ITypeConverter _elementConverter;
+        private BaseTypeConverter _elementConverter;
 
         public CollectionTypeConverter(TypeModel model) {
             _model = model;
@@ -43,7 +43,7 @@ namespace Neon.Serialization.Converters {
             return null;
         }
 
-        public object Import(SerializedData data, ObjectGraphReader graph, object instance) {
+        protected override object DoImport(SerializedData data, ObjectGraphReader graph, object instance) {
             if (instance == null) {
                 instance = graph.GetObjectInstance(_model, data);
             }
@@ -59,7 +59,7 @@ namespace Neon.Serialization.Converters {
             return instance;
         }
 
-        public SerializedData Export(object instance, ObjectGraphWriter graph) {
+        protected override SerializedData DoExport(object instance, ObjectGraphWriter graph) {
             // If it's an array or a collection, we have special logic for processing
             List<SerializedData> output = new List<SerializedData>();
 

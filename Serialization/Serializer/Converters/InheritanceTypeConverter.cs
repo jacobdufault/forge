@@ -23,8 +23,9 @@ using System.Linq;
 using System.Text;
 
 namespace Neon.Serialization.Converters {
-    internal class InheritanceTypeConverter : ITypeConverter {
-        private InheritanceTypeConverter() {
+    internal class InheritanceTypeConverter : BaseTypeConverter {
+        private InheritanceTypeConverter()
+            : base(false) {
         }
 
         public static InheritanceTypeConverter TryCreate(Type type) {
@@ -37,13 +38,13 @@ namespace Neon.Serialization.Converters {
             return null;
         }
 
-        public object Import(SerializedData data, ObjectGraphReader graph, object instance) {
+        protected override object DoImport(SerializedData data, ObjectGraphReader graph, object instance) {
             Type instanceType = TypeCache.FindType(data.AsDictionary["InstanceType"].AsString);
-            ITypeConverter converter = TypeConverterResolver.GetNextConverter<InheritanceTypeConverter>(instanceType);
+            BaseTypeConverter converter = TypeConverterResolver.GetNextConverter<InheritanceTypeConverter>(instanceType);
             return converter.Import(data.AsDictionary["Data"], graph, instance);
         }
 
-        public SerializedData Export(object instance, ObjectGraphWriter graph) {
+        protected override SerializedData DoExport(object instance, ObjectGraphWriter graph) {
             Type instanceType = instance.GetType();
             Dictionary<string, SerializedData> data = new Dictionary<string, SerializedData>();
 
@@ -52,7 +53,7 @@ namespace Neon.Serialization.Converters {
 
             // we want to make sure we export under the direct instance type, otherwise we'll go
             // into an infinite loop of reexporting the interface metadata.
-            ITypeConverter converter = TypeConverterResolver.GetNextConverter<InheritanceTypeConverter>(instanceType);
+            BaseTypeConverter converter = TypeConverterResolver.GetNextConverter<InheritanceTypeConverter>(instanceType);
             data["Data"] = converter.Export(instance, graph);
 
             return new SerializedData(data);

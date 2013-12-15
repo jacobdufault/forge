@@ -23,7 +23,7 @@ using System.Linq;
 using System.Text;
 
 namespace Neon.Serialization.Converters {
-    internal class CyclicTypeConverter : ITypeConverter {
+    internal class CyclicTypeConverter : BaseTypeConverter {
         private TypeModel _model;
 
         public CyclicTypeConverter(TypeModel model) {
@@ -40,11 +40,11 @@ namespace Neon.Serialization.Converters {
             return null;
         }
 
-        public object Import(SerializedData data, ObjectGraphReader graph, object instance) {
+        protected override object DoImport(SerializedData data, ObjectGraphReader graph, object instance) {
             return graph.GetObjectInstance(_model, data);
         }
 
-        public SerializedData Export(object instance, ObjectGraphWriter graph) {
+        protected override SerializedData DoExport(object instance, ObjectGraphWriter graph) {
             return graph.GetObjectReference(instance);
         }
     }
