@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
 
@@ -14,51 +15,52 @@ namespace Neon.Entities.E2ETests {
         OnGlobalInput
     }
 
+    [ProtoContract]
     internal class TriggerEventLogger : ITriggerAdded, ITriggerRemoved, ITriggerModified, ITriggerUpdate, ITriggerGlobalPreUpdate, ITriggerGlobalPostUpdate, ITriggerInput, ITriggerGlobalInput {
         public Type[] ComputeEntityFilter() {
             return EntityFilter;
         }
 
+        [ProtoMember(1)]
         public Type[] EntityFilter;
+
+        public TriggerEventLogger() {
+            EntityFilter = new Type[0];
+        }
 
         public TriggerEventLogger(Type[] entityFilter) {
             EntityFilter = entityFilter;
         }
 
-        public List<TriggerEvent> _events = new List<TriggerEvent>();
-
-        public TriggerEvent[] Events {
-            get {
-                return _events.ToArray();
-            }
-        }
+        [ProtoMember(2)]
+        public List<TriggerEvent> Events = new List<TriggerEvent>();
 
         public void ClearEvents() {
-            _events.Clear();
+            Events.Clear();
         }
 
         public void OnAdded(IEntity entity) {
-            _events.Add(TriggerEvent.OnAdded);
+            Events.Add(TriggerEvent.OnAdded);
         }
 
         public void OnRemoved(IEntity entity) {
-            _events.Add(TriggerEvent.OnRemoved);
+            Events.Add(TriggerEvent.OnRemoved);
         }
 
         public void OnModified(IEntity entity) {
-            _events.Add(TriggerEvent.OnModified);
+            Events.Add(TriggerEvent.OnModified);
         }
 
         public void OnUpdate(IEntity entity) {
-            _events.Add(TriggerEvent.OnUpdate);
+            Events.Add(TriggerEvent.OnUpdate);
         }
 
         public void OnGlobalPreUpdate(IEntity singletonEntity) {
-            _events.Add(TriggerEvent.OnGlobalPreUpdate);
+            Events.Add(TriggerEvent.OnGlobalPreUpdate);
         }
 
         public void OnGlobalPostUpdate(IEntity singletonEntity) {
-            _events.Add(TriggerEvent.OnGlobalPostUpdate);
+            Events.Add(TriggerEvent.OnGlobalPostUpdate);
         }
 
         public Type IStructuredInputType {
@@ -66,11 +68,29 @@ namespace Neon.Entities.E2ETests {
         }
 
         public void OnInput(IGameInput input, IEntity entity) {
-            _events.Add(TriggerEvent.OnInput);
+            Events.Add(TriggerEvent.OnInput);
         }
 
         public void OnGlobalInput(IGameInput input, IEntity singletonEntity) {
-            _events.Add(TriggerEvent.OnGlobalInput);
+            Events.Add(TriggerEvent.OnGlobalInput);
+        }
+    }
+
+    public static class IGameEngineExtensions {
+        public static TSystem GetSystem<TSystem>(this IGameEngine engine) where TSystem : ISystem {
+            foreach (ISystem system in engine.TakeSnapshot().Systems) {
+                if (system is TSystem) {
+                    return (TSystem)system;
+                }
+            }
+
+            throw new Exception("No system of type " + typeof(TSystem) + " is in the engine");
+        }
+
+        public static void Add<T>(this IList<T> list, params T[] elements) {
+            foreach (var element in elements) {
+                list.Add(element);
+            }
         }
     }
 
@@ -84,35 +104,42 @@ namespace Neon.Entities.E2ETests {
         public void AddAndUpdateEntity() {
             IGameSnapshot snapshot = CreateEmptySnapshot();
 
-            TriggerEventLogger trigger = new TriggerEventLogger(new Type[] { });
-            snapshot.Systems.Add(trigger);
+            snapshot.Systems.Add(new TriggerEventLogger(new Type[] { }));
 
-            IEntity entity = ContentDatabaseHelper.CreateEntity();
-            snapshot.AddedEntities.Add(entity);
+            IEntity entity = snapshot.CreateEntity(EntityAddLocation.Added);
 
             IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, new List<ITemplate>());
 
             engine.SynchronizeState().WaitOne();
             engine.Update();
 
-            CollectionAssert.AreEqual(new TriggerEvent[] {
-                TriggerEvent.OnAdded,
-                TriggerEvent.OnGlobalPreUpdate,
-                TriggerEvent.OnUpdate,
-                TriggerEvent.OnGlobalPostUpdate
-            }, trigger.Events);
-            trigger.ClearEvents();
+            List<TriggerEvent> events = new List<TriggerEvent>();
+            events.Add(TriggerEvent.OnAdded);
+            events.Add(TriggerEvent.OnGlobalPreUpdate);
+            events.Add(TriggerEvent.OnUpdate);
+            events.Add(TriggerEvent.OnGlobalPostUpdate);
+            CollectionAssert.AreEqual(events, engine.GetSystem<TriggerEventLogger>().Events);
 
             for (int i = 0; i < 20; ++i) {
                 engine.SynchronizeState().WaitOne();
                 engine.Update();
 
-                CollectionAssert.AreEqual(new TriggerEvent[] {
-                    TriggerEvent.OnGlobalPreUpdate,
-                    TriggerEvent.OnUpdate,
-                    TriggerEvent.OnGlobalPostUpdate,
-                }, trigger.Events);
-                trigger.ClearEvents();
+                events.Add(TriggerEvent.OnGlobalPreUpdate);
+                events.Add(TriggerEvent.OnUpdate);
+                events.Add(TriggerEvent.OnGlobalPostUpdate);
+                CollectionAssert.AreEqual(events, engine.GetSystem<TriggerEventLogger>().Events);
+            }
+        }
+
+        [ProtoContract]
+        private class AddAndModifyOnAddedSystem : ITriggerAdded {
+            public void OnAdded(IEntity entity) {
+                entity.AddData<TestData0>();
+                entity.Modify<TestData0>();
+            }
+
+            public Type[] ComputeEntityFilter() {
+                return new Type[] { };
             }
         }
 
@@ -120,40 +147,43 @@ namespace Neon.Entities.E2ETests {
         public void AddEntityAndModifyInAdd() {
             IGameSnapshot snapshot = CreateEmptySnapshot();
 
-            TriggerEventLogger trigger = new TriggerEventLogger(new Type[] { });
-            snapshot.Systems.Add(trigger);
+            snapshot.Systems.Add(new TriggerEventLogger(new Type[] { }));
+            snapshot.Systems.Add(new AddAndModifyOnAddedSystem());
 
-            LambdaSystem addedTrigger = new LambdaSystem(new Type[] { });
-            addedTrigger.OnAdded = entity => {
-                entity.AddData<TestData0>();
-                entity.Modify<TestData0>();
-            };
-            snapshot.Systems.Add(addedTrigger);
-
-            snapshot.AddedEntities.Add(ContentDatabaseHelper.CreateEntity());
+            snapshot.CreateEntity(EntityAddLocation.Added);
 
             IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, new List<ITemplate>());
             engine.SynchronizeState().WaitOne();
             engine.Update();
 
-            CollectionAssert.AreEqual(new TriggerEvent[] {
+            List<TriggerEvent> events = new List<TriggerEvent>();
+            events.Add(
                 TriggerEvent.OnAdded,
                 TriggerEvent.OnGlobalPreUpdate,
                 TriggerEvent.OnUpdate,
-                TriggerEvent.OnGlobalPostUpdate,
-            }, trigger.Events);
-            trigger.ClearEvents();
+                TriggerEvent.OnGlobalPostUpdate);
+            CollectionAssert.AreEqual(events, engine.GetSystem<TriggerEventLogger>().Events);
 
             for (int i = 0; i < 20; ++i) {
                 engine.SynchronizeState().WaitOne();
                 engine.Update();
 
-                CollectionAssert.AreEqual(new TriggerEvent[] {
+                events.Add(
                     TriggerEvent.OnGlobalPreUpdate,
                     TriggerEvent.OnUpdate,
-                    TriggerEvent.OnGlobalPostUpdate,
-                }, trigger.Events);
-                trigger.ClearEvents();
+                    TriggerEvent.OnGlobalPostUpdate);
+                CollectionAssert.AreEqual(events, engine.GetSystem<TriggerEventLogger>().Events);
+            }
+        }
+
+        [ProtoContract]
+        private class ModifyOnUpdateSystem : ITriggerUpdate {
+            public void OnUpdate(IEntity entity) {
+                entity.Modify<TestData0>();
+            }
+
+            public Type[] ComputeEntityFilter() {
+                return new Type[] { };
             }
         }
 
@@ -161,78 +191,64 @@ namespace Neon.Entities.E2ETests {
         public void AddEntityAndModifyInUpdate() {
             IGameSnapshot snapshot = CreateEmptySnapshot();
 
-            TriggerEventLogger trigger = new TriggerEventLogger(new Type[] { typeof(TestData0) });
-            snapshot.Systems.Add(trigger);
-
-            LambdaSystem modifySystem = new LambdaSystem(new Type[] { });
-            modifySystem.OnUpdate = entity => {
-                entity.Modify<TestData0>();
-            };
-            snapshot.Systems.Add(modifySystem);
+            snapshot.Systems.Add(new TriggerEventLogger(new Type[] { typeof(TestData0) }));
+            snapshot.Systems.Add(new ModifyOnUpdateSystem());
 
             {
-                IEntity e = ContentDatabaseHelper.CreateEntity();
+                IEntity e = snapshot.CreateEntity(EntityAddLocation.Added);
                 e.AddData<TestData0>();
-                snapshot.AddedEntities.Add(e);
             }
 
             IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, new List<ITemplate>());
             engine.SynchronizeState().WaitOne();
             engine.Update();
 
-            CollectionAssert.AreEqual(new TriggerEvent[] {
-                TriggerEvent.OnAdded,
+            List<TriggerEvent> events = new List<TriggerEvent>();
+            events.Add(TriggerEvent.OnAdded,
                 TriggerEvent.OnGlobalPreUpdate,
                 TriggerEvent.OnUpdate,
-                TriggerEvent.OnGlobalPostUpdate,
-            }, trigger.Events);
-            trigger.ClearEvents();
+                TriggerEvent.OnGlobalPostUpdate);
+            CollectionAssert.AreEqual(events, engine.GetSystem<TriggerEventLogger>().Events);
 
             for (int i = 0; i < 20; ++i) {
                 engine.SynchronizeState().WaitOne();
                 engine.Update();
 
-                CollectionAssert.AreEqual(new TriggerEvent[] {
-                    TriggerEvent.OnModified,
+                events.Add(TriggerEvent.OnModified,
                     TriggerEvent.OnGlobalPreUpdate,
                     TriggerEvent.OnUpdate,
-                    TriggerEvent.OnGlobalPostUpdate,
-                }, trigger.Events);
-                trigger.ClearEvents();
+                    TriggerEvent.OnGlobalPostUpdate);
+                CollectionAssert.AreEqual(events, engine.GetSystem<TriggerEventLogger>().Events);
             }
         }
 
         [TestMethod]
         public void RemoveEntityWithNoData() {
             IGameSnapshot snapshot = CreateEmptySnapshot();
+            snapshot.Systems.Add(new TriggerEventLogger(new Type[] { }));
 
-            TriggerEventLogger trigger = new TriggerEventLogger(new Type[] { });
-            snapshot.Systems.Add(trigger);
-
-            IEntity entity = ContentDatabaseHelper.CreateEntity();
-            snapshot.RemovedEntities.Add(entity);
+            IEntity entity = snapshot.CreateEntity(EntityAddLocation.Removed);
 
             IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, new List<ITemplate>());
 
             engine.SynchronizeState().WaitOne();
             engine.Update();
 
-            CollectionAssert.AreEqual(new TriggerEvent[] {
+            List<TriggerEvent> events = new List<TriggerEvent>();
+            events.Add(
                 TriggerEvent.OnRemoved,
                 TriggerEvent.OnGlobalPreUpdate,
-                TriggerEvent.OnGlobalPostUpdate
-            }, trigger.Events);
-            trigger.ClearEvents();
+                TriggerEvent.OnGlobalPostUpdate);
+            CollectionAssert.AreEqual(events, engine.GetSystem<TriggerEventLogger>().Events);
 
             for (int i = 0; i < 20; ++i) {
                 engine.SynchronizeState().WaitOne();
                 engine.Update();
 
-                CollectionAssert.AreEqual(new TriggerEvent[] {
+                events.Add(
                     TriggerEvent.OnGlobalPreUpdate,
-                    TriggerEvent.OnGlobalPostUpdate,
-                }, trigger.Events);
-                trigger.ClearEvents();
+                    TriggerEvent.OnGlobalPostUpdate);
+                CollectionAssert.AreEqual(events, engine.GetSystem<TriggerEventLogger>().Events);
             }
         }
 
@@ -240,34 +256,41 @@ namespace Neon.Entities.E2ETests {
         public void RemoveEntityWithData() {
             IGameSnapshot snapshot = CreateEmptySnapshot();
 
-            TriggerEventLogger trigger = new TriggerEventLogger(new Type[] { });
-            snapshot.Systems.Add(trigger);
+            snapshot.Systems.Add(new TriggerEventLogger(new Type[] { }));
 
-            IEntity entity = ContentDatabaseHelper.CreateEntity();
+            IEntity entity = snapshot.CreateEntity(EntityAddLocation.Removed);
             entity.AddData<TestData0>();
-            snapshot.RemovedEntities.Add(entity);
 
             IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, new List<ITemplate>());
 
             engine.SynchronizeState().WaitOne();
             engine.Update();
 
-            CollectionAssert.AreEqual(new TriggerEvent[] {
-                TriggerEvent.OnRemoved,
-                TriggerEvent.OnGlobalPreUpdate,
-                TriggerEvent.OnGlobalPostUpdate
-            }, trigger.Events);
-            trigger.ClearEvents();
+            List<TriggerEvent> events = new List<TriggerEvent>();
+            events.Add(TriggerEvent.OnRemoved);
+            events.Add(TriggerEvent.OnGlobalPreUpdate);
+            events.Add(TriggerEvent.OnGlobalPostUpdate);
+            CollectionAssert.AreEqual(events, engine.GetSystem<TriggerEventLogger>().Events);
 
             for (int i = 0; i < 20; ++i) {
                 engine.SynchronizeState().WaitOne();
                 engine.Update();
 
-                CollectionAssert.AreEqual(new TriggerEvent[] {
-                    TriggerEvent.OnGlobalPreUpdate,
-                    TriggerEvent.OnGlobalPostUpdate,
-                }, trigger.Events);
-                trigger.ClearEvents();
+                events.Add(TriggerEvent.OnGlobalPreUpdate);
+                events.Add(TriggerEvent.OnGlobalPostUpdate);
+                CollectionAssert.AreEqual(events, engine.GetSystem<TriggerEventLogger>().Events);
+            }
+        }
+
+        [ProtoContract]
+        private class ModifyOnRemovedTrigger : ITriggerRemoved {
+
+            public void OnRemoved(IEntity entity) {
+                entity.Modify<TestData0>();
+            }
+
+            public Type[] ComputeEntityFilter() {
+                return new Type[] { };
             }
         }
 
@@ -279,19 +302,12 @@ namespace Neon.Entities.E2ETests {
         public void RemoveEntityAndModifyInRemoveNotification() {
             IGameSnapshot snapshot = CreateEmptySnapshot();
 
-            TriggerEventLogger trigger = new TriggerEventLogger(new Type[] { });
-            snapshot.Systems.Add(trigger);
-
-            LambdaSystem lambdaSystem = new LambdaSystem(new Type[] { });
-            lambdaSystem.OnRemoved = entity => {
-                entity.Modify<TestData0>();
-            };
-            snapshot.Systems.Add(lambdaSystem);
+            snapshot.Systems.Add(new TriggerEventLogger(new Type[] { }));
+            snapshot.Systems.Add(new ModifyOnRemovedTrigger());
 
             {
-                IEntity e = ContentDatabaseHelper.CreateEntity();
+                IEntity e = snapshot.CreateEntity(EntityAddLocation.Removed);
                 e.AddData<TestData0>();
-                snapshot.RemovedEntities.Add(e);
             }
 
             IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, new List<ITemplate>());
@@ -299,22 +315,21 @@ namespace Neon.Entities.E2ETests {
             engine.SynchronizeState().WaitOne();
             engine.Update();
 
-            CollectionAssert.AreEqual(new TriggerEvent[] {
+            List<TriggerEvent> events = new List<TriggerEvent>();
+            events.Add(
                 TriggerEvent.OnRemoved,
                 TriggerEvent.OnGlobalPreUpdate,
-                TriggerEvent.OnGlobalPostUpdate
-            }, trigger.Events);
-            trigger.ClearEvents();
+                TriggerEvent.OnGlobalPostUpdate);
+            CollectionAssert.AreEqual(events, engine.GetSystem<TriggerEventLogger>().Events);
 
             for (int i = 0; i < 20; ++i) {
                 engine.SynchronizeState().WaitOne();
                 engine.Update();
 
-                CollectionAssert.AreEqual(new TriggerEvent[] {
+                events.Add(
                     TriggerEvent.OnGlobalPreUpdate,
-                    TriggerEvent.OnGlobalPostUpdate,
-                }, trigger.Events);
-                trigger.ClearEvents();
+                    TriggerEvent.OnGlobalPostUpdate);
+                CollectionAssert.AreEqual(events, engine.GetSystem<TriggerEventLogger>().Events);
             }
         }
     }

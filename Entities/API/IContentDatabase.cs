@@ -3,26 +3,13 @@ using Neon.Entities.Implementation.Shared;
 using System.Collections.Generic;
 
 namespace Neon.Entities {
-    // TODO: what should this factory be named? EntityFctory and TemplateFacotyr?
-    public class ContentDatabaseHelper {
-        /// <summary>
-        /// Creates a new IEntity instance that can be modified as pleased. The returned object will
-        /// respond to modifications immediately; ie, after calling entity.AddData, entity.Current
-        /// will return the added instance, effectively eschewing the immutability and update-order
-        /// properties that the game engine has to simplify content creation. Make sure to add the
-        /// entity instance to an IContentDatabase!
-        /// </summary>
-        public static IEntity CreateEntity() {
-            return new ContentEntity();
-        }
-
-        /// <summary>
-        /// Creates a new ITemplate instance that can be modified. Make sure to add it to an
-        /// IContentDatabase!
-        /// </summary>
-        public static ITemplate CreateTemplate() {
-            return new Template();
-        }
+    /// <summary>
+    /// Specifies where an entity should be added to when adding one to a IGameSnapshot.
+    /// </summary>
+    public enum EntityAddLocation {
+        Active,
+        Removed,
+        Added
     }
 
     /// <summary>
@@ -36,6 +23,19 @@ namespace Neon.Entities {
     /// </remarks>
     public interface IGameSnapshot {
         /// <summary>
+        /// Adds a new entity to the snapshot.
+        /// </summary>
+        /// <param name="to">What collection the entity should be added to.</param>
+        /// <param name="prettyName">The pretty name of the entity.</param>
+        /// <returns>A new entity.</returns>
+        IEntity CreateEntity(EntityAddLocation to, string prettyName = "");
+
+        /// <summary>
+        /// Creates a new ITemplate instance that is attached to this snapshot.
+        /// </summary>
+        TemplateReference CreateTemplate();
+
+        /// <summary>
         /// The singleton entity. It is automatically created and cannot be destroyed, but it can be
         /// modified.
         /// </summary>
@@ -46,21 +46,21 @@ namespace Neon.Entities {
         /// <summary>
         /// All entities in the game that were not added or removed in the previous update.
         /// </summary>
-        List<IEntity> ActiveEntities {
+        IEnumerable<IEntity> ActiveEntities {
             get;
         }
 
         /// <summary>
         /// All entities that were removed during the previous update.
         /// </summary>
-        List<IEntity> RemovedEntities {
+        IEnumerable<IEntity> RemovedEntities {
             get;
         }
 
         /// <summary>
         /// All entities that were added during the previous update.
         /// </summary>
-        List<IEntity> AddedEntities {
+        IEnumerable<IEntity> AddedEntities {
             get;
         }
 

@@ -50,6 +50,16 @@ namespace Neon.Collections {
         }
 
         /// <summary>
+        /// Creates a new sparse array from the given enumerator.
+        /// </summary>
+        /// <param name="enumerator">The items to allocate the array from.</param>
+        public SparseArray(IEnumerable<KeyValuePair<int, T>> enumerator) {
+            foreach (var pair in enumerator) {
+                this[pair.Key] = pair.Value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the element at the given index.
         /// </summary>
         /// <param name="index">The index to set</param>

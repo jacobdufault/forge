@@ -17,16 +17,19 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+using ProtoBuf;
 using System.Threading;
 
 namespace Neon.Utilities {
     /// <summary>
     /// Generates unique integers that are sequential. This class is thread-safe.
     /// </summary>
+    [ProtoContract]
     public class UniqueIntGenerator {
         /// <summary>
         /// The next integer to generate.
         /// </summary>
+        [ProtoMember(1)]
         private int _next;
 
         /// <summary>

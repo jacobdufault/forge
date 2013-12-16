@@ -1,5 +1,4 @@
-﻿using Neon.Serialization;
-using System;
+﻿using System;
 
 namespace Neon.Entities {
     /// <summary>
@@ -12,7 +11,7 @@ namespace Neon.Entities {
     }
 
     /// <summary>
-    /// Systems which require special saving/restoration logic should extend this interface.
+    /// All systems that have local data that needs to be serialized should extend IRestoredSystem.
     /// </summary>
     public interface IRestoredSystem {
         /// <summary>
@@ -22,17 +21,6 @@ namespace Neon.Entities {
         Guid RestorationGuid {
             get;
         }
-
-        /// <summary>
-        /// Save any auxiliary data to the given data output.
-        /// </summary>
-        SerializedData ExportState(SerializationConverter converter);
-
-        /// <summary>
-        /// Restore the system from the given data.
-        /// </summary>
-        /// <param name="data">The data to restore the system from.</param>
-        void ImportState(SerializedData data);
     }
 
     /// <summary>

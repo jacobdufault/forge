@@ -1,21 +1,53 @@
 ﻿using Neon.Collections;
-using Neon.Entities.Implementation.Content.Specifications;
 using Neon.Entities.Implementation.Shared;
-using Neon.Serialization;
 using Neon.Utilities;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Neon.Entities.Implementation.Content {
+    [ProtoContract(SkipConstructor = true)]
     internal class ContentEntity : IEntity {
-        private static UniqueIntGenerator _idGenerator = new UniqueIntGenerator();
+        [ProtoMember(1)]
+        private SerializableContainer _serializedCurrentData;
+        [ProtoMember(2)]
+        private SerializableContainer _serializedPreviousData;
+
+        [ProtoBeforeSerialization]
+        private void ExportContainers() {
+            _serializedCurrentData = new SerializableContainer(_currentData.Select(pair => pair.Value));
+            _serializedPreviousData = new SerializableContainer(_previousData.Select(pair => pair.Value));
+        }
+
+        [ProtoAfterDeserialization]
+        private void ImportContainers() {
+            _eventNotifier = new EventNotifier();
+
+            _currentData = new SparseArray<IData>();
+            foreach (IData current in _serializedCurrentData.Cast<IData>()) {
+                _currentData[DataAccessorFactory.GetId(current)] = current;
+            }
+
+            _previousData = new SparseArray<IData>();
+            foreach (IData previous in _serializedPreviousData.Cast<IData>()) {
+                _previousData[DataAccessorFactory.GetId(previous)] = previous;
+            }
+        }
 
         private SparseArray<IData> _currentData;
+
         private SparseArray<IData> _previousData;
+
         private EventNotifier _eventNotifier;
 
-        public ContentEntity()
-            : this(_idGenerator.Next(), "") {
+        [ProtoMember(3)]
+        public bool HasModification;
+
+        [ProtoMember(4)]
+        public int UniqueId {
+            get;
+            private set;
         }
 
         public ContentEntity(int uniqueId, string prettyName) {
@@ -27,9 +59,9 @@ namespace Neon.Entities.Implementation.Content {
             PrettyName = prettyName;
         }
 
-        public ContentEntity(EntitySpecification specification, SerializationConverter converter) :
-            this(specification.UniqueId, specification.PrettyName) {
-            Restore(specification, converter);
+        public ContentEntity(IEntity entity) :
+            this(entity.UniqueId, entity.PrettyName) {
+            Restore(entity);
         }
 
         public override string ToString() {
@@ -41,31 +73,22 @@ namespace Neon.Entities.Implementation.Content {
             }
         }
 
-        public void Restore(EntitySpecification specification, SerializationConverter converter) {
-            foreach (EntityDataSpecification data in specification.Data) {
-                Type dataType = TypeCache.FindType(data.DataType);
+        public void Restore(IEntity entity) {
+            foreach (IData data in entity.SelectCurrentData()) {
+                DataAccessor accessor = new DataAccessor(data);
 
-                HasModification = HasModification || data.WasModified;
+                HasModification = HasModification || entity.WasModified(accessor);
 
-                IData current = (IData)converter.Import(dataType, data.CurrentState);
-                IData previous = (IData)converter.Import(dataType, data.PreviousState);
+                IData current = entity.Current(accessor);
+                IData previous = entity.Previous(accessor);
 
-                int dataId = DataAccessorFactory.GetId(dataType);
-
-                _currentData[dataId] = current;
-                _previousData[dataId] = previous;
+                _currentData[accessor.Id] = current;
+                _previousData[accessor.Id] = previous;
             }
         }
 
-        public bool HasModification;
-
-        public int UniqueId {
-            get;
-            private set;
-        }
-
         public void Destroy() {
-            // do nothing
+            throw new InvalidOperationException("Cannot destroy a ContentEntity");
         }
 
         public IData AddOrModify(DataAccessor accessor) {

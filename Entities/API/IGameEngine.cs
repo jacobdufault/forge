@@ -1,4 +1,5 @@
-﻿using Neon.Entities.Implementation.Runtime;
+﻿using Neon.Entities.Implementation.Content;
+using Neon.Entities.Implementation.Runtime;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -66,7 +67,7 @@ namespace Neon.Entities {
         /// Returns a hash code of all data inside of the engine. The hash code is computed via
         /// reflection and can be used to attempt to determine if two game engines are out of sync.
         /// </summary>
-        int GetVerificationHash();
+        byte[] GetVerificationHash();
     }
 
     /// <summary>
@@ -76,13 +77,13 @@ namespace Neon.Entities {
     public static class GameEngineFactory {
         /// <summary>
         /// Creates a new game engine that can be used to simulate the game using the content from
-        /// the given content database.
+        /// the given content database. The passed in snapshot will not be modified.
         /// </summary>
         /// <param name="content">The content to allocate the engine from.</param>
         /// <param name="templates">The templates to use when running the engine.</param>
         /// <returns>A game engine that can play the given content.</returns>
         public static IGameEngine CreateEngine(IGameSnapshot content, List<ITemplate> templates) {
-            return new GameEngine(content, templates);
+            return new GameEngine((GameSnapshot)content, templates);
         }
     }
 }

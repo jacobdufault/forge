@@ -1,34 +1,64 @@
 ﻿using Neon.Collections;
 using Neon.Entities.Implementation.Runtime;
+using Neon.Entities.Implementation.Shared;
 using Neon.Utilities;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
-namespace Neon.Entities.Implementation.Shared {
-    internal class Template : ITemplate {
-        private static UniqueIntGenerator _idGenerator = new UniqueIntGenerator();
+namespace Neon.Entities.Implementation.Content {
+    [ProtoContract(SkipConstructor = true)]
+    internal class ContentTemplate : ITemplate {
+        [ProtoMember(1)]
+        private SerializableContainer _serializedDefaultData;
+
+        [ProtoBeforeSerialization]
+        private void ExportDefaultData() {
+            _serializedDefaultData = new SerializableContainer(_defaultDataInstances.Select(pair => pair.Value));
+        }
+
+        [ProtoAfterDeserialization]
+        private void ImportDefaultData() {
+            _defaultDataInstances = new SparseArray<IData>();
+            foreach (IData data in _serializedDefaultData.Cast<IData>()) {
+                _defaultDataInstances[DataAccessorFactory.GetId(data)] = data;
+            }
+
+            _eventNotifier = new EventNotifier();
+        }
 
         private SparseArray<IData> _defaultDataInstances;
+
         private EventNotifier _eventNotifier;
 
-        /// <summary>
-        /// The game engine that entities are added to when they are instantiated.
-        /// </summary>
-        public GameEngine GameEngine {
+        [ProtoMember(2)]
+        public int TemplateId {
+            get;
+            private set;
+        }
+
+        [ProtoMember(3)]
+        public string PrettyName {
             get;
             set;
         }
 
-        public Template()
-            : this(_idGenerator.Next(), "") {
-        }
-
-        public Template(int id, string prettyName) {
+        public ContentTemplate(int id) {
             _defaultDataInstances = new SparseArray<IData>();
             _eventNotifier = new EventNotifier();
 
             TemplateId = id;
-            PrettyName = prettyName;
+            PrettyName = "";
+        }
+
+        public ContentTemplate(ITemplate template)
+            : this(template.TemplateId) {
+            PrettyName = template.PrettyName;
+
+            foreach (IData data in template.SelectCurrentData()) {
+                AddDefaultData(data);
+            }
         }
 
         /// <summary>
@@ -41,10 +71,6 @@ namespace Neon.Entities.Implementation.Shared {
         /// </remarks>
         /// <param name="data">The data instance to copy from.</param>
         public void AddDefaultData(IData data) {
-            if (GameEngine != null) {
-                throw new InvalidOperationException("Template cannot be modified while game is being played");
-            }
-
             _defaultDataInstances[DataAccessorFactory.GetId(data)] = data;
         }
 
@@ -59,28 +85,11 @@ namespace Neon.Entities.Implementation.Shared {
         /// <param name="accessor">The type of data to remove.</param>
         /// <returns>True if the data was removed.</returns>
         public bool RemoveDefaultData(DataAccessor accessor) {
-            if (GameEngine != null) {
-                throw new InvalidOperationException("Template cannot be modified while game is being played");
-            }
-
             return _defaultDataInstances.Remove(accessor.Id);
         }
 
-        public int TemplateId {
-            get;
-            private set;
-        }
-
         public IEntity InstantiateEntity() {
-            if (GameEngine == null) {
-                throw new InvalidOperationException("Unable to instantiate entity with no game engine");
-            }
-
-            RuntimeEntity entity = new RuntimeEntity(this);
-
-            GameEngine.AddEntity(entity);
-
-            return entity;
+            throw new InvalidOperationException("Unable to instantiate an entity from a ContentTemplate");
         }
 
         public ICollection<IData> SelectCurrentData(Predicate<IData> filter = null,
@@ -127,11 +136,6 @@ namespace Neon.Entities.Implementation.Shared {
 
         public bool WasModified(DataAccessor accessor) {
             return false;
-        }
-
-        public string PrettyName {
-            get;
-            set;
         }
 
         public override string ToString() {

@@ -1,121 +1,134 @@
-﻿using Neon.Entities.Implementation.Content.Specifications;
-using Neon.Entities.Implementation.Shared;
-using Neon.Serialization;
+﻿using Neon.Entities.Implementation.Shared;
+using Neon.Utilities;
+using ProtoBuf;
+using ProtoBuf.Meta;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Neon.Entities.Implementation.Content {
+    [ProtoContract]
     internal class GameSnapshot : IGameSnapshot {
-        public static IGameSnapshot Read(SerializedData data, SerializationConverter converter, List<ISystem> systems) {
-            GameSnapshot contentDatabase = new GameSnapshot();
-
-            var dict = data.AsDictionary;
-
-            // restore the entities (use EntityDeserializer to support circular references)
-            EntityDeserializer entityDeserializer = new EntityDeserializer(converter);
-            contentDatabase.SingletonEntity = entityDeserializer.AddEntity(dict["SingletonEntity"]);
-            contentDatabase.ActiveEntities = entityDeserializer.AddEntities(dict["ActiveEntities"].AsList);
-            contentDatabase.AddedEntities = entityDeserializer.AddEntities(dict["AddedEntities"].AsList);
-            contentDatabase.RemovedEntities = entityDeserializer.AddEntities(dict["RemovedEntities"].AsList);
-            entityDeserializer.Run();
-
-            // get systems that need restoration
-            List<IRestoredSystem> restorableSystems = (from s in systems
-                                                       where s is IRestoredSystem
-                                                       select (IRestoredSystem)s).ToList();
-
-            // restore systems
-            contentDatabase.Systems = new List<ISystem>(systems);
-            foreach (var system in data.AsDictionary["Systems"].AsList) {
-                RestorableSystemSpecification systemSpec = new RestorableSystemSpecification(system);
-
-                foreach (var restorableSystem in restorableSystems) {
-                    if (systemSpec.RestorationGuid == restorableSystem.RestorationGuid) {
-                        restorableSystem.ImportState(systemSpec.SavedState);
-                        restorableSystems.Remove(restorableSystem);
-                        break;
-                    }
-                }
-            }
-
-            if (restorableSystems.Count > 0) {
-                throw new InvalidOperationException("Not all systems which requested restoration were restored");
-            }
-
-            return contentDatabase;
-        }
-
-        public SerializedData Export(SerializationConverter converter) {
-            Dictionary<string, SerializedData> dict = new Dictionary<string, SerializedData>();
-
-            // entities
-            dict["SingletonEntity"] = new EntitySpecification(SingletonEntity, false, false, converter).Export();
-
-            List<SerializedData> active = new List<SerializedData>();
-            foreach (var entity in ActiveEntities) {
-                active.Add(new EntitySpecification(entity, false, false, converter).Export());
-            }
-            dict["ActiveEntities"] = new SerializedData(active);
-
-            List<SerializedData> added = new List<SerializedData>();
-            foreach (var entity in AddedEntities) {
-                added.Add(new EntitySpecification(entity, false, false, converter).Export());
-            }
-            dict["AddedEntities"] = new SerializedData(added);
-
-            List<SerializedData> removed = new List<SerializedData>();
-            foreach (var entity in RemovedEntities) {
-                removed.Add(new EntitySpecification(entity, false, false, converter).Export());
-            }
-            dict["RemovedEntities"] = new SerializedData(removed);
-
-            // save system state
-            List<SerializedData> systems = new List<SerializedData>();
-            foreach (var system in Systems) {
-                if (system is IRestoredSystem) {
-                    IRestoredSystem restoredSystem = (IRestoredSystem)system;
-
-                    RestorableSystemSpecification restoreSpec = new RestorableSystemSpecification(restoredSystem, converter);
-                    systems.Add(restoreSpec.Export());
-                }
-            }
-            dict["Systems"] = new SerializedData(systems);
-
-            return new SerializedData(dict);
+        /// <summary>
+        /// Make sure that the SerializableContainer is registered with the default type model
+        /// </summary>
+        static GameSnapshot() {
+            SerializableContainer.RegisterWithTypeModel(RuntimeTypeModel.Default);
         }
 
         public GameSnapshot() {
-            SingletonEntity = new ContentEntity();
-            ActiveEntities = new List<IEntity>();
-            AddedEntities = new List<IEntity>();
-            RemovedEntities = new List<IEntity>();
+            _entityIdGenerator = new UniqueIntGenerator();
+
+            SingletonEntity = new ContentEntity(_entityIdGenerator.Next(), "Global Singleton");
+            ActiveEntities = new List<ContentEntity>();
+            AddedEntities = new List<ContentEntity>();
+            RemovedEntities = new List<ContentEntity>();
             Systems = new List<ISystem>();
+            _templateResolver = new TemplateResolver();
         }
 
-        public IEntity SingletonEntity {
+        [ProtoMember(1)]
+        private UniqueIntGenerator _entityIdGenerator;
+
+        [ProtoMember(2)]
+        public ContentEntity SingletonEntity {
             get;
             set;
         }
 
-        public List<IEntity> ActiveEntities {
+        [ProtoMember(3)]
+        public List<ContentEntity> ActiveEntities {
             get;
             private set;
         }
 
-        public List<IEntity> AddedEntities {
+        [ProtoMember(4)]
+        public List<ContentEntity> AddedEntities {
             get;
             private set;
         }
 
-        public List<IEntity> RemovedEntities {
+        [ProtoMember(5)]
+        public List<ContentEntity> RemovedEntities {
             get;
             private set;
+        }
+
+        [ProtoMember(6)]
+        private SerializableContainer _serializedSystems;
+
+        [ProtoBeforeSerialization]
+        private void ExportSystems() {
+            _serializedSystems = new SerializableContainer(Systems);
+        }
+
+        [ProtoAfterDeserialization]
+        private void ImportSystems() {
+            Systems = _serializedSystems.ToList<ISystem>();
         }
 
         public List<ISystem> Systems {
             get;
             set;
+        }
+
+        /// <summary>
+        /// Template resolver that should be used only within this snapshot; ie, all data and entity
+        /// instances *within* this snapshot (reachable from this object instance) should all point
+        /// to this template resolver, but no other reference should point to this resolver.
+        /// </summary>
+        [ProtoMember(7)]
+        private TemplateResolver _templateResolver;
+
+        /// <summary>
+        /// Sets the templates that all entities will reference.
+        /// </summary>
+        /// <param name="templates">The templates that all entity/data references inside of this
+        /// object will reference</param>
+        public void SetTemplates(IEnumerable<ITemplate> templates) {
+            _templateResolver.SetTemplates(templates);
+        }
+
+        public IEntity CreateEntity(EntityAddLocation to, string prettyName = "") {
+            ContentEntity added = new ContentEntity(_entityIdGenerator.Next(), prettyName);
+
+            switch (to) {
+                case EntityAddLocation.Active:
+                    ActiveEntities.Add(added);
+                    break;
+                case EntityAddLocation.Added:
+                    AddedEntities.Add(added);
+                    break;
+                case EntityAddLocation.Removed:
+                    RemovedEntities.Add(added);
+                    break;
+            }
+
+            return added;
+        }
+
+        public TemplateReference CreateTemplate() {
+            return _templateResolver.CreateTemplate();
+        }
+
+        IEntity IGameSnapshot.SingletonEntity {
+            get { return SingletonEntity; }
+        }
+
+        IEnumerable<IEntity> IGameSnapshot.ActiveEntities {
+            get { return ActiveEntities.Select<ContentEntity, IEntity>(c => c); ; }
+        }
+
+        IEnumerable<IEntity> IGameSnapshot.RemovedEntities {
+            get { return RemovedEntities.Select<ContentEntity, IEntity>(c => c); }
+        }
+
+        IEnumerable<IEntity> IGameSnapshot.AddedEntities {
+            get { return AddedEntities.Select<ContentEntity, IEntity>(c => c); }
+        }
+
+        List<ISystem> IGameSnapshot.Systems {
+            get { return Systems; }
         }
     }
 }

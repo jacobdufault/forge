@@ -10,27 +10,10 @@ namespace Neon.Entities {
     /// </summary>
     public static class LevelManager {
         /// <summary>
-        /// Attempts to load level that is contained within the given string.
-        /// </summary>
-        /// <param name="level">The level to load.</param>
-        /// <returns>An empty maybe if no level could be loaded, otherwise the loaded
-        /// level.</returns>
-        public static Maybe<ISavedLevel> Load(SavedStateReader level) {
-            return level.GetFileItem<EntitiesSaveFileItem>().Lift<EntitiesSaveFileItem, ISavedLevel>();
-        }
-
-        /// <summary>
-        /// Saves a level to the given writer.
-        /// </summary>
-        public static void Save(SavedStateWriter level, ISavedLevel savedLevel) {
-            level.WriteFileItem((EntitiesSaveFileItem)savedLevel);
-        }
-
-        /// <summary>
         /// Returns a new empty level.
         /// </summary>
         public static ISavedLevel CreateLevel() {
-            return new EntitiesSaveFileItem();
+            return new SavedLevel();
         }
     }
 

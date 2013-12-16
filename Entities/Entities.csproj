@@ -36,6 +36,9 @@
     <DocumentationFile>bin\Release\Neon.Entities.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="protobuf-net">
+      <HintPath>..\protobuf-net.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Threading">
@@ -47,16 +50,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="API\DataReference.cs" />
+    <Compile Include="API\TemplateReference.cs" />
     <Compile Include="Implementation\Content\GameSnapshot.cs" />
     <Compile Include="Implementation\Content\ContentEntity.cs" />
+    <Compile Include="Implementation\Content\ContentTemplate.cs" />
+    <Compile Include="Implementation\Content\SerializableContainer.cs" />
+    <Compile Include="Implementation\Runtime\HashingStream.cs" />
     <Compile Include="Implementation\Runtime\PerformanceInformation.cs" />
-    <Compile Include="Implementation\Shared\Template.cs" />
-    <Compile Include="Implementation\Content\Specifications\RestorableSystemSpecification.cs" />
-    <Compile Include="Implementation\Shared\EntitiesSaveFileItem.cs" />
-    <Compile Include="Implementation\Content\Specifications\EntitySpecification.cs" />
-    <Compile Include="Implementation\Content\Specifications\EntityDataSpecification.cs" />
-    <Compile Include="Implementation\Content\Specifications\TemplateDataSpecification.cs" />
-    <Compile Include="Implementation\Content\Specifications\TemplateSpecification.cs" />
+    <Compile Include="Implementation\Runtime\RuntimeTemplate.cs" />
+    <Compile Include="Implementation\Shared\SavedLevel.cs" />
     <Compile Include="Implementation\Shared\DataAccessor.cs" />
     <Compile Include="Implementation\Runtime\RuntimeEntity.cs" />
     <Compile Include="Implementation\Runtime\EntityManagerMetadata.cs" />
@@ -65,8 +68,6 @@
     <Compile Include="API\Exceptions.cs" />
     <Compile Include="API\IEntityExtensions.cs" />
     <Compile Include="Implementation\Runtime\ImmutableContainer.cs" />
-    <Compile Include="Implementation\Content\EntityDeserializer.cs" />
-    <Compile Include="Implementation\Content\TemplateDeserializer.cs" />
     <Compile Include="API\ISystemProvider.cs" />
     <Compile Include="API\IContentDatabase.cs" />
     <Compile Include="API\IData.cs" />
@@ -81,7 +82,7 @@
     <Compile Include="Implementation\Runtime\System.cs" />
     <Compile Include="Implementation\Runtime\GameEngine.cs" />
     <Compile Include="Implementation\Shared\Filter.cs" />
-    <Compile Include="Implementation\Verification\AutomatedHashComputation.cs" />
+    <Compile Include="Implementation\Shared\TypeCache.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -92,10 +93,6 @@
     <ProjectReference Include="..\FileSaving\FileSaving.csproj">
       <Project>{3bb8571c-22e3-47a0-a4b3-12d682b25b4d}</Project>
       <Name>FileSaving</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Serialization\Serialization.csproj">
-      <Project>{b97ca54f-0428-4853-af39-5ed8375a0262}</Project>
-      <Name>Serialization</Name>
     </ProjectReference>
     <ProjectReference Include="..\Utilities\Utilities.csproj">
       <Project>{25db9f16-ecae-4a3f-b3c3-5794b8288587}</Project>

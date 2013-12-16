@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neon.Entities.Implementation.Content;
 using Neon.Entities.Implementation.Runtime;
+using Neon.Utilities;
 using System;
 using System.Collections.Generic;
 
@@ -25,10 +26,10 @@ namespace Neon.Entities.Tests {
     }
 
     internal static class EntityHelpers {
+        private static UniqueIntGenerator _idGenerator = new UniqueIntGenerator();
+
         public static RuntimeEntity CreateEntity() {
-            //return new EntityTemplate().Instantiate(false);
-            return new RuntimeEntity(new ContentEntity());
-            //throw new NotImplementedException();
+            return new RuntimeEntity(new ContentEntity(_idGenerator.Next(), ""));
         }
     }
 

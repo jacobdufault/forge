@@ -1,14 +1,13 @@
 ﻿using Neon.Collections;
 using Neon.Entities.Implementation.Content;
-using Neon.Entities.Implementation.Content.Specifications;
 using Neon.Entities.Implementation.Shared;
-using Neon.Entities.Implementation.Verification;
-using Neon.Serialization;
 using Neon.Utilities;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -139,19 +138,17 @@ namespace Neon.Entities.Implementation.Runtime {
             private set;
         }
 
-        public GameEngine(IGameSnapshot contentDatabase, List<ITemplate> templates) {
-            _systems = contentDatabase.Systems;
+        private List<RuntimeTemplate> _templates;
 
-            foreach (var template in templates) {
-                Template tem = (Template)template;
+        public GameEngine(GameSnapshot baseSnapshot, List<ITemplate> templates) {
+            _templates = templates.ConvertAll(
+                template => new RuntimeTemplate((ContentTemplate)template, this)).ToList();
 
-                if (tem.GameEngine != null) {
-                    throw new InvalidOperationException("Attempt to create multiple GameEngines " +
-                        "from the same set of templates; this is not currently supported");
-                }
+            // Create our own little island of references with its own set of templates
+            GameSnapshot snapshot = Serializer.DeepClone(baseSnapshot);
+            snapshot.SetTemplates(_templates.Cast<ITemplate>());
 
-                tem.GameEngine = this;
-            }
+            _systems = snapshot.Systems;
 
             SystemDoneEvent = new CountdownEvent(0);
             _eventProcessors.BeginMonitoring((EventNotifier)EventNotifier);
@@ -159,13 +156,13 @@ namespace Neon.Entities.Implementation.Runtime {
             // TODO: ensure that when correctly restore UpdateNumber
             //UpdateNumber = updateNumber;
 
-            SingletonEntity = new RuntimeEntity((ContentEntity)contentDatabase.SingletonEntity);
+            SingletonEntity = new RuntimeEntity((ContentEntity)snapshot.SingletonEntity);
 
-            foreach (var entity in contentDatabase.AddedEntities) {
+            foreach (var entity in snapshot.AddedEntities) {
                 AddEntity(new RuntimeEntity((ContentEntity)entity));
             }
 
-            foreach (var entity in contentDatabase.ActiveEntities) {
+            foreach (var entity in snapshot.ActiveEntities) {
                 RuntimeEntity runtimeEntity = new RuntimeEntity((ContentEntity)entity);
 
                 // add the entity
@@ -181,7 +178,7 @@ namespace Neon.Entities.Implementation.Runtime {
                 //}
             }
 
-            foreach (var entity in contentDatabase.RemovedEntities) {
+            foreach (var entity in snapshot.RemovedEntities) {
                 RuntimeEntity runtimeEntity = new RuntimeEntity((ContentEntity)entity);
 
                 // add the entity
@@ -199,7 +196,7 @@ namespace Neon.Entities.Implementation.Runtime {
                 RemoveEntity(runtimeEntity);
             }
 
-            foreach (var system in contentDatabase.Systems) {
+            foreach (var system in snapshot.Systems) {
                 AddSystem(system);
             }
 
@@ -527,54 +524,36 @@ namespace Neon.Entities.Implementation.Runtime {
         #endregion
 
         public IGameSnapshot TakeSnapshot() {
-            SerializationConverter converter = new SerializationConverter();
-            TemplateDeserializer.AddTemplateExporter(converter);
-            EntityDeserializer.AddEntityExporter(converter);
-
             GameSnapshot snapshot = new GameSnapshot();
 
-            snapshot.SingletonEntity = new ContentEntity(new EntitySpecification(SingletonEntity, false, false, converter), converter);
+            snapshot.SingletonEntity = new ContentEntity(SingletonEntity);
 
             foreach (var adding in _notifiedAddingEntities.ToList()) {
-                snapshot.AddedEntities.Add(new ContentEntity(new EntitySpecification(adding, true, false, converter), converter));
+                snapshot.AddedEntities.Add(new ContentEntity(adding));
             }
 
             List<RuntimeEntity> removing = _notifiedRemovedEntities.ToList();
             foreach (var entity in _entities) {
                 bool isRemoving = removing.Contains(entity);
 
-                ContentEntity contentEntity = new ContentEntity(new EntitySpecification(entity, false, isRemoving, converter), converter);
-
                 if (isRemoving) {
-                    snapshot.RemovedEntities.Add(contentEntity);
+                    snapshot.RemovedEntities.Add(new ContentEntity(entity));
                 }
                 else {
-                    snapshot.ActiveEntities.Add(contentEntity);
+                    snapshot.ActiveEntities.Add(new ContentEntity(entity));
                 }
 
             }
 
             snapshot.Systems = _systems;
 
-            return snapshot;
+            GameSnapshot clone = Serializer.DeepClone(snapshot);
+            clone.SetTemplates(_templates.ConvertAll<ITemplate>(template => new ContentTemplate(template)));
+            return clone;
         }
 
-        public int GetVerificationHash() {
-            int hash = 17;
-
-            foreach (IEntity entity in _entities) {
-                foreach (var data in entity.SelectCurrentData()) {
-                    DataAccessor accessor = new DataAccessor(data);
-
-                    IData current = entity.Current(accessor);
-                    IData previous = entity.Previous(accessor);
-
-                    hash = (hash * 31) + AutomatedHashComputation.GetHash(current);
-                    hash = (hash * 31) + AutomatedHashComputation.GetHash(previous);
-                }
-            }
-
-            return hash;
+        public byte[] GetVerificationHash() {
+            return HashingStream.GetHash(TakeSnapshot(), HashAlgorithm.Create("MD5"));
         }
     }
 }
