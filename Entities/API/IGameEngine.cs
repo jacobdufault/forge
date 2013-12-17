@@ -80,11 +80,9 @@ namespace Neon.Entities {
         /// the given content database. The passed in snapshot will not be modified.
         /// </summary>
         /// <param name="content">The content to allocate the engine from.</param>
-        /// <param name="templates">The templates to use when running the engine.</param>
         /// <returns>A game engine that can play the given content.</returns>
-        public static IGameEngine CreateEngine(IGameSnapshot content,
-            IEnumerable<ITemplate> templates) {
-            return new GameEngine((GameSnapshot)content, templates);
+        public static IGameEngine CreateEngine(IGameSnapshot content) {
+            return new GameEngine((GameSnapshot)content);
         }
     }
 }

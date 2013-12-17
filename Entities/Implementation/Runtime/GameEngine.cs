@@ -140,13 +140,12 @@ namespace Neon.Entities.Implementation.Runtime {
 
         private List<RuntimeTemplate> _templates;
 
-        public GameEngine(GameSnapshot baseSnapshot, IEnumerable<ITemplate> templates) {
-            _templates = templates.Select(
-                template => new RuntimeTemplate((ContentTemplate)template, this)).ToList();
-
+        public GameEngine(GameSnapshot baseSnapshot) {
             // Create our own little island of references with its own set of templates
             GameSnapshot snapshot = Serializer.DeepClone(baseSnapshot);
-            snapshot.SetTemplates(_templates.Cast<ITemplate>());
+
+            _templates = snapshot.Templates.Select(t => new RuntimeTemplate(t, this)).ToList();
+            snapshot.SetTemplateReferences(_templates.Cast<ITemplate>());
 
             _systems = snapshot.Systems;
 
@@ -548,7 +547,7 @@ namespace Neon.Entities.Implementation.Runtime {
             snapshot.Systems = _systems;
 
             GameSnapshot clone = Serializer.DeepClone(snapshot);
-            clone.SetTemplates(_templates.ConvertAll<ITemplate>(template => new ContentTemplate(template)));
+            clone.SetTemplateReferences(_templates.ConvertAll<ITemplate>(template => new ContentTemplate(template)));
             return clone;
         }
 

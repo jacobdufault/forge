@@ -83,8 +83,6 @@
     <Compile Include="Implementation\Runtime\System.cs" />
     <Compile Include="Implementation\Runtime\GameEngine.cs" />
     <Compile Include="Implementation\Shared\Filter.cs" />
-    <Compile Include="Implementation\Shared\SerializationHelpers.cs" />
-    <Compile Include="Implementation\Shared\TypeCache.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

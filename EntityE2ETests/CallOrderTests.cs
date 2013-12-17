@@ -108,7 +108,7 @@ namespace Neon.Entities.E2ETests {
 
             IEntity entity = snapshot.CreateEntity(EntityAddLocation.Added);
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, new List<ITemplate>());
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot);
 
             engine.SynchronizeState().WaitOne();
             engine.Update();
@@ -152,7 +152,7 @@ namespace Neon.Entities.E2ETests {
 
             snapshot.CreateEntity(EntityAddLocation.Added);
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, new List<ITemplate>());
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot);
             engine.SynchronizeState().WaitOne();
             engine.Update();
 
@@ -199,7 +199,7 @@ namespace Neon.Entities.E2ETests {
                 e.AddData<TestData0>();
             }
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, new List<ITemplate>());
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot);
             engine.SynchronizeState().WaitOne();
             engine.Update();
 
@@ -229,7 +229,7 @@ namespace Neon.Entities.E2ETests {
 
             IEntity entity = snapshot.CreateEntity(EntityAddLocation.Removed);
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, new List<ITemplate>());
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot);
 
             engine.SynchronizeState().WaitOne();
             engine.Update();
@@ -261,7 +261,7 @@ namespace Neon.Entities.E2ETests {
             IEntity entity = snapshot.CreateEntity(EntityAddLocation.Removed);
             entity.AddData<TestData0>();
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, new List<ITemplate>());
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot);
 
             engine.SynchronizeState().WaitOne();
             engine.Update();
@@ -310,7 +310,7 @@ namespace Neon.Entities.E2ETests {
                 e.AddData<TestData0>();
             }
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, new List<ITemplate>());
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot);
 
             engine.SynchronizeState().WaitOne();
             engine.Update();

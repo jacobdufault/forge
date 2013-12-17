@@ -17,8 +17,6 @@ namespace Neon.Entities.Implementation.Shared {
         [ProtoMember(2)]
         private GameSnapshot _originalState = new GameSnapshot();
         [ProtoMember(3)]
-        private List<ContentTemplate> _templates = new List<ContentTemplate>();
-        [ProtoMember(4)]
         private List<IssuedInput> _input = new List<IssuedInput>();
 
         IGameSnapshot ISavedLevel.CurrentState {
@@ -30,12 +28,6 @@ namespace Neon.Entities.Implementation.Shared {
         IGameSnapshot ISavedLevel.OriginalState {
             get {
                 return _originalState;
-            }
-        }
-
-        IEnumerable<ITemplate> ISavedLevel.Templates {
-            get {
-                return _templates.Cast<ITemplate>();
             }
         }
 

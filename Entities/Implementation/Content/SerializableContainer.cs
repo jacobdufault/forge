@@ -1,4 +1,5 @@
 ﻿using Neon.Entities.Implementation.Shared;
+using Neon.Utilities;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
@@ -18,7 +19,7 @@ namespace Neon.Entities.Implementation.Content {
         }
 
         /// <summary>
-        /// Helper method to register the container with the given type model.
+        /// Helper method to register the container with the given type metadata.
         /// </summary>
         public static void RegisterWithTypeModel(RuntimeTypeModel model) {
             // if we already registered ourselves, don't register again

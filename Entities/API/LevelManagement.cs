@@ -98,13 +98,6 @@ namespace Neon.Entities {
         }
 
         /// <summary>
-        /// The templates that are used in the level.
-        /// </summary>
-        IEnumerable<ITemplate> Templates {
-            get;
-        }
-
-        /// <summary>
         /// The input that can be used to transform the original state into the current state.
         /// </summary>
         List<IssuedInput> Input {

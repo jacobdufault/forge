@@ -70,5 +70,12 @@ namespace Neon.Entities {
         List<ISystem> Systems {
             get;
         }
+
+        /// <summary>
+        /// All of the templates that are in the game.
+        /// </summary>
+        IEnumerable<ITemplate> Templates {
+            get;
+        }
     }
 }

@@ -10,7 +10,7 @@ namespace Neon.Entities.Implementation.Content {
     [ProtoContract]
     internal class GameSnapshot : IGameSnapshot {
         /// <summary>
-        /// Make sure that the SerializableContainer is registered with the default type model
+        /// Make sure that the SerializableContainer is registered with the default type metadata
         /// </summary>
         static GameSnapshot() {
             SerializableContainer.RegisterWithTypeModel(RuntimeTypeModel.Default);
@@ -24,6 +24,8 @@ namespace Neon.Entities.Implementation.Content {
             AddedEntities = new List<ContentEntity>();
             RemovedEntities = new List<ContentEntity>();
             Systems = new List<ISystem>();
+            Templates = new List<ContentTemplate>();
+
             _templateResolver = new TemplateResolver();
         }
 
@@ -64,10 +66,21 @@ namespace Neon.Entities.Implementation.Content {
 
         [ProtoAfterDeserialization]
         private void ImportSystems() {
+            if (ActiveEntities == null) ActiveEntities = new List<ContentEntity>();
+            if (RemovedEntities == null) RemovedEntities = new List<ContentEntity>();
+            if (Templates == null) Templates = new List<ContentTemplate>();
+
             Systems = _serializedSystems.ToList<ISystem>();
+            SetTemplateReferences(Templates.Cast<ITemplate>());
         }
 
         public List<ISystem> Systems {
+            get;
+            set;
+        }
+
+        [ProtoMember(7)]
+        public List<ContentTemplate> Templates {
             get;
             set;
         }
@@ -77,7 +90,7 @@ namespace Neon.Entities.Implementation.Content {
         /// instances *within* this snapshot (reachable from this object instance) should all point
         /// to this template resolver, but no other reference should point to this resolver.
         /// </summary>
-        [ProtoMember(7)]
+        [ProtoMember(8)]
         private TemplateResolver _templateResolver;
 
         /// <summary>
@@ -85,7 +98,7 @@ namespace Neon.Entities.Implementation.Content {
         /// </summary>
         /// <param name="templates">The templates that all entity/data references inside of this
         /// object will reference</param>
-        public void SetTemplates(IEnumerable<ITemplate> templates) {
+        public void SetTemplateReferences(IEnumerable<ITemplate> templates) {
             _templateResolver.SetTemplates(templates);
         }
 
@@ -129,6 +142,10 @@ namespace Neon.Entities.Implementation.Content {
 
         List<ISystem> IGameSnapshot.Systems {
             get { return Systems; }
+        }
+
+        IEnumerable<ITemplate> IGameSnapshot.Templates {
+            get { return Templates.Cast<ITemplate>(); }
         }
     }
 }

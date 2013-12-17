@@ -75,7 +75,7 @@ namespace Neon.Entities.E2ETests {
         public void GotAddedEventsForInitialDatabase() {
             IGameSnapshot database = CreateDefaultDatabase();
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(database, new List<ITemplate>());
+            IGameEngine engine = GameEngineFactory.CreateEngine(database);
             engine.SynchronizeState().WaitOne();
             engine.Update();
 
@@ -102,7 +102,7 @@ namespace Neon.Entities.E2ETests {
                 Filter = new[] { typeof(TestData0) }
             });
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(database, new List<ITemplate>());
+            IGameEngine engine = GameEngineFactory.CreateEngine(database);
             engine.SynchronizeState().WaitOne();
             engine.Update();
 
@@ -112,10 +112,10 @@ namespace Neon.Entities.E2ETests {
         [TestMethod]
         public void ToFromContentDatabase() {
             IGameSnapshot database0 = CreateDefaultDatabase();
-            IGameEngine engine0 = GameEngineFactory.CreateEngine(database0, new List<ITemplate>());
+            IGameEngine engine0 = GameEngineFactory.CreateEngine(database0);
 
             IGameSnapshot database1 = engine0.TakeSnapshot();
-            IGameEngine engine1 = GameEngineFactory.CreateEngine(database1, new List<ITemplate>());
+            IGameEngine engine1 = GameEngineFactory.CreateEngine(database1);
 
             CollectionAssert.AreEqual(engine0.GetVerificationHash(), engine1.GetVerificationHash());
         }
@@ -132,7 +132,7 @@ namespace Neon.Entities.E2ETests {
                 Filter = new[] { typeof(TestData0) }
             });
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(database, new List<ITemplate>());
+            IGameEngine engine = GameEngineFactory.CreateEngine(database);
             engine.SynchronizeState().WaitOne();
             engine.Update();
 
