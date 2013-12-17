@@ -60,9 +60,14 @@
     <Compile Include="Maybe.cs" />
     <Compile Include="Notifier.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PropertyMetadata.cs" />
     <Compile Include="Real.cs" />
     <Compile Include="Reference.cs" />
+    <Compile Include="SerializationHelpers.cs" />
     <Compile Include="Tuple.cs" />
+    <Compile Include="TypeCache.cs" />
+    <Compile Include="TypeExtensions.cs" />
+    <Compile Include="TypeMetadata.cs" />
     <Compile Include="UniqueIntGenerator.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="Vector2r.cs" />
