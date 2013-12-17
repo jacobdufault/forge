@@ -140,8 +140,8 @@ namespace Neon.Entities.Implementation.Runtime {
 
         private List<RuntimeTemplate> _templates;
 
-        public GameEngine(GameSnapshot baseSnapshot, List<ITemplate> templates) {
-            _templates = templates.ConvertAll(
+        public GameEngine(GameSnapshot baseSnapshot, IEnumerable<ITemplate> templates) {
+            _templates = templates.Select(
                 template => new RuntimeTemplate((ContentTemplate)template, this)).ToList();
 
             // Create our own little island of references with its own set of templates

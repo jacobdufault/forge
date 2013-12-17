@@ -82,7 +82,8 @@ namespace Neon.Entities {
         /// <param name="content">The content to allocate the engine from.</param>
         /// <param name="templates">The templates to use when running the engine.</param>
         /// <returns>A game engine that can play the given content.</returns>
-        public static IGameEngine CreateEngine(IGameSnapshot content, List<ITemplate> templates) {
+        public static IGameEngine CreateEngine(IGameSnapshot content,
+            IEnumerable<ITemplate> templates) {
             return new GameEngine((GameSnapshot)content, templates);
         }
     }

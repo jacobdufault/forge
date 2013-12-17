@@ -17,13 +17,15 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+using ProtoBuf;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 
 namespace Neon.Utilities {
-    [Serializable]
+    [ProtoContract]
     public struct Real {
+        [ProtoMember(1)]
         public long RawValue;
         public const int SHIFT_AMOUNT = 12; //12 is 4096
 

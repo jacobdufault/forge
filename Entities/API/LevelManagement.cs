@@ -3,6 +3,7 @@ using Neon.Utilities;
 using ProtoBuf;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Neon.Entities {
     /// <summary>
@@ -14,6 +15,24 @@ namespace Neon.Entities {
         /// </summary>
         public static ISavedLevel CreateLevel() {
             return new SavedLevel();
+        }
+
+        /// <summary>
+        /// Saves the given level to the given destination stream.
+        /// </summary>
+        /// <param name="destination">The stream to save the level to.</param>
+        /// <param name="level">The level to save.</param>
+        public static void Save(Stream destination, ISavedLevel level) {
+            Serializer.Serialize<SavedLevel>(destination, (SavedLevel)level);
+        }
+
+        /// <summary>
+        /// Restores a level from a stream that was used to save it.
+        /// </summary>
+        /// <param name="source">The source stream to load the level from.</param>
+        /// <returns>A fully restored level.</returns>
+        public static ISavedLevel Load(Stream source) {
+            return Serializer.Deserialize<SavedLevel>(source);
         }
     }
 

@@ -22,6 +22,7 @@ namespace Neon.Entities.Implementation.Content {
 
         [ProtoAfterDeserialization]
         private void ImportContainers() {
+            if (PrettyName == null) PrettyName = "";
             _eventNotifier = new EventNotifier();
 
             _currentData = new SparseArray<IData>();

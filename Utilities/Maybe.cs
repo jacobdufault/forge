@@ -17,6 +17,7 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+using ProtoBuf;
 using System;
 
 namespace Neon.Utilities {
@@ -30,8 +31,20 @@ namespace Neon.Utilities {
         public static Maybe<T> Just<T>(T instance) {
             return new Maybe<T>(instance);
         }
+
+        /// <summary>
+        /// Returns a maybe instance that is empty.
+        /// </summary>
+        /// <typeparam name="T">The type of the maybe instance.</typeparam>
+        /// <returns>An empty Maybe[T] instance.</returns>
+        public static Maybe<T> Empty<T>() {
+            return Maybe<T>.Empty;
+        }
     }
 
+    /// <summary>
+    /// Some common extensions for the maybe class.
+    /// </summary>
     public static class MaybeExtensions {
         /// <summary>
         /// Lifts a maybe into another maybe using the given lifting function. If the given maybe is
@@ -88,16 +101,19 @@ namespace Neon.Utilities {
     /// more clarity into the contract that function exhibits.
     /// </summary>
     /// <typeparam name="T">The type of value stored in the Maybe instance</typeparam>
+    [ProtoContract]
     public struct Maybe<T> {
         /// <summary>
         /// The stored value in the maybe instance. Only contains interesting data if _hasValue is
         /// true (otherwise the data is garbage).
         /// </summary>
+        [ProtoMember(1)]
         private readonly T _value;
 
         /// <summary>
         /// True if the maybe instance is currently holding a value.
         /// </summary>
+        [ProtoMember(2)]
         private readonly bool _hasValue;
 
         /// <summary>
@@ -111,8 +127,8 @@ namespace Neon.Utilities {
         /// Internal constructor used to construct the maybe. Used primarily in construction of the
         /// Empty element.
         /// </summary>
-        private Maybe(T item, bool hasValue) {
-            _value = item;
+        private Maybe(T value, bool hasValue) {
+            _value = value;
             _hasValue = hasValue;
         }
 
