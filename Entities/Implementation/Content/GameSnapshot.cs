@@ -116,15 +116,15 @@ namespace Neon.Entities.Implementation.Content {
         }
 
         IEnumerable<IEntity> IGameSnapshot.ActiveEntities {
-            get { return ActiveEntities.Select<ContentEntity, IEntity>(c => c); ; }
+            get { return ActiveEntities.Cast<IEntity>(); }
         }
 
         IEnumerable<IEntity> IGameSnapshot.RemovedEntities {
-            get { return RemovedEntities.Select<ContentEntity, IEntity>(c => c); }
+            get { return RemovedEntities.Cast<IEntity>(); }
         }
 
         IEnumerable<IEntity> IGameSnapshot.AddedEntities {
-            get { return AddedEntities.Select<ContentEntity, IEntity>(c => c); }
+            get { return AddedEntities.Cast<IEntity>(); }
         }
 
         List<ISystem> IGameSnapshot.Systems {

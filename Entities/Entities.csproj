@@ -59,6 +59,7 @@
     <Compile Include="Implementation\Runtime\HashingStream.cs" />
     <Compile Include="Implementation\Runtime\PerformanceInformation.cs" />
     <Compile Include="Implementation\Runtime\RuntimeTemplate.cs" />
+    <Compile Include="Implementation\Shared\FailSerializationSurrogate.cs" />
     <Compile Include="Implementation\Shared\SavedLevel.cs" />
     <Compile Include="Implementation\Shared\DataAccessor.cs" />
     <Compile Include="Implementation\Runtime\RuntimeEntity.cs" />
@@ -69,7 +70,7 @@
     <Compile Include="API\IEntityExtensions.cs" />
     <Compile Include="Implementation\Runtime\ImmutableContainer.cs" />
     <Compile Include="API\ISystemProvider.cs" />
-    <Compile Include="API\IContentDatabase.cs" />
+    <Compile Include="API\IGameSnapshot.cs" />
     <Compile Include="API\IData.cs" />
     <Compile Include="API\IEntity.cs" />
     <Compile Include="API\IEventNotifier.cs" />
@@ -82,6 +83,7 @@
     <Compile Include="Implementation\Runtime\System.cs" />
     <Compile Include="Implementation\Runtime\GameEngine.cs" />
     <Compile Include="Implementation\Shared\Filter.cs" />
+    <Compile Include="Implementation\Shared\SerializationHelpers.cs" />
     <Compile Include="Implementation\Shared\TypeCache.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -89,10 +91,6 @@
     <ProjectReference Include="..\Collections\Collections.csproj">
       <Project>{9d91d020-4291-4926-b76d-b73d138b0aef}</Project>
       <Name>Collections</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\FileSaving\FileSaving.csproj">
-      <Project>{3bb8571c-22e3-47a0-a4b3-12d682b25b4d}</Project>
-      <Name>FileSaving</Name>
     </ProjectReference>
     <ProjectReference Include="..\Utilities\Utilities.csproj">
       <Project>{25db9f16-ecae-4a3f-b3c3-5794b8288587}</Project>

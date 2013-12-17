@@ -13,8 +13,8 @@ namespace Neon.Entities {
     }
 
     /// <summary>
-    /// The IGameSnapshot stores a serialized state of the game. It provides a common interface that
-    /// both the engine and the editor use for accessing saved games and replays.
+    /// The IGameSnapshot stores a serialized state of the engine. It provides a common interface
+    /// that both the engine and the editor use for accessing saved games and replays.
     /// </summary>
     /// <remarks>
     /// All implementations of this class must extend the MarshalByRefObject class, as

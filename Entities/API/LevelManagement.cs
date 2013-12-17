@@ -1,6 +1,6 @@
 ﻿using Neon.Entities.Implementation.Shared;
-using Neon.FileSaving;
 using Neon.Utilities;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
 
@@ -20,16 +20,36 @@ namespace Neon.Entities {
     /// <summary>
     /// Stores an IGameInput instance along with the update that the input was issued.
     /// </summary>
+    [ProtoContract]
     public class IssuedInput {
         /// <summary>
         /// The update number that this input was issued at.
         /// </summary>
-        public readonly int UpdateNumber;
+        [ProtoMember(1)]
+        public int UpdateNumber {
+            get;
+            private set;
+        }
 
         /// <summary>
-        /// The input instance itself.
+        /// The input instance itself. This is serialized under _serializedInput.
         /// </summary>
-        public readonly IGameInput Input;
+        public IGameInput Input {
+            get;
+            private set;
+        }
+
+        private byte[] _serializedInput;
+
+        [ProtoBeforeSerialization]
+        private void OnExport() {
+            _serializedInput = SerializationHelpers.SerializeWithType(Input);
+        }
+
+        [ProtoAfterDeserialization]
+        private void OnImport() {
+            Input = (IGameInput)SerializationHelpers.DeserializeWithType(_serializedInput);
+        }
 
         /// <summary>
         /// Creates a new IssuedInput instance.
@@ -44,20 +64,6 @@ namespace Neon.Entities {
     /// Represents a level that has been saved.
     /// </summary>
     public interface ISavedLevel {
-        /// <summary>
-        /// Paths of assemblies that should be loaded into the AppDomain.
-        /// </summary>
-        List<string> AssemblyInjectionPaths {
-            get;
-        }
-
-        /// <summary>
-        /// Types of the system providers that should be used to get instances of ISystems.
-        /// </summary>
-        List<Type> SystemProviderTypes {
-            get;
-        }
-
         /// <summary>
         /// The current state of the game.
         /// </summary>
@@ -75,7 +81,7 @@ namespace Neon.Entities {
         /// <summary>
         /// The templates that are used in the level.
         /// </summary>
-        List<ITemplate> Templates {
+        IEnumerable<ITemplate> Templates {
             get;
         }
 

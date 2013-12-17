@@ -56,47 +56,6 @@ namespace Neon.Entities.Implementation.Content {
     [ProtoContract]
     internal class SerializableContainerSurrogate {
         /// <summary>
-        /// Serializes the given object with its type, so that when it is reconstructed it will be
-        /// rebuilt with the correct type.
-        /// </summary>
-        /// <param name="obj">The object to serialize.</param>
-        private static byte[] SerializeWithType(object obj) {
-            using (var ms = new MemoryStream()) {
-                Type type = obj.GetType();
-                var id = ASCIIEncoding.ASCII.GetBytes(type.FullName + '|');
-                ms.Write(id, 0, id.Length);
-                Serializer.Serialize(ms, obj);
-                var bytes = ms.ToArray();
-                return bytes;
-            }
-        }
-
-        /// <summary>
-        /// Reads an object with type information from a previous serialized state (done via
-        /// SerializeWithType) ; this method is useful when you don't know the type of object you
-        /// are deserializing.
-        /// </summary>
-        /// <param name="data">The data to deserialize from.</param>
-        /// <returns>An object instance of the same type that it was serialized with.</returns>
-        private static object DeserializeWithType(byte[] data) {
-            StringBuilder stringBuilder = new StringBuilder();
-            using (MemoryStream stream = new MemoryStream(data)) {
-                while (true) {
-                    var currentChar = (char)stream.ReadByte();
-                    if (currentChar == '|') {
-                        break;
-                    }
-
-                    stringBuilder.Append(currentChar);
-                }
-                string typeName = stringBuilder.ToString();
-                Type deserializationType = TypeCache.FindType(typeName);
-
-                return Serializer.NonGeneric.Deserialize(deserializationType, stream);
-            }
-        }
-
-        /// <summary>
         /// The list of items that are in the bucket we serialized.
         /// </summary>
         [ProtoMember(1)]
@@ -107,7 +66,7 @@ namespace Neon.Entities.Implementation.Content {
 
             SerializableContainer container = new SerializableContainer();
             foreach (byte[] item in surrogate._items) {
-                container.Items.Add(DeserializeWithType(item));
+                container.Items.Add(SerializationHelpers.DeserializeWithType(item));
             }
             return container;
         }
@@ -118,7 +77,7 @@ namespace Neon.Entities.Implementation.Content {
             SerializableContainerSurrogate surrogate = new SerializableContainerSurrogate();
             if (bucket.Items != null) {
                 foreach (object item in bucket.Items) {
-                    surrogate._items.Add(SerializeWithType(item));
+                    surrogate._items.Add(SerializationHelpers.SerializeWithType(item));
                 }
             }
             return surrogate;
