@@ -27,6 +27,7 @@ namespace Neon.Entities.Implementation.Content {
             Templates = new List<ContentTemplate>();
 
             _templateResolver = new TemplateResolver();
+            SetTemplateReferences(Templates.Cast<ITemplate>());
         }
 
         [ProtoMember(1)]
@@ -121,7 +122,9 @@ namespace Neon.Entities.Implementation.Content {
         }
 
         public TemplateReference CreateTemplate() {
-            return _templateResolver.CreateTemplate();
+            TemplateReference reference = _templateResolver.CreateTemplate();
+            Templates.Add((ContentTemplate)reference.Resolve());
+            return reference;
         }
 
         IEntity IGameSnapshot.SingletonEntity {

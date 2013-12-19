@@ -69,7 +69,6 @@
     <Compile Include="API\Exceptions.cs" />
     <Compile Include="API\IEntityExtensions.cs" />
     <Compile Include="Implementation\Runtime\ImmutableContainer.cs" />
-    <Compile Include="API\ISystemProvider.cs" />
     <Compile Include="API\IGameSnapshot.cs" />
     <Compile Include="API\IData.cs" />
     <Compile Include="API\IEntity.cs" />

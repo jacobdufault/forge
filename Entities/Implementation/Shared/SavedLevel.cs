@@ -1,5 +1,4 @@
 ﻿using Neon.Entities.Implementation.Content;
-using Neon.Entities.Serialization;
 using Neon.Utilities;
 using ProtoBuf;
 using System;
