@@ -56,6 +56,8 @@
     <Compile Include="Implementation\Content\ContentTemplate.cs" />
     <Compile Include="Implementation\Runtime\PerformanceInformation.cs" />
     <Compile Include="Implementation\Runtime\RuntimeTemplate.cs" />
+    <Compile Include="Implementation\Shared\DataSparseArrayConverter.cs" />
+    <Compile Include="Implementation\Shared\RequiredConverters.cs" />
     <Compile Include="Implementation\Shared\SavedLevel.cs" />
     <Compile Include="Implementation\Shared\DataAccessor.cs" />
     <Compile Include="Implementation\Runtime\RuntimeEntity.cs" />

@@ -20,19 +20,18 @@ namespace Neon.Entities {
         /// <summary>
         /// Saves the given level to the given destination stream.
         /// </summary>
-        /// <param name="destination">The stream to save the level to.</param>
         /// <param name="level">The level to save.</param>
         public static string Save(ISavedLevel level) {
-            return SerializationHelpers.Serialize((SavedLevel)level);
+            return SerializationHelpers.Serialize((SavedLevel)level, RequiredConverters.GetConverters(null));
         }
 
         /// <summary>
         /// Restores a level from a stream that was used to save it.
         /// </summary>
-        /// <param name="source">The source stream to load the level from.</param>
+        /// <param name="json">The saved JSON to restore the level from.</param>
         /// <returns>A fully restored level.</returns>
-        public static ISavedLevel Load(string source) {
-            return SerializationHelpers.Deserialize<SavedLevel>(source);
+        public static ISavedLevel Load(string json) {
+            return SerializationHelpers.Deserialize<SavedLevel>(json, RequiredConverters.GetConverters(null));
         }
     }
 

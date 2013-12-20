@@ -13,7 +13,7 @@ namespace Neon.Entities.Implementation.Shared {
     internal class SavedLevel : ISavedLevel {
         [JsonProperty("CurrentState")]
         private GameSnapshot _currentState = new GameSnapshot();
-        [JsonProperty("PreviousState")]
+        [JsonProperty("OriginalState")]
         private GameSnapshot _originalState = new GameSnapshot();
         [JsonProperty("Input")]
         private List<IssuedInput> _input = new List<IssuedInput>();

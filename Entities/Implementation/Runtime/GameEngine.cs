@@ -140,7 +140,7 @@ namespace Neon.Entities.Implementation.Runtime {
 
         public GameEngine(GameSnapshot baseSnapshot) {
             // Create our own little island of references with its own set of templates
-            GameSnapshot snapshot = SerializationHelpers.DeepClone(baseSnapshot, new TemplateConverter(this));
+            GameSnapshot snapshot = SerializationHelpers.DeepClone(baseSnapshot, RequiredConverters.GetConverters(this));
 
             _systems = snapshot.Systems;
 
@@ -545,11 +545,11 @@ namespace Neon.Entities.Implementation.Runtime {
         }
 
         public IGameSnapshot TakeSnapshot() {
-            return SerializationHelpers.DeepClone(GetSnapshot(), new TemplateConverter(null));
+            return SerializationHelpers.DeepClone(GetSnapshot(), RequiredConverters.GetConverters(null));
         }
 
         public int GetVerificationHash() {
-            string json = SerializationHelpers.Serialize(GetSnapshot(), new TemplateConverter(null));
+            string json = SerializationHelpers.Serialize(GetSnapshot(), RequiredConverters.GetConverters(null));
             return json.GetHashCode();
         }
     }
