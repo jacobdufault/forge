@@ -27,10 +27,13 @@ namespace Neon.Entities.Implementation.Content {
             set;
         }
 
-        public ContentTemplate(int id) {
+        public ContentTemplate() {
             _defaultDataInstances = new SparseArray<IData>();
             _eventNotifier = new EventNotifier();
+        }
 
+        public ContentTemplate(int id)
+            : this() {
             TemplateId = id;
             PrettyName = "";
         }

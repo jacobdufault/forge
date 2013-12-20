@@ -23,7 +23,7 @@ namespace Neon.Entities {
         /// <param name="destination">The stream to save the level to.</param>
         /// <param name="level">The level to save.</param>
         public static string Save(ISavedLevel level) {
-            return SerializationHelpers.Serialize(level);
+            return SerializationHelpers.Serialize((SavedLevel)level);
         }
 
         /// <summary>

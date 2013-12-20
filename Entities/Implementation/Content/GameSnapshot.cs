@@ -80,7 +80,8 @@ namespace Neon.Entities.Implementation.Content {
         }
 
         public ITemplate CreateTemplate() {
-            ITemplate template = new ContentTemplate(_templateIdGenerator.Next());
+            ContentTemplate template = new ContentTemplate(_templateIdGenerator.Next());
+            Templates.Add(template);
             return template;
         }
 
