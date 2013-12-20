@@ -36,7 +36,7 @@ namespace Neon.Utilities {
         /// Returns the next unique int.
         /// </summary>
         public int Next() {
-            return Interlocked.Increment(ref _next);
+            return Interlocked.Increment(ref _next) - 1;
         }
 
         /// <summary>
