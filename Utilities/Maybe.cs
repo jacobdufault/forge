@@ -17,7 +17,7 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using ProtoBuf;
+using Newtonsoft.Json;
 using System;
 
 namespace Neon.Utilities {
@@ -101,19 +101,19 @@ namespace Neon.Utilities {
     /// more clarity into the contract that function exhibits.
     /// </summary>
     /// <typeparam name="T">The type of value stored in the Maybe instance</typeparam>
-    [ProtoContract]
+    [JsonObject(MemberSerialization.OptIn)]
     public struct Maybe<T> {
         /// <summary>
         /// The stored value in the maybe instance. Only contains interesting data if _hasValue is
         /// true (otherwise the data is garbage).
         /// </summary>
-        [ProtoMember(1)]
+        [JsonProperty("Value")]
         private readonly T _value;
 
         /// <summary>
         /// True if the maybe instance is currently holding a value.
         /// </summary>
-        [ProtoMember(2)]
+        [JsonProperty("HasValue")]
         private readonly bool _hasValue;
 
         /// <summary>

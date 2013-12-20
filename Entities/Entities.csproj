@@ -36,8 +36,8 @@
     <DocumentationFile>bin\Release\Neon.Entities.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="protobuf-net">
-      <HintPath>..\protobuf-net.dll</HintPath>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -51,15 +51,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="API\DataReference.cs" />
-    <Compile Include="API\TemplateReference.cs" />
     <Compile Include="Implementation\Content\GameSnapshot.cs" />
     <Compile Include="Implementation\Content\ContentEntity.cs" />
     <Compile Include="Implementation\Content\ContentTemplate.cs" />
-    <Compile Include="Implementation\Content\SerializableContainer.cs" />
-    <Compile Include="Implementation\Runtime\HashingStream.cs" />
     <Compile Include="Implementation\Runtime\PerformanceInformation.cs" />
     <Compile Include="Implementation\Runtime\RuntimeTemplate.cs" />
-    <Compile Include="Implementation\Shared\FailSerializationSurrogate.cs" />
     <Compile Include="Implementation\Shared\SavedLevel.cs" />
     <Compile Include="Implementation\Shared\DataAccessor.cs" />
     <Compile Include="Implementation\Runtime\RuntimeEntity.cs" />
@@ -82,6 +78,7 @@
     <Compile Include="Implementation\Runtime\System.cs" />
     <Compile Include="Implementation\Runtime\GameEngine.cs" />
     <Compile Include="Implementation\Shared\Filter.cs" />
+    <Compile Include="Implementation\Shared\TemplateConverter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

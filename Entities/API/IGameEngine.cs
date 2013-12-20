@@ -67,7 +67,7 @@ namespace Neon.Entities {
         /// Returns a hash code of all data inside of the engine. The hash code is computed via
         /// reflection and can be used to attempt to determine if two game engines are out of sync.
         /// </summary>
-        byte[] GetVerificationHash();
+        int GetVerificationHash();
     }
 
     /// <summary>

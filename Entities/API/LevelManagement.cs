@@ -1,6 +1,6 @@
 ﻿using Neon.Entities.Implementation.Shared;
 using Neon.Utilities;
-using ProtoBuf;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -22,8 +22,8 @@ namespace Neon.Entities {
         /// </summary>
         /// <param name="destination">The stream to save the level to.</param>
         /// <param name="level">The level to save.</param>
-        public static void Save(Stream destination, ISavedLevel level) {
-            Serializer.Serialize<SavedLevel>(destination, (SavedLevel)level);
+        public static string Save(ISavedLevel level) {
+            return SerializationHelpers.Serialize(level);
         }
 
         /// <summary>
@@ -31,20 +31,20 @@ namespace Neon.Entities {
         /// </summary>
         /// <param name="source">The source stream to load the level from.</param>
         /// <returns>A fully restored level.</returns>
-        public static ISavedLevel Load(Stream source) {
-            return Serializer.Deserialize<SavedLevel>(source);
+        public static ISavedLevel Load(string source) {
+            return SerializationHelpers.Deserialize<SavedLevel>(source);
         }
     }
 
     /// <summary>
     /// Stores an IGameInput instance along with the update that the input was issued.
     /// </summary>
-    [ProtoContract]
+    [JsonObject(MemberSerialization.OptIn)]
     public class IssuedInput {
         /// <summary>
         /// The update number that this input was issued at.
         /// </summary>
-        [ProtoMember(1)]
+        [JsonProperty("UpdateNumber")]
         public int UpdateNumber {
             get;
             private set;
@@ -53,21 +53,10 @@ namespace Neon.Entities {
         /// <summary>
         /// The input instance itself. This is serialized under _serializedInput.
         /// </summary>
+        [JsonProperty("Input")]
         public IGameInput Input {
             get;
             private set;
-        }
-
-        private byte[] _serializedInput;
-
-        [ProtoBeforeSerialization]
-        private void OnExport() {
-            _serializedInput = SerializationHelpers.SerializeWithType(Input);
-        }
-
-        [ProtoAfterDeserialization]
-        private void OnImport() {
-            Input = (IGameInput)SerializationHelpers.DeserializeWithType(_serializedInput);
         }
 
         /// <summary>

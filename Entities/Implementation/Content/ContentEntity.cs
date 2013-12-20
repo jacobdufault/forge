@@ -1,61 +1,40 @@
 ﻿using Neon.Collections;
 using Neon.Entities.Implementation.Shared;
 using Neon.Utilities;
-using ProtoBuf;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Neon.Entities.Implementation.Content {
-    [ProtoContract(SkipConstructor = true)]
+    [JsonObject(MemberSerialization.OptIn)]
     internal class ContentEntity : IEntity {
-        [ProtoMember(1)]
-        private SerializableContainer _serializedCurrentData;
-        [ProtoMember(2)]
-        private SerializableContainer _serializedPreviousData;
-
-        [ProtoBeforeSerialization]
-        private void ExportContainers() {
-            _serializedCurrentData = new SerializableContainer(_currentData.Select(pair => pair.Value));
-            _serializedPreviousData = new SerializableContainer(_previousData.Select(pair => pair.Value));
-        }
-
-        [ProtoAfterDeserialization]
-        private void ImportContainers() {
-            if (PrettyName == null) PrettyName = "";
-            _eventNotifier = new EventNotifier();
-
-            _currentData = new SparseArray<IData>();
-            foreach (IData current in _serializedCurrentData.Cast<IData>()) {
-                _currentData[DataAccessorFactory.GetId(current)] = current;
-            }
-
-            _previousData = new SparseArray<IData>();
-            foreach (IData previous in _serializedPreviousData.Cast<IData>()) {
-                _previousData[DataAccessorFactory.GetId(previous)] = previous;
-            }
-        }
-
+        [JsonProperty("CurrentData")]
         private SparseArray<IData> _currentData;
 
+        [JsonProperty("PreviousData")]
         private SparseArray<IData> _previousData;
 
+        [JsonIgnore]
         private EventNotifier _eventNotifier;
 
-        [ProtoMember(3)]
+        [JsonIgnore]
         public bool HasModification;
 
-        [ProtoMember(4)]
+        [JsonProperty("UniqueId")]
         public int UniqueId {
             get;
             private set;
         }
 
-        public ContentEntity(int uniqueId, string prettyName) {
+        private ContentEntity() {
             _currentData = new SparseArray<IData>();
             _previousData = new SparseArray<IData>();
             _eventNotifier = new EventNotifier();
+        }
 
+        public ContentEntity(int uniqueId, string prettyName)
+            : this() {
             UniqueId = uniqueId;
             PrettyName = prettyName;
         }
@@ -175,6 +154,7 @@ namespace Neon.Entities.Implementation.Content {
             return false;
         }
 
+        [JsonProperty("PrettyName")]
         public string PrettyName {
             get;
             set;

@@ -2,7 +2,7 @@
 using Neon.Entities.Implementation.Content;
 using Neon.Entities.Implementation.Shared;
 using Neon.Utilities;
-using ProtoBuf;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -138,14 +138,9 @@ namespace Neon.Entities.Implementation.Runtime {
             private set;
         }
 
-        private List<RuntimeTemplate> _templates;
-
         public GameEngine(GameSnapshot baseSnapshot) {
             // Create our own little island of references with its own set of templates
-            GameSnapshot snapshot = Serializer.DeepClone(baseSnapshot);
-
-            _templates = snapshot.Templates.Select(t => new RuntimeTemplate(t, this)).ToList();
-            snapshot.SetTemplateReferences(_templates.Cast<ITemplate>());
+            GameSnapshot snapshot = SerializationHelpers.DeepClone(baseSnapshot, new TemplateConverter(this));
 
             _systems = snapshot.Systems;
 
@@ -522,7 +517,7 @@ namespace Neon.Entities.Implementation.Runtime {
         public CountdownEvent SystemDoneEvent { get; private set; }
         #endregion
 
-        public IGameSnapshot TakeSnapshot() {
+        private GameSnapshot GetSnapshot() {
             GameSnapshot snapshot = new GameSnapshot();
 
             snapshot.SingletonEntity = new ContentEntity(SingletonEntity);
@@ -546,13 +541,16 @@ namespace Neon.Entities.Implementation.Runtime {
 
             snapshot.Systems = _systems;
 
-            GameSnapshot clone = Serializer.DeepClone(snapshot);
-            clone.SetTemplateReferences(_templates.ConvertAll<ITemplate>(template => new ContentTemplate(template)));
-            return clone;
+            return snapshot;
         }
 
-        public byte[] GetVerificationHash() {
-            return HashingStream.GetHash(TakeSnapshot(), HashAlgorithm.Create("MD5"));
+        public IGameSnapshot TakeSnapshot() {
+            return SerializationHelpers.DeepClone(GetSnapshot(), new TemplateConverter(null));
+        }
+
+        public int GetVerificationHash() {
+            string json = SerializationHelpers.Serialize(GetSnapshot(), new TemplateConverter(null));
+            return json.GetHashCode();
         }
     }
 }

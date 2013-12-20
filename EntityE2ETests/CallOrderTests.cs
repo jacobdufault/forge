@@ -1,5 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ProtoBuf;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 
@@ -15,13 +15,13 @@ namespace Neon.Entities.E2ETests {
         OnGlobalInput
     }
 
-    [ProtoContract]
+    [JsonObject(MemberSerialization.OptIn)]
     internal class TriggerEventLogger : ITriggerAdded, ITriggerRemoved, ITriggerModified, ITriggerUpdate, ITriggerGlobalPreUpdate, ITriggerGlobalPostUpdate, ITriggerInput, ITriggerGlobalInput {
         public Type[] ComputeEntityFilter() {
             return EntityFilter;
         }
 
-        [ProtoMember(1)]
+        [JsonProperty("EntityFilter")]
         public Type[] EntityFilter;
 
         public TriggerEventLogger() {
@@ -32,7 +32,7 @@ namespace Neon.Entities.E2ETests {
             EntityFilter = entityFilter;
         }
 
-        [ProtoMember(2)]
+        [JsonProperty("Events")]
         public List<TriggerEvent> Events = new List<TriggerEvent>();
 
         public void ClearEvents() {
@@ -131,7 +131,7 @@ namespace Neon.Entities.E2ETests {
             }
         }
 
-        [ProtoContract]
+        [JsonObject(MemberSerialization.OptIn)]
         private class AddAndModifyOnAddedSystem : ITriggerAdded {
             public void OnAdded(IEntity entity) {
                 entity.AddData<TestData0>();
@@ -176,7 +176,7 @@ namespace Neon.Entities.E2ETests {
             }
         }
 
-        [ProtoContract]
+        [JsonObject(MemberSerialization.OptIn)]
         private class ModifyOnUpdateSystem : ITriggerUpdate {
             public void OnUpdate(IEntity entity) {
                 entity.Modify<TestData0>();
@@ -282,7 +282,7 @@ namespace Neon.Entities.E2ETests {
             }
         }
 
-        [ProtoContract]
+        [JsonObject(MemberSerialization.OptIn)]
         private class ModifyOnRemovedTrigger : ITriggerRemoved {
 
             public void OnRemoved(IEntity entity) {

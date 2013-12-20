@@ -1,23 +1,16 @@
 ﻿using Neon.Entities.Implementation.Shared;
 using Neon.Utilities;
-using ProtoBuf;
-using ProtoBuf.Meta;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Neon.Entities.Implementation.Content {
-    [ProtoContract]
+    [JsonObject(MemberSerialization.OptIn)]
     internal class GameSnapshot : IGameSnapshot {
-        /// <summary>
-        /// Make sure that the SerializableContainer is registered with the default type metadata
-        /// </summary>
-        static GameSnapshot() {
-            SerializableContainer.RegisterWithTypeModel(RuntimeTypeModel.Default);
-        }
-
         public GameSnapshot() {
             _entityIdGenerator = new UniqueIntGenerator();
+            _templateIdGenerator = new UniqueIntGenerator();
 
             SingletonEntity = new ContentEntity(_entityIdGenerator.Next(), "Global Singleton");
             ActiveEntities = new List<ContentEntity>();
@@ -25,82 +18,47 @@ namespace Neon.Entities.Implementation.Content {
             RemovedEntities = new List<ContentEntity>();
             Systems = new List<ISystem>();
             Templates = new List<ContentTemplate>();
-
-            _templateResolver = new TemplateResolver();
-            SetTemplateReferences(Templates.Cast<ITemplate>());
         }
 
-        [ProtoMember(1)]
+        [JsonProperty("EntityIdGenerator")]
         private UniqueIntGenerator _entityIdGenerator;
+        [JsonProperty("TemplateIdGenerator")]
+        private UniqueIntGenerator _templateIdGenerator;
 
-        [ProtoMember(2)]
+        [JsonProperty("SingletonEntity")]
         public ContentEntity SingletonEntity {
             get;
             set;
         }
 
-        [ProtoMember(3)]
+        [JsonProperty("ActiveEntities")]
         public List<ContentEntity> ActiveEntities {
             get;
             private set;
         }
 
-        [ProtoMember(4)]
+        [JsonProperty("AddedEntities")]
         public List<ContentEntity> AddedEntities {
             get;
             private set;
         }
 
-        [ProtoMember(5)]
+        [JsonProperty("RemovedEntities")]
         public List<ContentEntity> RemovedEntities {
             get;
             private set;
         }
 
-        [ProtoMember(6)]
-        private SerializableContainer _serializedSystems;
-
-        [ProtoBeforeSerialization]
-        private void ExportSystems() {
-            _serializedSystems = new SerializableContainer(Systems);
-        }
-
-        [ProtoAfterDeserialization]
-        private void ImportSystems() {
-            if (ActiveEntities == null) ActiveEntities = new List<ContentEntity>();
-            if (RemovedEntities == null) RemovedEntities = new List<ContentEntity>();
-            if (Templates == null) Templates = new List<ContentTemplate>();
-
-            Systems = _serializedSystems.ToList<ISystem>();
-            SetTemplateReferences(Templates.Cast<ITemplate>());
-        }
-
+        [JsonProperty("Systems")]
         public List<ISystem> Systems {
             get;
             set;
         }
 
-        [ProtoMember(7)]
+        [JsonProperty("Templates")]
         public List<ContentTemplate> Templates {
             get;
             set;
-        }
-
-        /// <summary>
-        /// Template resolver that should be used only within this snapshot; ie, all data and entity
-        /// instances *within* this snapshot (reachable from this object instance) should all point
-        /// to this template resolver, but no other reference should point to this resolver.
-        /// </summary>
-        [ProtoMember(8)]
-        private TemplateResolver _templateResolver;
-
-        /// <summary>
-        /// Sets the templates that all entities will reference.
-        /// </summary>
-        /// <param name="templates">The templates that all entity/data references inside of this
-        /// object will reference</param>
-        public void SetTemplateReferences(IEnumerable<ITemplate> templates) {
-            _templateResolver.SetTemplates(templates);
         }
 
         public IEntity CreateEntity(EntityAddLocation to, string prettyName = "") {
@@ -121,10 +79,9 @@ namespace Neon.Entities.Implementation.Content {
             return added;
         }
 
-        public TemplateReference CreateTemplate() {
-            TemplateReference reference = _templateResolver.CreateTemplate();
-            Templates.Add((ContentTemplate)reference.Resolve());
-            return reference;
+        public ITemplate CreateTemplate() {
+            ITemplate template = new ContentTemplate(_templateIdGenerator.Next());
+            return template;
         }
 
         IEntity IGameSnapshot.SingletonEntity {

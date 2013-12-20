@@ -117,7 +117,7 @@ namespace Neon.Entities.E2ETests {
             IGameSnapshot database1 = engine0.TakeSnapshot();
             IGameEngine engine1 = GameEngineFactory.CreateEngine(database1);
 
-            CollectionAssert.AreEqual(engine0.GetVerificationHash(), engine1.GetVerificationHash());
+            Assert.AreEqual(engine0.GetVerificationHash(), engine1.GetVerificationHash());
         }
 
         [TestMethod]

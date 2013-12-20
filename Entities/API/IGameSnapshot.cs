@@ -33,7 +33,7 @@ namespace Neon.Entities {
         /// <summary>
         /// Creates a new ITemplate instance that is attached to this snapshot.
         /// </summary>
-        TemplateReference CreateTemplate();
+        ITemplate CreateTemplate();
 
         /// <summary>
         /// The singleton entity. It is automatically created and cannot be destroyed, but it can be

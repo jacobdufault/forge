@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 
 namespace Neon.Entities {
     /// <summary>
@@ -7,6 +8,7 @@ namespace Neon.Entities {
     /// <remarks>
     /// Client code should not directly extend this, as it does not give any behavior by itself.
     /// </remarks>
+    [JsonObject(MemberSerialization.OptIn)]
     public interface ISystem {
     }
 

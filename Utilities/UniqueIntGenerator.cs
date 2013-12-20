@@ -17,19 +17,19 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using ProtoBuf;
+using Newtonsoft.Json;
 using System.Threading;
 
 namespace Neon.Utilities {
     /// <summary>
     /// Generates unique integers that are sequential. This class is thread-safe.
     /// </summary>
-    [ProtoContract]
+    [JsonObject(MemberSerialization.OptIn)]
     public class UniqueIntGenerator {
         /// <summary>
         /// The next integer to generate.
         /// </summary>
-        [ProtoMember(1)]
+        [JsonProperty("NextId")]
         private int _next;
 
         /// <summary>

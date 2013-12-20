@@ -11,7 +11,7 @@ namespace Neon.Entities.Implementation.Runtime {
     /// A runtime version of an ITemplate designed for efficiency.
     /// </summary>
     /// <remarks>
-    /// This class does *NOT* implement ProtoContract; it should never go through the save pipeline!
+    /// This class does *NOT* implement JsonObject; it should never go through the save pipeline!
     /// Instead, convert it to a ContentTemplate and save that.
     /// </remarks>
     internal class RuntimeTemplate : ITemplate {

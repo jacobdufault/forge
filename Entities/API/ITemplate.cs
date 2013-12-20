@@ -1,4 +1,6 @@
-﻿namespace Neon.Entities {
+﻿using Newtonsoft.Json;
+
+namespace Neon.Entities {
     /// <summary>
     /// Used for creating IEntity instances that have a set of data values already initialized.
     /// </summary>
@@ -7,6 +9,7 @@
     /// will then receive the Orc ITemplate, and when it comes time to spawn it will instantiate an
     /// entity from the template, and that entity will be a derivative instance of the original Orc.
     /// </remarks>
+    [JsonObject(IsReference = true)]
     public interface ITemplate : IQueryableEntity {
         /// <summary>
         /// Each IEntityTemplate can be uniquely identified by its TemplateId.

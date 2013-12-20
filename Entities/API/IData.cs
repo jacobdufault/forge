@@ -1,11 +1,13 @@
 ﻿
 using Neon.Entities.Implementation.Shared;
+using Newtonsoft.Json;
 using System;
 
 namespace Neon.Entities {
     /// <summary>
     /// Contains game data.
     /// </summary>
+    [JsonObject(MemberSerialization.OptIn)]
     public interface IData {
         /// <summary>
         /// Does this data type support concurrent modifications, such as from two threads at the

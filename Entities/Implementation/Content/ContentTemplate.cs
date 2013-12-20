@@ -2,43 +2,26 @@
 using Neon.Entities.Implementation.Runtime;
 using Neon.Entities.Implementation.Shared;
 using Neon.Utilities;
-using ProtoBuf;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Neon.Entities.Implementation.Content {
-    [ProtoContract(SkipConstructor = true)]
+    [JsonObject(MemberSerialization.OptIn)]
     internal class ContentTemplate : ITemplate {
-        [ProtoMember(1)]
-        private SerializableContainer _serializedDefaultData;
-
-        [ProtoBeforeSerialization]
-        private void ExportDefaultData() {
-            _serializedDefaultData = new SerializableContainer(_defaultDataInstances.Select(pair => pair.Value));
-        }
-
-        [ProtoAfterDeserialization]
-        private void ImportDefaultData() {
-            _defaultDataInstances = new SparseArray<IData>();
-            foreach (IData data in _serializedDefaultData.Cast<IData>()) {
-                _defaultDataInstances[DataAccessorFactory.GetId(data)] = data;
-            }
-
-            _eventNotifier = new EventNotifier();
-        }
-
+        [JsonProperty("DefaultDataInstances")]
         private SparseArray<IData> _defaultDataInstances;
 
         private EventNotifier _eventNotifier;
 
-        [ProtoMember(2)]
+        [JsonProperty("TemplateId")]
         public int TemplateId {
             get;
             private set;
         }
 
-        [ProtoMember(3)]
+        [JsonProperty("PrettyName")]
         public string PrettyName {
             get;
             set;

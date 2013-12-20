@@ -1,17 +1,17 @@
-﻿using ProtoBuf;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
 namespace Neon.Entities.E2ETests {
-    [ProtoContract]
+    [JsonObject(MemberSerialization.OptIn)]
     internal class SystemCounter : ITriggerUpdate, ITriggerRemoved {
-        [ProtoMember(1)]
+        [JsonProperty("UpdateCount")]
         public int UpdateCount;
-        [ProtoMember(2)]
+        [JsonProperty("RemovedCount")]
         public int RemovedCount;
-        [ProtoMember(3)]
+        [JsonProperty("Filter")]
         public Type[] Filter;
 
         public void OnUpdate(IEntity entity) {
