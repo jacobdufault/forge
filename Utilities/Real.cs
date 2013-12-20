@@ -17,12 +17,46 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 
 namespace Neon.Utilities {
+    /// <summary>
+    /// A Real value implements floating point operations on the CPU. It does not adhere any any
+    /// IEEE standard, but has the extremely important attribute of providing identical semantics on
+    /// every CPU which executes it. This is otherwise impossible to guarantee in the CLR,
+    /// especially when 3rd party code is running and/or C++ DLL access is unavailable to set x87
+    /// FPU rounding modes.
+    /// </summary>
+    // TODO: The Real public API needs to be trimmed before the 1.0 release; implementation details
+    //       are currently way too public
+    [JsonConverter(typeof(RealJsonConverter))]
     public struct Real {
+        /// <summary>
+        /// Serializes Real values to JSON and back as floats. Without using a converter, Reals
+        /// would be serialized as an object ({}) which would create a lot of unnecessary bloat.
+        /// </summary>
+        private class RealJsonConverter : JsonConverter {
+            public override bool CanConvert(Type objectType) {
+                return objectType == typeof(Real);
+            }
+
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
+                if (reader.TokenType != JsonToken.Float) {
+                    throw new InvalidOperationException("Expected float when deserializing Real");
+                }
+
+                return Real.Create((double)reader.Value);
+            }
+
+            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
+                Real real = (Real)value;
+                writer.WriteValue(real.AsFloat);
+            }
+        }
+
         public long RawValue;
         public const int SHIFT_AMOUNT = 12; //12 is 4096
 
@@ -126,6 +160,12 @@ namespace Neon.Utilities {
         public float AsFloat {
             get {
                 return (float)this.RawValue / (float)One;
+            }
+        }
+
+        public double AsDouble {
+            get {
+                return (double)this.RawValue / (double)One;
             }
         }
 

@@ -31,5 +31,19 @@ namespace Neon.Utilities.Tests {
             Assert.AreEqual(-150.333, Real.CreateDecimal(-150, 333, 3).AsFloat, 0.01);
             Assert.AreEqual(-150.0005, Real.CreateDecimal(-150, 0005, 4).AsFloat, 0.01);
         }
+
+        private void VerifySerializatedEqual(Real real) {
+            Assert.AreEqual(real, SerializationHelpers.DeepClone(real));
+        }
+
+        [TestMethod]
+        public void SerializeRealAsFloat() {
+            VerifySerializatedEqual(Real.CreateDecimal(0, 105, 3));
+            VerifySerializatedEqual(Real.CreateDecimal(10, 105, 3));
+            VerifySerializatedEqual(Real.CreateDecimal(5, 105, 3));
+            VerifySerializatedEqual(Real.CreateDecimal(20, 1, 1));
+            VerifySerializatedEqual(Real.CreateDecimal(-150, 333, 3));
+            VerifySerializatedEqual(Real.CreateDecimal(-150, 0005, 4));
+        }
     }
 }
