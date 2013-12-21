@@ -29,7 +29,13 @@ namespace Neon.Entities.Tests {
         private static UniqueIntGenerator _idGenerator = new UniqueIntGenerator();
 
         public static RuntimeEntity CreateEntity() {
-            return new RuntimeEntity(new ContentEntity(_idGenerator.Next(), ""));
+            RuntimeEntity runtime = new RuntimeEntity();
+            runtime.Initialize(new ContentEntitySerializationFormat() {
+                Data = new List<ContentEntity.DataInstance>(),
+                PrettyName = "",
+                UniqueId = _idGenerator.Next()
+            });
+            return runtime;
         }
     }
 

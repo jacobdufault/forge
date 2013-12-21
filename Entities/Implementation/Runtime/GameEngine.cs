@@ -148,21 +148,23 @@ namespace Neon.Entities.Implementation.Runtime {
             // TODO: ensure that when correctly restore UpdateNumber
             //UpdateNumber = updateNumber;
 
-            SingletonEntity = new RuntimeEntity((ContentEntity)snapshot.SingletonEntity);
+            SingletonEntity = (RuntimeEntity)snapshot.SingletonEntity;
 
             foreach (var entity in snapshot.AddedEntities) {
-                AddEntity(new RuntimeEntity((ContentEntity)entity));
+                AddEntity((RuntimeEntity)entity);
             }
 
             foreach (var entity in snapshot.ActiveEntities) {
-                RuntimeEntity runtimeEntity = new RuntimeEntity((ContentEntity)entity);
+                RuntimeEntity runtimeEntity = (RuntimeEntity)entity;
 
                 // add the entity
                 InternalAddEntity(runtimeEntity);
 
-                if (((ContentEntity)entity).HasModification) {
-                    runtimeEntity.ModificationNotifier.Notify();
-                }
+                // TODO: verify that if the modification notifier is already triggered, we can
+                // ignore this
+                //if (((ContentEntity)entity).HasModification) {
+                //    runtimeEntity.ModificationNotifier.Notify();
+                //}
 
                 // done via InternalAddEntity
                 //if (deserializedEntity.HasStateChange) {
@@ -171,14 +173,16 @@ namespace Neon.Entities.Implementation.Runtime {
             }
 
             foreach (var entity in snapshot.RemovedEntities) {
-                RuntimeEntity runtimeEntity = new RuntimeEntity((ContentEntity)entity);
+                RuntimeEntity runtimeEntity = (RuntimeEntity)entity;
 
                 // add the entity
                 InternalAddEntity(runtimeEntity);
 
-                if (((ContentEntity)entity).HasModification) {
-                    runtimeEntity.ModificationNotifier.Notify();
-                }
+                // TODO: verify that if the modification notifier is already triggered, we can
+                // ignore this
+                //if (((ContentEntity)entity).HasModification) {
+                //    runtimeEntity.ModificationNotifier.Notify();
+                //}
 
                 // done via InternalAddEntity
                 //if (deserializedEntity.HasStateChange) {
@@ -515,13 +519,13 @@ namespace Neon.Entities.Implementation.Runtime {
         public CountdownEvent SystemDoneEvent { get; private set; }
         #endregion
 
-        private GameSnapshot GetSnapshot() {
+        private GameSnapshot GetRawSnapshot() {
             GameSnapshot snapshot = new GameSnapshot();
 
-            snapshot.SingletonEntity = new ContentEntity(SingletonEntity);
+            snapshot.SingletonEntity = SingletonEntity;
 
             foreach (var adding in _notifiedAddingEntities.ToList()) {
-                snapshot.AddedEntities.Add(new ContentEntity(adding));
+                snapshot.AddedEntities.Add(adding);
             }
 
             List<RuntimeEntity> removing = _notifiedRemovedEntities.ToList();
@@ -529,10 +533,10 @@ namespace Neon.Entities.Implementation.Runtime {
                 bool isRemoving = removing.Contains(entity);
 
                 if (isRemoving) {
-                    snapshot.RemovedEntities.Add(new ContentEntity(entity));
+                    snapshot.RemovedEntities.Add(entity);
                 }
                 else {
-                    snapshot.ActiveEntities.Add(new ContentEntity(entity));
+                    snapshot.ActiveEntities.Add(entity);
                 }
 
             }
@@ -544,12 +548,12 @@ namespace Neon.Entities.Implementation.Runtime {
         }
 
         public IGameSnapshot TakeSnapshot() {
-            return SerializationHelpers.DeepClone(GetSnapshot(),
+            return SerializationHelpers.DeepClone(GetRawSnapshot(),
                 RequiredConverters.GetConverters(), RequiredConverters.GetContexts(Maybe<GameEngine>.Empty));
         }
 
         public int GetVerificationHash() {
-            string json = SerializationHelpers.Serialize(GetSnapshot(),
+            string json = SerializationHelpers.Serialize(GetRawSnapshot(),
                 RequiredConverters.GetConverters(), RequiredConverters.GetContexts(Maybe<GameEngine>.Empty));
             return json.GetHashCode();
         }

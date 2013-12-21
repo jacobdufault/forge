@@ -9,6 +9,59 @@ using System.Linq;
 using System.Runtime.Serialization;
 
 namespace Neon.Entities.Implementation.Content {
+    internal class EntityContainerConverter : JsonConverter {
+        public override bool CanConvert(Type objectType) {
+            throw new InvalidOperationException();
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
+            EntitySerializationContainer container =
+                (EntitySerializationContainer)existingValue ?? new EntitySerializationContainer();
+
+            var serializedEntities = serializer.Deserialize<List<ContentEntitySerializationFormat>>(reader);
+
+            // We need to get our conversion context
+            GeneralStreamingContext generalContext = (GeneralStreamingContext)serializer.Context.Context;
+            EntityConversionContext conversionContext = generalContext.Get<EntityConversionContext>();
+            GameEngineContext engineContext = generalContext.Get<GameEngineContext>();
+
+            // Restore our created entity instances
+            List<IEntity> restored = new List<IEntity>();
+            foreach (ContentEntitySerializationFormat format in serializedEntities) {
+                int entityId = format.UniqueId;
+                IEntity entity = conversionContext.GetEntityInstance(entityId, engineContext);
+                restored.Add(entity);
+
+                if (entity is ContentEntity) {
+                    ((ContentEntity)entity).Initialize(format);
+                }
+                else {
+                    ((RuntimeEntity)entity).Initialize(format);
+                }
+            }
+
+            container.Entities = restored;
+            return container;
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
+            EntitySerializationContainer container = (EntitySerializationContainer)value;
+
+            var formats = new List<ContentEntitySerializationFormat>();
+            foreach (IEntity entity in container.Entities) {
+                if (entity is ContentEntity) {
+                    formats.Add(((ContentEntity)entity).GetSerializedFormat());
+                }
+                else {
+                    formats.Add(((RuntimeEntity)entity).GetSerializedFormat());
+                }
+            }
+
+            serializer.Serialize(writer, formats);
+        }
+
+    }
+
     internal class TemplateContainerConverter : JsonConverter {
         public override bool CanConvert(Type objectType) {
             throw new InvalidOperationException();
@@ -55,12 +108,16 @@ namespace Neon.Entities.Implementation.Content {
 
             serializer.Serialize(writer, formats);
         }
-
     }
 
     [JsonConverter(typeof(TemplateContainerConverter))]
     internal class TemplateSerializationContainer {
         public List<ITemplate> Templates;
+    }
+
+    [JsonConverter(typeof(EntityContainerConverter))]
+    internal class EntitySerializationContainer {
+        public List<IEntity> Entities;
     }
 
     [JsonObject(MemberSerialization.OptIn)]
@@ -70,9 +127,9 @@ namespace Neon.Entities.Implementation.Content {
             _templateIdGenerator = new UniqueIntGenerator();
 
             SingletonEntity = new ContentEntity(_entityIdGenerator.Next(), "Global Singleton");
-            ActiveEntities = new List<ContentEntity>();
-            AddedEntities = new List<ContentEntity>();
-            RemovedEntities = new List<ContentEntity>();
+            ActiveEntities = new List<IEntity>();
+            AddedEntities = new List<IEntity>();
+            RemovedEntities = new List<IEntity>();
             Systems = new List<ISystem>();
             Templates = new List<ITemplate>();
         }
@@ -83,28 +140,32 @@ namespace Neon.Entities.Implementation.Content {
         private UniqueIntGenerator _templateIdGenerator;
 
         [JsonProperty("SingletonEntity")]
-        public ContentEntity SingletonEntity {
+        public IEntity SingletonEntity {
             get;
             set;
         }
 
-        [JsonProperty("ActiveEntities")]
-        public List<ContentEntity> ActiveEntities {
+        public List<IEntity> ActiveEntities {
+            get;
+            private set;
+        }
+
+        public List<IEntity> AddedEntities {
+            get;
+            private set;
+        }
+
+        public List<IEntity> RemovedEntities {
             get;
             private set;
         }
 
         [JsonProperty("AddedEntities")]
-        public List<ContentEntity> AddedEntities {
-            get;
-            private set;
-        }
-
+        private EntitySerializationContainer _addedEntitiesContainer;
+        [JsonProperty("ActiveEntities")]
+        private EntitySerializationContainer _activeEntitiesContainer;
         [JsonProperty("RemovedEntities")]
-        public List<ContentEntity> RemovedEntities {
-            get;
-            private set;
-        }
+        private EntitySerializationContainer _removedEntitiesContainer;
 
         [JsonProperty("Systems")]
         public List<ISystem> Systems {
@@ -125,6 +186,15 @@ namespace Neon.Entities.Implementation.Content {
             _templateSerializationContainer = new TemplateSerializationContainer() {
                 Templates = Templates
             };
+            _addedEntitiesContainer = new EntitySerializationContainer() {
+                Entities = AddedEntities
+            };
+            _activeEntitiesContainer = new EntitySerializationContainer() {
+                Entities = ActiveEntities
+            };
+            _removedEntitiesContainer = new EntitySerializationContainer() {
+                Entities = RemovedEntities
+            };
         }
 
         [OnDeserializing]
@@ -132,6 +202,7 @@ namespace Neon.Entities.Implementation.Content {
             GeneralStreamingContext generalContext = (GeneralStreamingContext)context.Context;
             generalContext.Create<DataReferenceContextObject>();
             generalContext.Create<TemplateConversionContext>();
+            generalContext.Create<EntityConversionContext>();
         }
 
         /// <summary>
@@ -140,6 +211,13 @@ namespace Neon.Entities.Implementation.Content {
         /// </summary>
         [OnDeserialized]
         private void RestoreDataReferences(StreamingContext context) {
+            AddedEntities = _addedEntitiesContainer.Entities;
+            ActiveEntities = _activeEntitiesContainer.Entities;
+            RemovedEntities = _removedEntitiesContainer.Entities;
+            Templates = _templateSerializationContainer.Templates;
+
+            // TODO: we can probably just directly use IEntity or ITemplate (or add support for
+            // IQueryableEntity) instead of going through a manual serialization process
             SparseArray<IEntity> entities = new SparseArray<IEntity>();
             entities[SingletonEntity.UniqueId] = SingletonEntity;
             foreach (var added in AddedEntities) {
@@ -152,7 +230,6 @@ namespace Neon.Entities.Implementation.Content {
                 entities[active.UniqueId] = active;
             }
 
-            Templates = _templateSerializationContainer.Templates;
             SparseArray<ITemplate> templates = new SparseArray<ITemplate>();
             foreach (var template in Templates) {
                 templates[template.TemplateId] = template;
@@ -174,6 +251,7 @@ namespace Neon.Entities.Implementation.Content {
 
             generalContext.Remove<DataReferenceContextObject>();
             generalContext.Remove<TemplateConversionContext>();
+            generalContext.Remove<EntityConversionContext>();
         }
 
         public IEntity CreateEntity(EntityAddLocation to, string prettyName = "") {

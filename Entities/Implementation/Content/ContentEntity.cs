@@ -1,4 +1,5 @@
 ﻿using Neon.Collections;
+using Neon.Entities.Implementation.Runtime;
 using Neon.Entities.Implementation.Shared;
 using Neon.Utilities;
 using Newtonsoft.Json;
@@ -8,28 +9,69 @@ using System.Linq;
 
 namespace Neon.Entities.Implementation.Content {
     [JsonObject(MemberSerialization.OptIn)]
-    internal class ContentEntity : IEntity {
-        [JsonProperty("CurrentData")]
-        private SparseArray<IData> _currentData;
-
-        [JsonProperty("PreviousData")]
-        private SparseArray<IData> _previousData;
-
-        [JsonIgnore]
-        private EventNotifier _eventNotifier;
-
-        [JsonIgnore]
-        public bool HasModification;
+    internal class ContentEntitySerializationFormat {
+        [JsonProperty("Data")]
+        public List<ContentEntity.DataInstance> Data;
 
         [JsonProperty("UniqueId")]
+        public int UniqueId;
+
+        [JsonProperty("PrettyName")]
+        public string PrettyName;
+    }
+
+    [JsonConverter(typeof(EntityConverter))]
+    internal class ContentEntity : IEntity {
+        [JsonObject(MemberSerialization.OptIn)]
+        public class DataInstance {
+            [JsonProperty("CurrentData")]
+            public IData CurrentData;
+            [JsonProperty("PreviousData")]
+            public IData PreviousData;
+
+            /// <summary>
+            /// Did the data get added in the last updated frame?
+            /// </summary>
+            [JsonProperty("WasAdded")]
+            public bool WasAdded;
+
+            /// <summary>
+            /// Did the data get removed in the last update frame?
+            /// </summary>
+            [JsonProperty("WasRemoved")]
+            public bool WasRemoved;
+
+            /// <summary>
+            /// Did the data get modified in the last update frame?
+            /// </summary>
+            [JsonProperty("WasModified")]
+            public bool WasModified;
+        }
+
+        private SparseArray<DataInstance> _data;
+
+        private EventNotifier _eventNotifier;
+
         public int UniqueId {
             get;
             private set;
         }
 
-        private ContentEntity() {
-            _currentData = new SparseArray<IData>();
-            _previousData = new SparseArray<IData>();
+        public string PrettyName {
+            get;
+            set;
+        }
+
+        public ContentEntitySerializationFormat GetSerializedFormat() {
+            return new ContentEntitySerializationFormat() {
+                PrettyName = PrettyName,
+                UniqueId = UniqueId,
+                Data = _data.Select(pair => pair.Value).ToList()
+            };
+        }
+
+        public ContentEntity() {
+            _data = new SparseArray<DataInstance>();
             _eventNotifier = new EventNotifier();
         }
 
@@ -39,10 +81,21 @@ namespace Neon.Entities.Implementation.Content {
             PrettyName = prettyName;
         }
 
+        public void Initialize(ContentEntitySerializationFormat format) {
+            PrettyName = format.PrettyName;
+            UniqueId = format.UniqueId;
+
+            foreach (DataInstance data in format.Data) {
+                _data[DataAccessorFactory.GetId(data.CurrentData)] = data;
+            }
+        }
+
+        /*
         public ContentEntity(IEntity entity) :
             this(entity.UniqueId, entity.PrettyName) {
             Restore(entity);
         }
+        */
 
         public override string ToString() {
             if (PrettyName.Length > 0) {
@@ -53,6 +106,7 @@ namespace Neon.Entities.Implementation.Content {
             }
         }
 
+        /*
         public void Restore(IEntity entity) {
             foreach (IData data in entity.SelectCurrentData()) {
                 DataAccessor accessor = new DataAccessor(data);
@@ -65,7 +119,7 @@ namespace Neon.Entities.Implementation.Content {
                 _currentData[accessor.Id] = current;
                 _previousData[accessor.Id] = previous;
             }
-        }
+        }*/
 
         public void Destroy() {
             throw new InvalidOperationException("Cannot destroy a ContentEntity");
@@ -81,21 +135,30 @@ namespace Neon.Entities.Implementation.Content {
             }
 
             Type dataType = DataAccessorFactory.GetTypeFromAccessor(accessor);
-            _currentData[accessor.Id] = (IData)Activator.CreateInstance(dataType);
-            _previousData[accessor.Id] = (IData)Activator.CreateInstance(dataType);
+            _data[accessor.Id] = new DataInstance() {
+                CurrentData = (IData)Activator.CreateInstance(dataType),
+                PreviousData = (IData)Activator.CreateInstance(dataType),
+                WasAdded = true,
+                WasModified = false,
+                WasRemoved = false
+            };
 
-            return _currentData[accessor.Id];
+            return _data[accessor.Id].CurrentData;
         }
 
         public void RemoveData(DataAccessor accessor) {
-            int id = accessor.Id;
-
-            if (_currentData.Contains(id) == false || _previousData.Contains(id) == false) {
+            if (_data.Contains(accessor.Id) == false) {
                 throw new NoSuchDataException(this, accessor);
             }
 
-            _currentData.Remove(id);
-            _previousData.Remove(id);
+            // RemoveData first call toggles WasRemoved to true; second call actually removes it
+
+            if (_data[accessor.Id].WasRemoved) {
+                _data.Remove(accessor.Id);
+            }
+            else {
+                _data[accessor.Id].WasRemoved = true;
+            }
         }
 
         public IData Modify(DataAccessor accessor) {
@@ -108,8 +171,8 @@ namespace Neon.Entities.Implementation.Content {
                 storage = new List<IData>();
             }
 
-            foreach (var pair in _currentData) {
-                IData data = pair.Value;
+            foreach (var pair in _data) {
+                IData data = pair.Value.CurrentData;
                 if (filter == null || filter(data)) {
                     storage.Add(data);
                 }
@@ -127,7 +190,7 @@ namespace Neon.Entities.Implementation.Content {
                 throw new NoSuchDataException(this, accessor);
             }
 
-            return _currentData[accessor.Id];
+            return _data[accessor.Id].CurrentData;
         }
 
         public IData Previous(DataAccessor accessor) {
@@ -135,29 +198,31 @@ namespace Neon.Entities.Implementation.Content {
                 throw new NoSuchDataException(this, accessor);
             }
 
-            return _previousData[accessor.Id];
+            return _data[accessor.Id].PreviousData;
         }
 
         public bool ContainsData(DataAccessor accessor) {
-            return _currentData.Contains(accessor.Id);
+            return _data.Contains(accessor.Id) && _data[accessor.Id].WasRemoved == false;
         }
 
         public bool WasModified(DataAccessor accessor) {
-            return false;
+            if (ContainsData(accessor) == false) {
+                throw new NoSuchDataException(this, accessor);
+            }
+
+            return _data[accessor.Id].WasModified;
         }
 
         public bool WasAdded(DataAccessor accessor) {
-            return false;
+            if (ContainsData(accessor) == false) {
+                throw new NoSuchDataException(this, accessor);
+            }
+
+            return _data[accessor.Id].WasAdded;
         }
 
         public bool WasRemoved(DataAccessor accessor) {
-            return false;
-        }
-
-        [JsonProperty("PrettyName")]
-        public string PrettyName {
-            get;
-            set;
+            return _data.Contains(accessor.Id) && _data[accessor.Id].WasRemoved;
         }
     }
 }

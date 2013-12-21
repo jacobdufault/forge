@@ -2,10 +2,12 @@
 using Neon.Entities.Implementation.Content;
 using Neon.Entities.Implementation.Shared;
 using Neon.Utilities;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 
 namespace Neon.Entities.Implementation.Runtime {
+    [JsonConverter(typeof(EntityConverter))]
     internal class RuntimeEntity : IEntity {
         #region Pretty Name
         /// <summary>
@@ -29,7 +31,7 @@ namespace Neon.Entities.Implementation.Runtime {
         // thread safe because we never write
         private int _uniqueId;
 
-        int IEntity.UniqueId {
+        public int UniqueId {
             get { return _uniqueId; }
         }
         #endregion
@@ -48,16 +50,19 @@ namespace Neon.Entities.Implementation.Runtime {
         }
         #endregion
 
-        private RuntimeEntity(int uniqueId, string prettyName) {
-            _uniqueId = uniqueId;
-            _idGenerator.Consume(_uniqueId);
-
-            PrettyName = prettyName;
-
+        public RuntimeEntity() {
             EventNotifier = new EventNotifier();
 
             DataStateChangeNotifier = new Notifier<RuntimeEntity>(this);
             ModificationNotifier = new Notifier<RuntimeEntity>(this);
+        }
+
+        private RuntimeEntity(int uniqueId, string prettyName)
+            : this() {
+            _uniqueId = uniqueId;
+            _idGenerator.Consume(_uniqueId);
+
+            PrettyName = prettyName;
         }
 
         public RuntimeEntity(ITemplate template)
@@ -67,19 +72,20 @@ namespace Neon.Entities.Implementation.Runtime {
             }
         }
 
-        public RuntimeEntity(ContentEntity contentEntity)
-            : this(contentEntity.UniqueId, contentEntity.PrettyName) {
+        public void Initialize(ContentEntitySerializationFormat format) {
+            _uniqueId = format.UniqueId;
+            PrettyName = format.PrettyName;
 
-            foreach (var data in contentEntity.SelectCurrentData()) {
-                DataAccessor accessor = new DataAccessor(data);
+            foreach (ContentEntity.DataInstance data in format.Data) {
+                DataAccessor accessor = new DataAccessor(data.CurrentData);
 
-                if (contentEntity.WasAdded(accessor)) {
-                    _toAddStage1.Add(data);
+                if (data.WasAdded) {
+                    _toAddStage1.Add(data.CurrentData);
                 }
 
                 else {
-                    IData current = contentEntity.Current(accessor);
-                    IData previous = contentEntity.Previous(accessor);
+                    IData current = data.CurrentData;
+                    IData previous = data.PreviousData;
 
                     _data[accessor.Id] = new DataContainer(previous, current, current.Duplicate());
 
@@ -87,7 +93,7 @@ namespace Neon.Entities.Implementation.Runtime {
                     // this Entity instance. With that in mind, we can treat our data initialization
                     // as if if were operating on the previous frame.
 
-                    if (contentEntity.WasModified(accessor)) {
+                    if (data.WasModified) {
                         // This is kind of an ugly hack, because to get the correct Previous/Current
                         // data we need to move Previous into Current so that Previous will reflect
                         // the true Previous value, not the Current one.
@@ -100,7 +106,7 @@ namespace Neon.Entities.Implementation.Runtime {
                         _data[accessor.Id].Current.CopyFrom(_data[accessor.Id].Previous);
                     }
 
-                    if (contentEntity.WasRemoved(accessor)) {
+                    if (data.WasRemoved) {
                         ((IEntity)this).RemoveData(accessor);
                     }
                 }
@@ -224,6 +230,86 @@ namespace Neon.Entities.Implementation.Runtime {
         void IEntity.Destroy() {
             // EntityManager.RemoveEntity is synchronized
             GameEngine.RemoveEntity(this);
+        }
+
+        public ContentEntitySerializationFormat GetSerializedFormat() {
+            List<ContentEntity.DataInstance> data = new List<ContentEntity.DataInstance>();
+
+            // the data instances that have been modified in the current update
+            HashSet<int> modifiedThisFrame = new HashSet<int>();
+            {
+                List<DataAccessor> modifications = _concurrentModifications.ToList();
+                foreach (DataAccessor modification in modifications) {
+                    modifiedThisFrame.Add(modification.Id);
+                }
+            }
+
+            // the data instances that have been removed in the current update
+            HashSet<int> removedThisFrame = new HashSet<int>();
+            {
+                foreach (DataAccessor item in _toRemoveStage1) {
+                    removedThisFrame.Add(item.Id);
+                }
+            }
+
+            foreach (var tuple in _data) {
+                DataContainer container = tuple.Value;
+                DataAccessor accessor = new DataAccessor(container.Current);
+
+                // If the data was removed this frame, then next frame it won't exist anymore, so we
+                // don't serialize it
+                if (WasRemoved(accessor)) {
+                    continue;
+                }
+
+                var dataInstance = new ContentEntity.DataInstance() {
+                    // these items are never added this frame; if WasAdded is true now, it will be
+                    // false next frame
+                    WasAdded = false,
+
+                    // the data *may* have been removed this frame, though
+                    WasRemoved = removedThisFrame.Contains(accessor.Id)
+                };
+
+                // if we were modified this frame, then we have to do a data swap (and set
+                // WasModified to true)
+                if (modifiedThisFrame.Contains(accessor.Id)) {
+                    // do a data swap so our modified data is correct
+                    dataInstance.CurrentData = container.Modifying;
+                    dataInstance.PreviousData = container.Current;
+
+                    dataInstance.WasModified = true;
+                }
+
+                // we were not modified this frame, so don't perform a data swap
+                else {
+                    dataInstance.CurrentData = container.Current;
+                    dataInstance.PreviousData = container.Previous;
+                    dataInstance.WasModified = false;
+                }
+
+                data.Add(dataInstance);
+            }
+
+            foreach (var toAdd in _toAddStage1) {
+                data.Add(new ContentEntity.DataInstance() {
+                    CurrentData = toAdd,
+                    PreviousData = toAdd,
+                    WasAdded = true,
+
+                    // added data is never modified
+                    WasModified = false,
+
+                    // added data also cannot be removed in the same frame it was added in
+                    WasRemoved = false
+                });
+            }
+
+            return new ContentEntitySerializationFormat() {
+                PrettyName = PrettyName,
+                UniqueId = UniqueId,
+                Data = data
+            };
         }
 
         #region Instance data
