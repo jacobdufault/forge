@@ -11,6 +11,31 @@ using System.Text;
 namespace Neon.Entities.Implementation.Shared {
     internal class TemplateConversionContext : IContextObject {
         public SparseArray<ITemplate> CreatedTemplates = new SparseArray<ITemplate>();
+
+        /// <summary>
+        /// Returns a template instance for the given TemplateId. If an instance for the given id
+        /// already exists, then it is returned. Otherwise, either a RuntimeTemplate or
+        /// ContentTemplate is created with an associated id based on the GameEngineContext.
+        /// </summary>
+        /// <param name="templateId">The id of the template to get an instance for.</param>
+        /// <param name="context">The GameEngineContext, used to determine if we should create a
+        /// ContentTemplate or RuntimeTemplate instance.</param>
+        public ITemplate GetTemplateInstance(int templateId, GameEngineContext context) {
+            if (CreatedTemplates.Contains(templateId)) {
+                return CreatedTemplates[templateId];
+            }
+
+            ITemplate template;
+            if (context.GameEngine.IsEmpty) {
+                template = new ContentTemplate();
+            }
+            else {
+                template = new RuntimeTemplate(context.GameEngine.Value);
+            }
+
+            CreatedTemplates[templateId] = template;
+            return template;
+        }
     }
 
     /// <summary>
@@ -43,25 +68,7 @@ namespace Neon.Entities.Implementation.Shared {
             // We'll have to use our conversion context to get an instance of the template so that
             // it can be restored later.
             int templateId = (int)(long)reader.Value;
-            return GetReference(conversionContext.CreatedTemplates, templateId, engineContext);
-        }
-
-        private ITemplate GetReference(SparseArray<ITemplate> templates, int templateId,
-            GameEngineContext engineContext) {
-            if (templates.Contains(templateId)) {
-                return templates[templateId];
-            }
-
-            ITemplate template;
-            if (engineContext.GameEngine.IsEmpty) {
-                template = new ContentTemplate();
-            }
-            else {
-                template = new RuntimeTemplate(engineContext.GameEngine.Value);
-            }
-
-            templates[templateId] = template;
-            return template;
+            return conversionContext.GetTemplateInstance(templateId, engineContext);
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {

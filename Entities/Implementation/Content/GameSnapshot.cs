@@ -29,8 +29,8 @@ namespace Neon.Entities.Implementation.Content {
 
             // Restore our created template instances
             foreach (ContentTemplateSerializationFormat format in serializedTemplates) {
-                ITemplate template = GetTemplateInstance(format.TemplateId, templateInstances,
-                    engineContext);
+                int templateId = format.TemplateId;
+                ITemplate template = conversionContext.GetTemplateInstance(templateId, engineContext);
 
                 if (template is ContentTemplate) {
                     ((ContentTemplate)template).Initialize(format);
@@ -42,24 +42,6 @@ namespace Neon.Entities.Implementation.Content {
 
             container.Templates = conversionContext.CreatedTemplates.Select(p => p.Value).ToList();
             return container;
-        }
-
-        private ITemplate GetTemplateInstance(int templateId, SparseArray<ITemplate> templates,
-            GameEngineContext context) {
-            if (templates.Contains(templateId)) {
-                return templates[templateId];
-            }
-
-            ITemplate template;
-            if (context.GameEngine.IsEmpty) {
-                template = new ContentTemplate();
-            }
-            else {
-                template = new RuntimeTemplate(context.GameEngine.Value);
-            }
-
-            templates[templateId] = template;
-            return template;
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
