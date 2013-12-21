@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
+using System.Runtime.Serialization;
 
 namespace Neon.Utilities {
     /// <summary>
@@ -50,14 +51,21 @@ namespace Neon.Utilities {
         /// use.
         /// </summary>
         /// <param name="converters">The converters to use in the settings.</param>
+        /// <param name="contextObjects">Context objects to use</param>
         /// <returns>An appropriate JsonSerializerSettings instance.</returns>
-        private static JsonSerializerSettings CreateSettings(JsonConverter[] converters) {
+        private static JsonSerializerSettings CreateSettings(JsonConverter[] converters,
+            IContextObject[] contextObjects) {
             return new JsonSerializerSettings() {
                 // handle inheritance correctly
                 TypeNameHandling = TypeNameHandling.Auto,
                 Converters = converters,
 
-                ContractResolver = new RequireOptInContractResolver(converters)
+                // we require that all types that go through the serialization process either a)
+                // have a converter for them, or b) are annotated with
+                // JsonObject(MemberSerialization.OptIn).
+                ContractResolver = new RequireOptInContractResolver(converters),
+
+                Context = new StreamingContext(StreamingContextStates.All, new GeneralStreamingContext(contextObjects)),
 
                 // opt-in to reference handling
                 //PreserveReferencesHandling = PreserveReferencesHandling.All
@@ -71,9 +79,11 @@ namespace Neon.Utilities {
         /// <param name="instance">The original object to clone.</param>
         /// <param name="converters">Specific JSON converters to use when deserializing the
         /// object.</param>
+        /// <param name="contextObjects">Initial context objects to use when deserializing</param>
         /// <returns>An identical clone to the given instance.</returns>
-        public static T DeepClone<T>(T instance, params JsonConverter[] converters) {
-            JsonSerializerSettings settings = CreateSettings(converters);
+        public static T DeepClone<T>(T instance, JsonConverter[] converters,
+            IContextObject[] contextObjects) {
+            JsonSerializerSettings settings = CreateSettings(converters, contextObjects);
 
             string json = JsonConvert.SerializeObject(instance, typeof(T), Formatting.Indented, settings);
             return (T)JsonConvert.DeserializeObject(json, typeof(T), settings);
@@ -86,9 +96,11 @@ namespace Neon.Utilities {
         /// <typeparam name="T">The type of object to serialize.</typeparam>
         /// <param name="instance">The object instance itself to serialize.</param>
         /// <param name="converters">The converters to use during the serialization process.</param>
-        /// <returns>A serialized version of the given object.</returns>
-        public static string Serialize<T>(T instance, params JsonConverter[] converters) {
-            JsonSerializerSettings settings = CreateSettings(converters);
+        /// <param name="contextObjects">Context objects to use</param <returns>
+        /// A serialized version of the given object.</returns>
+        public static string Serialize<T>(T instance, JsonConverter[] converters,
+            IContextObject[] contextObjects) {
+            JsonSerializerSettings settings = CreateSettings(converters, contextObjects);
 
             return JsonConvert.SerializeObject(instance, typeof(T), Formatting.Indented, settings);
         }
@@ -100,10 +112,12 @@ namespace Neon.Utilities {
         /// <typeparam name="T">The type of the object to deserialize.</typeparam>
         /// <param name="json">The serialized state of the object.</param>
         /// <param name="converters">Converters to use during the deserialization process.</param>
+        /// <param name="contextObjects">Context objects to use</param>
         /// <returns>A deserialized object of type T (or a derived type) that was generated from the
         /// given JSON data.</returns>
-        public static T Deserialize<T>(string json, params JsonConverter[] converters) {
-            JsonSerializerSettings settings = CreateSettings(converters);
+        public static T Deserialize<T>(string json, JsonConverter[] converters,
+            IContextObject[] contextObjects) {
+            JsonSerializerSettings settings = CreateSettings(converters, contextObjects);
 
             return (T)JsonConvert.DeserializeObject(json, typeof(T), settings);
         }

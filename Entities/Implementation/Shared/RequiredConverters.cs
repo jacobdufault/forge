@@ -1,4 +1,5 @@
 ﻿using Neon.Entities.Implementation.Runtime;
+using Neon.Utilities;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -11,10 +12,21 @@ namespace Neon.Entities.Implementation.Shared {
     /// Json.NET is used to serialize/deserialize values.
     /// </summary>
     internal static class RequiredConverters {
-        public static JsonConverter[] GetConverters(GameEngine gameEngine) {
+        /// <summary>
+        /// Returns the converters that are necessary for proper serialization of an ISavedLevel.
+        /// </summary>
+        public static JsonConverter[] GetConverters() {
             return new JsonConverter[] {
                DataSparseArrayConverter.Instance,
-               new TemplateConverter(gameEngine)
+            };
+        }
+
+        /// <summary>
+        /// Returns the context objects that are necessary for proper serialization of ISavedlevel.
+        /// </summary>
+        public static IContextObject[] GetContexts(Maybe<GameEngine> engine) {
+            return new IContextObject[] {
+                new GameEngineContext(engine)
             };
         }
     }

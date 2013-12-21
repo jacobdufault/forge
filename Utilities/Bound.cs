@@ -17,16 +17,20 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 
 namespace Neon.Utilities {
+    [JsonObject(MemberSerialization.OptIn)]
     public struct Bound {
+        [JsonProperty("X")]
         public readonly Real X;
+        [JsonProperty("Z")]
         public readonly Real Z;
+        [JsonProperty("Radius")]
         public readonly Real Radius;
-        private readonly Real RadiusSq;
 
         public Bound(Real x, Real z, Real radius) {
             Contract.Requires(radius > 0, "Radius must be > 0");
@@ -34,7 +38,6 @@ namespace Neon.Utilities {
             X = x;
             Z = z;
             Radius = radius;
-            RadiusSq = radius * radius;
         }
 
         /// <summary>
@@ -60,7 +63,7 @@ namespace Neon.Utilities {
         /// </summary>
         public bool Contains(Real x, Real z) {
             Real distanceSq = Vector2r.DistanceSq(X, Z, x, z);
-            return RadiusSq > distanceSq;
+            return (Radius * Radius) > distanceSq;
         }
 
         public override string ToString() {

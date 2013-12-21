@@ -9,8 +9,27 @@ using System.Linq;
 
 namespace Neon.Entities.Implementation.Content {
     [JsonObject(MemberSerialization.OptIn)]
-    internal class ContentTemplate : ITemplate {
+    internal class ContentTemplateSerializationFormat {
         [JsonProperty("DefaultDataInstances")]
+        public List<IData> DefaultDataInstances;
+
+        [JsonProperty("TemplateId")]
+        public int TemplateId;
+
+        [JsonProperty("PrettyName")]
+        public string PrettyName;
+    }
+
+    [JsonConverter(typeof(TemplateConverter))]
+    internal class ContentTemplate : ITemplate {
+        public ContentTemplateSerializationFormat GetSerializedFormat() {
+            return new ContentTemplateSerializationFormat() {
+                DefaultDataInstances = _defaultDataInstances.Select(pair => pair.Value).ToList(),
+                TemplateId = TemplateId,
+                PrettyName = PrettyName
+            };
+        }
+
         private SparseArray<IData> _defaultDataInstances;
 
         private EventNotifier _eventNotifier;
@@ -44,6 +63,18 @@ namespace Neon.Entities.Implementation.Content {
 
             foreach (IData data in template.SelectCurrentData()) {
                 AddDefaultData(data);
+            }
+        }
+
+        /// <summary>
+        /// Initializes the ContentTemplate with data from the given ContentTemplate.
+        /// </summary>
+        public void Initialize(ContentTemplateSerializationFormat template) {
+            TemplateId = template.TemplateId;
+            PrettyName = template.PrettyName;
+
+            foreach (IData data in template.DefaultDataInstances) {
+                _defaultDataInstances[DataAccessorFactory.GetId(data)] = data;
             }
         }
 

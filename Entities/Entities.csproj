@@ -57,12 +57,15 @@
     <Compile Include="Implementation\Runtime\PerformanceInformation.cs" />
     <Compile Include="Implementation\Runtime\RuntimeTemplate.cs" />
     <Compile Include="Implementation\Shared\DataSparseArrayConverter.cs" />
+    <Compile Include="Implementation\Shared\EventProcessor.cs" />
+    <Compile Include="Implementation\Shared\GameEngineContext.cs" />
+    <Compile Include="Implementation\Shared\IEntityConverter.cs" />
+    <Compile Include="Implementation\Content\DataReferenceContextObject.cs" />
     <Compile Include="Implementation\Shared\RequiredConverters.cs" />
     <Compile Include="Implementation\Shared\SavedLevel.cs" />
     <Compile Include="Implementation\Shared\DataAccessor.cs" />
     <Compile Include="Implementation\Runtime\RuntimeEntity.cs" />
     <Compile Include="Implementation\Runtime\EntityManagerMetadata.cs" />
-    <Compile Include="Implementation\Shared\EventProcessor.cs" />
     <Compile Include="API\Events.cs" />
     <Compile Include="API\Exceptions.cs" />
     <Compile Include="API\IEntityExtensions.cs" />

@@ -58,6 +58,7 @@
     <Compile Include="GameRandom.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="Maybe.cs" />
+    <Compile Include="GeneralStreamingContext.cs" />
     <Compile Include="Notifier.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PropertyMetadata.cs" />

@@ -17,30 +17,38 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+using Newtonsoft.Json;
+
 namespace Neon.Utilities {
+    [JsonObject(MemberSerialization.OptIn)]
     public class Tuple<T1> {
         public Tuple(T1 item1) {
             Item1 = item1;
         }
 
+        [JsonProperty("Item1")]
         public T1 Item1 { get; set; }
     }
 
+    [JsonObject(MemberSerialization.OptIn)]
     public class Tuple<T1, T2> : Tuple<T1> {
         public Tuple(T1 item1, T2 item2)
             : base(item1) {
             Item2 = item2;
         }
 
+        [JsonProperty("Item2")]
         public T2 Item2 { get; set; }
     }
 
+    [JsonObject(MemberSerialization.OptIn)]
     public class Tuple<T1, T2, T3> : Tuple<T1, T2> {
         public Tuple(T1 item1, T2 item2, T3 item3)
             : base(item1, item2) {
             Item3 = item3;
         }
 
+        [JsonProperty("Item3")]
         public T3 Item3 { get; set; }
     }
 

@@ -1,12 +1,6 @@
 ﻿using Neon.Entities.Implementation.Content;
-using Neon.Utilities;
 using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
 
 namespace Neon.Entities.Implementation.Shared {
     [JsonObject(MemberSerialization.OptIn)]

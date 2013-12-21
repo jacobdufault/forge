@@ -1,4 +1,5 @@
-﻿using Neon.Entities.Implementation.Shared;
+﻿using Neon.Entities.Implementation.Runtime;
+using Neon.Entities.Implementation.Shared;
 using Neon.Utilities;
 using Newtonsoft.Json;
 using System;
@@ -22,7 +23,8 @@ namespace Neon.Entities {
         /// </summary>
         /// <param name="level">The level to save.</param>
         public static string Save(ISavedLevel level) {
-            return SerializationHelpers.Serialize((SavedLevel)level, RequiredConverters.GetConverters(null));
+            return SerializationHelpers.Serialize((SavedLevel)level,
+                RequiredConverters.GetConverters(), RequiredConverters.GetContexts(Maybe<GameEngine>.Empty));
         }
 
         /// <summary>
@@ -31,7 +33,8 @@ namespace Neon.Entities {
         /// <param name="json">The saved JSON to restore the level from.</param>
         /// <returns>A fully restored level.</returns>
         public static ISavedLevel Load(string json) {
-            return SerializationHelpers.Deserialize<SavedLevel>(json, RequiredConverters.GetConverters(null));
+            ISavedLevel restored = SerializationHelpers.Deserialize<SavedLevel>(json, RequiredConverters.GetConverters(), RequiredConverters.GetContexts(Maybe<GameEngine>.Empty));
+            return restored;
         }
     }
 

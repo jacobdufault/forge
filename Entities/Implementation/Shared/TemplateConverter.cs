@@ -1,5 +1,7 @@
-﻿using Neon.Entities.Implementation.Content;
+﻿using Neon.Collections;
+using Neon.Entities.Implementation.Content;
 using Neon.Entities.Implementation.Runtime;
+using Neon.Utilities;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -7,59 +9,64 @@ using System.Linq;
 using System.Text;
 
 namespace Neon.Entities.Implementation.Shared {
+    internal class TemplateConversionContext : IContextObject {
+        public SparseArray<ITemplate> CreatedTemplates = new SparseArray<ITemplate>();
+    }
+
     /// <summary>
-    /// Provides import and export support for ITemplates. ITemplates are always serialized using
-    /// ContentTemplate, but the actual instance references are either ContentTemplates are
-    /// RuntimeTemplates depending on the TemplateConverter's constructor arguments.
+    /// During the import/export process, all ITemplate instances are just exported as their
+    /// TemplateIds. Then, a custom serialization converter is used to export the actual contents of
+    /// the ITemplate instances. This results in a very clean and consistent file format that works
+    /// with any type of object graph.
     /// </summary>
     internal class TemplateConverter : JsonConverter {
-        /// <summary>
-        /// If we're doing a runtime import, then we when construct RuntimeTemplates we need an
-        /// associated GameEngine to construct them with.
-        /// </summary>
-        private GameEngine _gameEngine;
-
-        /// <summary>
-        /// Initializes a new instance of the TemplateConverter class.
-        /// </summary>
-        /// <param name="gameEngine">If null, then ITemplate instances are imported as
-        /// ContentTemplate references. If a non-null argument is passed, then RuntimeTemplates are
-        /// created which are linked to the specified game engine.</param>
-        public TemplateConverter(GameEngine gameEngine) {
-            _gameEngine = gameEngine;
-        }
-
         public override bool CanConvert(Type objectType) {
-            // we handle ITemplate and RuntimeTemplate as ContentTemplate, but we want to make sure
-            // that ContentTemplate still gets handled by the default implementation, so we make
-            // sure not to process ContentTemplates.
-            return (objectType == typeof(ITemplate) || objectType == typeof(RuntimeTemplate)) &&
-                objectType != typeof(ContentTemplate);
+            throw new InvalidOperationException();
         }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue,
-            JsonSerializer serializer) {
-            // We always export ContentTemplate instances so we always import ContentTemplate
-            // instances.
-
-            ContentTemplate content = (ContentTemplate)existingValue ?? new ContentTemplate(-1);
-            serializer.Populate(reader, content);
-
-            if (_gameEngine != null) {
-                return new RuntimeTemplate(content, _gameEngine);
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
+            // Make sure to handle null imports
+            if (reader.TokenType == JsonToken.Null) {
+                return null;
             }
-            return content;
+
+            // We need to get our template conversion context
+            GeneralStreamingContext generalContext = (GeneralStreamingContext)serializer.Context.Context;
+            TemplateConversionContext conversionContext = generalContext.Get<TemplateConversionContext>();
+            GameEngineContext engineContext = generalContext.Get<GameEngineContext>();
+
+            if (reader.TokenType != JsonToken.Integer) {
+                throw new InvalidOperationException("Unexpected token type " + reader.TokenType);
+            }
+
+            // The token is referencing an integer, which means its just referencing a template.
+            // We'll have to use our conversion context to get an instance of the template so that
+            // it can be restored later.
+            int templateId = (int)(long)reader.Value;
+            return GetReference(conversionContext.CreatedTemplates, templateId, engineContext);
+        }
+
+        private ITemplate GetReference(SparseArray<ITemplate> templates, int templateId,
+            GameEngineContext engineContext) {
+            if (templates.Contains(templateId)) {
+                return templates[templateId];
+            }
+
+            ITemplate template;
+            if (engineContext.GameEngine.IsEmpty) {
+                template = new ContentTemplate();
+            }
+            else {
+                template = new RuntimeTemplate(engineContext.GameEngine.Value);
+            }
+
+            templates[templateId] = template;
+            return template;
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
-            // We always export ContentTemplate instances (to help make a more stable save file
-            // format and to simplify the serialization process, despite this file)
-            ContentTemplate content = value as ContentTemplate;
-            if (content == null) {
-                content = new ContentTemplate((ITemplate)value);
-            }
-
-            serializer.Serialize(writer, content);
+            ITemplate template = (ITemplate)value;
+            writer.WriteValue(template.TemplateId);
         }
     }
 }

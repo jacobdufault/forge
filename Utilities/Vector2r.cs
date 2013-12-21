@@ -17,14 +17,15 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace Neon.Utilities {
-    [Serializable]
+    [JsonObject(MemberSerialization.OptIn)]
     public struct Vector2r {
+        [JsonProperty("X")]
         public Real X;
+
+        [JsonProperty("Z")]
         public Real Z;
 
         public Vector2r(Real x, Real z) {
@@ -95,15 +96,12 @@ namespace Neon.Utilities {
 
         public override bool Equals(System.Object obj) {
             // If parameter is null return false.
-            if (obj == null) {
+            if (obj == null || obj is Vector2r == false) {
                 return false;
             }
 
             // If parameter cannot be cast to Point return false.
             Vector2r p = (Vector2r)obj;
-            if ((System.Object)p == null) {
-                return false;
-            }
 
             // Return true if the fields match:
             return X == p.X && Z == p.Z;

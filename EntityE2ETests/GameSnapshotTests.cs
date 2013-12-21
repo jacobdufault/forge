@@ -68,6 +68,28 @@ namespace Neon.Entities.E2ETests {
                 entity.AddData<TestData1>().A = 80;
             }
 
+            {
+                ITemplate template;
+                template = database.CreateTemplate();
+
+                template = database.CreateTemplate();
+                template.AddDefaultData(new TestData0());
+
+                template = database.CreateTemplate();
+                template.AddDefaultData(new TestData1() {
+                    A = 90
+                });
+
+                template = database.CreateTemplate();
+                template.AddDefaultData(new TestData0());
+                template.AddDefaultData(new TestData1() {
+                    A = 100
+                });
+
+                entity = database.CreateEntity(EntityAddLocation.Removed);
+                entity.AddData<TestData2>().Template = template;
+            }
+
             return database;
         }
 

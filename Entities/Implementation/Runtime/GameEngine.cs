@@ -98,12 +98,6 @@ namespace Neon.Entities.Implementation.Runtime {
         private object _updateTaskLock = new object();
 
         /// <summary>
-        /// The task that represents our current Update method. This is not used internally except
-        /// to notify the user that they cannot have concurrent Update calls running.
-        /// </summary>
-        private Task _updateTask;
-
-        /// <summary>
         /// The key we use to access unordered list metadata from the entity.
         /// </summary>
         private static int _entityUnorderedListMetadataKey = EntityManagerMetadata.GetUnorderedListMetadataIndex();
@@ -138,11 +132,15 @@ namespace Neon.Entities.Implementation.Runtime {
             private set;
         }
 
+        private List<ITemplate> _templates;
+
         public GameEngine(GameSnapshot baseSnapshot) {
             // Create our own little island of references with its own set of templates
-            GameSnapshot snapshot = SerializationHelpers.DeepClone(baseSnapshot, RequiredConverters.GetConverters(this));
+            GameSnapshot snapshot = SerializationHelpers.DeepClone(baseSnapshot,
+                RequiredConverters.GetConverters(), RequiredConverters.GetContexts(Maybe.Just(this)));
 
             _systems = snapshot.Systems;
+            _templates = snapshot.Templates;
 
             SystemDoneEvent = new CountdownEvent(0);
             _eventProcessors.BeginMonitoring((EventNotifier)EventNotifier);
@@ -540,16 +538,19 @@ namespace Neon.Entities.Implementation.Runtime {
             }
 
             snapshot.Systems = _systems;
+            snapshot.Templates = _templates;
 
             return snapshot;
         }
 
         public IGameSnapshot TakeSnapshot() {
-            return SerializationHelpers.DeepClone(GetSnapshot(), RequiredConverters.GetConverters(null));
+            return SerializationHelpers.DeepClone(GetSnapshot(),
+                RequiredConverters.GetConverters(), RequiredConverters.GetContexts(Maybe<GameEngine>.Empty));
         }
 
         public int GetVerificationHash() {
-            string json = SerializationHelpers.Serialize(GetSnapshot(), RequiredConverters.GetConverters(null));
+            string json = SerializationHelpers.Serialize(GetSnapshot(),
+                RequiredConverters.GetConverters(), RequiredConverters.GetContexts(Maybe<GameEngine>.Empty));
             return json.GetHashCode();
         }
     }

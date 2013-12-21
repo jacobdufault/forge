@@ -29,4 +29,13 @@ namespace Neon.Entities.E2ETests {
         }
     }
 
+    [JsonObject(MemberSerialization.OptIn)]
+    internal class TestData2 : BaseData<TestData2> {
+        [JsonProperty("Template")]
+        public ITemplate Template;
+
+        public override void CopyFrom(TestData2 source) {
+            Template = source.Template;
+        }
+    }
 }

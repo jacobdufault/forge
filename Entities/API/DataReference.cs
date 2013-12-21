@@ -1,7 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Neon.Entities.Implementation.Shared;
+using Neon.Utilities;
+using Newtonsoft.Json;
+using System;
+using System.Runtime.Serialization;
 
 namespace Neon.Entities {
     /// <summary>
@@ -17,29 +18,110 @@ namespace Neon.Entities {
     /// <summary>
     /// Base type for data references for common code.
     /// </summary>
+    [JsonObject(MemberSerialization.OptIn)]
     public abstract class BaseDataReferenceType : IDataReferenceTypeEraser {
-        private IQueryableEntity _entity;
+        IQueryableEntity IDataReferenceTypeEraser.Provider {
+            get {
+                return _queryableEntity;
+            }
+            set {
+                _queryableEntity = value;
+                UpdateSerializedValues();
+            }
+        }
+        private IQueryableEntity _queryableEntity;
 
-        public TData Get<TData>() where TData : IData {
+        /// <summary>
+        /// Updates that values that will be serialized and used to restore the DataReferenced based
+        /// upon the current value in _queryableEntity.
+        /// </summary>
+        private void UpdateSerializedValues() {
+            IEntity asEntity = _queryableEntity as IEntity;
+            if (asEntity != null) {
+                ReferencedId = asEntity.UniqueId;
+                IsEntityReference = true;
+            }
+
+            else {
+                ITemplate template = (ITemplate)_queryableEntity;
+                ReferencedId = template.TemplateId;
+                IsEntityReference = false;
+            }
+        }
+
+        /// <summary>
+        /// The id of the entity or template that we reference. We serialize this and it will be
+        /// resolved later.
+        /// </summary>
+        [JsonProperty("ReferencedId")]
+        internal int ReferencedId;
+
+        [JsonProperty("IsEntityReference")]
+        internal bool IsEntityReference;
+
+        /// <summary>
+        /// Resolves the reference to a specific entity.
+        /// </summary>
+        /// <param name="entity">The entity that the reference will reference.</param>
+        internal void ResolveEntityId(IQueryableEntity entity) {
+            // validate that the given entity is actually the entity we are saved to
+            if (IsEntityReference && entity is IEntity == false) {
+                throw new InvalidOperationException("Reference references IEntity but resolved entity is not an IEntity");
+            }
+            if (IsEntityReference == false && entity is ITemplate == false) {
+                throw new InvalidOperationException("Reference references ITemplate but resolved entity is not an ITemplate");
+            }
+
+            int id = -1;
+            if (IsEntityReference) {
+                id = ((IEntity)entity).UniqueId;
+            }
+            else {
+                id = ((ITemplate)entity).TemplateId;
+            }
+
+            if (id != ReferencedId) {
+                throw new InvalidOperationException("The resolved entity has a different id than " +
+                    "the one the reference references (got " + id + ", expected " + ReferencedId +
+                    ")");
+            }
+
+            // done validating; assign the entity reference
+            _queryableEntity = entity;
+        }
+
+        /// <summary>
+        /// This method will automatically be called when we are deserializing the object. We want
+        /// to add ourselves to the list of data references in the context so that we will get
+        /// restored.
+        /// </summary>
+        [OnDeserializing]
+        private void OnSerialization(StreamingContext context) {
+            GeneralStreamingContext generalContext = (GeneralStreamingContext)context.Context;
+            generalContext.Get<DataReferenceContextObject>().DataReferences.Add(this);
+        }
+
+        public TData Current<TData>() where TData : IData {
             if (VerifyRequest<TData>() == false) {
                 throw new InvalidOperationException("Cannot retrieve " + typeof(TData) +
                     " with DataReference type " + GetType() +
                     "; consider adding the given Data type to the data reference");
             }
 
-            return _entity.Current<TData>();
+            return _queryableEntity.Current<TData>();
+        }
+
+        public TData Previous<TData>() where TData : IData {
+            if (VerifyRequest<TData>() == false) {
+                throw new InvalidOperationException("Cannot retrieve " + typeof(TData) +
+                    " with DataReference type " + GetType() +
+                    "; consider adding the given Data type to the data reference");
+            }
+
+            return _queryableEntity.Previous<TData>();
         }
 
         protected abstract bool VerifyRequest<TDataRequest>() where TDataRequest : IData;
-
-        IQueryableEntity IDataReferenceTypeEraser.Provider {
-            get {
-                return _entity;
-            }
-            set {
-                _entity = value;
-            }
-        }
     }
 
     /// <summary>
@@ -48,8 +130,12 @@ namespace Neon.Entities {
     /// <typeparam name="TData0">A referenced data type.</typeparam>
     public class DataReference<TData0> : BaseDataReferenceType
         where TData0 : IData {
-        public TData0 Get() {
-            return Get<TData0>();
+        public TData0 Current() {
+            return Current<TData0>();
+        }
+
+        public TData0 Previous() {
+            return Previous<TData0>();
         }
 
         protected override bool VerifyRequest<TDataRequest>() {
@@ -64,7 +150,6 @@ namespace Neon.Entities {
     /// <typeparam name="TData0">A referenced data type.</typeparam> <typeparam name="TData1">A
     /// referenced data type.</typeparam>
     public class DataReference<TData0, TData1> : BaseDataReferenceType {
-
         protected override bool VerifyRequest<TDataRequest>() {
             return
                 typeof(TDataRequest) == typeof(TData0) ||

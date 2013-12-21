@@ -3,6 +3,7 @@ using Neon.Entities.Implementation.Content;
 using Neon.Entities.Implementation.Runtime;
 using Neon.Entities.Implementation.Shared;
 using Neon.Utilities;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 
@@ -10,10 +11,7 @@ namespace Neon.Entities.Implementation.Runtime {
     /// <summary>
     /// A runtime version of an ITemplate designed for efficiency.
     /// </summary>
-    /// <remarks>
-    /// This class does *NOT* implement JsonObject; it should never go through the save pipeline!
-    /// Instead, convert it to a ContentTemplate and save that.
-    /// </remarks>
+    [JsonConverter(typeof(TemplateConverter))]
     internal class RuntimeTemplate : ITemplate {
         /// <summary>
         /// The data instances inside of the template.
@@ -30,13 +28,22 @@ namespace Neon.Entities.Implementation.Runtime {
         /// </summary>
         private GameEngine _gameEngine;
 
-        public RuntimeTemplate(ContentTemplate content, GameEngine engine) {
+        public RuntimeTemplate(GameEngine engine) {
             _defaultDataInstances = new SparseArray<IData>();
             _eventNotifier = new EventNotifier();
             _gameEngine = engine;
+        }
 
-            TemplateId = content.TemplateId;
-            PrettyName = content.PrettyName;
+        /// <summary>
+        /// Initializes the RuntimeTemplate with data from the given ContentTemplate.
+        /// </summary>
+        public void Initialize(ContentTemplateSerializationFormat template) {
+            TemplateId = template.TemplateId;
+            PrettyName = template.PrettyName;
+
+            foreach (IData data in template.DefaultDataInstances) {
+                _defaultDataInstances[DataAccessorFactory.GetId(data)] = data;
+            }
         }
 
         /// <summary>
