@@ -139,7 +139,6 @@ namespace Neon.Entities.Implementation.Content {
         [JsonProperty("TemplateIdGenerator")]
         private UniqueIntGenerator _templateIdGenerator;
 
-        [JsonProperty("SingletonEntity")]
         public IEntity SingletonEntity {
             get;
             set;
@@ -160,6 +159,8 @@ namespace Neon.Entities.Implementation.Content {
             private set;
         }
 
+        [JsonProperty("SingletonEntity")]
+        private EntitySerializationContainer _singletonEntityContainer;
         [JsonProperty("AddedEntities")]
         private EntitySerializationContainer _addedEntitiesContainer;
         [JsonProperty("ActiveEntities")]
@@ -186,6 +187,9 @@ namespace Neon.Entities.Implementation.Content {
             _templateSerializationContainer = new TemplateSerializationContainer() {
                 Templates = Templates
             };
+            _singletonEntityContainer = new EntitySerializationContainer() {
+                Entities = new List<IEntity>() { SingletonEntity }
+            };
             _addedEntitiesContainer = new EntitySerializationContainer() {
                 Entities = AddedEntities
             };
@@ -211,6 +215,7 @@ namespace Neon.Entities.Implementation.Content {
         /// </summary>
         [OnDeserialized]
         private void RestoreDataReferences(StreamingContext context) {
+            SingletonEntity = _singletonEntityContainer.Entities[0];
             AddedEntities = _addedEntitiesContainer.Entities;
             ActiveEntities = _activeEntitiesContainer.Entities;
             RemovedEntities = _removedEntitiesContainer.Entities;

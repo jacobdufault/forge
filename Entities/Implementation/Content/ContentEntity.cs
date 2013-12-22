@@ -78,11 +78,11 @@ namespace Neon.Entities.Implementation.Content {
         public ContentEntity(int uniqueId, string prettyName)
             : this() {
             UniqueId = uniqueId;
-            PrettyName = prettyName;
+            PrettyName = prettyName ?? "";
         }
 
         public void Initialize(ContentEntitySerializationFormat format) {
-            PrettyName = format.PrettyName;
+            PrettyName = format.PrettyName ?? "";
             UniqueId = format.UniqueId;
 
             foreach (DataInstance data in format.Data) {

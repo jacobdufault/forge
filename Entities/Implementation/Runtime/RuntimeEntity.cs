@@ -62,7 +62,7 @@ namespace Neon.Entities.Implementation.Runtime {
             _uniqueId = uniqueId;
             _idGenerator.Consume(_uniqueId);
 
-            PrettyName = prettyName;
+            PrettyName = prettyName ?? "";
         }
 
         public RuntimeEntity(ITemplate template)
@@ -74,7 +74,7 @@ namespace Neon.Entities.Implementation.Runtime {
 
         public void Initialize(ContentEntitySerializationFormat format) {
             _uniqueId = format.UniqueId;
-            PrettyName = format.PrettyName;
+            PrettyName = format.PrettyName ?? "";
 
             foreach (ContentEntity.DataInstance data in format.Data) {
                 DataAccessor accessor = new DataAccessor(data.CurrentData);
