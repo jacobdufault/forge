@@ -223,22 +223,70 @@ namespace Neon.Entities.Implementation.Content {
             generalContext.Remove<EntityConversionContext>();
         }
 
-        public IEntity CreateEntity(EntityAddTarget addTarget, string prettyName = "") {
+        public IEntity CreateEntity(string prettyName = "") {
+            ContentEntity added = new ContentEntity(_entityIdGenerator.Next(), prettyName);
+            AddedEntities.Add(added);
+            return added;
+        }
+
+        /// <summary>
+        /// Helper for tests to create snapshots with entities within more collections than just
+        /// AddedEntities.
+        /// </summary>
+        internal enum EntityAddTarget {
+            Added,
+            Active,
+            Removed
+        }
+        /// <summary>
+        /// Helper for tests to create snapshots with entities within more collections than just
+        /// AddedEntities.
+        /// </summary>
+        internal IEntity CreateEntity(EntityAddTarget target, string prettyName = "") {
             ContentEntity added = new ContentEntity(_entityIdGenerator.Next(), prettyName);
 
-            switch (addTarget) {
-                case EntityAddTarget.Active:
-                    ActiveEntities.Add(added);
-                    break;
-                case EntityAddTarget.Added:
-                    AddedEntities.Add(added);
-                    break;
-                case EntityAddTarget.Removed:
-                    RemovedEntities.Add(added);
-                    break;
+            if (target == EntityAddTarget.Added) {
+                AddedEntities.Add(added);
+            }
+            else if (target == EntityAddTarget.Active) {
+                ActiveEntities.Add(added);
+            }
+            else {
+                RemovedEntities.Add(added);
             }
 
             return added;
+        }
+
+        public void RemoveEntity(IEntity entity) {
+            if (SingletonEntity == entity) {
+                throw new InvalidOperationException("Cannot remove SingletonEntity");
+            }
+
+            for (int i = 0; i < AddedEntities.Count; ++i) {
+                if (entity.UniqueId == AddedEntities[i].UniqueId) {
+                    AddedEntities.RemoveAt(i);
+                    return;
+                }
+            }
+
+            for (int i = 0; i < ActiveEntities.Count; ++i) {
+                if (entity.UniqueId == ActiveEntities[i].UniqueId) {
+                    IEntity removed = ActiveEntities[i];
+                    ActiveEntities.RemoveAt(i);
+                    RemovedEntities.Add(removed);
+                    return;
+                }
+            }
+
+            foreach (IEntity removed in RemovedEntities) {
+                if (entity.UniqueId == removed.UniqueId) {
+                    throw new InvalidOperationException("Unable to remove entity; it is already " +
+                        "being removed");
+                }
+            }
+
+            throw new InvalidOperationException("Unable to find entity with UniqueId = " + entity.UniqueId);
         }
 
         IEntity IGameSnapshot.SingletonEntity {

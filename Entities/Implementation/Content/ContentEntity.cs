@@ -109,13 +109,6 @@ namespace Neon.Entities.Implementation.Content {
             }
         }
 
-        /*
-        public ContentEntity(IEntity entity) :
-            this(entity.UniqueId, entity.PrettyName) {
-            Restore(entity);
-        }
-        */
-
         public override string ToString() {
             if (PrettyName.Length > 0) {
                 return string.Format("Entity [uid={0}, name={1}]", UniqueId, PrettyName);
@@ -125,27 +118,12 @@ namespace Neon.Entities.Implementation.Content {
             }
         }
 
-        /*
-        public void Restore(IEntity entity) {
-            foreach (IData data in entity.SelectCurrentData()) {
-                DataAccessor accessor = new DataAccessor(data);
-
-                HasModification = HasModification || entity.WasModified(accessor);
-
-                IData current = entity.Current(accessor);
-                IData previous = entity.Previous(accessor);
-
-                _currentData[accessor.Id] = current;
-                _previousData[accessor.Id] = previous;
-            }
-        }*/
-
         public void Destroy() {
-            throw new InvalidOperationException("Cannot destroy a ContentEntity");
+            throw new InvalidOperationException("Cannot destroy a ContentEntity; use GameSnapshot.Remove instead");
         }
 
         public IData AddOrModify(DataAccessor accessor) {
-            throw new InvalidOperationException("Cannot AddOrModify a ContentEntity (use Add)");
+            throw new InvalidOperationException("Cannot AddOrModify data in a ContentEntity (use Add)");
         }
 
         public IData AddData(DataAccessor accessor) {
@@ -170,9 +148,10 @@ namespace Neon.Entities.Implementation.Content {
                 throw new NoSuchDataException(this, accessor);
             }
 
-            // RemoveData first call toggles WasRemoved to true; second call actually removes it
+            // If the data is being added, then just remove it. Otherwise, add to to the removed
+            // collection.
 
-            if (_data[accessor.Id].WasRemoved) {
+            if (_data[accessor.Id].WasAdded) {
                 _data.Remove(accessor.Id);
             }
             else {
@@ -181,7 +160,7 @@ namespace Neon.Entities.Implementation.Content {
         }
 
         public IData Modify(DataAccessor accessor) {
-            throw new InvalidOperationException("Cannot modify a ContentEntity");
+            throw new InvalidOperationException("Cannot modify data in a ContentEntity");
         }
 
         public ICollection<IData> SelectCurrentData(Predicate<IData> filter = null,

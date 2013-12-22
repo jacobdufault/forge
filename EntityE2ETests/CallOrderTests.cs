@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Neon.Entities.Implementation.Content;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -121,12 +122,12 @@ namespace Neon.Entities.E2ETests {
 
         [TestMethod]
         public void AddAndUpdateEntity() {
-            IGameSnapshot snapshot = CreateEmptySnapshot();
+            GameSnapshot snapshot = (GameSnapshot)CreateEmptySnapshot();
             ITemplateGroup templates = LevelManager.CreateTemplateGroup();
 
             snapshot.Systems.Add(new TriggerEventLogger(new Type[] { }));
 
-            IEntity entity = snapshot.CreateEntity(EntityAddTarget.Added);
+            IEntity entity = snapshot.CreateEntity(GameSnapshot.EntityAddTarget.Added);
 
             IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
 
@@ -165,13 +166,13 @@ namespace Neon.Entities.E2ETests {
 
         [TestMethod]
         public void AddEntityAndModifyInAdd() {
-            IGameSnapshot snapshot = CreateEmptySnapshot();
+            GameSnapshot snapshot = (GameSnapshot)CreateEmptySnapshot();
             ITemplateGroup templates = LevelManager.CreateTemplateGroup();
 
             snapshot.Systems.Add(new TriggerEventLogger(new Type[] { }));
             snapshot.Systems.Add(new AddAndModifyOnAddedSystem());
 
-            snapshot.CreateEntity(EntityAddTarget.Added);
+            snapshot.CreateEntity(GameSnapshot.EntityAddTarget.Added);
 
             IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
             engine.SynchronizeState().WaitOne();
@@ -210,14 +211,14 @@ namespace Neon.Entities.E2ETests {
 
         [TestMethod]
         public void AddEntityAndModifyInUpdate() {
-            IGameSnapshot snapshot = CreateEmptySnapshot();
+            GameSnapshot snapshot = (GameSnapshot)CreateEmptySnapshot();
             ITemplateGroup templates = LevelManager.CreateTemplateGroup();
 
             snapshot.Systems.Add(new TriggerEventLogger(new Type[] { typeof(TestData0) }));
             snapshot.Systems.Add(new ModifyOnUpdateSystem());
 
             {
-                IEntity e = snapshot.CreateEntity(EntityAddTarget.Added);
+                IEntity e = snapshot.CreateEntity(GameSnapshot.EntityAddTarget.Added);
                 e.AddData<TestData0>();
             }
 
@@ -246,12 +247,12 @@ namespace Neon.Entities.E2ETests {
 
         [TestMethod]
         public void RemoveEntityWithNoData() {
-            IGameSnapshot snapshot = CreateEmptySnapshot();
+            GameSnapshot snapshot = (GameSnapshot)CreateEmptySnapshot();
             ITemplateGroup templates = LevelManager.CreateTemplateGroup();
 
             snapshot.Systems.Add(new TriggerEventLogger(new Type[] { }));
 
-            IEntity entity = snapshot.CreateEntity(EntityAddTarget.Removed);
+            IEntity entity = snapshot.CreateEntity(GameSnapshot.EntityAddTarget.Removed);
 
             IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
 
@@ -278,12 +279,12 @@ namespace Neon.Entities.E2ETests {
 
         [TestMethod]
         public void RemoveEntityWithData() {
-            IGameSnapshot snapshot = CreateEmptySnapshot();
+            GameSnapshot snapshot = (GameSnapshot)CreateEmptySnapshot();
             ITemplateGroup templates = LevelManager.CreateTemplateGroup();
 
             snapshot.Systems.Add(new TriggerEventLogger(new Type[] { }));
 
-            IEntity entity = snapshot.CreateEntity(EntityAddTarget.Removed);
+            IEntity entity = snapshot.CreateEntity(GameSnapshot.EntityAddTarget.Removed);
             entity.AddData<TestData0>();
 
             IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
@@ -325,14 +326,14 @@ namespace Neon.Entities.E2ETests {
         /// </summary>
         [TestMethod]
         public void RemoveEntityAndModifyInRemoveNotification() {
-            IGameSnapshot snapshot = CreateEmptySnapshot();
+            GameSnapshot snapshot = (GameSnapshot)CreateEmptySnapshot();
             ITemplateGroup templates = LevelManager.CreateTemplateGroup();
 
             snapshot.Systems.Add(new TriggerEventLogger(new Type[] { }));
             snapshot.Systems.Add(new ModifyOnRemovedTrigger());
 
             {
-                IEntity e = snapshot.CreateEntity(EntityAddTarget.Removed);
+                IEntity e = snapshot.CreateEntity(GameSnapshot.EntityAddTarget.Removed);
                 e.AddData<TestData0>();
             }
 

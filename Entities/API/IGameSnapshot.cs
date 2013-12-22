@@ -21,15 +21,6 @@ using System.Collections.Generic;
 
 namespace Neon.Entities {
     /// <summary>
-    /// Specifies where an entity should be added to when adding one to a IGameSnapshot.
-    /// </summary>
-    public enum EntityAddTarget {
-        Active,
-        Removed,
-        Added
-    }
-
-    /// <summary>
     /// The IGameSnapshot stores a serialized state of the engine. It provides a common interface
     /// that both the engine and the editor use for accessing saved games and replays.
     /// </summary>
@@ -40,12 +31,23 @@ namespace Neon.Entities {
     /// </remarks>
     public interface IGameSnapshot {
         /// <summary>
-        /// Adds a new entity to the snapshot.
+        /// Adds a new entity to the snapshot (under the Added entities collection).
         /// </summary>
-        /// <param name="addTarget">What collection the entity should be added to.</param>
         /// <param name="prettyName">The pretty name of the entity.</param>
         /// <returns>A new entity.</returns>
-        IEntity CreateEntity(EntityAddTarget addTarget, string prettyName = "");
+        IEntity CreateEntity(string prettyName = "");
+
+        /// <summary>
+        /// Request for the given entity to be removed from the snapshot.
+        /// </summary>
+        /// <remarks>
+        /// This function does different operations depending on what collection the entity is
+        /// currently in. If it is the SingletonEntity, an exception is thrown. If it is in
+        /// AddedEntities, the entity is just destroyed completely. If it is in ActiveEntities, the
+        /// entity is moved to RemovedEntities. If it is RemovedEntities, an exception is thrown.
+        /// </remarks>
+        /// <param name="entity">The entity to remove.</param>
+        void RemoveEntity(IEntity entity);
 
         /// <summary>
         /// The singleton entity. It is automatically created and cannot be destroyed, but it can be

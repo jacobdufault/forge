@@ -19,6 +19,7 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neon.Entities;
+using Neon.Entities.Implementation.Content;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -54,57 +55,57 @@ namespace Neon.Entities.E2ETests {
 
         [TestMethod]
         public void CorrectUpdateCount() {
-            IGameSnapshot database = LevelManager.CreateSnapshot();
+            GameSnapshot snapshot = (GameSnapshot)LevelManager.CreateSnapshot();
             ITemplateGroup templates = LevelManager.CreateTemplateGroup();
 
             for (int i = 0; i < 10; ++i) {
-                IEntity entity = database.CreateEntity(EntityAddTarget.Active);
+                IEntity entity = snapshot.CreateEntity(GameSnapshot.EntityAddTarget.Active);
                 entity.AddData<TestData0>();
             }
 
-            database.Systems.Add(new SystemCounter() {
+            snapshot.Systems.Add(new SystemCounter() {
                 Filter = new[] { typeof(TestData0) }
             });
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(database, templates);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
             engine.SynchronizeState().WaitOne();
             engine.Update();
 
-            Assert.AreEqual(database.ActiveEntities.Count(), engine.GetSystem<SystemCounter>().UpdateCount);
+            Assert.AreEqual(snapshot.ActiveEntities.Count(), engine.GetSystem<SystemCounter>().UpdateCount);
         }
 
         [TestMethod]
         public void ToFromContentDatabase() {
             ITemplateGroup templates = TestUtils.CreateDefaultTemplates();
 
-            IGameSnapshot database0 = TestUtils.CreateDefaultDatabase(templates);
-            IGameEngine engine0 = GameEngineFactory.CreateEngine(database0, templates);
+            IGameSnapshot snapshot0 = TestUtils.CreateDefaultDatabase(templates);
+            IGameEngine engine0 = GameEngineFactory.CreateEngine(snapshot0, templates);
 
-            IGameSnapshot database1 = engine0.TakeSnapshot();
-            IGameEngine engine1 = GameEngineFactory.CreateEngine(database1, templates);
+            IGameSnapshot snapshot1 = engine0.TakeSnapshot();
+            IGameEngine engine1 = GameEngineFactory.CreateEngine(snapshot1, templates);
 
             Assert.AreEqual(engine0.GetVerificationHash(), engine1.GetVerificationHash());
         }
 
         [TestMethod]
         public void SendRemoveFromContentDatabase() {
-            IGameSnapshot database = LevelManager.CreateSnapshot();
+            GameSnapshot snapshot = (GameSnapshot)LevelManager.CreateSnapshot();
             ITemplateGroup templates = TestUtils.CreateDefaultTemplates();
 
             for (int i = 0; i < 10; ++i) {
-                IEntity entity = database.CreateEntity(EntityAddTarget.Removed);
+                IEntity entity = snapshot.CreateEntity(GameSnapshot.EntityAddTarget.Removed);
                 entity.AddData<TestData0>();
             }
 
-            database.Systems.Add(new SystemCounter() {
+            snapshot.Systems.Add(new SystemCounter() {
                 Filter = new[] { typeof(TestData0) }
             });
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(database, templates);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
             engine.SynchronizeState().WaitOne();
             engine.Update();
 
-            Assert.AreEqual(database.RemovedEntities.Count(), engine.GetSystem<SystemCounter>().RemovedCount);
+            Assert.AreEqual(snapshot.RemovedEntities.Count(), engine.GetSystem<SystemCounter>().RemovedCount);
         }
     }
 }

@@ -33,5 +33,11 @@ namespace Neon.Entities {
         /// Creates a new ITemplate instance that is attached to this snapshot.
         /// </summary>
         ITemplate CreateTemplate();
+
+        /// <summary>
+        /// Removes the given template from the template group. Be careful that no IGameSnapshots
+        /// are referencing the given template.
+        /// </summary>
+        void RemoveTemplate(ITemplate template);
     }
 }
