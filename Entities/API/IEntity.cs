@@ -13,7 +13,7 @@ namespace Neon.Entities {
     /// more primitive ones. The primitive methods are necessary, however, when data type
     /// information is not explicitly known at compile-time.
     /// </remarks>
-    [JsonConverter(typeof(EntityConverter))]
+    [JsonConverter(typeof(QueryableEntityConverter))]
     public interface IEntity : IQueryableEntity {
         /// <summary>
         /// Each entity has a unique identifier. The identifier is *never* shared by any other

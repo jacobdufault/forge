@@ -15,10 +15,28 @@ namespace Neon.Entities {
         }
     }
 
+    internal class BaseDataReferenceConverter : JsonConverter {
+        public override bool CanConvert(Type objectType) {
+            throw new InvalidOperationException();
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
+            var entity = serializer.Deserialize<IQueryableEntity>(reader);
+
+            var reference = (IDataReferenceTypeEraser)Activator.CreateInstance(objectType);
+            reference.Provider = entity;
+            return reference;
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
+            serializer.Serialize(writer, ((IDataReferenceTypeEraser)value).Provider, typeof(IQueryableEntity));
+        }
+    }
+
     /// <summary>
     /// Base type for data references for common code.
     /// </summary>
-    [JsonObject(MemberSerialization.OptIn)]
+    [JsonConverter(typeof(BaseDataReferenceConverter))]
     public abstract class BaseDataReferenceType : IDataReferenceTypeEraser {
         IQueryableEntity IDataReferenceTypeEraser.Provider {
             get {
@@ -26,11 +44,12 @@ namespace Neon.Entities {
             }
             set {
                 _queryableEntity = value;
-                UpdateSerializedValues();
+                //UpdateSerializedValues();
             }
         }
         private IQueryableEntity _queryableEntity;
 
+        /*
         /// <summary>
         /// Updates that values that will be serialized and used to restore the DataReferenced based
         /// upon the current value in _queryableEntity.
@@ -38,14 +57,14 @@ namespace Neon.Entities {
         private void UpdateSerializedValues() {
             IEntity asEntity = _queryableEntity as IEntity;
             if (asEntity != null) {
-                ReferencedId = asEntity.UniqueId;
-                IsEntityReference = true;
+                _referencedId = asEntity.UniqueId;
+                _referenceType = EntityReferenceType.EntityReference;
             }
 
             else {
                 ITemplate template = (ITemplate)_queryableEntity;
-                ReferencedId = template.TemplateId;
-                IsEntityReference = false;
+                _referencedId = template.TemplateId;
+                _referenceType = EntityReferenceType.TemplateReference;
             }
         }
 
@@ -54,52 +73,38 @@ namespace Neon.Entities {
         /// resolved later.
         /// </summary>
         [JsonProperty("ReferencedId")]
-        internal int ReferencedId;
-
-        [JsonProperty("IsEntityReference")]
-        internal bool IsEntityReference;
+        internal int _referencedId;
 
         /// <summary>
-        /// Resolves the reference to a specific entity.
+        /// Specifies the types of entities that this DataReference can reference.
         /// </summary>
-        /// <param name="entity">The entity that the reference will reference.</param>
-        internal void ResolveEntityId(IQueryableEntity entity) {
-            // validate that the given entity is actually the entity we are saved to
-            if (IsEntityReference && entity is IEntity == false) {
-                throw new InvalidOperationException("Reference references IEntity but resolved entity is not an IEntity");
-            }
-            if (IsEntityReference == false && entity is ITemplate == false) {
-                throw new InvalidOperationException("Reference references ITemplate but resolved entity is not an ITemplate");
+        internal enum EntityReferenceType {
+            TemplateReference,
+            EntityReference
+        }
+
+        /// <summary>
+        /// The type of entity that we are referencing (either an IEntity or an ITemplate).
+        /// </summary>
+        [JsonProperty("ReferenceType")]
+        internal EntityReferenceType _referenceType;
+
+        [OnDeserialized]
+        private void ResolveEntity(StreamingContext context) {
+            var generalContext = (GeneralStreamingContext)context.Context;
+            var engineContext = generalContext.Get<GameEngineContext>();
+
+            if (_referenceType == EntityReferenceType.EntityReference) {
+                var entityContext = generalContext.Get<EntityConversionContext>();
+                _queryableEntity = entityContext.GetEntityInstance(_referencedId, engineContext);
             }
 
-            int id = -1;
-            if (IsEntityReference) {
-                id = ((IEntity)entity).UniqueId;
-            }
             else {
-                id = ((ITemplate)entity).TemplateId;
+                var templateContext = generalContext.Get<TemplateConversionContext>();
+                _queryableEntity = templateContext.GetTemplateInstance(_referencedId, engineContext);
             }
-
-            if (id != ReferencedId) {
-                throw new InvalidOperationException("The resolved entity has a different id than " +
-                    "the one the reference references (got " + id + ", expected " + ReferencedId +
-                    ")");
-            }
-
-            // done validating; assign the entity reference
-            _queryableEntity = entity;
         }
-
-        /// <summary>
-        /// This method will automatically be called when we are deserializing the object. We want
-        /// to add ourselves to the list of data references in the context so that we will get
-        /// restored.
-        /// </summary>
-        [OnDeserializing]
-        private void OnSerialization(StreamingContext context) {
-            GeneralStreamingContext generalContext = (GeneralStreamingContext)context.Context;
-            generalContext.Get<DataReferenceContextObject>().DataReferences.Add(this);
-        }
+        */
 
         public TData Current<TData>() where TData : IData {
             if (VerifyRequest<TData>() == false) {

@@ -176,7 +176,6 @@ namespace Neon.Entities.Implementation.Content {
         [OnDeserializing]
         private void CreateContext(StreamingContext context) {
             GeneralStreamingContext generalContext = (GeneralStreamingContext)context.Context;
-            generalContext.Create<DataReferenceContextObject>();
             generalContext.Create<EntityConversionContext>();
         }
 
@@ -192,42 +191,6 @@ namespace Neon.Entities.Implementation.Content {
             RemovedEntities = _removedEntitiesContainer.Entities;
 
             GeneralStreamingContext generalContext = (GeneralStreamingContext)context.Context;
-
-            /*
-            // TODO: we can probably just directly use IEntity or ITemplate (or add support for
-            // IQueryableEntity) instead of going through a manual serialization process
-            SparseArray<IEntity> entities = new SparseArray<IEntity>();
-            entities[SingletonEntity.UniqueId] = SingletonEntity;
-            foreach (var added in AddedEntities) {
-                entities[added.UniqueId] = added;
-            }
-            foreach (var removed in RemovedEntities) {
-                entities[removed.UniqueId] = removed;
-            }
-            foreach (var active in ActiveEntities) {
-                entities[active.UniqueId] = active;
-            }
-
-            SparseArray<ITemplate> templates = new SparseArray<ITemplate>();
-            foreach (var template in generalContext.Get<TemplateConversionContext>().CreatedTemplates) {
-                templates[template.Value.TemplateId] = template.Value;
-            }
-
-            List<BaseDataReferenceType> references = generalContext.Get<DataReferenceContextObject>().DataReferences;
-            for (int i = 0; i < references.Count; ++i) {
-                BaseDataReferenceType reference = references[i];
-
-                int targetId = reference.ReferencedId;
-                if (reference.IsEntityReference) {
-                    reference.ResolveEntityId(entities[targetId]);
-                }
-                else {
-                    reference.ResolveEntityId(templates[targetId]);
-                }
-            }
-            */
-
-            generalContext.Remove<DataReferenceContextObject>();
             generalContext.Remove<EntityConversionContext>();
         }
 

@@ -11,7 +11,7 @@ namespace Neon.Entities {
     /// entity from the template, and that entity will be a derivative instance of the original Orc.
     /// </remarks>
 
-    [JsonConverter(typeof(TemplateConverter))]
+    [JsonConverter(typeof(QueryableEntityConverter))]
     public interface ITemplate : IQueryableEntity {
         /// <summary>
         /// Each IEntityTemplate can be uniquely identified by its TemplateId.

@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 
 namespace Neon.Entities.Implementation.Runtime {
-    [JsonConverter(typeof(EntityConverter))]
+    [JsonConverter(typeof(QueryableEntityConverter))]
     internal class RuntimeEntity : IEntity {
         #region Pretty Name
         /// <summary>

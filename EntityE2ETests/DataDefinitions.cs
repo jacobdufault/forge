@@ -38,4 +38,14 @@ namespace Neon.Entities.E2ETests {
             Template = source.Template;
         }
     }
+
+    [JsonObject(MemberSerialization.OptIn)]
+    internal class TestData3 : BaseData<TestData3> {
+        [JsonProperty("DataReference")]
+        public DataReference<TestData0> DataReference;
+
+        public override void CopyFrom(TestData3 source) {
+            DataReference = source.DataReference;
+        }
+    }
 }

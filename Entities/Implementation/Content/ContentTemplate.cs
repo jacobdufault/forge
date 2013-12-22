@@ -20,7 +20,7 @@ namespace Neon.Entities.Implementation.Content {
         public string PrettyName;
     }
 
-    [JsonConverter(typeof(TemplateConverter))]
+    [JsonConverter(typeof(QueryableEntityConverter))]
     internal class ContentTemplate : ITemplate {
         public ContentTemplateSerializationFormat GetSerializedFormat() {
             return new ContentTemplateSerializationFormat() {

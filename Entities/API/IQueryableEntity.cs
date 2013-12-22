@@ -1,10 +1,13 @@
-﻿using System;
+﻿using Neon.Entities.Implementation.Shared;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 
 namespace Neon.Entities {
     /// <summary>
     /// An entity within the game state that can be queried for information about its current data.
     /// </summary>
+    [JsonConverter(typeof(QueryableEntityConverter))]
     public interface IQueryableEntity {
         /// <summary>
         /// Selects that data inside of the entity that passes the given filter.

@@ -1,6 +1,7 @@
 ﻿using Neon.Entities.Implementation.Runtime;
 using Neon.Utilities;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +19,7 @@ namespace Neon.Entities.Implementation.Shared {
         public static JsonConverter[] GetConverters() {
             return new JsonConverter[] {
                DataSparseArrayConverter.Instance,
+               new StringEnumConverter() // we want to always convert enums by name
             };
         }
 

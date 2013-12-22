@@ -11,7 +11,7 @@ namespace Neon.Entities.Implementation.Runtime {
     /// <summary>
     /// A runtime version of an ITemplate designed for efficiency.
     /// </summary>
-    [JsonConverter(typeof(TemplateConverter))]
+    [JsonConverter(typeof(QueryableEntityConverter))]
     internal class RuntimeTemplate : ITemplate {
         /// <summary>
         /// The data instances inside of the template.

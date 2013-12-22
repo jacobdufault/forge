@@ -20,7 +20,7 @@ namespace Neon.Entities.Implementation.Content {
         public string PrettyName;
     }
 
-    [JsonConverter(typeof(EntityConverter))]
+    [JsonConverter(typeof(QueryableEntityConverter))]
     internal class ContentEntity : IEntity {
         [JsonObject(MemberSerialization.OptIn)]
         public class DataInstance {

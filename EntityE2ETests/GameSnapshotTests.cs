@@ -24,19 +24,26 @@ namespace Neon.Entities.E2ETests {
         public static ITemplateGroup CreateDefaultTemplates() {
             ITemplateGroup templates = CreateEmptyTemplates();
 
-            ITemplate template = templates.CreateTemplate();
-            template.AddDefaultData(new TestData0());
+            ITemplate template0 = templates.CreateTemplate();
+            template0.AddDefaultData(new TestData0());
 
-            template = templates.CreateTemplate();
-            template.AddDefaultData(new TestData1() {
+            ITemplate template1 = templates.CreateTemplate();
+            template1.AddDefaultData(new TestData1() {
                 A = 90
             });
 
-            template = templates.CreateTemplate();
-            template.AddDefaultData(new TestData0());
-            template.AddDefaultData(new TestData1() {
+            ITemplate template2 = templates.CreateTemplate();
+            template2.AddDefaultData(new TestData0());
+            template2.AddDefaultData(new TestData1() {
                 A = 100
             });
+
+            ITemplate template3 = templates.CreateTemplate();
+            TestData3 data = new TestData3() {
+                DataReference = new DataReference<TestData0>()
+            };
+            ((IDataReferenceTypeEraser)data.DataReference).Provider = template0;
+            template3.AddDefaultData(data);
 
             return templates;
         }
@@ -47,15 +54,19 @@ namespace Neon.Entities.E2ETests {
             IEntity entity;
 
             {
-                entity = database.CreateEntity(EntityAddLocation.Added);
-                entity.AddData<TestData0>();
+                IEntity entity0 = database.CreateEntity(EntityAddLocation.Added);
+                entity0.AddData<TestData0>();
 
-                entity = database.CreateEntity(EntityAddLocation.Added);
-                entity.AddData<TestData1>().A = 10;
+                IEntity entity1 = database.CreateEntity(EntityAddLocation.Added);
+                entity1.AddData<TestData1>().A = 10;
 
-                entity = database.CreateEntity(EntityAddLocation.Added);
-                entity.AddData<TestData0>();
-                entity.AddData<TestData1>().A = 20;
+                IEntity entity2 = database.CreateEntity(EntityAddLocation.Added);
+                entity2.AddData<TestData0>();
+                entity2.AddData<TestData1>().A = 20;
+
+                IEntity entity3 = database.CreateEntity(EntityAddLocation.Added);
+                entity3.AddData<TestData3>().DataReference = new DataReference<TestData0>();
+                ((IDataReferenceTypeEraser)entity3.Current<TestData3>().DataReference).Provider = entity0;
             }
 
             {
