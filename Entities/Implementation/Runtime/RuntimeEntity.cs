@@ -86,8 +86,9 @@ namespace Neon.Entities.Implementation.Runtime {
 
         public RuntimeEntity(ITemplate template)
             : this(_idGenerator.Next(), "") {
-            foreach (var data in template.SelectCurrentData()) {
-                AddData_unlocked(new DataAccessor(data)).CopyFrom(data);
+            foreach (DataAccessor accessor in template.SelectData()) {
+                IData data = template.Current(accessor);
+                AddData_unlocked(accessor).CopyFrom(data);
             }
         }
 
@@ -412,16 +413,16 @@ namespace Neon.Entities.Implementation.Runtime {
             return ((IEntity)this).Modify(accessor);
         }
 
-        public ICollection<IData> SelectCurrentData(Predicate<IData> filter = null,
-            ICollection<IData> storage = null) {
+        public ICollection<DataAccessor> SelectData(Predicate<DataAccessor> filter = null,
+            ICollection<DataAccessor> storage = null) {
             if (storage == null) {
-                storage = new List<IData>();
+                storage = new List<DataAccessor>();
             }
 
             foreach (var tuple in _data) {
-                IData data = tuple.Value.Current;
-                if (filter == null || filter(data)) {
-                    storage.Add(data);
+                DataAccessor accessor = new DataAccessor(tuple.Key);
+                if (filter == null || filter(accessor)) {
+                    storage.Add(accessor);
                 }
             }
 

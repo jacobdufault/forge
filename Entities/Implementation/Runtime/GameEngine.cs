@@ -303,8 +303,8 @@ namespace Neon.Entities.Implementation.Runtime {
                 _eventProcessors.StopMonitoring((EventNotifier)((IEntity)toRemove).EventNotifier);
 
                 // remove all data from the entity and then push said changes out
-                foreach (var data in toRemove.SelectCurrentData()) {
-                    toRemove.RemoveData(new DataAccessor(data));
+                foreach (DataAccessor accessor in toRemove.SelectData()) {
+                    toRemove.RemoveData(accessor);
                 }
                 toRemove.DataStateChangeUpdate();
 

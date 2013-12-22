@@ -29,15 +29,15 @@ namespace Neon.Entities {
     [JsonConverter(typeof(QueryableEntityConverter))]
     public interface IQueryableEntity {
         /// <summary>
-        /// Selects that data inside of the entity that passes the given filter.
+        /// Selects data inside of the entity that passes the given filter.
         /// </summary>
         /// <param name="filter">The predicate to check items to see if they should be contained
         /// inside of the result.</param>
         /// <param name="storage">An optional collection to append result to, instead of creating a
         /// new one. The collection will *not* be cleared by this method.</param>
         /// <returns>A list of data instances that pass the filter.</returns>
-        ICollection<IData> SelectCurrentData(Predicate<IData> filter = null,
-            ICollection<IData> storage = null);
+        ICollection<DataAccessor> SelectData(Predicate<DataAccessor> filter = null,
+            ICollection<DataAccessor> storage = null);
 
         /// <summary>
         /// Returns an event dispatcher that is used to notify external code of interesting things

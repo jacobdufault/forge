@@ -76,8 +76,8 @@ namespace Neon.Entities.Implementation.Content {
             : this(template.TemplateId) {
             PrettyName = template.PrettyName;
 
-            foreach (IData data in template.SelectCurrentData()) {
-                AddDefaultData(data);
+            foreach (DataAccessor accessor in template.SelectData()) {
+                AddDefaultData(template.Current(accessor));
             }
         }
 
@@ -124,16 +124,16 @@ namespace Neon.Entities.Implementation.Content {
             throw new InvalidOperationException("Unable to instantiate an entity from a ContentTemplate");
         }
 
-        public ICollection<IData> SelectCurrentData(Predicate<IData> filter = null,
-            ICollection<IData> storage = null) {
+        public ICollection<DataAccessor> SelectData(Predicate<DataAccessor> filter = null,
+            ICollection<DataAccessor> storage = null) {
             if (storage == null) {
-                storage = new List<IData>();
+                storage = new List<DataAccessor>();
             }
 
             foreach (var pair in _defaultDataInstances) {
-                IData data = pair.Value;
-                if (filter == null || filter(data)) {
-                    storage.Add(data);
+                DataAccessor accessor = new DataAccessor(pair.Key);
+                if (filter == null || filter(accessor)) {
+                    storage.Add(accessor);
                 }
             }
 

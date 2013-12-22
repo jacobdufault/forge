@@ -107,16 +107,16 @@ namespace Neon.Entities.Implementation.Runtime {
             return entity;
         }
 
-        public ICollection<IData> SelectCurrentData(Predicate<IData> filter = null,
-            ICollection<IData> storage = null) {
+        public ICollection<DataAccessor> SelectData(Predicate<DataAccessor> filter = null,
+            ICollection<DataAccessor> storage = null) {
             if (storage == null) {
-                storage = new List<IData>();
+                storage = new List<DataAccessor>();
             }
 
             foreach (var pair in _defaultDataInstances) {
-                IData data = pair.Value;
-                if (filter == null || filter(data)) {
-                    storage.Add(data);
+                DataAccessor accessor = new DataAccessor(pair.Key);
+                if (filter == null || filter(accessor)) {
+                    storage.Add(accessor);
                 }
             }
 

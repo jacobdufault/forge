@@ -163,16 +163,16 @@ namespace Neon.Entities.Implementation.Content {
             throw new InvalidOperationException("Cannot modify data in a ContentEntity");
         }
 
-        public ICollection<IData> SelectCurrentData(Predicate<IData> filter = null,
-            ICollection<IData> storage = null) {
+        public ICollection<DataAccessor> SelectData(Predicate<DataAccessor> filter = null,
+            ICollection<DataAccessor> storage = null) {
             if (storage == null) {
-                storage = new List<IData>();
+                storage = new List<DataAccessor>();
             }
 
             foreach (var pair in _data) {
-                IData data = pair.Value.CurrentData;
-                if (filter == null || filter(data)) {
-                    storage.Add(data);
+                DataAccessor accessor = new DataAccessor(pair.Key);
+                if (filter == null || filter(accessor)) {
+                    storage.Add(accessor);
                 }
             }
 
