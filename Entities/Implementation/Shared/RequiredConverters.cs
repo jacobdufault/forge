@@ -22,6 +22,7 @@ using Neon.Entities.Implementation.Runtime;
 using Neon.Utilities;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using System.Collections.Generic;
 
 namespace Neon.Entities.Implementation.Shared {
     /// <summary>
@@ -41,10 +42,12 @@ namespace Neon.Entities.Implementation.Shared {
         /// <summary>
         /// Returns the context objects that are necessary for proper serialization of ISavedlevel.
         /// </summary>
-        public static IContextObject[] GetContextObjects(Maybe<GameEngine> engine) {
-            return new IContextObject[] {
-                new GameEngineContext(engine)
-            };
+        public static IContextObject[] GetContextObjects(Maybe<GameEngine> engine,
+            params IContextObject[] additionalContextObjects) {
+
+            List<IContextObject> objects = new List<IContextObject>(additionalContextObjects);
+            objects.Add(new GameEngineContext(engine));
+            return objects.ToArray();
         }
     }
 }

@@ -140,7 +140,6 @@ namespace Neon.Entities.Implementation.Content {
     internal class GameSnapshot : IGameSnapshot {
         public GameSnapshot() {
             _entityIdGenerator = new UniqueIntGenerator();
-            _templateIdGenerator = new UniqueIntGenerator();
 
             SingletonEntity = new ContentEntity(_entityIdGenerator.Next(), "Global Singleton");
             ActiveEntities = new List<IEntity>();
@@ -151,8 +150,6 @@ namespace Neon.Entities.Implementation.Content {
 
         [JsonProperty("EntityIdGenerator")]
         private UniqueIntGenerator _entityIdGenerator;
-        [JsonProperty("TemplateIdGenerator")]
-        private UniqueIntGenerator _templateIdGenerator;
 
         public IEntity SingletonEntity {
             get;

@@ -182,5 +182,36 @@ namespace Neon.Entities.Implementation.Content {
                 return string.Format("Template [tid={0}]", TemplateId);
             }
         }
+
+        /// <summary>
+        /// Indicates whether this instance and a specified object are equal.
+        /// </summary>
+        public override bool Equals(Object obj) {
+            return obj is ITemplate && this == (ITemplate)obj;
+        }
+        /// <summary>
+        /// Returns a hash code for this instance.
+        /// </summary>
+        public override int GetHashCode() {
+            return TemplateId.GetHashCode();
+        }
+        /// <summary>
+        /// Indicates whether this instance and a specified object are equal.
+        /// </summary>
+        public static bool operator ==(ContentTemplate x, ITemplate y) {
+            if (x.TemplateId != y.TemplateId) return false;
+            if (x.PrettyName != y.PrettyName) return false;
+
+            // TODO: should we verify the data is also equal?
+            return true;
+        }
+
+        /// <summary>
+        /// Indicates whether this instance and a specified object are not equal.
+        /// </summary>
+        public static bool operator !=(ContentTemplate x, ITemplate y) {
+            return !(x == y);
+        }
+
     }
 }

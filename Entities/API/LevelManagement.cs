@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using Neon.Entities.Implementation.Content;
+using Neon.Entities.Implementation.ContextObjects;
 using Neon.Entities.Implementation.Runtime;
 using Neon.Entities.Implementation.Shared;
 using Neon.Utilities;
@@ -75,7 +76,8 @@ namespace Neon.Entities {
         public static ITemplateGroup LoadTemplates(string json) {
             return SerializationHelpers.Deserialize<TemplateGroup>(json,
                 RequiredConverters.GetConverters(),
-                RequiredConverters.GetContextObjects(Maybe<GameEngine>.Empty));
+                RequiredConverters.GetContextObjects(Maybe<GameEngine>.Empty,
+                    new TemplateConversionContext()));
         }
     }
 }

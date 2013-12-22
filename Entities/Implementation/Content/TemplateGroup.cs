@@ -24,6 +24,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 
 namespace Neon.Entities.Implementation.Content {
 
@@ -78,38 +79,35 @@ namespace Neon.Entities.Implementation.Content {
         public List<ITemplate> Templates;
     }
 
-    internal class TemplateGroupConverter : JsonConverter {
-        public override bool CanConvert(Type objectType) {
-            throw new InvalidOperationException();
-        }
-
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
-            TemplateGroup group = (TemplateGroup)existingValue ?? new TemplateGroup();
-            TemplateSerializationContainer container = serializer.Deserialize<TemplateSerializationContainer>(reader);
-            group.Templates = container.Templates;
-            return group;
-        }
-
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
-            TemplateGroup group = (TemplateGroup)value;
-
-            TemplateSerializationContainer container = new TemplateSerializationContainer() {
-                Templates = group.Templates
-            };
-            serializer.Serialize(writer, container);
-        }
-    }
-
-    [JsonConverter(typeof(TemplateGroupConverter))]
+    [JsonObject(MemberSerialization.OptIn)]
     internal class TemplateGroup : ITemplateGroup {
         public List<ITemplate> Templates = new List<ITemplate>();
+
+        [JsonProperty("Templates")]
+        private TemplateSerializationContainer _templateSerializationContainer;
+
+        [JsonProperty("TemplateIdGenerator")]
+        public UniqueIntGenerator TemplateIdGenerator = new UniqueIntGenerator();
+
+        [OnSerializing]
+        private void OnSerializing(StreamingContext context) {
+            _templateSerializationContainer = new TemplateSerializationContainer() {
+                Templates = Templates
+            };
+        }
+
+        [OnDeserialized]
+        private void OnDeserialized(StreamingContext context) {
+            Templates = _templateSerializationContainer.Templates;
+            _templateSerializationContainer = null;
+        }
 
         IEnumerable<ITemplate> ITemplateGroup.Templates {
             get { return Templates; }
         }
 
         ITemplate ITemplateGroup.CreateTemplate() {
-            ITemplate template = new ContentTemplate();
+            ITemplate template = new ContentTemplate(TemplateIdGenerator.Next());
             Templates.Add(template);
             return template;
         }
