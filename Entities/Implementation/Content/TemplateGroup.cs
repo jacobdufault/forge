@@ -33,6 +33,38 @@ namespace Neon.Entities.Implementation.Content {
             throw new InvalidOperationException();
         }
 
+        /// <summary>
+        /// Verifies that all of created templates in the template context have an associated
+        /// definition in the list of template definitions.
+        /// </summary>
+        private void VerifyReferenceDefinitions(GameEngineContext engineContext, TemplateConversionContext templateContext, List<ContentTemplateSerializationFormat> templateDefinitions) {
+            // We only verify template definitions if we're restoring an for an engine; it does not
+            // matter if the templates are not fully instantiated if we're only in content editing
+            // mode, as no game code will be executed.
+            // TODO: do we really want to do this?
+            if (engineContext.GameEngine.IsEmpty) {
+                return;
+            }
+
+            // Get all of the ids for templates that we can restore
+            HashSet<int> restoredTemplates = new HashSet<int>();
+            foreach (var restoredTemplate in templateDefinitions) {
+                restoredTemplates.Add(restoredTemplate.TemplateId);
+            }
+
+            // For every template that we have already created a reference for, verify that we have
+            // an associated definition
+            foreach (var pair in templateContext.CreatedTemplates) {
+                ITemplate template = pair.Value;
+
+                if (restoredTemplates.Contains(template.TemplateId) == false) {
+                    throw new InvalidOperationException("Found template reference with id=" +
+                        template.TemplateId + ", but the ITemplateGroup had no corresponding " +
+                        "template definition");
+                }
+            }
+        }
+
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
             TemplateSerializationContainer container =
                 (TemplateSerializationContainer)existingValue ?? new TemplateSerializationContainer();
@@ -43,6 +75,13 @@ namespace Neon.Entities.Implementation.Content {
             GeneralStreamingContext generalContext = (GeneralStreamingContext)serializer.Context.Context;
             TemplateConversionContext conversionContext = generalContext.Get<TemplateConversionContext>();
             GameEngineContext engineContext = generalContext.Get<GameEngineContext>();
+
+            // TODO: if this method is really slow, then we can combine VerifyReferenceDefinitions
+            //       and the
+            // actual restoration process
+
+            // Verify that we have restored all of our referenced templates
+            VerifyReferenceDefinitions(engineContext, conversionContext, serializedTemplates);
 
             // Restore our created template instances
             foreach (ContentTemplateSerializationFormat format in serializedTemplates) {
