@@ -115,6 +115,19 @@ namespace Neon.Entities.Tests {
             entity.Current<TestData0>();
         }
 
+        [TestMethod]
+        public void RemovedDataIsNotReturnedInSelectData() {
+            RuntimeEntity entity = EntityHelpers.CreateEntity();
+            entity.AddData<TestData0>();
+            entity.DataStateChangeUpdate();
+            Assert.AreEqual(1, entity.SelectData().Count);
+
+            entity.RemoveData<TestData0>();
+            entity.DataStateChangeUpdate();
+
+            Assert.AreEqual(0, entity.SelectData().Count);
+        }
+
         /*
         [TestMethod]
         public void RemovedDataIsAccessibleThroughCurrent() {

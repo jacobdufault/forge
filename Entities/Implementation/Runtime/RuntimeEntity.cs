@@ -421,6 +421,10 @@ namespace Neon.Entities.Implementation.Runtime {
 
             foreach (var tuple in _data) {
                 DataAccessor accessor = new DataAccessor(tuple.Key);
+                if (WasRemoved(accessor)) {
+                    continue;
+                }
+
                 if (filter == null || filter(accessor)) {
                     storage.Add(accessor);
                 }
