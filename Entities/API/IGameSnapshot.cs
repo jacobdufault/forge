@@ -31,11 +31,6 @@ namespace Neon.Entities {
         IEntity CreateEntity(EntityAddLocation to, string prettyName = "");
 
         /// <summary>
-        /// Creates a new ITemplate instance that is attached to this snapshot.
-        /// </summary>
-        ITemplate CreateTemplate();
-
-        /// <summary>
         /// The singleton entity. It is automatically created and cannot be destroyed, but it can be
         /// modified.
         /// </summary>
@@ -68,13 +63,6 @@ namespace Neon.Entities {
         /// All systems that are used when executing the game.
         /// </summary>
         List<ISystem> Systems {
-            get;
-        }
-
-        /// <summary>
-        /// All of the templates that are in the game.
-        /// </summary>
-        IEnumerable<ITemplate> Templates {
             get;
         }
     }

@@ -97,18 +97,19 @@ namespace Neon.Entities.E2ETests {
     [TestClass]
     public class CallOrderTests {
         public static IGameSnapshot CreateEmptySnapshot() {
-            return LevelManager.CreateLevel().CurrentState;
+            return LevelManager.CreateSnapshot();
         }
 
         [TestMethod]
         public void AddAndUpdateEntity() {
             IGameSnapshot snapshot = CreateEmptySnapshot();
+            ITemplateGroup templates = LevelManager.CreateTemplateGroup();
 
             snapshot.Systems.Add(new TriggerEventLogger(new Type[] { }));
 
             IEntity entity = snapshot.CreateEntity(EntityAddLocation.Added);
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
 
             engine.SynchronizeState().WaitOne();
             engine.Update();
@@ -146,13 +147,14 @@ namespace Neon.Entities.E2ETests {
         [TestMethod]
         public void AddEntityAndModifyInAdd() {
             IGameSnapshot snapshot = CreateEmptySnapshot();
+            ITemplateGroup templates = LevelManager.CreateTemplateGroup();
 
             snapshot.Systems.Add(new TriggerEventLogger(new Type[] { }));
             snapshot.Systems.Add(new AddAndModifyOnAddedSystem());
 
             snapshot.CreateEntity(EntityAddLocation.Added);
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
             engine.SynchronizeState().WaitOne();
             engine.Update();
 
@@ -190,6 +192,7 @@ namespace Neon.Entities.E2ETests {
         [TestMethod]
         public void AddEntityAndModifyInUpdate() {
             IGameSnapshot snapshot = CreateEmptySnapshot();
+            ITemplateGroup templates = LevelManager.CreateTemplateGroup();
 
             snapshot.Systems.Add(new TriggerEventLogger(new Type[] { typeof(TestData0) }));
             snapshot.Systems.Add(new ModifyOnUpdateSystem());
@@ -199,7 +202,7 @@ namespace Neon.Entities.E2ETests {
                 e.AddData<TestData0>();
             }
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
             engine.SynchronizeState().WaitOne();
             engine.Update();
 
@@ -225,11 +228,13 @@ namespace Neon.Entities.E2ETests {
         [TestMethod]
         public void RemoveEntityWithNoData() {
             IGameSnapshot snapshot = CreateEmptySnapshot();
+            ITemplateGroup templates = LevelManager.CreateTemplateGroup();
+
             snapshot.Systems.Add(new TriggerEventLogger(new Type[] { }));
 
             IEntity entity = snapshot.CreateEntity(EntityAddLocation.Removed);
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
 
             engine.SynchronizeState().WaitOne();
             engine.Update();
@@ -255,13 +260,14 @@ namespace Neon.Entities.E2ETests {
         [TestMethod]
         public void RemoveEntityWithData() {
             IGameSnapshot snapshot = CreateEmptySnapshot();
+            ITemplateGroup templates = LevelManager.CreateTemplateGroup();
 
             snapshot.Systems.Add(new TriggerEventLogger(new Type[] { }));
 
             IEntity entity = snapshot.CreateEntity(EntityAddLocation.Removed);
             entity.AddData<TestData0>();
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
 
             engine.SynchronizeState().WaitOne();
             engine.Update();
@@ -301,6 +307,7 @@ namespace Neon.Entities.E2ETests {
         [TestMethod]
         public void RemoveEntityAndModifyInRemoveNotification() {
             IGameSnapshot snapshot = CreateEmptySnapshot();
+            ITemplateGroup templates = LevelManager.CreateTemplateGroup();
 
             snapshot.Systems.Add(new TriggerEventLogger(new Type[] { }));
             snapshot.Systems.Add(new ModifyOnRemovedTrigger());
@@ -310,7 +317,7 @@ namespace Neon.Entities.E2ETests {
                 e.AddData<TestData0>();
             }
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
 
             engine.SynchronizeState().WaitOne();
             engine.Update();

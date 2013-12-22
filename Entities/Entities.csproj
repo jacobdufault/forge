@@ -51,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="API\DataReference.cs" />
+    <Compile Include="API\ITemplateGroup.cs" />
     <Compile Include="Implementation\Content\GameSnapshot.cs" />
     <Compile Include="Implementation\Content\ContentEntity.cs" />
     <Compile Include="Implementation\Content\ContentTemplate.cs" />
@@ -62,7 +63,6 @@
     <Compile Include="Implementation\Shared\IEntityConverter.cs" />
     <Compile Include="Implementation\Content\DataReferenceContextObject.cs" />
     <Compile Include="Implementation\Shared\RequiredConverters.cs" />
-    <Compile Include="Implementation\Shared\SavedLevel.cs" />
     <Compile Include="Implementation\Shared\DataAccessor.cs" />
     <Compile Include="Implementation\Runtime\RuntimeEntity.cs" />
     <Compile Include="Implementation\Runtime\EntityManagerMetadata.cs" />

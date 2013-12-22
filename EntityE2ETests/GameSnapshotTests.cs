@@ -14,7 +14,31 @@ namespace Neon.Entities.E2ETests {
     [TestClass]
     public class GameSnapshotTests {
         public static IGameSnapshot CreateEmptyDatabase() {
-            return LevelManager.CreateLevel().CurrentState;
+            return LevelManager.CreateSnapshot();
+        }
+
+        public static ITemplateGroup CreateEmptyTemplates() {
+            return LevelManager.CreateTemplateGroup();
+        }
+
+        public static ITemplateGroup CreateDefaultTemplates() {
+            ITemplateGroup templates = CreateEmptyTemplates();
+
+            ITemplate template = templates.CreateTemplate();
+            template.AddDefaultData(new TestData0());
+
+            template = templates.CreateTemplate();
+            template.AddDefaultData(new TestData1() {
+                A = 90
+            });
+
+            template = templates.CreateTemplate();
+            template.AddDefaultData(new TestData0());
+            template.AddDefaultData(new TestData1() {
+                A = 100
+            });
+
+            return templates;
         }
 
         public static IGameSnapshot CreateDefaultDatabase() {
@@ -68,36 +92,15 @@ namespace Neon.Entities.E2ETests {
                 entity.AddData<TestData1>().A = 80;
             }
 
-            {
-                ITemplate template;
-                template = database.CreateTemplate();
-
-                template = database.CreateTemplate();
-                template.AddDefaultData(new TestData0());
-
-                template = database.CreateTemplate();
-                template.AddDefaultData(new TestData1() {
-                    A = 90
-                });
-
-                template = database.CreateTemplate();
-                template.AddDefaultData(new TestData0());
-                template.AddDefaultData(new TestData1() {
-                    A = 100
-                });
-
-                entity = database.CreateEntity(EntityAddLocation.Removed);
-                entity.AddData<TestData2>().Template = template;
-            }
-
             return database;
         }
 
         [TestMethod]
         public void GotAddedEventsForInitialDatabase() {
             IGameSnapshot database = CreateDefaultDatabase();
+            ITemplateGroup templates = CreateDefaultTemplates();
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(database);
+            IGameEngine engine = GameEngineFactory.CreateEngine(database, templates);
             engine.SynchronizeState().WaitOne();
             engine.Update();
 
@@ -115,6 +118,8 @@ namespace Neon.Entities.E2ETests {
         [TestMethod]
         public void CorrectUpdateCount() {
             IGameSnapshot database = CreateEmptyDatabase();
+            ITemplateGroup templates = LevelManager.CreateTemplateGroup();
+
             for (int i = 0; i < 10; ++i) {
                 IEntity entity = database.CreateEntity(EntityAddLocation.Active);
                 entity.AddData<TestData0>();
@@ -124,7 +129,7 @@ namespace Neon.Entities.E2ETests {
                 Filter = new[] { typeof(TestData0) }
             });
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(database);
+            IGameEngine engine = GameEngineFactory.CreateEngine(database, templates);
             engine.SynchronizeState().WaitOne();
             engine.Update();
 
@@ -133,11 +138,13 @@ namespace Neon.Entities.E2ETests {
 
         [TestMethod]
         public void ToFromContentDatabase() {
+            ITemplateGroup templates = CreateDefaultTemplates();
+
             IGameSnapshot database0 = CreateDefaultDatabase();
-            IGameEngine engine0 = GameEngineFactory.CreateEngine(database0);
+            IGameEngine engine0 = GameEngineFactory.CreateEngine(database0, templates);
 
             IGameSnapshot database1 = engine0.TakeSnapshot();
-            IGameEngine engine1 = GameEngineFactory.CreateEngine(database1);
+            IGameEngine engine1 = GameEngineFactory.CreateEngine(database1, templates);
 
             Assert.AreEqual(engine0.GetVerificationHash(), engine1.GetVerificationHash());
         }
@@ -145,6 +152,8 @@ namespace Neon.Entities.E2ETests {
         [TestMethod]
         public void SendRemoveFromContentDatabase() {
             IGameSnapshot database = CreateEmptyDatabase();
+            ITemplateGroup templates = CreateDefaultTemplates();
+
             for (int i = 0; i < 10; ++i) {
                 IEntity entity = database.CreateEntity(EntityAddLocation.Removed);
                 entity.AddData<TestData0>();
@@ -154,7 +163,7 @@ namespace Neon.Entities.E2ETests {
                 Filter = new[] { typeof(TestData0) }
             });
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(database);
+            IGameEngine engine = GameEngineFactory.CreateEngine(database, templates);
             engine.SynchronizeState().WaitOne();
             engine.Update();
 

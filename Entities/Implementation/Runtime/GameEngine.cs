@@ -132,15 +132,12 @@ namespace Neon.Entities.Implementation.Runtime {
             private set;
         }
 
-        private List<ITemplate> _templates;
-
-        public GameEngine(GameSnapshot baseSnapshot) {
+        public GameEngine(string snapshotJson, string templateJson) {
             // Create our own little island of references with its own set of templates
-            GameSnapshot snapshot = SerializationHelpers.DeepClone(baseSnapshot,
-                RequiredConverters.GetConverters(), RequiredConverters.GetContexts(Maybe.Just(this)));
+            GameSnapshot snapshot = GameSnapshotRestorer.Restore(snapshotJson, templateJson,
+                Maybe.Just(this));
 
             _systems = snapshot.Systems;
-            _templates = snapshot.Templates;
 
             SystemDoneEvent = new CountdownEvent(0);
             _eventProcessors.BeginMonitoring((EventNotifier)EventNotifier);
@@ -542,7 +539,6 @@ namespace Neon.Entities.Implementation.Runtime {
             }
 
             snapshot.Systems = _systems;
-            snapshot.Templates = _templates;
 
             return snapshot;
         }

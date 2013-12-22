@@ -120,6 +120,92 @@ namespace Neon.Entities.Implementation.Content {
         public List<IEntity> Entities;
     }
 
+    internal class TemplateGroupConverter : JsonConverter {
+        public override bool CanConvert(Type objectType) {
+            throw new InvalidOperationException();
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
+            TemplateGroup group = (TemplateGroup)existingValue ?? new TemplateGroup();
+
+            GeneralStreamingContext generalContext = (GeneralStreamingContext)serializer.Context.Context;
+            generalContext.Create<TemplateConversionContext>();
+            TemplateSerializationContainer container = serializer.Deserialize<TemplateSerializationContainer>(reader);
+            generalContext.Remove<TemplateConversionContext>();
+
+            group.Templates = container.Templates;
+            return group;
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
+            TemplateGroup group = (TemplateGroup)value;
+
+            TemplateSerializationContainer container = new TemplateSerializationContainer() {
+                Templates = group.Templates
+            };
+            GeneralStreamingContext generalContext = (GeneralStreamingContext)serializer.Context.Context;
+            generalContext.Create<TemplateConversionContext>();
+            serializer.Serialize(writer, container);
+            generalContext.Remove<TemplateConversionContext>();
+        }
+    }
+
+    [JsonConverter(typeof(TemplateGroupConverter))]
+    internal class TemplateGroup : ITemplateGroup {
+        public List<ITemplate> Templates = new List<ITemplate>();
+
+        IEnumerable<ITemplate> ITemplateGroup.Templates {
+            get { return Templates; }
+        }
+
+        ITemplate ITemplateGroup.CreateTemplate() {
+            ITemplate template = new ContentTemplate();
+            Templates.Add(template);
+            return template;
+        }
+    }
+
+    [JsonObject(MemberSerialization.OptIn)]
+    internal class GameSnapshotRestorer {
+        [JsonProperty("Snapshot")]
+        private GameSnapshot _gameSnapshot;
+
+        [JsonProperty("Templates")]
+        [JsonConverter(typeof(TemplateContainerConverter))]
+        private TemplateSerializationContainer _templates;
+
+        [OnSerializing]
+        private void ErrorOnSerializing(StreamingContext context) {
+            throw new InvalidOperationException("GameSnapshotRestorer cannot be serialized");
+        }
+
+        [OnDeserializing]
+        private void CreateContext(StreamingContext context) {
+            GeneralStreamingContext generalContext = (GeneralStreamingContext)context.Context;
+            generalContext.Create<TemplateConversionContext>();
+        }
+
+        [OnDeserialized]
+        private void RemoveContexts(StreamingContext context) {
+            GeneralStreamingContext generalContext = (GeneralStreamingContext)context.Context;
+            generalContext.Remove<TemplateConversionContext>();
+        }
+
+        private static string CombineJson(string snapshot, string template) {
+            string s = "{ \"Snapshot\": " + snapshot + ", \"Templates\": " + template + " }";
+            return s;
+        }
+
+        public static GameSnapshot Restore(string snapshotJson, string templateJson,
+            Maybe<GameEngine> gameEngine) {
+            string json = CombineJson(snapshotJson, templateJson);
+
+            var restorer = SerializationHelpers.Deserialize<GameSnapshotRestorer>(json,
+                RequiredConverters.GetConverters(), RequiredConverters.GetContexts(gameEngine));
+            return restorer._gameSnapshot;
+        }
+    }
+
     [JsonObject(MemberSerialization.OptIn)]
     internal class GameSnapshot : IGameSnapshot {
         public GameSnapshot() {
@@ -131,7 +217,6 @@ namespace Neon.Entities.Implementation.Content {
             AddedEntities = new List<IEntity>();
             RemovedEntities = new List<IEntity>();
             Systems = new List<ISystem>();
-            Templates = new List<ITemplate>();
         }
 
         [JsonProperty("EntityIdGenerator")]
@@ -174,19 +259,8 @@ namespace Neon.Entities.Implementation.Content {
             set;
         }
 
-        public List<ITemplate> Templates {
-            get;
-            set;
-        }
-
-        [JsonProperty("Templates")]
-        private TemplateSerializationContainer _templateSerializationContainer;
-
         [OnSerializing]
         private void CreateConverter(StreamingContext context) {
-            _templateSerializationContainer = new TemplateSerializationContainer() {
-                Templates = Templates
-            };
             _singletonEntityContainer = new EntitySerializationContainer() {
                 Entities = new List<IEntity>() { SingletonEntity }
             };
@@ -205,7 +279,6 @@ namespace Neon.Entities.Implementation.Content {
         private void CreateContext(StreamingContext context) {
             GeneralStreamingContext generalContext = (GeneralStreamingContext)context.Context;
             generalContext.Create<DataReferenceContextObject>();
-            generalContext.Create<TemplateConversionContext>();
             generalContext.Create<EntityConversionContext>();
         }
 
@@ -219,8 +292,10 @@ namespace Neon.Entities.Implementation.Content {
             AddedEntities = _addedEntitiesContainer.Entities;
             ActiveEntities = _activeEntitiesContainer.Entities;
             RemovedEntities = _removedEntitiesContainer.Entities;
-            Templates = _templateSerializationContainer.Templates;
 
+            GeneralStreamingContext generalContext = (GeneralStreamingContext)context.Context;
+
+            /*
             // TODO: we can probably just directly use IEntity or ITemplate (or add support for
             // IQueryableEntity) instead of going through a manual serialization process
             SparseArray<IEntity> entities = new SparseArray<IEntity>();
@@ -240,7 +315,6 @@ namespace Neon.Entities.Implementation.Content {
                 templates[template.TemplateId] = template;
             }
 
-            GeneralStreamingContext generalContext = (GeneralStreamingContext)context.Context;
             List<BaseDataReferenceType> references = generalContext.Get<DataReferenceContextObject>().DataReferences;
             for (int i = 0; i < references.Count; ++i) {
                 BaseDataReferenceType reference = references[i];
@@ -253,9 +327,9 @@ namespace Neon.Entities.Implementation.Content {
                     reference.ResolveEntityId(templates[targetId]);
                 }
             }
+            */
 
             generalContext.Remove<DataReferenceContextObject>();
-            generalContext.Remove<TemplateConversionContext>();
             generalContext.Remove<EntityConversionContext>();
         }
 
@@ -277,12 +351,6 @@ namespace Neon.Entities.Implementation.Content {
             return added;
         }
 
-        public ITemplate CreateTemplate() {
-            ContentTemplate template = new ContentTemplate(_templateIdGenerator.Next());
-            Templates.Add(template);
-            return template;
-        }
-
         IEntity IGameSnapshot.SingletonEntity {
             get { return SingletonEntity; }
         }
@@ -301,10 +369,6 @@ namespace Neon.Entities.Implementation.Content {
 
         List<ISystem> IGameSnapshot.Systems {
             get { return Systems; }
-        }
-
-        IEnumerable<ITemplate> IGameSnapshot.Templates {
-            get { return Templates.Cast<ITemplate>(); }
         }
     }
 }
