@@ -62,140 +62,38 @@ namespace Neon.Entities.Implementation.Content {
 
     }
 
-    internal class TemplateContainerConverter : JsonConverter {
-        public override bool CanConvert(Type objectType) {
-            throw new InvalidOperationException();
-        }
-
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
-            TemplateSerializationContainer container =
-                (TemplateSerializationContainer)existingValue ?? new TemplateSerializationContainer();
-
-            List<ContentTemplateSerializationFormat> serializedTemplates = serializer.Deserialize<List<ContentTemplateSerializationFormat>>(reader);
-
-            // We need to get our conversion context
-            GeneralStreamingContext generalContext = (GeneralStreamingContext)serializer.Context.Context;
-            TemplateConversionContext conversionContext = generalContext.Get<TemplateConversionContext>();
-            GameEngineContext engineContext = generalContext.Get<GameEngineContext>();
-
-            SparseArray<ITemplate> templateInstances = conversionContext.CreatedTemplates;
-
-            // Restore our created template instances
-            foreach (ContentTemplateSerializationFormat format in serializedTemplates) {
-                int templateId = format.TemplateId;
-                ITemplate template = conversionContext.GetTemplateInstance(templateId, engineContext);
-
-                if (template is ContentTemplate) {
-                    ((ContentTemplate)template).Initialize(format);
-                }
-                else {
-                    ((RuntimeTemplate)template).Initialize(format);
-                }
-            }
-
-            container.Templates = conversionContext.CreatedTemplates.Select(p => p.Value).ToList();
-            return container;
-        }
-
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
-            TemplateSerializationContainer container = (TemplateSerializationContainer)value;
-
-            List<ContentTemplateSerializationFormat> formats = new List<ContentTemplateSerializationFormat>();
-            foreach (ITemplate template in container.Templates) {
-                ContentTemplate content = template as ContentTemplate ?? new ContentTemplate(template);
-                formats.Add(content.GetSerializedFormat());
-            }
-
-            serializer.Serialize(writer, formats);
-        }
-    }
-
-    [JsonConverter(typeof(TemplateContainerConverter))]
-    internal class TemplateSerializationContainer {
-        public List<ITemplate> Templates;
-    }
-
     [JsonConverter(typeof(EntityContainerConverter))]
     internal class EntitySerializationContainer {
         public List<IEntity> Entities;
     }
 
-    internal class TemplateGroupConverter : JsonConverter {
-        public override bool CanConvert(Type objectType) {
-            throw new InvalidOperationException();
-        }
-
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
-            TemplateGroup group = (TemplateGroup)existingValue ?? new TemplateGroup();
-
-            GeneralStreamingContext generalContext = (GeneralStreamingContext)serializer.Context.Context;
-            generalContext.Create<TemplateConversionContext>();
-            TemplateSerializationContainer container = serializer.Deserialize<TemplateSerializationContainer>(reader);
-            generalContext.Remove<TemplateConversionContext>();
-
-            group.Templates = container.Templates;
-            return group;
-        }
-
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
-            TemplateGroup group = (TemplateGroup)value;
-
-            TemplateSerializationContainer container = new TemplateSerializationContainer() {
-                Templates = group.Templates
-            };
-            GeneralStreamingContext generalContext = (GeneralStreamingContext)serializer.Context.Context;
-            generalContext.Create<TemplateConversionContext>();
-            serializer.Serialize(writer, container);
-            generalContext.Remove<TemplateConversionContext>();
-        }
-    }
-
-    [JsonConverter(typeof(TemplateGroupConverter))]
-    internal class TemplateGroup : ITemplateGroup {
-        public List<ITemplate> Templates = new List<ITemplate>();
-
-        IEnumerable<ITemplate> ITemplateGroup.Templates {
-            get { return Templates; }
-        }
-
-        ITemplate ITemplateGroup.CreateTemplate() {
-            ITemplate template = new ContentTemplate();
-            Templates.Add(template);
-            return template;
-        }
-    }
-
+    /// <summary>
+    /// This type is used to deserialize a GameSnapshot instance. It just deserializes the
+    /// GameSnapshot and TemplateGroup together in the same deserialization call so that the
+    /// internal references inside of the TemplateGroup have the same ITemplate references as the
+    /// internal ITemplate references in the GameSnapshot.
+    /// </summary>
     [JsonObject(MemberSerialization.OptIn)]
     internal class GameSnapshotRestorer {
         [JsonProperty("Snapshot")]
         private GameSnapshot _gameSnapshot;
 
         [JsonProperty("Templates")]
-        [JsonConverter(typeof(TemplateContainerConverter))]
-        private TemplateSerializationContainer _templates;
+        private TemplateGroup _templates;
 
-        [OnSerializing]
-        private void ErrorOnSerializing(StreamingContext context) {
-            throw new InvalidOperationException("GameSnapshotRestorer cannot be serialized");
-        }
-
-        [OnDeserializing]
-        private void CreateContext(StreamingContext context) {
-            GeneralStreamingContext generalContext = (GeneralStreamingContext)context.Context;
-            generalContext.Create<TemplateConversionContext>();
-        }
-
-        [OnDeserialized]
-        private void RemoveContexts(StreamingContext context) {
-            GeneralStreamingContext generalContext = (GeneralStreamingContext)context.Context;
-            generalContext.Remove<TemplateConversionContext>();
-        }
-
+        /// <summary>
+        /// Combines snapshot and template JSON together into the serialized format that the
+        /// GameSnapshotRestorer can read.
+        /// </summary>
         private static string CombineJson(string snapshot, string template) {
             string s = "{ \"Snapshot\": " + snapshot + ", \"Templates\": " + template + " }";
             return s;
         }
 
+        /// <summary>
+        /// Restores a GameSnapshot using the given GameSnapshot JSON and the given TemplateGroup
+        /// JSON.
+        /// </summary>
         public static GameSnapshot Restore(string snapshotJson, string templateJson,
             Maybe<GameEngine> gameEngine) {
             string json = CombineJson(snapshotJson, templateJson);
@@ -311,8 +209,8 @@ namespace Neon.Entities.Implementation.Content {
             }
 
             SparseArray<ITemplate> templates = new SparseArray<ITemplate>();
-            foreach (var template in Templates) {
-                templates[template.TemplateId] = template;
+            foreach (var template in generalContext.Get<TemplateConversionContext>().CreatedTemplates) {
+                templates[template.Value.TemplateId] = template.Value;
             }
 
             List<BaseDataReferenceType> references = generalContext.Get<DataReferenceContextObject>().DataReferences;

@@ -55,6 +55,7 @@
     <Compile Include="Implementation\Content\GameSnapshot.cs" />
     <Compile Include="Implementation\Content\ContentEntity.cs" />
     <Compile Include="Implementation\Content\ContentTemplate.cs" />
+    <Compile Include="Implementation\Content\TemplateGroup.cs" />
     <Compile Include="Implementation\Runtime\PerformanceInformation.cs" />
     <Compile Include="Implementation\Runtime\RuntimeTemplate.cs" />
     <Compile Include="Implementation\Shared\DataSparseArrayConverter.cs" />
