@@ -258,7 +258,7 @@ namespace Neon.Entities.Implementation.Content {
             return added;
         }
 
-        public void RemoveEntity(IEntity entity) {
+        public GameSnapshotEntityRemoveResult RemoveEntity(IEntity entity) {
             if (SingletonEntity == entity) {
                 throw new InvalidOperationException("Cannot remove SingletonEntity");
             }
@@ -266,7 +266,7 @@ namespace Neon.Entities.Implementation.Content {
             for (int i = 0; i < AddedEntities.Count; ++i) {
                 if (entity.UniqueId == AddedEntities[i].UniqueId) {
                     AddedEntities.RemoveAt(i);
-                    return;
+                    return GameSnapshotEntityRemoveResult.Destroyed;
                 }
             }
 
@@ -275,7 +275,7 @@ namespace Neon.Entities.Implementation.Content {
                     IEntity removed = ActiveEntities[i];
                     ActiveEntities.RemoveAt(i);
                     RemovedEntities.Add(removed);
-                    return;
+                    return GameSnapshotEntityRemoveResult.IntoRemoved;
                 }
             }
 

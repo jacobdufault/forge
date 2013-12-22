@@ -21,6 +21,21 @@ using System.Collections.Generic;
 
 namespace Neon.Entities {
     /// <summary>
+    /// Represents the result of removing an entity.
+    /// </summary>
+    public enum GameSnapshotEntityRemoveResult {
+        /// <summary>
+        /// The entity was completely destroyed and no longer exists.
+        /// </summary>
+        Destroyed,
+
+        /// <summary>
+        /// The entity was moved into the Removed collection.
+        /// </summary>
+        IntoRemoved,
+    }
+
+    /// <summary>
     /// The IGameSnapshot stores a serialized state of the engine. It provides a common interface
     /// that both the engine and the editor use for accessing saved games and replays.
     /// </summary>
@@ -47,7 +62,7 @@ namespace Neon.Entities {
         /// entity is moved to RemovedEntities. If it is RemovedEntities, an exception is thrown.
         /// </remarks>
         /// <param name="entity">The entity to remove.</param>
-        void RemoveEntity(IEntity entity);
+        GameSnapshotEntityRemoveResult RemoveEntity(IEntity entity);
 
         /// <summary>
         /// The singleton entity. It is automatically created and cannot be destroyed, but it can be
