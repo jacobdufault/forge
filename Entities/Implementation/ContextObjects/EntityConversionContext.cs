@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Neon.Entities.Implementation.Shared {
+namespace Neon.Entities.Implementation.ContextObjects {
     internal class EntityConversionContext : IContextObject {
         public SparseArray<IEntity> CreatedEntities = new SparseArray<IEntity>();
 

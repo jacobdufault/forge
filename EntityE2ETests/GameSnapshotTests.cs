@@ -42,7 +42,7 @@ namespace Neon.Entities.E2ETests {
             TestData3 data = new TestData3() {
                 DataReference = new DataReference<TestData0>()
             };
-            ((IDataReferenceTypeEraser)data.DataReference).Provider = template0;
+            ((IDataReference)data.DataReference).Provider = template0;
             template3.AddDefaultData(data);
 
             return templates;
@@ -66,7 +66,7 @@ namespace Neon.Entities.E2ETests {
 
                 IEntity entity3 = database.CreateEntity(EntityAddLocation.Added);
                 entity3.AddData<TestData3>().DataReference = new DataReference<TestData0>();
-                ((IDataReferenceTypeEraser)entity3.Current<TestData3>().DataReference).Provider = entity0;
+                ((IDataReference)entity3.Current<TestData3>().DataReference).Provider = entity0;
             }
 
             {

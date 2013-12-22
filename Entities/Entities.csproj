@@ -58,9 +58,8 @@
     <Compile Include="Implementation\Content\TemplateGroup.cs" />
     <Compile Include="Implementation\Runtime\PerformanceInformation.cs" />
     <Compile Include="Implementation\Runtime\RuntimeTemplate.cs" />
-    <Compile Include="Implementation\Shared\DataSparseArrayConverter.cs" />
     <Compile Include="Implementation\Shared\EventProcessor.cs" />
-    <Compile Include="Implementation\Shared\GameEngineContext.cs" />
+    <Compile Include="Implementation\ContextObjects\GameEngineContext.cs" />
     <Compile Include="Implementation\Shared\QueryableEntityConverter.cs" />
     <Compile Include="Implementation\Shared\RequiredConverters.cs" />
     <Compile Include="Implementation\Shared\DataAccessor.cs" />
@@ -83,8 +82,8 @@
     <Compile Include="Implementation\Runtime\System.cs" />
     <Compile Include="Implementation\Runtime\GameEngine.cs" />
     <Compile Include="Implementation\Shared\Filter.cs" />
-    <Compile Include="Implementation\Shared\EntityConversionContext.cs" />
-    <Compile Include="Implementation\Shared\TemplateConversionContext.cs" />
+    <Compile Include="Implementation\ContextObjects\EntityConversionContext.cs" />
+    <Compile Include="Implementation\ContextObjects\TemplateConversionContext.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

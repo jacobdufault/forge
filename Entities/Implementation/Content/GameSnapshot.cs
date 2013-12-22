@@ -1,4 +1,4 @@
-﻿using Neon.Collections;
+﻿using Neon.Entities.Implementation.ContextObjects;
 using Neon.Entities.Implementation.Runtime;
 using Neon.Entities.Implementation.Shared;
 using Neon.Utilities;
@@ -99,7 +99,8 @@ namespace Neon.Entities.Implementation.Content {
             string json = CombineJson(snapshotJson, templateJson);
 
             var restorer = SerializationHelpers.Deserialize<GameSnapshotRestorer>(json,
-                RequiredConverters.GetConverters(), RequiredConverters.GetContexts(gameEngine));
+                RequiredConverters.GetConverters(),
+                RequiredConverters.GetContextObjects(gameEngine));
             return restorer._gameSnapshot;
         }
     }

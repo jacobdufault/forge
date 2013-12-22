@@ -1,11 +1,8 @@
-﻿using Neon.Entities.Implementation.Runtime;
+﻿using Neon.Entities.Implementation.ContextObjects;
+using Neon.Entities.Implementation.Runtime;
 using Neon.Utilities;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Neon.Entities.Implementation.Shared {
     /// <summary>
@@ -18,7 +15,6 @@ namespace Neon.Entities.Implementation.Shared {
         /// </summary>
         public static JsonConverter[] GetConverters() {
             return new JsonConverter[] {
-               DataSparseArrayConverter.Instance,
                new StringEnumConverter() // we want to always convert enums by name
             };
         }
@@ -26,7 +22,7 @@ namespace Neon.Entities.Implementation.Shared {
         /// <summary>
         /// Returns the context objects that are necessary for proper serialization of ISavedlevel.
         /// </summary>
-        public static IContextObject[] GetContexts(Maybe<GameEngine> engine) {
+        public static IContextObject[] GetContextObjects(Maybe<GameEngine> engine) {
             return new IContextObject[] {
                 new GameEngineContext(engine)
             };

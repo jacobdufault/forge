@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Neon.Entities.Implementation.Shared {
+namespace Neon.Entities.Implementation.ContextObjects {
     /// <summary>
     /// A context object that just contains the current GameEngine that is being used to deserialize
     /// the object.

@@ -545,12 +545,14 @@ namespace Neon.Entities.Implementation.Runtime {
 
         public IGameSnapshot TakeSnapshot() {
             return SerializationHelpers.DeepClone(GetRawSnapshot(),
-                RequiredConverters.GetConverters(), RequiredConverters.GetContexts(Maybe<GameEngine>.Empty));
+                RequiredConverters.GetConverters(),
+                RequiredConverters.GetContextObjects(Maybe<GameEngine>.Empty));
         }
 
         public int GetVerificationHash() {
             string json = SerializationHelpers.Serialize(GetRawSnapshot(),
-                RequiredConverters.GetConverters(), RequiredConverters.GetContexts(Maybe<GameEngine>.Empty));
+                RequiredConverters.GetConverters(),
+                RequiredConverters.GetContextObjects(Maybe<GameEngine>.Empty));
             return json.GetHashCode();
         }
     }

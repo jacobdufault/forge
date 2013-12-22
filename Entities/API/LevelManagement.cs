@@ -33,7 +33,7 @@ namespace Neon.Entities {
         public static string SaveSnapshot(IGameSnapshot snapshot) {
             return SerializationHelpers.Serialize<GameSnapshot>((GameSnapshot)snapshot,
                 RequiredConverters.GetConverters(),
-                RequiredConverters.GetContexts(Maybe<GameEngine>.Empty));
+                RequiredConverters.GetContextObjects(Maybe<GameEngine>.Empty));
         }
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace Neon.Entities {
         public static string SaveTemplates(ITemplateGroup templates) {
             return SerializationHelpers.Serialize<TemplateGroup>((TemplateGroup)templates,
                 RequiredConverters.GetConverters(),
-                RequiredConverters.GetContexts(Maybe<GameEngine>.Empty));
+                RequiredConverters.GetContextObjects(Maybe<GameEngine>.Empty));
         }
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace Neon.Entities {
         public static ITemplateGroup LoadTemplates(string json) {
             return SerializationHelpers.Deserialize<TemplateGroup>(json,
                 RequiredConverters.GetConverters(),
-                RequiredConverters.GetContexts(Maybe<GameEngine>.Empty));
+                RequiredConverters.GetContextObjects(Maybe<GameEngine>.Empty));
         }
     }
 }
