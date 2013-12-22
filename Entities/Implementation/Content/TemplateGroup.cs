@@ -85,12 +85,7 @@ namespace Neon.Entities.Implementation.Content {
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
             TemplateGroup group = (TemplateGroup)existingValue ?? new TemplateGroup();
-
-            GeneralStreamingContext generalContext = (GeneralStreamingContext)serializer.Context.Context;
-            generalContext.Create<TemplateConversionContext>();
             TemplateSerializationContainer container = serializer.Deserialize<TemplateSerializationContainer>(reader);
-            generalContext.Remove<TemplateConversionContext>();
-
             group.Templates = container.Templates;
             return group;
         }
@@ -101,10 +96,7 @@ namespace Neon.Entities.Implementation.Content {
             TemplateSerializationContainer container = new TemplateSerializationContainer() {
                 Templates = group.Templates
             };
-            GeneralStreamingContext generalContext = (GeneralStreamingContext)serializer.Context.Context;
-            generalContext.Create<TemplateConversionContext>();
             serializer.Serialize(writer, container);
-            generalContext.Remove<TemplateConversionContext>();
         }
     }
 

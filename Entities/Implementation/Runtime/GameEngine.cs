@@ -151,7 +151,14 @@ namespace Neon.Entities.Implementation.Runtime {
             private set;
         }
 
+        /// <summary>
+        /// ITemplateGroup JSON so that we can create a snapshot of the content.
+        /// </summary>
+        private string _templateJson;
+
         public GameEngine(string snapshotJson, string templateJson) {
+            _templateJson = templateJson;
+
             // Create our own little island of references with its own set of templates
             GameSnapshot snapshot = GameSnapshotRestorer.Restore(snapshotJson, templateJson,
                 Maybe.Just(this));
@@ -563,9 +570,11 @@ namespace Neon.Entities.Implementation.Runtime {
         }
 
         public IGameSnapshot TakeSnapshot() {
-            return SerializationHelpers.DeepClone(GetRawSnapshot(),
+            string snapshotJson = SerializationHelpers.Serialize(GetRawSnapshot(),
                 RequiredConverters.GetConverters(),
                 RequiredConverters.GetContextObjects(Maybe<GameEngine>.Empty));
+
+            return GameSnapshotRestorer.Restore(snapshotJson, _templateJson, Maybe<GameEngine>.Empty);
         }
 
         public int GetVerificationHash() {

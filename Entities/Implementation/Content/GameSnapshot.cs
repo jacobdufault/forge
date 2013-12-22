@@ -100,6 +100,18 @@ namespace Neon.Entities.Implementation.Content {
         [JsonProperty("Templates")]
         private TemplateGroup _templates;
 
+        [OnDeserializing]
+        private void AddTemplateContext(StreamingContext context) {
+            var generalContext = (GeneralStreamingContext)context.Context;
+            generalContext.Create<TemplateConversionContext>();
+        }
+
+        [OnDeserialized]
+        private void RemoveTemplateContext(StreamingContext context) {
+            var generalContext = (GeneralStreamingContext)context.Context;
+            generalContext.Remove<TemplateConversionContext>();
+        }
+
         /// <summary>
         /// Combines snapshot and template JSON together into the serialized format that the
         /// GameSnapshotRestorer can read.
