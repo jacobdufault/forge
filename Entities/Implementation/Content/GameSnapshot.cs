@@ -195,17 +195,17 @@ namespace Neon.Entities.Implementation.Content {
             generalContext.Remove<EntityConversionContext>();
         }
 
-        public IEntity CreateEntity(EntityAddLocation to, string prettyName = "") {
+        public IEntity CreateEntity(EntityAddTarget addTarget, string prettyName = "") {
             ContentEntity added = new ContentEntity(_entityIdGenerator.Next(), prettyName);
 
-            switch (to) {
-                case EntityAddLocation.Active:
+            switch (addTarget) {
+                case EntityAddTarget.Active:
                     ActiveEntities.Add(added);
                     break;
-                case EntityAddLocation.Added:
+                case EntityAddTarget.Added:
                     AddedEntities.Add(added);
                     break;
-                case EntityAddLocation.Removed:
+                case EntityAddTarget.Removed:
                     RemovedEntities.Add(added);
                     break;
             }

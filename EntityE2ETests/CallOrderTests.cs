@@ -107,7 +107,7 @@ namespace Neon.Entities.E2ETests {
 
             snapshot.Systems.Add(new TriggerEventLogger(new Type[] { }));
 
-            IEntity entity = snapshot.CreateEntity(EntityAddLocation.Added);
+            IEntity entity = snapshot.CreateEntity(EntityAddTarget.Added);
 
             IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
 
@@ -152,7 +152,7 @@ namespace Neon.Entities.E2ETests {
             snapshot.Systems.Add(new TriggerEventLogger(new Type[] { }));
             snapshot.Systems.Add(new AddAndModifyOnAddedSystem());
 
-            snapshot.CreateEntity(EntityAddLocation.Added);
+            snapshot.CreateEntity(EntityAddTarget.Added);
 
             IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
             engine.SynchronizeState().WaitOne();
@@ -198,7 +198,7 @@ namespace Neon.Entities.E2ETests {
             snapshot.Systems.Add(new ModifyOnUpdateSystem());
 
             {
-                IEntity e = snapshot.CreateEntity(EntityAddLocation.Added);
+                IEntity e = snapshot.CreateEntity(EntityAddTarget.Added);
                 e.AddData<TestData0>();
             }
 
@@ -232,7 +232,7 @@ namespace Neon.Entities.E2ETests {
 
             snapshot.Systems.Add(new TriggerEventLogger(new Type[] { }));
 
-            IEntity entity = snapshot.CreateEntity(EntityAddLocation.Removed);
+            IEntity entity = snapshot.CreateEntity(EntityAddTarget.Removed);
 
             IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
 
@@ -264,7 +264,7 @@ namespace Neon.Entities.E2ETests {
 
             snapshot.Systems.Add(new TriggerEventLogger(new Type[] { }));
 
-            IEntity entity = snapshot.CreateEntity(EntityAddLocation.Removed);
+            IEntity entity = snapshot.CreateEntity(EntityAddTarget.Removed);
             entity.AddData<TestData0>();
 
             IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
@@ -313,7 +313,7 @@ namespace Neon.Entities.E2ETests {
             snapshot.Systems.Add(new ModifyOnRemovedTrigger());
 
             {
-                IEntity e = snapshot.CreateEntity(EntityAddLocation.Removed);
+                IEntity e = snapshot.CreateEntity(EntityAddTarget.Removed);
                 e.AddData<TestData0>();
             }
 

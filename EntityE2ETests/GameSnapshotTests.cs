@@ -54,51 +54,51 @@ namespace Neon.Entities.E2ETests {
             IEntity entity;
 
             {
-                IEntity entity0 = database.CreateEntity(EntityAddLocation.Added);
+                IEntity entity0 = database.CreateEntity(EntityAddTarget.Added);
                 entity0.AddData<TestData0>();
 
-                IEntity entity1 = database.CreateEntity(EntityAddLocation.Added);
+                IEntity entity1 = database.CreateEntity(EntityAddTarget.Added);
                 entity1.AddData<TestData1>().A = 10;
 
-                IEntity entity2 = database.CreateEntity(EntityAddLocation.Added);
+                IEntity entity2 = database.CreateEntity(EntityAddTarget.Added);
                 entity2.AddData<TestData0>();
                 entity2.AddData<TestData1>().A = 20;
 
-                IEntity entity3 = database.CreateEntity(EntityAddLocation.Added);
+                IEntity entity3 = database.CreateEntity(EntityAddTarget.Added);
                 entity3.AddData<TestData3>().DataReference = new DataReference<TestData0>();
                 ((IDataReference)entity3.Current<TestData3>().DataReference).Provider = entity0;
             }
 
             {
-                entity = database.CreateEntity(EntityAddLocation.Active);
+                entity = database.CreateEntity(EntityAddTarget.Active);
                 entity.AddData<TestData0>();
 
-                entity = database.CreateEntity(EntityAddLocation.Active);
+                entity = database.CreateEntity(EntityAddTarget.Active);
                 entity.AddData<TestData1>().A = 30;
 
-                entity = database.CreateEntity(EntityAddLocation.Active);
+                entity = database.CreateEntity(EntityAddTarget.Active);
                 entity.AddData<TestData0>();
                 entity.AddData<TestData1>().A = 40;
 
-                entity = database.CreateEntity(EntityAddLocation.Active);
+                entity = database.CreateEntity(EntityAddTarget.Active);
                 entity.AddData<TestData0>();
 
-                entity = database.CreateEntity(EntityAddLocation.Active);
+                entity = database.CreateEntity(EntityAddTarget.Active);
                 entity.AddData<TestData1>().A = 50;
 
-                entity = database.CreateEntity(EntityAddLocation.Active);
+                entity = database.CreateEntity(EntityAddTarget.Active);
                 entity.AddData<TestData0>();
                 entity.AddData<TestData1>().A = 60;
             }
 
             {
-                entity = database.CreateEntity(EntityAddLocation.Removed);
+                entity = database.CreateEntity(EntityAddTarget.Removed);
                 entity.AddData<TestData0>();
 
-                entity = database.CreateEntity(EntityAddLocation.Removed);
+                entity = database.CreateEntity(EntityAddTarget.Removed);
                 entity.AddData<TestData1>().A = 70;
 
-                entity = database.CreateEntity(EntityAddLocation.Removed);
+                entity = database.CreateEntity(EntityAddTarget.Removed);
                 entity.AddData<TestData0>();
                 entity.AddData<TestData1>().A = 80;
             }
@@ -132,7 +132,7 @@ namespace Neon.Entities.E2ETests {
             ITemplateGroup templates = LevelManager.CreateTemplateGroup();
 
             for (int i = 0; i < 10; ++i) {
-                IEntity entity = database.CreateEntity(EntityAddLocation.Active);
+                IEntity entity = database.CreateEntity(EntityAddTarget.Active);
                 entity.AddData<TestData0>();
             }
 
@@ -166,7 +166,7 @@ namespace Neon.Entities.E2ETests {
             ITemplateGroup templates = CreateDefaultTemplates();
 
             for (int i = 0; i < 10; ++i) {
-                IEntity entity = database.CreateEntity(EntityAddLocation.Removed);
+                IEntity entity = database.CreateEntity(EntityAddTarget.Removed);
                 entity.AddData<TestData0>();
             }
 

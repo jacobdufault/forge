@@ -1,12 +1,10 @@
-﻿using Neon.Entities.Implementation.Content;
-using Neon.Entities.Implementation.Shared;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Neon.Entities {
     /// <summary>
     /// Specifies where an entity should be added to when adding one to a IGameSnapshot.
     /// </summary>
-    public enum EntityAddLocation {
+    public enum EntityAddTarget {
         Active,
         Removed,
         Added
@@ -25,10 +23,10 @@ namespace Neon.Entities {
         /// <summary>
         /// Adds a new entity to the snapshot.
         /// </summary>
-        /// <param name="to">What collection the entity should be added to.</param>
+        /// <param name="addTarget">What collection the entity should be added to.</param>
         /// <param name="prettyName">The pretty name of the entity.</param>
         /// <returns>A new entity.</returns>
-        IEntity CreateEntity(EntityAddLocation to, string prettyName = "");
+        IEntity CreateEntity(EntityAddTarget addTarget, string prettyName = "");
 
         /// <summary>
         /// The singleton entity. It is automatically created and cannot be destroyed, but it can be

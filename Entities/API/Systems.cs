@@ -13,19 +13,6 @@ namespace Neon.Entities {
     }
 
     /// <summary>
-    /// All systems that have local data that needs to be serialized should extend IRestoredSystem.
-    /// </summary>
-    public interface IRestoredSystem {
-        /// <summary>
-        /// Returns the GUID for this system. This is used to identify what serialized data to use
-        /// when restoring the system.
-        /// </summary>
-        Guid RestorationGuid {
-            get;
-        }
-    }
-
-    /// <summary>
     /// Base filter for triggers which require a filter. as it does not provide any trigger APIs by
     /// itself.
     /// </summary>

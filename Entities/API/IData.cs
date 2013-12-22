@@ -1,5 +1,4 @@
-﻿
-using Neon.Entities.Implementation.Shared;
+﻿using Neon.Entities.Implementation.Shared;
 using Newtonsoft.Json;
 using System;
 
@@ -42,18 +41,41 @@ namespace Neon.Entities {
         IData Duplicate();
     }
 
+    /// <summary>
+    /// Base data type that makes implementing IData easier.
+    /// </summary>
+    /// <typeparam name="TData">The type that is extending BaseData.</typeparam>
     public abstract class BaseData<TData> : IData {
+        /// <summary>
+        /// Does this data type support concurrent modifications (two or more modifications made in
+        /// the same update loop, potentially in different threads at the same time).
+        /// </summary>
+        /// <remarks>
+        /// If this returns true, then ResolveConcurrentModifications will be called at the end of
+        /// the update loop (which by default throws an exception, so make sure to override it).
+        /// </remarks>
         public virtual bool SupportsConcurrentModifications {
             get {
                 return false;
             }
         }
 
+        /// <summary>
+        /// Resolve any modifications that have occurred to the data instance. This method will only
+        /// be called if SupportsConcurrentModifications returns true. By default, this method
+        /// throws an exception.
+        /// </summary>
         public virtual void ResolveConcurrentModifications() {
             throw new InvalidOperationException("Type " + GetType() + " supports concurrent " +
                 "modifications but did not override ResolveConcurrentModifications");
         }
 
+        /// <summary>
+        /// Copy the data from source into this object instance. After this method is done being
+        /// called, source should be identical in content to this (such that this.Equals(source) ==
+        /// true).
+        /// </summary>
+        /// <param name="source">The source data object to copy from.</param>
         public abstract void CopyFrom(TData source);
 
         void IData.CopyFrom(IData source) {

@@ -1,14 +1,14 @@
-﻿using Neon.Entities.Implementation.Shared;
-using Neon.Utilities;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
-using System.Runtime.Serialization;
 
 namespace Neon.Entities {
     /// <summary>
     /// Interface used for type erasure by BaseDataReferenceType.
     /// </summary>
     public interface IDataReference {
+        /// <summary>
+        /// The entity that this reference uses to resolve its current/previous data references.
+        /// </summary>
         IQueryableEntity Provider {
             get;
             set;

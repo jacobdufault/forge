@@ -1,5 +1,4 @@
-﻿
-using Neon.Entities.Implementation.Shared;
+﻿using Neon.Entities.Implementation.Shared;
 using Newtonsoft.Json;
 
 namespace Neon.Entities {

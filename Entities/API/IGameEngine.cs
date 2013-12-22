@@ -1,5 +1,4 @@
-﻿using Neon.Entities.Implementation.Content;
-using Neon.Entities.Implementation.Runtime;
+﻿using Neon.Entities.Implementation.Runtime;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -71,20 +70,29 @@ namespace Neon.Entities {
     }
 
     /// <summary>
-    /// Allocates IGameEngines that can be used to play the state stored inside of a content
-    /// database.
+    /// Allocates IGameEngines that can be used to play the state stored inside of a game snapshot.
     /// </summary>
     public static class GameEngineFactory {
         /// <summary>
         /// Creates a new game engine that can be used to simulate the game using the content from
         /// the given content database. The passed in snapshot will not be modified.
         /// </summary>
-        /// <param name="content">The content to allocate the engine from.</param>
+        /// <param name="snapshotJson">The serialized IGameSnapshot to use to create the
+        /// engine.</param>
+        /// <param name="templateJson">The serialized ITemplateGroup used to create the
+        /// engine.</param>
         /// <returns>A game engine that can play the given content.</returns>
         public static IGameEngine CreateEngine(string snapshotJson, string templateJson) {
             return new GameEngine(snapshotJson, templateJson);
         }
 
+        /// <summary>
+        /// Creates a new game engine that can be used to simulate the game using the content from
+        /// the given content database. The passed in snapshot will not be modified.
+        /// </summary>
+        /// <param name="snapshotJson">The IGameSnapshot to use to create the engine.</param>
+        /// <param name="templateJson">The ITemplateGroup used to create the engine.</param>
+        /// <returns>A game engine that can play the given content.</returns>
         public static IGameEngine CreateEngine(IGameSnapshot snapshot, ITemplateGroup templates) {
             return CreateEngine(LevelManager.SaveSnapshot(snapshot),
                 LevelManager.SaveTemplates(templates));

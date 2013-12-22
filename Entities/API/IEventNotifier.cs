@@ -1,6 +1,9 @@
 ﻿using System;
 
 namespace Neon.Entities {
+    /// <summary>
+    /// Base event type that all events must derive from.
+    /// </summary>
     public abstract class BaseEvent {
     }
 
