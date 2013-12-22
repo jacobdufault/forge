@@ -29,14 +29,14 @@ using System.Linq;
 namespace Neon.Entities.Implementation.Content {
     [JsonObject(MemberSerialization.OptIn)]
     internal class ContentTemplateSerializationFormat {
-        [JsonProperty("DefaultDataInstances")]
-        public List<IData> DefaultDataInstances;
-
         [JsonProperty("TemplateId")]
         public int TemplateId;
 
         [JsonProperty("PrettyName")]
         public string PrettyName;
+
+        [JsonProperty("DefaultDataInstances")]
+        public List<IData> DefaultDataInstances;
     }
 
     [JsonConverter(typeof(QueryableEntityConverter))]
