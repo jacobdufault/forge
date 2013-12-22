@@ -15,5 +15,10 @@ namespace Neon.Entities.E2ETests {
 
             CollectionAssert.AreEqual(templates.Templates.ToList(), restored.Templates.ToList());
         }
+
+        [TestMethod]
+        public void RoundTripEmptyTemplateGroup() {
+            LevelManager.LoadTemplates(LevelManager.SaveTemplates(LevelManager.CreateTemplateGroup()));
+        }
     }
 }

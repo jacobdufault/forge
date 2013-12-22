@@ -46,10 +46,10 @@ namespace Neon.Entities.Implementation.ContextObjects {
 
             ITemplate template;
             if (context.GameEngine.IsEmpty) {
-                template = new ContentTemplate();
+                template = new ContentTemplate(templateId);
             }
             else {
-                template = new RuntimeTemplate(context.GameEngine.Value);
+                template = new RuntimeTemplate(templateId, context.GameEngine.Value);
             }
 
             CreatedTemplates[templateId] = template;

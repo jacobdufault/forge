@@ -47,10 +47,12 @@ namespace Neon.Entities.Implementation.Runtime {
         /// </summary>
         private GameEngine _gameEngine;
 
-        public RuntimeTemplate(GameEngine engine) {
+        public RuntimeTemplate(int templateId, GameEngine engine) {
             _defaultDataInstances = new SparseArray<IData>();
             _eventNotifier = new EventNotifier();
             _gameEngine = engine;
+            TemplateId = templateId;
+            PrettyName = "";
         }
 
         /// <summary>
