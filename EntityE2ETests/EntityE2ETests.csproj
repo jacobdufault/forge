@@ -60,6 +60,7 @@
   <ItemGroup>
     <Compile Include="CallOrderTests.cs" />
     <Compile Include="DataDefinitions.cs" />
+    <Compile Include="EngineTests.cs" />
     <Compile Include="LevelManagementTests.cs" />
     <Compile Include="SystemCounter.cs" />
     <Compile Include="GameSnapshotTests.cs" />

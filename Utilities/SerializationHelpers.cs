@@ -55,6 +55,9 @@ namespace Neon.Utilities {
         /// <returns>An appropriate JsonSerializerSettings instance.</returns>
         private static JsonSerializerSettings CreateSettings(JsonConverter[] converters,
             IContextObject[] contextObjects) {
+            converters = converters ?? new JsonConverter[0];
+            contextObjects = contextObjects ?? new IContextObject[0];
+
             return new JsonSerializerSettings() {
                 // handle inheritance correctly
                 TypeNameHandling = TypeNameHandling.Auto,
