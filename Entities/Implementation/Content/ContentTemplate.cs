@@ -124,8 +124,8 @@ namespace Neon.Entities.Implementation.Content {
             throw new InvalidOperationException("Unable to instantiate an entity from a ContentTemplate");
         }
 
-        public ICollection<DataAccessor> SelectData(Predicate<DataAccessor> filter = null,
-            ICollection<DataAccessor> storage = null) {
+        public ICollection<DataAccessor> SelectData(bool includeRemoved = false,
+            Predicate<DataAccessor> filter = null, ICollection<DataAccessor> storage = null) {
             if (storage == null) {
                 storage = new List<DataAccessor>();
             }

@@ -163,13 +163,18 @@ namespace Neon.Entities.Implementation.Content {
             throw new InvalidOperationException("Cannot modify data in a ContentEntity");
         }
 
-        public ICollection<DataAccessor> SelectData(Predicate<DataAccessor> filter = null,
-            ICollection<DataAccessor> storage = null) {
+        public ICollection<DataAccessor> SelectData(bool includeRemoved = false,
+            Predicate<DataAccessor> filter = null, ICollection<DataAccessor> storage = null) {
             if (storage == null) {
                 storage = new List<DataAccessor>();
             }
 
             foreach (var pair in _data) {
+                // don't select removed data
+                if (includeRemoved == false && pair.Value.WasRemoved) {
+                    continue;
+                }
+
                 DataAccessor accessor = new DataAccessor(pair.Key);
                 if (filter == null || filter(accessor)) {
                     storage.Add(accessor);
@@ -192,7 +197,9 @@ namespace Neon.Entities.Implementation.Content {
         }
 
         public IData Previous(DataAccessor accessor) {
-            if (ContainsData(accessor) == false) {
+            // use _data.Contains instead of ContainsData because WasRemoved may be true (and
+            // Previous can return the last data instance for removed data).
+            if (_data.Contains(accessor.Id) == false) {
                 throw new NoSuchDataException(this, accessor);
             }
 
@@ -204,19 +211,11 @@ namespace Neon.Entities.Implementation.Content {
         }
 
         public bool WasModified(DataAccessor accessor) {
-            if (ContainsData(accessor) == false) {
-                throw new NoSuchDataException(this, accessor);
-            }
-
-            return _data[accessor.Id].WasModified;
+            return _data.Contains(accessor.Id) && _data[accessor.Id].WasModified;
         }
 
         public bool WasAdded(DataAccessor accessor) {
-            if (ContainsData(accessor) == false) {
-                throw new NoSuchDataException(this, accessor);
-            }
-
-            return _data[accessor.Id].WasAdded;
+            return _data.Contains(accessor.Id) && _data[accessor.Id].WasAdded;
         }
 
         public bool WasRemoved(DataAccessor accessor) {

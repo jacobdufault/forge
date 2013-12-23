@@ -107,8 +107,8 @@ namespace Neon.Entities.Implementation.Runtime {
             return entity;
         }
 
-        public ICollection<DataAccessor> SelectData(Predicate<DataAccessor> filter = null,
-            ICollection<DataAccessor> storage = null) {
+        public ICollection<DataAccessor> SelectData(bool includeRemoved = false,
+            Predicate<DataAccessor> filter = null, ICollection<DataAccessor> storage = null) {
             if (storage == null) {
                 storage = new List<DataAccessor>();
             }
