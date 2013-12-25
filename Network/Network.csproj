@@ -51,22 +51,23 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Configuration.cs" />
-    <Compile Include="Chat.cs" />
-    <Compile Include="ConnectionMonitor.cs" />
-    <Compile Include="GameNetwork.cs" />
-    <Compile Include="INetworkConnectionMonitor.cs" />
-    <Compile Include="LobbyHostPlayerReadinessMessageHandler.cs" />
-    <Compile Include="LobbyLaunchedHandler.cs" />
-    <Compile Include="LobbyMapHandling.cs" />
-    <Compile Include="LobbyPlayerDispatch.cs" />
-    <Compile Include="NetworkMessageRecipient.cs" />
-    <Compile Include="NetworkPlayer.cs" />
-    <Compile Include="INetworkMessage.cs" />
-    <Compile Include="INetworkMessageHandler.cs" />
-    <Compile Include="Lobby.cs" />
-    <Compile Include="NetworkContext.cs" />
-    <Compile Include="NetworkMessageDispatcher.cs" />
+    <Compile Include="Core\Configuration.cs" />
+    <Compile Include="Chat\Chat.cs" />
+    <Compile Include="Game\GameNetwork.cs" />
+    <Compile Include="Core\INetworkConnectionMonitor.cs" />
+    <Compile Include="Lobby\LobbyHost.cs" />
+    <Compile Include="Lobby\LobbyHostPlayerReadinessMessageHandler.cs" />
+    <Compile Include="Lobby\LobbyLaunchedHandler.cs" />
+    <Compile Include="Lobby\LobbyMapHandling.cs" />
+    <Compile Include="Lobby\LobbyMember.cs" />
+    <Compile Include="Lobby\LobbyPlayerDispatch.cs" />
+    <Compile Include="Core\NetworkMessageRecipient.cs" />
+    <Compile Include="Core\NetworkPlayer.cs" />
+    <Compile Include="Core\INetworkMessage.cs" />
+    <Compile Include="Core\INetworkMessageHandler.cs" />
+    <Compile Include="Lobby\LobbyCommon.cs" />
+    <Compile Include="Core\NetworkContext.cs" />
+    <Compile Include="Core\NetworkMessageDispatcher.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -75,6 +76,7 @@
       <Name>Utilities</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

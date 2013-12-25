@@ -18,6 +18,7 @@ using log4net.Repository.Hierarchy;
 using log4net.Core;
 using log4net.Appender;
 using Newtonsoft.Json;
+using Neon.Network.Core;
 
 namespace NetworkDebug {
     public partial class Form1 : Form, IAppender {
