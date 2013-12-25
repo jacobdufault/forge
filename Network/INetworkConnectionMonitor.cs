@@ -7,7 +7,7 @@ namespace Neon.Network {
     /// <summary>
     /// Object that monitors the connection and disconnection of other computers.
     /// </summary>
-    internal interface INetworkConnectionMonitor {
+    public interface INetworkConnectionMonitor {
         /// <summary>
         /// The given player has connected.
         /// </summary>

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Neon.Network {
@@ -14,7 +15,10 @@ namespace Neon.Network {
     /// INetworkMessage listeners.
     /// </summary>
     public class NetworkContext {
-        internal NetworkMessageDispatcher Dispatcher;
+        /// <summary>
+        /// Networking dispatcher that is used for sending messages.
+        /// </summary>
+        public NetworkMessageDispatcher Dispatcher;
 
         /// <summary>
         /// The local player.
@@ -27,24 +31,38 @@ namespace Neon.Network {
         private string _serverPassword;
         private List<INetworkConnectionMonitor> _connectionMonitors;
 
-        public NetPeer Peer {
+        /// <summary>
+        /// Returns the internal NetPeer instance that represents the core connection.
+        /// </summary>
+        internal NetPeer Peer {
             get {
                 return (NetPeer)_client ?? (NetPeer)_server;
             }
         }
 
+        /// <summary>
+        /// Returns true if this NetworkConext is acting as a server.
+        /// </summary>
         public bool IsServer {
             get {
                 return _server != null;
             }
         }
 
+        /// <summary>
+        /// Returns true if this NetworkContext is acting as a client.
+        /// </summary>
         public bool IsClient {
             get {
                 return _client != null;
             }
         }
 
+        /// <summary>
+        /// Returns true if the given NetworkPlayer is the server.
+        /// </summary>
+        /// <param name="player">The player to check.</param>
+        /// <returns>True if the player is the server, otherwise false.</returns>
         public bool IsPlayerServer(NetworkPlayer player) {
             if (IsServer) {
                 return player == (NetworkPlayer)_server.Tag;
@@ -54,7 +72,7 @@ namespace Neon.Network {
                 return player == (NetworkPlayer)_client.ServerConnection.Tag;
             }
 
-            throw new InvalidOperationException();
+            throw new InvalidOperationException("Bad internal state; not a server or client");
         }
 
         /// <summary>
@@ -74,8 +92,11 @@ namespace Neon.Network {
             GetConnection(player).Disconnect("Kicked by host");
         }
 
+        /// <summary>
+        /// Helper method to lookup the network connection based on the given network player.
+        /// </summary>
         internal NetConnection GetConnection(NetworkPlayer player) {
-            NetPeer peer = (NetPeer)_server ?? (NetPeer)_client;
+            NetPeer peer = Peer;
 
             for (int i = 0; i < peer.ConnectionsCount; ++i) {
                 NetConnection connection = peer.Connections[i];
@@ -125,98 +146,101 @@ namespace Neon.Network {
         }
 
         /// <summary>
-        /// Creates a new client connection connected to the given IP end point.
+        /// Creates a new client connection connected to the given IP end point. This method blocks
+        /// until we know if the client has either connected or disconnected.
         /// </summary>
         /// <param name="ip">The IP to connect to.</param>
         /// <param name="player">This computer's player.</param>
+        /// <param name="password">The password that the server is expecting.</param>
         /// <returns></returns>
         public static Maybe<NetworkContext> CreateClient(string ip, NetworkPlayer player, string password) {
-            /*
-            try {
-                NetClient client = new NetClient(Configuration.GetConfiguration(server: false));
-                NetOutgoingMessage hailMsg = client.CreateMessage();
+            NetClient client = new NetClient(Configuration.GetConfiguration(server: false));
+            client.Start();
 
+            // Write out our hail message
+            {
+                NetOutgoingMessage hailMsg = client.CreateMessage();
                 HailMessage hail = new HailMessage() {
                     Player = player,
                     Password = password
                 };
-                hailMsg.Write(JsonConvert.SerializeObject(hail));
+                string serializedHail = SerializationHelpers.Serialize(hail);
+                hailMsg.Write(serializedHail);
 
-                client.Connect(ip, hailMsg);
+                Log<NetworkContext>.Info("Trying to connect to " + ip + " on port " + Configuration.Port + " with hailing message " + serializedHail);
 
-                NetworkContext context = new NetworkContext(player) {
-                    _client = client
-                };
-
-                return Maybe.Just(context);
+                // Try to connect to the server
+                client.Connect(ip, Configuration.Port, hailMsg);
             }
-            catch (Exception) {
-                return Maybe<NetworkContext>.Empty;
-            }
-            */
 
-            NetClient client = new NetClient(Configuration.GetConfiguration(server: false));
-            client.Start();
-
-            NetOutgoingMessage hailMsg = client.CreateMessage();
-
-            HailMessage hail = new HailMessage() {
-                Player = player,
-                Password = password
-            };
-            string serializedHail = SerializationHelpers.Serialize(hail);
-            hailMsg.Write(serializedHail);
-
-            Log<NetworkContext>.Info("Trying to connect to " + ip + " on port " + Configuration.Port + " with hailing message " + serializedHail);
-            client.Connect(ip, Configuration.Port, hailMsg);
-
+            // Block until we know if we have connected or disconnected.
             while (true) {
                 NetIncomingMessage msg;
 
                 while ((msg = client.ReadMessage()) != null) {
                     if (msg.MessageType != NetIncomingMessageType.StatusChanged) {
-                        Log<NetworkContext>.Error("Unexpected message type " + msg.MessageType + " while connecting");
+                        Log<NetworkContext>.Error("While attempting to connect to server, got unexpected message type " + msg.MessageType);
                         continue;
                     }
 
                     NetConnectionStatus status = (NetConnectionStatus)msg.ReadByte();
-                    Log<NetworkContext>.Info("Status changed to " + status);
+                    Log<NetworkContext>.Info("While attempting to connect to server, status changed to " + status);
                     goto gotConnectionAttemptResult;
                 }
+
+                Thread.Sleep(0);
             }
         gotConnectionAttemptResult:
 
+            // If the connection status is not connected, then we failed, so just return an empty
+            // network context
             if (client.ConnectionStatus != NetConnectionStatus.Connected) {
                 return Maybe<NetworkContext>.Empty;
             }
 
-            // Read in the hail message to populate our server connection with the server player
+            // We're connected to the server! Read in the hail message to populate our server
+            // connection with the server player instance
             {
                 NetIncomingMessage msg = client.ServerConnection.RemoteHailMessage;
                 NetworkPlayer serverPlayer = SerializationHelpers.Deserialize<NetworkPlayer>(msg.ReadString());
                 client.ServerConnection.Tag = serverPlayer;
+                NetworkContext context = new NetworkContext(player) {
+                    _client = client
+                };
+                return Maybe.Just(context);
             }
-            NetworkContext context = new NetworkContext(player) {
-                _client = client
-            };
-            return Maybe.Just(context);
         }
 
-        private NetworkContext(NetworkPlayer player) {
+        /// <summary>
+        /// Private constructor for NetworkContext; NetworkContexts can only be created using the
+        /// static helper methods.
+        /// </summary>
+        /// <param name="localPlayer">The local player</param>
+        private NetworkContext(NetworkPlayer localPlayer) {
             Dispatcher = new NetworkMessageDispatcher();
-            LocalPlayer = player;
-            _localPlayerEnumerable = new[] { player };
+            LocalPlayer = localPlayer;
+            _localPlayerEnumerable = new[] { localPlayer };
 
             _connectionMonitors = new List<INetworkConnectionMonitor>();
 
-            Log<NetworkContext>.Info("Created network context for " + player);
+            Log<NetworkContext>.Info("Created network context with LocalPlayer=" + localPlayer);
         }
 
-        internal void AddConnectionMonitor(INetworkConnectionMonitor monitor) {
+        /// <summary>
+        /// Add a new connection monitor listener. This allows for client code to be notified when
+        /// another player connects or disconnects from the network.
+        /// </summary>
+        /// <param name="monitor">The connection monitor to add.</param>
+        public void AddConnectionMonitor(INetworkConnectionMonitor monitor) {
             _connectionMonitors.Add(monitor);
         }
 
-        internal void RemoveConnectionMonitor(INetworkConnectionMonitor monitor) {
+        /// <summary>
+        /// Remove a previously added connection monitor. If the monitor was not found when removing
+        /// it, an exception is thrown.
+        /// </summary>
+        /// <param name="monitor">The connection monitor to remove.</param>
+        public void RemoveConnectionMonitor(INetworkConnectionMonitor monitor) {
             if (_connectionMonitors.Remove(monitor) == false) {
                 throw new InvalidOperationException("No such monitor to remove");
             }
@@ -350,15 +374,15 @@ namespace Neon.Network {
                         break;
                     }
 
-                case NetworkMessageRecipient.Server:
-                    if (IsClient) {
+                case NetworkMessageRecipient.Server: {
+                        if (IsClient == false) {
+                            throw new InvalidOperationException("Only clients can send messages to the server");
+                        }
+
                         var msg = CreateMessage(LocalPlayer, message, broadcast: false);
                         _client.ServerConnection.SendMessage(msg, NetDeliveryMethod.ReliableOrdered, 0);
+                        break;
                     }
-                    else {
-                        Dispatcher.InvokeHandlers(LocalPlayer, message);
-                    }
-                    break;
             }
         }
 
@@ -368,9 +392,18 @@ namespace Neon.Network {
         /// <param name="recipient">The player that should receive the message.</param>
         /// <param name="message">Who to send the message to.</param>
         public void SendMessage(NetworkPlayer recipient, INetworkMessage message) {
-            NetOutgoingMessage msg = CreateMessage(LocalPlayer, message, broadcast: false);
-            NetConnection connection = GetConnection(recipient);
-            connection.SendMessage(msg, NetDeliveryMethod.ReliableOrdered, 0);
+            // If we're sending the message to ourselves (strange, but fine), then just directly
+            // invoke the handlers -- there is not going to be a network connection
+            if (recipient == LocalPlayer) {
+                Dispatcher.InvokeHandlers(LocalPlayer, message);
+            }
+
+            // Otherwise, lookup the network connection and send the message to that connection
+            else {
+                NetOutgoingMessage msg = CreateMessage(LocalPlayer, message, broadcast: false);
+                NetConnection connection = GetConnection(recipient);
+                connection.SendMessage(msg, NetDeliveryMethod.ReliableOrdered, 0);
+            }
         }
 
         /// <summary>
@@ -392,31 +425,5 @@ namespace Neon.Network {
             msg.Write(serialized);
             return msg;
         }
-    }
-
-    /// <summary>
-    /// Specifies who should receive a network message.
-    /// </summary>
-    public enum NetworkMessageRecipient {
-        /// <summary>
-        /// All computers process the message. However, each computer processes each message in the
-        /// same order.
-        /// </summary>
-        /// <remarks>
-        /// This message type requires that the message be sent to the server, and then the server
-        /// rebroadcast the message.
-        /// </remarks>
-        All,
-
-        /// <summary>
-        /// The message should be processed by only the server.
-        /// </summary>
-        Server,
-
-        /// <summary>
-        /// The message should be processed by all clients and *not* the server. This message type
-        /// can only be sent by the server.
-        /// </summary>
-        Clients,
     }
 }

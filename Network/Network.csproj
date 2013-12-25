@@ -60,6 +60,7 @@
     <Compile Include="LobbyLaunchedHandler.cs" />
     <Compile Include="LobbyMapHandling.cs" />
     <Compile Include="LobbyPlayerDispatch.cs" />
+    <Compile Include="NetworkMessageRecipient.cs" />
     <Compile Include="NetworkPlayer.cs" />
     <Compile Include="INetworkMessage.cs" />
     <Compile Include="INetworkMessageHandler.cs" />
