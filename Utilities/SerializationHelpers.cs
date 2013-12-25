@@ -93,19 +93,40 @@ namespace Neon.Utilities {
         }
 
         /// <summary>
+        /// Returns a deep clone of the given object instance.
+        /// </summary>
+        /// <typeparam name="T">The type of object to clone.</typeparam>
+        /// <param name="instance">The original object to clone.</param>
+        /// <returns>An identical clone to the given instance.</returns>
+        public static T DeepClone<T>(T instance) {
+            return DeepClone(instance, EmptyConverterArray, EmptyContextObjectArray);
+        }
+
+        /// <summary>
         /// Returns the serialized version of the given instance, optionally using the given
         /// converters during the serialization process.
         /// </summary>
         /// <typeparam name="T">The type of object to serialize.</typeparam>
         /// <param name="instance">The object instance itself to serialize.</param>
         /// <param name="converters">The converters to use during the serialization process.</param>
-        /// <param name="contextObjects">Context objects to use</param <returns>
-        /// A serialized version of the given object.</returns>
+        /// <param name="contextObjects">Context objects to use</param>
+        /// <returns>A serialized version of the given object.</returns>
         public static string Serialize<T>(T instance, JsonConverter[] converters,
             IContextObject[] contextObjects) {
             JsonSerializerSettings settings = CreateSettings(converters, contextObjects);
 
             return JsonConvert.SerializeObject(instance, typeof(T), Formatting.Indented, settings);
+        }
+
+        /// <summary>
+        /// Returns the serialized version of the given instance, optionally using the given
+        /// converters during the serialization process.
+        /// </summary>
+        /// <typeparam name="T">The type of object to serialize.</typeparam>
+        /// <param name="instance">The object instance itself to serialize.</param>
+        /// <returns>A serialized version of the given object.</returns>
+        public static string Serialize<T>(T instance) {
+            return Serialize(instance, EmptyConverterArray, EmptyContextObjectArray);
         }
 
         /// <summary>
@@ -124,5 +145,20 @@ namespace Neon.Utilities {
 
             return (T)JsonConvert.DeserializeObject(json, typeof(T), settings);
         }
+
+        /// <summary>
+        /// Deserializes the given JSON data (hopefully created using Serialize for maximal
+        /// compatibility) into an object instance of type T.
+        /// </summary>
+        /// <typeparam name="T">The type of the object to deserialize.</typeparam>
+        /// <param name="json">The serialized state of the object.</param>
+        /// <returns>A deserialized object of type T (or a derived type) that was generated from the
+        /// given JSON data.</returns>
+        public static T Deserialize<T>(string json) {
+            return Deserialize<T>(json, EmptyConverterArray, EmptyContextObjectArray);
+        }
+
+        private static JsonConverter[] EmptyConverterArray = new JsonConverter[0];
+        private static IContextObject[] EmptyContextObjectArray = new IContextObject[0];
     }
 }
