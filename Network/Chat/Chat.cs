@@ -18,66 +18,75 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using Neon.Network.Core;
+using Neon.Utilities;
+using System.Collections.Generic;
 
 namespace Neon.Network.Chat {
-    /// <summary>
-    /// Specifies the intended recipient of a chat message.
-    /// </summary>
-    public enum ChatRecipient {
-        /// <summary>
-        /// Send a message to everyone.
-        /// </summary>
-        All,
-
-        /// <summary>
-        /// Send a message to only friendly players.
-        /// </summary>
-        Friendly,
-
-        /// <summary>
-        /// Send a message to only enemy players.
-        /// </summary>
-        Enemy
-    }
-
-    public sealed class ChatNetworkMessage : INetworkMessage {
-        /// <summary>
-        /// The content of the chat message.
-        /// </summary>
-        public string Content;
-
-        /// <summary>
-        /// The player that sent the message.
-        /// </summary>
-        public NetworkPlayer Sender;
-
-        /// <summary>
-        /// The players that the message is intended for.
-        /// </summary>
-        public ChatRecipient Recipient;
-    }
-
-    /*
     /// <summary>
     /// Core API for sending chat messages. Subscribe to ChatNetworkMessage to receive chat
     /// messages.
     /// </summary>
-    public static class Chat {
+    public class ChatManager {
+        private NetworkContext _context;
+        private ChatMessageHandler _handler;
+
+        public ChatManager(NetworkContext context, IPlayerRelationDetermination relations) {
+            _context = context;
+            _handler = new ChatMessageHandler(_context, relations);
+            _context.Dispatcher.AddHandler(_handler);
+        }
+
+        public void Dispose() {
+            if (_handler != null) {
+                _context.Dispatcher.RemoveHandler(_handler);
+                _handler = null;
+            }
+        }
+
         /// <summary>
-        /// Send a chat message.
+        /// All of the chat messages that have been received that should be displayed.
         /// </summary>
-        /// <param name="context">The networking context that will be used to send the
-        /// message.</param>
+        public List<ReceivedChatMessage> DisplayableMessages {
+            get {
+                return _handler.DisplayableMessages;
+            }
+        }
+
+        /// <summary>
+        /// All received chat messages.
+        /// </summary>
+        public List<ReceivedChatMessage> AllMessages {
+            get {
+                return _handler.AllMessages;
+            }
+        }
+
+        /// <summary>
+        /// Send a chat message to all players that have the given relationship with the sending
+        /// player.
+        /// </summary>
         /// <param name="message">The message to send.</param>
-        /// <param name="recipient">The players that should receive the message.</param>
-        public static void SendMessage(NetworkContext context, string message,
-            ChatRecipient recipient) {
-            context.SendMessage(new ChatNetworkMessage() {
+        /// <param name="requiredRelation">The relationship that the local player has to have with
+        /// the message candidate in order to send the chat message.</param>
+        public void SendMessage(string message, PlayerRelation requiredRelation) {
+            _context.SendMessage(NetworkMessageRecipient.All, new ChatNetworkMessage() {
                 Content = message,
-                Recipient = recipient,
-                Sender = context.LocalPlayer
+                Sender = _context.LocalPlayer,
+                RequiredSenderToLocalRelation = Maybe.Just(requiredRelation)
+            });
+        }
+
+        /// <summary>
+        /// Sends a chat message to every player.
+        /// </summary>
+        /// <param name="message">The message to send.</param>
+        public void SendMessage(string message) {
+            _context.SendMessage(NetworkMessageRecipient.All, new ChatNetworkMessage() {
+                Content = message,
+                Sender = _context.LocalPlayer,
+                RequiredSenderToLocalRelation = Maybe<PlayerRelation>.Empty
             });
         }
     }
-    */
+
 }
