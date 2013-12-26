@@ -42,10 +42,10 @@ namespace Neon.Network.Chat {
         /// mapping network players to a directed player relation graph.
         /// </summary>
         /// <param name="context">The networking context.</param>
-        /// <param name="relations">The player relationship mapper.</param>
-        public ChatManager(NetworkContext context, IPlayerRelationDetermination relations) {
+        /// <param name="relationGraph">The player relationship mapper.</param>
+        public ChatManager(NetworkContext context, IPlayerRelationGraph relationGraph) {
             _context = context;
-            _handler = new ChatMessageHandler(_context, relations);
+            _handler = new ChatMessageHandler(_context, relationGraph);
             _context.Dispatcher.AddHandler(_handler);
         }
 

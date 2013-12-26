@@ -37,7 +37,7 @@ namespace Neon.Network.Chat {
         /// The relation determination object used to determine the relation between the sender of
         /// the chat message and the local player.
         /// </summary>
-        private IPlayerRelationDetermination _relations;
+        private IPlayerRelationGraph _relationGraph;
 
         /// <summary>
         /// All received chat messages.
@@ -49,9 +49,9 @@ namespace Neon.Network.Chat {
         /// </summary>
         public List<ReceivedChatMessage> DisplayableMessages;
 
-        public ChatMessageHandler(NetworkContext context, IPlayerRelationDetermination relations) {
+        public ChatMessageHandler(NetworkContext context, IPlayerRelationGraph relationGraph) {
             _localPlayer = context.LocalPlayer;
-            _relations = relations;
+            _relationGraph = relationGraph;
 
             AllMessages = new List<ReceivedChatMessage>();
             DisplayableMessages = new List<ReceivedChatMessage>();
@@ -86,7 +86,7 @@ namespace Neon.Network.Chat {
             }
 
             // Get the relation that the sender has towards us
-            PlayerRelation currentRelation = _relations.GetDirectedRelation(sender, _localPlayer);
+            PlayerRelation currentRelation = _relationGraph.GetDirectedRelation(sender, _localPlayer);
             return currentRelation == requiredRelation.Value;
         }
     }

@@ -23,7 +23,7 @@ namespace Neon.Network.Chat {
     /// <summary>
     /// Interface used to determine how two players are related.
     /// </summary>
-    public interface IPlayerRelationDetermination {
+    public interface IPlayerRelationGraph {
         /// <summary>
         /// Return the directed relation between player 1 and player 2. That is, the relation that
         /// player 1 views player 2 as.
