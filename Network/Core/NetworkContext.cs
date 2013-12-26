@@ -40,7 +40,7 @@ namespace Neon.Network.Core {
         /// The local player.
         /// </summary>
         internal NetworkPlayer LocalPlayer;
-        internal NetworkPlayer[] _localPlayerEnumerable;
+        private NetworkPlayer[] _localPlayerEnumerable;
 
         private NetClient _client;
         private NetServer _server;

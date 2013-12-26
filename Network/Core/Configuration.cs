@@ -20,8 +20,20 @@
 using Lidgren.Network;
 
 namespace Neon.Network.Core {
+    /// <summary>
+    /// This class contains Lidgren.Network configuration settings that are used when creating
+    /// NetPeer (typically either a NetServer or a NetClient type) instances.
+    /// </summary>
     internal static class Configuration {
+        /// <summary>
+        /// The port that is used when hosting.
+        /// </summary>
         public const int Port = 6009;
+
+        /// <summary>
+        /// Global application name that is used to distinguish Neon.
+        /// </summary>
+        public const string AppName = "Neon.Network";
 
         public static NetPeerConfiguration GetConfiguration(bool server) {
             NetPeerConfiguration config = new NetPeerConfiguration("Neon.Networking");
