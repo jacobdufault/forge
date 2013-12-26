@@ -72,77 +72,18 @@ namespace Neon.Network.Core {
         private NetworkMessageDispatcher _dispatcher;
 
         /// <summary>
-        /// Returns true if this NetworkConext is acting as a server.
+        /// Private constructor for NetworkContext; NetworkContexts can only be created using the
+        /// static helper methods.
         /// </summary>
-        public bool IsServer {
-            get {
-                return _server != null;
-            }
-        }
+        /// <param name="localPlayer">The local player</param>
+        private NetworkContext(NetworkPlayer localPlayer) {
+            _dispatcher = new NetworkMessageDispatcher();
+            LocalPlayer = localPlayer;
+            _localPlayerEnumerable = new[] { localPlayer };
 
-        /// <summary>
-        /// Returns true if this NetworkContext is acting as a client.
-        /// </summary>
-        public bool IsClient {
-            get {
-                return _client != null;
-            }
-        }
+            _connectionMonitors = new List<INetworkConnectionMonitor>();
 
-        /// <summary>
-        /// The local player.
-        /// </summary>
-        public NetworkPlayer LocalPlayer;
-
-        /// <summary>
-        /// Returns true if the given NetworkPlayer is the server.
-        /// </summary>
-        /// <param name="player">The player to check.</param>
-        /// <returns>True if the player is the server, otherwise false.</returns>
-        public bool IsPlayerServer(NetworkPlayer player) {
-            if (IsServer) {
-                return player == (NetworkPlayer)_server.Tag;
-            }
-
-            if (IsClient) {
-                return player == (NetworkPlayer)_client.ServerConnection.Tag;
-            }
-
-            throw new InvalidOperationException("Bad internal state; not a server or client");
-        }
-
-        /// <summary>
-        /// Kicks the given player. This function is only operable if the context is a server
-        /// (otherwise an exception is thrown).
-        /// </summary>
-        /// <param name="player">The player to kick.</param>
-        public void Kick(NetworkPlayer player) {
-            if (IsServer == false) {
-                throw new InvalidOperationException("Only servers can kick players");
-            }
-
-            if (player == LocalPlayer) {
-                throw new InvalidOperationException("Cannot kick the local player");
-            }
-
-            GetConnection(player).Disconnect("Kicked by host");
-        }
-
-        /// <summary>
-        /// Helper method to lookup the network connection based on the given network player.
-        /// </summary>
-        internal NetConnection GetConnection(NetworkPlayer player) {
-            NetPeer peer = Peer;
-
-            for (int i = 0; i < peer.ConnectionsCount; ++i) {
-                NetConnection connection = peer.Connections[i];
-
-                if (player == (NetworkPlayer)connection.Tag) {
-                    return connection;
-                }
-            }
-
-            throw new InvalidOperationException("No connection for player " + player);
+            Log<NetworkContext>.Info("Created network context with LocalPlayer=" + localPlayer);
         }
 
         /// <summary>
@@ -164,24 +105,6 @@ namespace Neon.Network.Core {
         }
 
         /// <summary>
-        /// Hail message format used when connecting to a server.
-        /// </summary>
-        [JsonObject(MemberSerialization.OptIn)]
-        private class HailMessage {
-            /// <summary>
-            /// The player connecting.
-            /// </summary>
-            [JsonProperty]
-            public NetworkPlayer Player;
-
-            /// <summary>
-            /// The password to use when connecting.
-            /// </summary>
-            [JsonProperty]
-            public string Password;
-        }
-
-        /// <summary>
         /// Creates a new client connection connected to the given IP end point. This method blocks
         /// until we know if the client has either connected or disconnected.
         /// </summary>
@@ -196,7 +119,7 @@ namespace Neon.Network.Core {
             // Write out our hail message
             {
                 NetOutgoingMessage hailMsg = client.CreateMessage();
-                HailMessage hail = new HailMessage() {
+                HailMessageFormat hail = new HailMessageFormat() {
                     Player = player,
                     Password = password
                 };
@@ -248,18 +171,63 @@ namespace Neon.Network.Core {
         }
 
         /// <summary>
-        /// Private constructor for NetworkContext; NetworkContexts can only be created using the
-        /// static helper methods.
+        /// Returns true if this NetworkConext is acting as a server.
         /// </summary>
-        /// <param name="localPlayer">The local player</param>
-        private NetworkContext(NetworkPlayer localPlayer) {
-            _dispatcher = new NetworkMessageDispatcher();
-            LocalPlayer = localPlayer;
-            _localPlayerEnumerable = new[] { localPlayer };
+        public bool IsServer {
+            get {
+                return _server != null;
+            }
+        }
 
-            _connectionMonitors = new List<INetworkConnectionMonitor>();
+        /// <summary>
+        /// Returns true if this NetworkContext is acting as a client.
+        /// </summary>
+        public bool IsClient {
+            get {
+                return _client != null;
+            }
+        }
 
-            Log<NetworkContext>.Info("Created network context with LocalPlayer=" + localPlayer);
+        /// <summary>
+        /// The local player.
+        /// </summary>
+        public NetworkPlayer LocalPlayer {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Returns true if the given NetworkPlayer is the server.
+        /// </summary>
+        /// <param name="player">The player to check.</param>
+        /// <returns>True if the player is the server, otherwise false.</returns>
+        public bool IsPlayerServer(NetworkPlayer player) {
+            if (IsServer) {
+                return player == (NetworkPlayer)_server.Tag;
+            }
+
+            if (IsClient) {
+                return player == (NetworkPlayer)_client.ServerConnection.Tag;
+            }
+
+            throw new InvalidOperationException("Bad internal state; not a server or client");
+        }
+
+        /// <summary>
+        /// Kicks the given player. This function is only operable if the context is a server
+        /// (otherwise an exception is thrown).
+        /// </summary>
+        /// <param name="player">The player to kick.</param>
+        public void Kick(NetworkPlayer player) {
+            if (IsServer == false) {
+                throw new InvalidOperationException("Only servers can kick players");
+            }
+
+            if (player == LocalPlayer) {
+                throw new InvalidOperationException("Cannot kick the local player");
+            }
+
+            GetConnection(player).Disconnect("Kicked by host");
         }
 
         /// <summary>
@@ -337,7 +305,7 @@ namespace Neon.Network.Core {
                         break;
 
                     case NetIncomingMessageType.ConnectionApproval:
-                        HailMessage hail = SerializationHelpers.Deserialize<HailMessage>(msg.ReadString());
+                        var hail = SerializationHelpers.Deserialize<HailMessageFormat>(msg.ReadString());
 
                         // bad password; deny the connection
                         if (hail.Password != _serverPassword) {
@@ -374,21 +342,6 @@ namespace Neon.Network.Core {
                 }
                 peer.Recycle(msg);
             }
-        }
-
-        /// <summary>
-        /// Message format for NetIncomingMessageType.Data
-        /// </summary>
-        [JsonObject(MemberSerialization.OptIn)]
-        private struct NetworkMessageFormat {
-            [JsonProperty]
-            public bool IfServerRebroadcast;
-
-            [JsonProperty]
-            public NetworkPlayer Sender;
-
-            [JsonProperty]
-            public INetworkMessage NetworkMessage;
         }
 
         /// <summary>
@@ -477,6 +430,56 @@ namespace Neon.Network.Core {
             NetOutgoingMessage msg = peer.CreateMessage();
             msg.Write(serialized);
             return msg;
+        }
+
+        /// <summary>
+        /// Helper method to lookup the network connection based on the given network player.
+        /// </summary>
+        private NetConnection GetConnection(NetworkPlayer player) {
+            NetPeer peer = Peer;
+
+            for (int i = 0; i < peer.ConnectionsCount; ++i) {
+                NetConnection connection = peer.Connections[i];
+
+                if (player == (NetworkPlayer)connection.Tag) {
+                    return connection;
+                }
+            }
+
+            throw new InvalidOperationException("No connection for player " + player);
+        }
+
+        /// <summary>
+        /// Message format for NetIncomingMessageType.Data
+        /// </summary>
+        [JsonObject(MemberSerialization.OptIn)]
+        private struct NetworkMessageFormat {
+            [JsonProperty]
+            public bool IfServerRebroadcast;
+
+            [JsonProperty]
+            public NetworkPlayer Sender;
+
+            [JsonProperty]
+            public INetworkMessage NetworkMessage;
+        }
+
+        /// <summary>
+        /// Hail message format used when connecting to a server.
+        /// </summary>
+        [JsonObject(MemberSerialization.OptIn)]
+        private class HailMessageFormat {
+            /// <summary>
+            /// The player connecting.
+            /// </summary>
+            [JsonProperty]
+            public NetworkPlayer Player;
+
+            /// <summary>
+            /// The password to use when connecting.
+            /// </summary>
+            [JsonProperty]
+            public string Password;
         }
     }
 }
