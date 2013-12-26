@@ -51,11 +51,11 @@ namespace Neon.Network.Lobby {
             : base(context) {
             _mapHandler = new MapDownloadServerMessageHandler(context, mapManager, map);
             _context.AddConnectionMonitor(_mapHandler);
-            _context.Dispatcher.AddHandler(_mapHandler);
+            _context.AddMessageHandler(_mapHandler);
 
             _readinessHandler = new LobbyHostPlayerReadinessMessageHandler(context);
             _context.AddConnectionMonitor(_readinessHandler);
-            _context.Dispatcher.AddHandler(_readinessHandler);
+            _context.AddMessageHandler(_readinessHandler);
         }
 
         public override void Dispose() {
@@ -63,17 +63,21 @@ namespace Neon.Network.Lobby {
 
             if (_mapHandler != null) {
                 _context.RemoveConnectionMonitor(_mapHandler);
-                _context.Dispatcher.RemoveHandler(_mapHandler);
+                _context.RemoveMessageHandler(_mapHandler);
                 _mapHandler = null;
             }
 
             if (_readinessHandler != null) {
                 _context.RemoveConnectionMonitor(_readinessHandler);
-                _context.Dispatcher.RemoveHandler(_readinessHandler);
+                _context.RemoveMessageHandler(_readinessHandler);
                 _readinessHandler = null;
             }
         }
 
+        /// <summary>
+        /// Try to launch the lobby. All players have to be ready in order to launch.
+        /// </summary>
+        /// <returns></returns>
         public bool TryLaunch() {
             // We already launched; just return true
             if (_readinessHandler == null) {

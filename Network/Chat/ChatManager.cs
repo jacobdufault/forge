@@ -46,7 +46,7 @@ namespace Neon.Network.Chat {
         public ChatManager(NetworkContext context, IPlayerRelationGraph relationGraph) {
             _context = context;
             _handler = new ChatMessageHandler(_context, relationGraph);
-            _context.Dispatcher.AddHandler(_handler);
+            _context.AddMessageHandler(_handler);
         }
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace Neon.Network.Chat {
         /// </summary>
         public void Dispose() {
             if (_handler != null) {
-                _context.Dispatcher.RemoveHandler(_handler);
+                _context.RemoveMessageHandler(_handler);
                 _handler = null;
             }
         }

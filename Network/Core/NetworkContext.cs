@@ -32,29 +32,44 @@ namespace Neon.Network.Core {
     /// </summary>
     public sealed class NetworkContext {
         /// <summary>
-        /// Networking dispatcher that is used for sending messages.
+        /// Enumerable container that merely contains LocalPlayer.
         /// </summary>
-        public NetworkMessageDispatcher Dispatcher;
+        private IEnumerable<NetworkPlayer> _localPlayerEnumerable;
 
         /// <summary>
-        /// The local player.
+        /// If the context is a client, then this is the Lidgren.Network client object.
         /// </summary>
-        internal NetworkPlayer LocalPlayer;
-        private NetworkPlayer[] _localPlayerEnumerable;
-
         private NetClient _client;
+
+        /// <summary>
+        /// If the context is a server, then this is the Lidgren.Network server object.
+        /// </summary>
         private NetServer _server;
-        private string _serverPassword;
-        private List<INetworkConnectionMonitor> _connectionMonitors;
 
         /// <summary>
         /// Returns the internal NetPeer instance that represents the core connection.
         /// </summary>
-        internal NetPeer Peer {
+        private NetPeer Peer {
             get {
                 return (NetPeer)_client ?? (NetPeer)_server;
             }
         }
+
+        /// <summary>
+        /// If we're a server, then this is the password for the server.
+        /// </summary>
+        private string _serverPassword;
+
+        /// <summary>
+        /// If we're a server, this is the list of objects which want to know when a client has
+        /// connected or disconnected.
+        /// </summary>
+        private List<INetworkConnectionMonitor> _connectionMonitors;
+
+        /// <summary>
+        /// Networking dispatcher that is used for sending messages.
+        /// </summary>
+        private NetworkMessageDispatcher _dispatcher;
 
         /// <summary>
         /// Returns true if this NetworkConext is acting as a server.
@@ -73,6 +88,11 @@ namespace Neon.Network.Core {
                 return _client != null;
             }
         }
+
+        /// <summary>
+        /// The local player.
+        /// </summary>
+        public NetworkPlayer LocalPlayer;
 
         /// <summary>
         /// Returns true if the given NetworkPlayer is the server.
@@ -233,13 +253,30 @@ namespace Neon.Network.Core {
         /// </summary>
         /// <param name="localPlayer">The local player</param>
         private NetworkContext(NetworkPlayer localPlayer) {
-            Dispatcher = new NetworkMessageDispatcher();
+            _dispatcher = new NetworkMessageDispatcher();
             LocalPlayer = localPlayer;
             _localPlayerEnumerable = new[] { localPlayer };
 
             _connectionMonitors = new List<INetworkConnectionMonitor>();
 
             Log<NetworkContext>.Info("Created network context with LocalPlayer=" + localPlayer);
+        }
+
+        /// <summary>
+        /// Adds the given message handler to the network context.
+        /// </summary>
+        /// <param name="handler">The network message handler to add.</param>
+        public void AddMessageHandler(INetworkMessageHandler handler) {
+            _dispatcher.AddHandler(handler);
+        }
+
+        /// <summary>
+        /// Removes the given message handler from the context. If the dispatcher was not previously
+        /// contained in the context, then an exception is thrown.
+        /// </summary>
+        /// <param name="handler">The network message handler to remove.</param>
+        public void RemoveMessageHandler(INetworkMessageHandler handler) {
+            _dispatcher.RemoveHandler(handler);
         }
 
         /// <summary>
@@ -267,7 +304,7 @@ namespace Neon.Network.Core {
         /// client or broadcast out received messages if we're a server.
         /// </summary>
         public void Update() {
-            NetPeer peer = (NetPeer)_client ?? (NetPeer)_server;
+            NetPeer peer = Peer;
 
             NetIncomingMessage msg;
             while ((msg = peer.ReadMessage()) != null) {
@@ -329,7 +366,7 @@ namespace Neon.Network.Core {
                             _server.SendToAll(outgoingMessage, NetDeliveryMethod.ReliableOrdered);
                         }
 
-                        Dispatcher.InvokeHandlers(message.Sender, message.NetworkMessage);
+                        _dispatcher.InvokeHandlers(message.Sender, message.NetworkMessage);
                         break;
 
                     default:
@@ -371,7 +408,7 @@ namespace Neon.Network.Core {
                         Log<NetworkContext>.Info("Sending message to all connections " + string.Join(", ", _server.Connections.Select(c => ((NetworkPlayer)c.Tag).Name).ToArray()));
 
                         _server.SendToAll(msg, NetDeliveryMethod.ReliableOrdered);
-                        Dispatcher.InvokeHandlers(LocalPlayer, message);
+                        _dispatcher.InvokeHandlers(LocalPlayer, message);
                     }
                     break;
 
@@ -381,7 +418,7 @@ namespace Neon.Network.Core {
                         }
 
                         var msg = CreateMessage(LocalPlayer, message, broadcast: false);
-                        NetPeer peer = (NetPeer)_client ?? (NetPeer)_server;
+                        NetPeer peer = Peer;
 
                         // only send the message if we have someone to send it to
                         if (peer.ConnectionsCount > 0) {
@@ -411,7 +448,7 @@ namespace Neon.Network.Core {
             // If we're sending the message to ourselves (strange, but fine), then just directly
             // invoke the handlers -- there is not going to be a network connection
             if (recipient == LocalPlayer) {
-                Dispatcher.InvokeHandlers(LocalPlayer, message);
+                _dispatcher.InvokeHandlers(LocalPlayer, message);
             }
 
             // Otherwise, lookup the network connection and send the message to that connection
@@ -436,7 +473,7 @@ namespace Neon.Network.Core {
                 NetworkMessage = message
             });
 
-            NetPeer peer = (NetPeer)_client ?? (NetPeer)_server;
+            NetPeer peer = Peer;
             NetOutgoingMessage msg = peer.CreateMessage();
             msg.Write(serialized);
             return msg;

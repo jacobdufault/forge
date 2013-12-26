@@ -33,7 +33,7 @@ namespace Neon.Network.Core {
     /// an INetworkMessage, it checks its NetworkMessageDispatcher to see if there are any handlers
     /// that need to be invoked.
     /// </remarks>
-    public sealed class NetworkMessageDispatcher {
+    internal sealed class NetworkMessageDispatcher {
         /// <summary>
         /// The message handlers; the key is the type of message, and the value is the list of
         /// handlers that can respond to that message type.
@@ -84,7 +84,7 @@ namespace Neon.Network.Core {
         /// <summary>
         /// Invoke all registered INetworkMessageHandlers for the given message and sender.
         /// </summary>
-        internal void InvokeHandlers(NetworkPlayer sender, INetworkMessage message) {
+        public void InvokeHandlers(NetworkPlayer sender, INetworkMessage message) {
             var handlers = GetHandlers(message.GetType());
 
             if (handlers.Count == 0) {

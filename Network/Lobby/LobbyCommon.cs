@@ -54,10 +54,10 @@ namespace Neon.Network.Lobby {
             _context = context;
 
             _lobbyLaunchedHandler = new LobbyLaunchedHandler();
-            _context.Dispatcher.AddHandler(_lobbyLaunchedHandler);
+            _context.AddMessageHandler(_lobbyLaunchedHandler);
 
             _playerManager = new PlayerManager(_context);
-            _context.Dispatcher.AddHandler(_playerManager);
+            _context.AddMessageHandler(_playerManager);
             if (_context.IsServer) {
                 _context.AddConnectionMonitor(_playerManager);
             }
@@ -86,12 +86,12 @@ namespace Neon.Network.Lobby {
         /// </summary>
         public virtual void Dispose() {
             if (_lobbyLaunchedHandler != null) {
-                _context.Dispatcher.RemoveHandler(_lobbyLaunchedHandler);
+                _context.RemoveMessageHandler(_lobbyLaunchedHandler);
                 _lobbyLaunchedHandler = null;
             }
 
             if (_playerManager != null) {
-                _context.Dispatcher.RemoveHandler(_playerManager);
+                _context.RemoveMessageHandler(_playerManager);
                 if (_context.IsServer) {
                     _context.RemoveConnectionMonitor(_playerManager);
                 }

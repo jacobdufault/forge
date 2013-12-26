@@ -32,14 +32,14 @@ namespace Neon.Network.Lobby {
         private LobbyMember(NetworkContext context, IMapManager mapManager)
             : base(context) {
             _mapHandler = new MapDownloadClientMessageHandler(context, mapManager);
-            context.Dispatcher.AddHandler(_mapHandler);
+            context.AddMessageHandler(_mapHandler);
         }
 
         public override void Dispose() {
             base.Dispose();
 
             if (_mapHandler != null) {
-                _context.Dispatcher.RemoveHandler(_mapHandler);
+                _context.RemoveMessageHandler(_mapHandler);
                 _mapHandler = null;
             }
         }
