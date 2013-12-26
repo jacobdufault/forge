@@ -23,19 +23,35 @@ using System.Collections.Generic;
 
 namespace Neon.Network.Chat {
     /// <summary>
-    /// Core API for sending chat messages. Subscribe to ChatNetworkMessage to receive chat
-    /// messages.
+    /// Contains the core APIS for sending and receiving chat messages.
     /// </summary>
-    public class ChatManager {
+    public sealed class ChatManager {
+        /// <summary>
+        /// The networking context to use for retrieving our local player and for adding our
+        /// ChatNetworkMessage handler.
+        /// </summary>
         private NetworkContext _context;
+
+        /// <summary>
+        /// The ChatMessageHandler we use to get chat messages from.
+        /// </summary>
         private ChatMessageHandler _handler;
 
+        /// <summary>
+        /// Construct a new ChatManager using the given networking context and the given object for
+        /// mapping network players to a directed player relation graph.
+        /// </summary>
+        /// <param name="context">The networking context.</param>
+        /// <param name="relations">The player relationship mapper.</param>
         public ChatManager(NetworkContext context, IPlayerRelationDetermination relations) {
             _context = context;
             _handler = new ChatMessageHandler(_context, relations);
             _context.Dispatcher.AddHandler(_handler);
         }
 
+        /// <summary>
+        /// Cleans up the ChatManager from the NetworkContext it was constructed with.
+        /// </summary>
         public void Dispose() {
             if (_handler != null) {
                 _context.Dispatcher.RemoveHandler(_handler);

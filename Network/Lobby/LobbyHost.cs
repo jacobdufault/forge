@@ -46,7 +46,6 @@ namespace Neon.Network.Lobby {
 
         private MapDownloadServerMessageHandler _mapHandler;
         private LobbyHostPlayerReadinessMessageHandler _readinessHandler;
-        private GameNetwork _gameNetwork;
 
         private LobbyHost(NetworkContext context, IMapManager mapManager, string map)
             : base(context) {
