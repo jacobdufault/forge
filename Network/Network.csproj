@@ -58,6 +58,7 @@
     <Compile Include="Chat\ReceivedChatMessage.cs" />
     <Compile Include="Core\Configuration.cs" />
     <Compile Include="Chat\ChatManager.cs" />
+    <Compile Include="Core\NetworkServerDiscovery.cs" />
     <Compile Include="Game\GameNetwork.cs" />
     <Compile Include="Core\INetworkConnectionMonitor.cs" />
     <Compile Include="Lobby\LobbyHost.cs" />

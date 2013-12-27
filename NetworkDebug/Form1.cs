@@ -25,7 +25,7 @@ namespace NetworkDebug {
         public Form1() {
             InitializeComponent();
 
-            TextLocalIP.Text = IPAddress.Loopback.ToString();
+            TextLocalIP.Text = "No server running";
 
             Hierarchy hiearchy = (Hierarchy)LogManager.GetRepository();
             hiearchy.Root.Level = Level.All;
@@ -83,6 +83,7 @@ namespace NetworkDebug {
             LobbyHost host = LobbyHost.CreateLobby(player, settings);
             _context = host.Context;
             TextConnectionInformation.Text = "Created lobby";
+            TextLocalIP.Text = string.Join(", ", _context.GetServerIPs().Select(ip => ip.ToString()).ToArray());
             Task.Factory.StartNew(() => {
                 while (true) {
                     host.Update();
@@ -114,6 +115,20 @@ namespace NetworkDebug {
 
         private void ButtonSendServer_Click(object sender, EventArgs e) {
             _context.SendMessage(NetworkMessageRecipient.Server, new DummyMessage());
+        }
+
+        private void ButtonDiscoveryRun_Click(object sender, EventArgs e) {
+            NetworkServerDiscovery.DiscoverServers();
+        }
+
+        private void ButtonDiscoveryClear_Click(object sender, EventArgs e) {
+            NetworkServerDiscovery.ClearDiscoveredServers();
+        }
+
+        private void ButtonUpdateDiscoveryList_Click(object sender, EventArgs e) {
+            NetworkServerDiscovery.Update();
+            LabelLocalServers.Text = string.Join(", ",
+                NetworkServerDiscovery.DiscoveredLocalServers.Select(s => s.ToString()).ToArray());
         }
     }
 

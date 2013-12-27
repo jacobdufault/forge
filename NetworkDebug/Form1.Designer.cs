@@ -33,6 +33,10 @@
             this.ButtonStartServer = new System.Windows.Forms.Button();
             this.ButtonConnect = new System.Windows.Forms.Button();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.ButtonDiscoveryClear = new System.Windows.Forms.Button();
+            this.ButtonDiscoveryRun = new System.Windows.Forms.Button();
+            this.LabelLocalServers = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
             this.TextLocalIP = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.TextConnectionInformation = new System.Windows.Forms.Label();
@@ -41,6 +45,7 @@
             this.ButtonSendClients = new System.Windows.Forms.Button();
             this.ButtonSendServer = new System.Windows.Forms.Button();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.ButtonUpdateDiscoveryList = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -135,6 +140,11 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.ButtonUpdateDiscoveryList);
+            this.groupBox2.Controls.Add(this.ButtonDiscoveryClear);
+            this.groupBox2.Controls.Add(this.ButtonDiscoveryRun);
+            this.groupBox2.Controls.Add(this.LabelLocalServers);
+            this.groupBox2.Controls.Add(this.label5);
             this.groupBox2.Controls.Add(this.TextLocalIP);
             this.groupBox2.Controls.Add(this.label1);
             this.groupBox2.Controls.Add(this.TextConnectionInformation);
@@ -144,6 +154,43 @@
             this.groupBox2.TabIndex = 2;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Information";
+            // 
+            // ButtonDiscoveryClear
+            // 
+            this.ButtonDiscoveryClear.Location = new System.Drawing.Point(132, 82);
+            this.ButtonDiscoveryClear.Name = "ButtonDiscoveryClear";
+            this.ButtonDiscoveryClear.Size = new System.Drawing.Size(100, 23);
+            this.ButtonDiscoveryClear.TabIndex = 10;
+            this.ButtonDiscoveryClear.Text = "Clear Servers";
+            this.ButtonDiscoveryClear.UseVisualStyleBackColor = true;
+            this.ButtonDiscoveryClear.Click += new System.EventHandler(this.ButtonDiscoveryClear_Click);
+            // 
+            // ButtonDiscoveryRun
+            // 
+            this.ButtonDiscoveryRun.Location = new System.Drawing.Point(10, 82);
+            this.ButtonDiscoveryRun.Name = "ButtonDiscoveryRun";
+            this.ButtonDiscoveryRun.Size = new System.Drawing.Size(116, 23);
+            this.ButtonDiscoveryRun.TabIndex = 9;
+            this.ButtonDiscoveryRun.Text = "Discover Servers";
+            this.ButtonDiscoveryRun.UseVisualStyleBackColor = true;
+            this.ButtonDiscoveryRun.Click += new System.EventHandler(this.ButtonDiscoveryRun_Click);
+            // 
+            // LabelLocalServers
+            // 
+            this.LabelLocalServers.AutoSize = true;
+            this.LabelLocalServers.Location = new System.Drawing.Point(92, 66);
+            this.LabelLocalServers.Name = "LabelLocalServers";
+            this.LabelLocalServers.Size = new System.Drawing.Size(0, 13);
+            this.LabelLocalServers.TabIndex = 4;
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(13, 66);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(72, 13);
+            this.label5.TabIndex = 3;
+            this.label5.Text = "Local Servers";
             // 
             // TextLocalIP
             // 
@@ -158,9 +205,9 @@
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(10, 123);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(46, 13);
+            this.label1.Size = new System.Drawing.Size(51, 13);
             this.label1.TabIndex = 1;
-            this.label1.Text = "Local IP";
+            this.label1.Text = "Server IP";
             // 
             // TextConnectionInformation
             // 
@@ -221,6 +268,16 @@
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Send a message";
             // 
+            // ButtonUpdateDiscoveryList
+            // 
+            this.ButtonUpdateDiscoveryList.Location = new System.Drawing.Point(239, 82);
+            this.ButtonUpdateDiscoveryList.Name = "ButtonUpdateDiscoveryList";
+            this.ButtonUpdateDiscoveryList.Size = new System.Drawing.Size(119, 23);
+            this.ButtonUpdateDiscoveryList.TabIndex = 11;
+            this.ButtonUpdateDiscoveryList.Text = "(Update Server List)";
+            this.ButtonUpdateDiscoveryList.UseVisualStyleBackColor = true;
+            this.ButtonUpdateDiscoveryList.Click += new System.EventHandler(this.ButtonUpdateDiscoveryList_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -261,6 +318,11 @@
         private System.Windows.Forms.Button ButtonSendClients;
         private System.Windows.Forms.Button ButtonSendServer;
         private System.Windows.Forms.GroupBox groupBox3;
+        private System.Windows.Forms.Label LabelLocalServers;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Button ButtonDiscoveryClear;
+        private System.Windows.Forms.Button ButtonDiscoveryRun;
+        private System.Windows.Forms.Button ButtonUpdateDiscoveryList;
     }
 }
 

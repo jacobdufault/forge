@@ -23,6 +23,8 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading;
 
 namespace Neon.Network.Core {
@@ -44,7 +46,23 @@ namespace Neon.Network.Core {
         /// <summary>
         /// If the context is a server, then this is the Lidgren.Network server object.
         /// </summary>
-        private NetServer _server;
+        private NetServer _server {
+            get {
+                return __server;
+            }
+            set {
+                if (__server != null && value == null) {
+                    __server.UPnP.DeleteForwardingRule(Configuration.Port);
+                }
+
+                if (__server == null && value != null) {
+                    value.UPnP.ForwardPort(Configuration.Port, "Neon.Network Port Forward");
+                }
+
+                __server = value;
+            }
+        }
+        private NetServer __server;
 
         /// <summary>
         /// Returns the internal NetPeer instance that represents the core connection.
@@ -86,6 +104,10 @@ namespace Neon.Network.Core {
             Log<NetworkContext>.Info("Created network context with LocalPlayer=" + localPlayer);
         }
 
+        ~NetworkContext() {
+            _server = null;
+        }
+
         /// <summary>
         /// Creates a new server.
         /// </summary>
@@ -96,12 +118,41 @@ namespace Neon.Network.Core {
             NetworkContext context = new NetworkContext(player);
 
             context._serverPassword = password;
-            context._server = new NetServer(Configuration.GetConfiguration(server: true));
-            context._server.Start();
+
+            // we create and start the server before assigning it to the context because assigning
+            // it to the context enables UPnP, which is not available before the server has started
+            NetServer server = new NetServer(Configuration.GetConfiguration(server: true));
+            server.Start();
+            context._server = server;
 
             Log<NetworkContext>.Info("Created server network context");
 
             return context;
+        }
+
+        /// <summary>
+        /// Tries to fetch all possible IPs that might be possible for clients to connect to the
+        /// server with. This operation throws an exception if the context is not a server.
+        /// </summary>
+        public IEnumerable<IPAddress> GetServerIPs() {
+            if (IsServer == false) {
+                throw new InvalidOperationException("Only servers can get connection IPs");
+            }
+
+            // Try to get the address from UPnP; this might fail if the router doesn't support UPnP
+            IPAddress external = _server.UPnP.GetExternalIP();
+            if (external != null) {
+                yield return external;
+            }
+
+            // Get all IP address that the DNS service reports
+            IPAddress[] ipAddresses = Dns.GetHostAddresses(Dns.GetHostName());
+            foreach (var address in ipAddresses) {
+                // Only return IPv4 addresses
+                if (address.AddressFamily == AddressFamily.InterNetwork) {
+                    yield return address;
+                }
+            }
         }
 
         /// <summary>
@@ -303,6 +354,17 @@ namespace Neon.Network.Core {
                                 break;
                         }
                         break;
+
+                    case NetIncomingMessageType.DiscoveryRequest: {
+                            ServerDiscoveryFormat response = new ServerDiscoveryFormat() {
+                                Host = LocalPlayer,
+                                Title = "NYI"
+                            };
+                            NetOutgoingMessage outgoing = _server.CreateMessage();
+                            outgoing.Write(SerializationHelpers.Serialize(response));
+                            _server.SendDiscoveryResponse(outgoing, msg.SenderEndPoint);
+                            break;
+                        }
 
                     case NetIncomingMessageType.ConnectionApproval:
                         var hail = SerializationHelpers.Deserialize<HailMessageFormat>(msg.ReadString());

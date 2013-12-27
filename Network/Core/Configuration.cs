@@ -40,7 +40,12 @@ namespace Neon.Network.Core {
 
             if (server) {
                 config.Port = Port;
+                config.EnableUPnP = true;
                 config.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
+                config.EnableMessageType(NetIncomingMessageType.DiscoveryRequest);
+            }
+            else {
+                config.EnableMessageType(NetIncomingMessageType.DiscoveryResponse);
             }
 
             return config;
