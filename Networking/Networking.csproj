@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{565BB8E0-6223-4BD2-8E2B-39E18939A69F}</ProjectGuid>
+    <ProjectGuid>{1E1D1B4B-1E31-45D0-A53C-597EFF87725A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Neon.AllLibraries</RootNamespace>
-    <AssemblyName>Neon.AllLibraries</AssemblyName>
+    <RootNamespace>Neon.Networking</RootNamespace>
+    <AssemblyName>Neon.Networking</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -24,47 +24,65 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\Build\</OutputPath>
+    <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Release\Neon.Networking.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Lidgren.Network">
+      <HintPath>..\Lidgren.Network.dll</HintPath>
+    </Reference>
     <Reference Include="log4net">
       <HintPath>..\log4net.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Threading">
+      <HintPath>..\System.Threading.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Chat\ChatMessageHandler.cs" />
+    <Compile Include="Chat\ChatNetworkMessage.cs" />
+    <Compile Include="Chat\IPlayerRelationGraph.cs" />
+    <Compile Include="Chat\PlayerRelation.cs" />
+    <Compile Include="Chat\ReceivedChatMessage.cs" />
+    <Compile Include="Core\Configuration.cs" />
+    <Compile Include="Chat\ChatManager.cs" />
+    <Compile Include="Core\NetworkServerDiscovery.cs" />
+    <Compile Include="Game\GameNetwork.cs" />
+    <Compile Include="Core\INetworkConnectionMonitor.cs" />
+    <Compile Include="Lobby\LobbyHost.cs" />
+    <Compile Include="Lobby\LobbyHostPlayerReadinessMessageHandler.cs" />
+    <Compile Include="Lobby\LobbyLaunchedHandler.cs" />
+    <Compile Include="Lobby\LobbyMapHandling.cs" />
+    <Compile Include="Lobby\LobbyMember.cs" />
+    <Compile Include="Lobby\LobbyPlayerDispatch.cs" />
+    <Compile Include="Core\NetworkMessageRecipient.cs" />
+    <Compile Include="Core\NetworkPlayer.cs" />
+    <Compile Include="Core\INetworkMessage.cs" />
+    <Compile Include="Core\INetworkMessageHandler.cs" />
+    <Compile Include="Lobby\LobbyCommon.cs" />
+    <Compile Include="Core\NetworkContext.cs" />
+    <Compile Include="Core\NetworkMessageDispatcher.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Collections\Collections.csproj">
-      <Project>{9d91d020-4291-4926-b76d-b73d138b0aef}</Project>
-      <Name>Collections</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Entities\Entities.csproj">
-      <Project>{f3d00c86-f3dc-490e-8a49-744c30c01117}</Project>
-      <Name>Entities</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Extensions\Extensions.csproj">
-      <Project>{34ca6106-4ebf-4f76-8d2d-1ea285c9554f}</Project>
-      <Name>Extensions</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Networking\Networking.csproj">
-      <Project>{1e1d1b4b-1e31-45d0-a53c-597eff87725a}</Project>
-      <Name>Networking</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Utilities\Utilities.csproj">
       <Project>{25db9f16-ecae-4a3f-b3c3-5794b8288587}</Project>
       <Name>Utilities</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
