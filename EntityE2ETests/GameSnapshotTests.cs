@@ -49,8 +49,15 @@ namespace Forge.Entities.E2ETests {
 
             engine.DispatchEvents();
 
-            Assert.AreEqual(database.AddedEntities.Count() + database.ActiveEntities.Count() +
+            Assert.AreEqual(1 + database.AddedEntities.Count() + database.ActiveEntities.Count() +
                 database.RemovedEntities.Count(), notifiedCount);
+
+            engine.SynchronizeState().WaitOne();
+            engine.Update();
+
+            notifiedCount = 0;
+            engine.DispatchEvents();
+            Assert.AreEqual(0, notifiedCount);
         }
 
         [TestMethod]

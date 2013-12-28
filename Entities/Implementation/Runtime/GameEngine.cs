@@ -38,8 +38,8 @@ namespace Forge.Entities.Implementation.Runtime {
     /// </summary>
     internal class GameEngine : MultithreadedSystemSharedContext, IGameEngine {
         private enum GameEngineNextState {
-            ExpectingSync,
-            ExpectingUpdate
+            SynchronizeState,
+            Update
         }
         private GameEngineNextState _nextState;
 
@@ -167,6 +167,9 @@ namespace Forge.Entities.Implementation.Runtime {
 
             SingletonEntity = (RuntimeEntity)snapshot.SingletonEntity;
 
+            Log<GameEngine>.Info("Submitting singleton entity EntityAddedEvent");
+            EventNotifier.Submit(EntityAddedEvent.Create(SingletonEntity));
+
             foreach (var entity in snapshot.AddedEntities) {
                 AddEntity((RuntimeEntity)entity);
             }
@@ -213,7 +216,7 @@ namespace Forge.Entities.Implementation.Runtime {
                 AddSystem(system);
             }
 
-            _nextState = GameEngineNextState.ExpectingSync;
+            _nextState = GameEngineNextState.SynchronizeState;
         }
 
         /// <summary>
@@ -248,6 +251,10 @@ namespace Forge.Entities.Implementation.Runtime {
         /// <param name="toAdd">The entity to add.</param>
         private void InternalAddEntity(RuntimeEntity toAdd) {
             toAdd.GameEngine = this;
+
+            // notify listeners that we both added and created the entity
+            Log<GameEngine>.Info("Submitting internal EntityAddedEvent for " + toAdd);
+            EventNotifier.Submit(EntityAddedEvent.Create(toAdd));
             EventNotifier.Submit(ShowEntityEvent.Create(toAdd));
 
             // register listeners
@@ -262,9 +269,6 @@ namespace Forge.Entities.Implementation.Runtime {
 
             // add it our list of entities
             _entities.Add(toAdd, GetEntitiesListFromMetadata(toAdd));
-
-            // notify listeners that we added an entity
-            ((EventNotifier)EventNotifier).Submit(EntityAddedEvent.Create(toAdd));
         }
 
         private void SinglethreadFrameEnd() {
@@ -426,7 +430,7 @@ namespace Forge.Entities.Implementation.Runtime {
         private ManualResetEvent _updateWaitHandle = new ManualResetEvent(false);
 
         public WaitHandle Update(IEnumerable<IGameInput> input) {
-            if (_nextState != GameEngineNextState.ExpectingUpdate) {
+            if (_nextState != GameEngineNextState.Update) {
                 throw new InvalidOperationException("Invalid call to Update; was expecting " + _nextState);
             }
 
@@ -437,7 +441,7 @@ namespace Forge.Entities.Implementation.Runtime {
 
             Task updateTask = Task.Factory.StartNew(RunUpdateWorld, input);
             updateTask.ContinueWith(t => {
-                _nextState = GameEngineNextState.ExpectingSync;
+                _nextState = GameEngineNextState.SynchronizeState;
                 _synchronizeStateWaitHandle.Reset();
                 _updateWaitHandle.Set();
             });
@@ -447,7 +451,7 @@ namespace Forge.Entities.Implementation.Runtime {
 
         private ManualResetEvent _synchronizeStateWaitHandle = new ManualResetEvent(false);
         public WaitHandle SynchronizeState() {
-            if (_nextState != GameEngineNextState.ExpectingSync) {
+            if (_nextState != GameEngineNextState.SynchronizeState) {
                 throw new InvalidOperationException("Invalid call to SynchronizeState; was expecting " + _nextState);
             }
 
@@ -458,7 +462,7 @@ namespace Forge.Entities.Implementation.Runtime {
 
             Task.Factory.StartNew(() => {
                 UpdateEntitiesWithStateChanges();
-                _nextState = GameEngineNextState.ExpectingUpdate;
+                _nextState = GameEngineNextState.Update;
                 _updateWaitHandle.Reset();
                 _synchronizeStateWaitHandle.Set();
             });

@@ -45,18 +45,6 @@ namespace Forge.Entities.Implementation.Shared {
         private List<IEvent> _dispatchingEvents = new List<IEvent>();
 
         /// <summary>
-        /// Called when an event has been dispatched to this event processor.
-        /// </summary>
-        internal Notifier<EventNotifier> EventAddedNotifier;
-
-        /// <summary>
-        /// Initializes a new instance of the EventProcessor class.
-        /// </summary>
-        internal EventNotifier() {
-            EventAddedNotifier = new Notifier<EventNotifier>(this);
-        }
-
-        /// <summary>
         /// Call event handlers for the given event.
         /// </summary>
         /// <param name="eventInstance">The event instance to invoke the handlers for</param>
@@ -77,11 +65,14 @@ namespace Forge.Entities.Implementation.Shared {
         /// being dispatched.
         /// </remarks>
         internal void DispatchEvents() {
+            if (_dispatchingEvents.Count > 0) {
+                throw new InvalidOperationException("Dispatch events can only have one caller at a time");
+            }
+
             // swap _events and _dispatchingEvents
             lock (this) {
                 Utils.Swap(ref _events, ref _dispatchingEvents);
             }
-            EventAddedNotifier.Reset();
 
             // dispatch all events in _dispatchingEvents
             for (int i = 0; i < _dispatchingEvents.Count; ++i) {
@@ -98,12 +89,12 @@ namespace Forge.Entities.Implementation.Shared {
         /// Dispatch an event. Event listeners will be notified of the event at a later point in
         /// time.
         /// </summary>
-        /// <param name="eventInstance">The event instance to dispatch</param>
+        /// <param name="evnt">The event instance to dispatch</param>
         public void Submit<TEvent>(TEvent evnt) where TEvent : BaseEvent<TEvent> {
+            Log<EventNotifier>.Info("Submitting event " + evnt);
             lock (this) {
                 _events.Add(evnt);
             }
-            EventAddedNotifier.Notify();
         }
 
         /// <summary>

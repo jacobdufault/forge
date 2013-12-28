@@ -64,6 +64,7 @@
   <ItemGroup>
     <Compile Include="DataAccessorTests.cs" />
     <Compile Include="EntityTests.cs" />
+    <Compile Include="EventNotifierTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

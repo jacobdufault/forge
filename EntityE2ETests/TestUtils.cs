@@ -5,32 +5,61 @@ using System.Linq;
 using System.Text;
 
 namespace Forge.Entities.E2ETests {
+    internal class TestTemplateGroup {
+        public ITemplateGroup TemplateGroup = LevelManager.CreateTemplateGroup();
+        public TestTemplate NewTemplate {
+            get {
+                return new TestTemplate(TemplateGroup.CreateTemplate());
+            }
+        }
+    }
+
+    internal class TestTemplate {
+        public ITemplate Template;
+
+        public TestTemplate(ITemplate template) {
+            Template = template;
+        }
+
+        public TestTemplate AddData<TData>(TData data) where TData : IData {
+            Template.AddDefaultData(data);
+            return this;
+        }
+    }
+
     internal static class TestUtils {
+        public static DataReference<TData> CreateDataReference<TData>(IQueryableEntity entity)
+            where TData : IData {
+            var dataReference = new DataReference<TData>();
+            ((IDataReference)dataReference).Provider = entity;
+            return dataReference;
+        }
+
+        /// <summary>
+        /// Creates the default templates.
+        /// </summary>
+        /// <returns></returns>
         public static ITemplateGroup CreateDefaultTemplates() {
-            ITemplateGroup templates = LevelManager.CreateTemplateGroup();
+            TestTemplateGroup group = new TestTemplateGroup();
 
-            ITemplate template0 = templates.CreateTemplate();
-            template0.AddDefaultData(new TestData0());
+            ITemplate template0 = group.NewTemplate
+                .AddData(new TestData0())
+                .Template;
 
-            ITemplate template1 = templates.CreateTemplate();
-            template1.AddDefaultData(new TestData1() {
-                A = 90
-            });
+            group.NewTemplate
+                .AddData(new TestData0())
+                .AddData(new TestData1() { A = 90 });
 
-            ITemplate template2 = templates.CreateTemplate();
-            template2.AddDefaultData(new TestData0());
-            template2.AddDefaultData(new TestData1() {
-                A = 100
-            });
+            group.NewTemplate
+                .AddData(new TestData0())
+                .AddData(new TestData1() { A = 100 });
 
-            ITemplate template3 = templates.CreateTemplate();
-            TestData3 data = new TestData3() {
-                DataReference = new DataReference<TestData0>()
-            };
-            ((IDataReference)data.DataReference).Provider = template0;
-            template3.AddDefaultData(data);
+            group.NewTemplate
+                .AddData(new TestData3() {
+                    DataReference = CreateDataReference<TestData0>(template0)
+                });
 
-            return templates;
+            return group.TemplateGroup;
         }
 
         public static IGameSnapshot CreateDefaultDatabase(ITemplateGroup templates) {
