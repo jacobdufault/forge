@@ -51,6 +51,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AutomaticTurnGame\AutomaticTurnGame.cs" />
+    <Compile Include="AutomaticTurnGame\Handlers.cs" />
+    <Compile Include="AutomaticTurnGame\NetworkMessages.cs" />
+    <Compile Include="AutomaticTurnGame\IGameCommand.cs" />
     <Compile Include="Chat\ChatMessageHandler.cs" />
     <Compile Include="Chat\ChatNetworkMessage.cs" />
     <Compile Include="Chat\IPlayerRelationGraph.cs" />
@@ -74,6 +78,9 @@
     <Compile Include="Lobby\LobbyCommon.cs" />
     <Compile Include="Core\NetworkContext.cs" />
     <Compile Include="Core\NetworkMessageDispatcher.cs" />
+    <Compile Include="Pausing\PauseManager.cs" />
+    <Compile Include="Pausing\PauseMessageHandler.cs" />
+    <Compile Include="Pausing\PauseNetworkMessage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
