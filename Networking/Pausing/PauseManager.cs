@@ -35,11 +35,19 @@ namespace Neon.Networking.Pausing {
         /// </summary>
         private PauseMessageHandler _handler;
 
+        /// <summary>
+        /// Create a new PauseManager instance.
+        /// </summary>
+        /// <param name="context">The networking context to use.</param>
         public PauseManager(NetworkContext context) {
+            _context = context;
             _handler = new PauseMessageHandler();
             _context.AddMessageHandler(_handler);
         }
 
+        /// <summary>
+        /// Cleans up resources that the PauseManager uses in the NetworkContext.
+        /// </summary>
         public void Dispose() {
             if (_handler != null) {
                 _context.RemoveMessageHandler(_handler);
