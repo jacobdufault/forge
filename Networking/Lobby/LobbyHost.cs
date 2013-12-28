@@ -18,7 +18,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using Neon.Networking.Core;
-using Neon.Networking.Game;
 using System.Collections.Generic;
 
 namespace Neon.Networking.Lobby {
@@ -77,10 +76,14 @@ namespace Neon.Networking.Lobby {
         /// <summary>
         /// Try to launch the lobby. All players have to be ready in order to launch.
         /// </summary>
-        /// <returns></returns>
+        /// <remarks>
+        /// You can also use HasLaunched to determine if the lobby has started. However, HasLaunched
+        /// will not actually start the game and will only return the lobby launch status.
+        /// </remarks>
+        /// <returns>True if the launch attempt was successful, false otherwise.</returns>
         public bool TryLaunch() {
             // We already launched; just return true
-            if (_readinessHandler == null) {
+            if (_readinessHandler == null || HasLaunched) {
                 return true;
             }
 

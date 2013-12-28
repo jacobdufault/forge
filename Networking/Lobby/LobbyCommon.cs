@@ -18,7 +18,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using Neon.Networking.Core;
-using Neon.Networking.Game;
 using Neon.Utilities;
 using System.Collections.Generic;
 
@@ -37,11 +36,6 @@ namespace Neon.Networking.Lobby {
                 return _context;
             }
         }
-
-        /// <summary>
-        /// If we have launched a game, then _gameNetwork will contain the game networking instance.
-        /// </summary>
-        private GameNetwork _gameNetwork;
 
         /// <summary>
         /// Message handler used to determine if we've received a LobbyLaunchedNetworkMessage.
@@ -100,21 +94,13 @@ namespace Neon.Networking.Lobby {
         }
 
         /// <summary>
-        /// Get the game-play network context that should be used when playing the game. This
-        /// returns a non-empty value when the game has been launched and all peers have loaded the
-        /// game.
+        /// Returns true if the lobby has launched. Make sure to dispose of the lobby.
         /// </summary>
-        public Maybe<GameNetwork> GetGameRun() {
-            // If we have launched, then create our game network.
-            if (_gameNetwork == null && _lobbyLaunchedHandler.IsLaunched) {
-                _gameNetwork = new GameNetwork(_context);
-                Dispose();
+        /// <returns>True if the lobby has launched, false if it hasn't.</returns>
+        public bool HasLaunched {
+            get {
+                return _lobbyLaunchedHandler.IsLaunched;
             }
-
-            if (_gameNetwork != null) {
-                return Maybe.Just(_gameNetwork);
-            }
-            return Maybe<GameNetwork>.Empty;
         }
     }
 }
