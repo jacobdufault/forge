@@ -42,10 +42,5 @@ namespace Neon.Networking.Lobby {
     /// </summary>
     [JsonObject(MemberSerialization.OptIn)]
     internal class LobbyLaunchedNetworkMessage : INetworkMessage {
-        /// <summary>
-        /// The players that are in the game.
-        /// </summary>
-        [JsonProperty("Players")]
-        public List<NetworkPlayer> Players;
     }
 }
