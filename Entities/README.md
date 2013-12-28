@@ -1,6 +1,6 @@
-## Neon.Entities
+## Forge.Entities
 
-`Neon.Entities` is an advanced entity-component-system implementation that is inspired by immutability. It is designed to scale to large games and be rendering engine agnostic, and there is first-class support for Unity.
+`Forge.Entities` is an advanced entity-component-system implementation that is inspired by immutability. It is designed to scale to large games and be rendering engine agnostic, and there is first-class support for Unity.
 
 Here's the short list:
 
@@ -9,11 +9,11 @@ Here's the short list:
 * Super simple save/load game support (replay support coming soon)
 * No more initialization and update order races
 
-By focusing on immutability, `Neon.Entities` is able to do some pretty awesome magic. It gives you automatic multithreading and deterministic execution (great for RTS, tower-defense, and simulation games!). Further, `Neon.Entities` removes the dreaded updated order and initialization order problems that are common to so many frameworks. Do you ever recall working with a `PositionChangedEvent`? That's completely removed in `Neon.Entities`; you can listen for data changes/additions/removals *and* be able to see the previous state of the data, before the modification.
+By focusing on immutability, `Forge.Entities` is able to do some pretty awesome magic. It gives you automatic multithreading and deterministic execution (great for RTS, tower-defense, and simulation games!). Further, `Forge.Entities` removes the dreaded updated order and initialization order problems that are common to so many frameworks. Do you ever recall working with a `PositionChangedEvent`? That's completely removed in `Forge.Entities`; you can listen for data changes/additions/removals *and* be able to see the previous state of the data, before the modification.
 
-`Neon.Entities` has first class support for saving and loading of games (replay support is simple to implement and will be eventually added in a `Neon.Replays` module); to save a game, all you have to do is add a few lines of annotations to objects which are used in the game simulation (`Json.NET` is used for serialization).
+`Forge.Entities` has first class support for saving and loading of games (replay support is simple to implement and will be eventually added in a `Forge.Replays` module); to save a game, all you have to do is add a few lines of annotations to objects which are used in the game simulation (`Json.NET` is used for serialization).
 
-To aid in game design, `Neon.Entities` has two modes of operation; one for the game designer, where you can edit game state, and one for the gamer, where the game is actually simulated. The game designer mode is perfect for creating a level in the `Unity` editor, and then you switch to the engine mode to play it! Simple.
+To aid in game design, `Forge.Entities` has two modes of operation; one for the game designer, where you can edit game state, and one for the gamer, where the game is actually simulated. The game designer mode is perfect for creating a level in the `Unity` editor, and then you switch to the engine mode to play it! Simple.
 
 ## Implementation Overview
 So, you want to dive into the details? Be warned, this code is complicated.
@@ -27,5 +27,5 @@ If you go into the `Implementation` folder, you'll find four more folders.
 * `Runtime`: Implements the API for the player; ie, actually implements the simulation.
 * `Shared`: Shared code between `Content` and `Runtime`.
 
-If you're looking to see how `Neon.Entities` does its magic, you're best bet is to look into `Runtime`. That has almost all of the interesting code.
+If you're looking to see how `Forge.Entities` does its magic, you're best bet is to look into `Runtime`. That has almost all of the interesting code.
 
