@@ -84,7 +84,7 @@ namespace Neon.Networking.Core {
         /// <summary>
         /// Invoke all registered INetworkMessageHandlers for the given message and sender.
         /// </summary>
-        public void InvokeHandlers(NetworkPlayer sender, INetworkMessage message) {
+        public void InvokeHandlers(Player sender, INetworkMessage message) {
             var handlers = GetHandlers(message.GetType());
 
             if (handlers.Count == 0) {

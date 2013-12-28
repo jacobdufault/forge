@@ -100,7 +100,7 @@ namespace Neon.Networking.Lobby {
         /// <summary>
         /// Return players that are not ready.
         /// </summary>
-        public IEnumerable<NetworkPlayer> PlayersNotReady {
+        public IEnumerable<Player> PlayersNotReady {
             get {
                 return _readinessHandler.NotReadyPlayers;
             }
@@ -112,7 +112,7 @@ namespace Neon.Networking.Lobby {
         /// <param name="player">The player that is creating the server.</param>
         /// <param name="settings">The settings to use for the lobby.</param>
         /// <returns>A lobby host if successful.</returns>
-        public static LobbyHost CreateLobby(NetworkPlayer player, LobbySettings settings) {
+        public static LobbyHost CreateLobby(Player player, LobbySettings settings) {
             NetworkContext context = NetworkContext.CreateServer(player, settings.Password);
 
             return new LobbyHost(context, settings.MapManager, settings.SerializedMap);
@@ -129,7 +129,7 @@ namespace Neon.Networking.Lobby {
         /// Kick the given lobby member from the lobby.
         /// </summary>
         /// <param name="member">The member to kick.</param>
-        public void Kick(NetworkPlayer member) {
+        public void Kick(Player member) {
             _context.Kick(member);
         }
     }

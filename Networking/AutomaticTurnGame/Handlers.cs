@@ -90,7 +90,7 @@ namespace Neon.Networking.AutomaticTurnGame {
             });
         }
 
-        public void HandleNetworkMessage(NetworkPlayer sender, INetworkMessage message) {
+        public void HandleNetworkMessage(Player sender, INetworkMessage message) {
             if (message is SubmitCommandsNetworkMessage) {
                 SubmitCommandsNetworkMessage m = (SubmitCommandsNetworkMessage)message;
 
@@ -121,8 +121,7 @@ namespace Neon.Networking.AutomaticTurnGame {
             return _updates.Dequeue();
         }
 
-        protected override void HandleNetworkMessage(NetworkPlayer sender,
-            EndTurnNetworkMessage message) {
+        protected override void HandleNetworkMessage(Player sender, EndTurnNetworkMessage message) {
             _updates.Enqueue(message.Commands);
         }
     }

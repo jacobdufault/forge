@@ -37,17 +37,17 @@ namespace Neon.Networking.Pausing {
         /// <summary>
         /// Returns who paused the game if it is paused.
         /// </summary>
-        public Maybe<NetworkPlayer> PausedBy {
+        public Maybe<Player> PausedBy {
             get;
             private set;
         }
 
         public PauseMessageHandler() {
             IsPaused = true;
-            PausedBy = Maybe<NetworkPlayer>.Empty;
+            PausedBy = Maybe<Player>.Empty;
         }
 
-        protected override void HandleNetworkMessage(NetworkPlayer sender,
+        protected override void HandleNetworkMessage(Player sender,
             SetPauseStatusNetworkMessage message) {
 
             IsPaused = message.Paused;
@@ -56,7 +56,7 @@ namespace Neon.Networking.Pausing {
                 PausedBy = Maybe.Just(sender);
             }
             else {
-                PausedBy = Maybe<NetworkPlayer>.Empty;
+                PausedBy = Maybe<Player>.Empty;
             }
         }
     }

@@ -75,7 +75,7 @@ namespace Neon.Networking.Pausing {
         /// If the game is paused, then this returns who paused the game. If the game is not paused,
         /// then this returns nothing.
         /// </summary>
-        public Maybe<NetworkPlayer> PausedBy {
+        public Maybe<Player> PausedBy {
             get {
                 return _handler.PausedBy;
             }

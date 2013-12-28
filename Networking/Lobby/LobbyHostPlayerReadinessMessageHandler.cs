@@ -42,12 +42,12 @@ namespace Neon.Networking.Lobby {
         /// <summary>
         /// Players that are ready to launch.
         /// </summary>
-        private HashSet<NetworkPlayer> _ready = new HashSet<NetworkPlayer>();
+        private HashSet<Player> _ready = new HashSet<Player>();
 
         /// <summary>
         /// Players that are not ready to launch.
         /// </summary>
-        private HashSet<NetworkPlayer> _notReady = new HashSet<NetworkPlayer>();
+        private HashSet<Player> _notReady = new HashSet<Player>();
 
         /// <summary>
         /// The networking context.
@@ -58,13 +58,13 @@ namespace Neon.Networking.Lobby {
             _context = context;
         }
 
-        public IEnumerable<NetworkPlayer> ReadyPlayers {
+        public IEnumerable<Player> ReadyPlayers {
             get {
                 return _ready;
             }
         }
 
-        public IEnumerable<NetworkPlayer> NotReadyPlayers {
+        public IEnumerable<Player> NotReadyPlayers {
             get {
                 return _notReady;
             }
@@ -86,7 +86,7 @@ namespace Neon.Networking.Lobby {
             }
         }
 
-        public void HandleNetworkMessage(NetworkPlayer sender, INetworkMessage message) {
+        public void HandleNetworkMessage(Player sender, INetworkMessage message) {
             if (message is LobbyNotReadyNetworkMessage) {
                 _ready.Remove(sender);
                 _notReady.Add(sender);
@@ -98,11 +98,11 @@ namespace Neon.Networking.Lobby {
             }
         }
 
-        public void OnConnected(NetworkPlayer player) {
+        public void OnConnected(Player player) {
             _notReady.Add(player);
         }
 
-        public void OnDisconnected(NetworkPlayer player) {
+        public void OnDisconnected(Player player) {
             _notReady.Remove(player);
             _ready.Remove(player);
         }

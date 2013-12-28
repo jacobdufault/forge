@@ -31,6 +31,6 @@ namespace Neon.Networking.Chat {
         /// <param name="player1">The source player.</param>
         /// <param name="player2">The target player.</param>
         /// <returns>The relationship from player1 to player2.</returns>
-        PlayerRelation GetDirectedRelation(NetworkPlayer player1, NetworkPlayer player2);
+        PlayerRelation GetDirectedRelation(Player player1, Player player2);
     }
 }

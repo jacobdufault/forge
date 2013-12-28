@@ -37,7 +37,7 @@ namespace Neon.Networking.Chat {
         /// The player that sent the message.
         /// </summary>
         [JsonProperty]
-        public NetworkPlayer Sender;
+        public Player Sender;
 
         /// <summary>
         /// Specifies what players should see the given message; only players which have a relation

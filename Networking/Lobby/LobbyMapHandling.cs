@@ -90,7 +90,7 @@ namespace Neon.Networking.Lobby {
             }
         }
 
-        public void HandleNetworkMessage(NetworkPlayer sender, INetworkMessage message) {
+        public void HandleNetworkMessage(Player sender, INetworkMessage message) {
             if (message is LobbyMapDownloadRequestedNetworkMessage) {
                 _context.SendMessage(sender, new LobbyMapDownloadNetworkMessage() {
                     Map = _serializedMap
@@ -98,13 +98,13 @@ namespace Neon.Networking.Lobby {
             }
         }
 
-        public void OnConnected(NetworkPlayer player) {
+        public void OnConnected(Player player) {
             _context.SendMessage(player, new LobbyMapVerifyNetworkMessage() {
                 MapHash = _mapHash
             });
         }
 
-        public void OnDisconnected(NetworkPlayer player) {
+        public void OnDisconnected(Player player) {
         }
     }
 
@@ -141,7 +141,7 @@ namespace Neon.Networking.Lobby {
             }
         }
 
-        public void HandleNetworkMessage(NetworkPlayer sender, INetworkMessage message) {
+        public void HandleNetworkMessage(Player sender, INetworkMessage message) {
             if (message is LobbyMapDownloadNetworkMessage) {
                 var m = (LobbyMapDownloadNetworkMessage)message;
                 _mapManager.Save(m.Map);

@@ -24,15 +24,15 @@ namespace NetworkDebug {
             hiearchy.Configured = true;
         }
 
-        private NetworkPlayer CreatePlayer() {
-            return new NetworkPlayer() {
+        private Player CreatePlayer() {
+            return new Player() {
                 Guid = Guid.NewGuid(),
                 Name = TextName.Text
             };
         }
 
         private void ButtonConnect_Click(object sender, EventArgs e) {
-            NetworkPlayer player = CreatePlayer();
+            Player player = CreatePlayer();
 
             MapManager mapManager = new MapManager();
             string password = TextPassword.Text;
@@ -63,7 +63,7 @@ namespace NetworkDebug {
         }
 
         private void ButtonStartServer_Click(object sender, EventArgs e) {
-            NetworkPlayer player = CreatePlayer();
+            Player player = CreatePlayer();
 
             LobbyHost.LobbySettings settings = new LobbyHost.LobbySettings() {
                 MapManager = new MapManager(),

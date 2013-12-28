@@ -30,7 +30,7 @@ namespace Neon.Networking.Lobby {
     [JsonObject(MemberSerialization.OptIn)]
     internal class PlayerJoinedNetworkMessage : INetworkMessage {
         [JsonProperty]
-        public NetworkPlayer Player;
+        public Player Player;
     }
 
     /// <summary>
@@ -39,14 +39,14 @@ namespace Neon.Networking.Lobby {
     [JsonObject(MemberSerialization.OptIn)]
     internal class PlayerLeftNetworkMessage : INetworkMessage {
         [JsonProperty]
-        public NetworkPlayer Player;
+        public Player Player;
     }
 
     internal class PlayerManager : INetworkConnectionMonitor, INetworkMessageHandler {
         private NetworkContext _context;
-        private List<NetworkPlayer> _players = new List<NetworkPlayer>();
+        private List<Player> _players = new List<Player>();
 
-        public IEnumerable<NetworkPlayer> Players {
+        public IEnumerable<Player> Players {
             get {
                 return _players;
             }
@@ -60,7 +60,7 @@ namespace Neon.Networking.Lobby {
             }
         }
 
-        public void OnConnected(NetworkPlayer connectedPlayer) {
+        public void OnConnected(Player connectedPlayer) {
             // this has to go before we notify everyone else of the connected player, otherwise we
             // will transmit to the connected player that they themselves got connected twice
             foreach (var player in _players) {
@@ -74,7 +74,7 @@ namespace Neon.Networking.Lobby {
             });
         }
 
-        public void OnDisconnected(NetworkPlayer player) {
+        public void OnDisconnected(Player player) {
             _context.SendMessage(NetworkMessageRecipient.All, new PlayerLeftNetworkMessage() {
                 Player = player
             });
@@ -89,16 +89,16 @@ namespace Neon.Networking.Lobby {
             }
         }
 
-        public void HandleNetworkMessage(NetworkPlayer sender, INetworkMessage message) {
+        public void HandleNetworkMessage(Player sender, INetworkMessage message) {
             Log<PlayerManager>.Info("PlayerManager got message " + message);
 
             if (message is PlayerJoinedNetworkMessage) {
-                NetworkPlayer player = ((PlayerJoinedNetworkMessage)message).Player;
+                Player player = ((PlayerJoinedNetworkMessage)message).Player;
                 _players.Add(player);
             }
 
             else if (message is PlayerLeftNetworkMessage) {
-                NetworkPlayer player = ((PlayerLeftNetworkMessage)message).Player;
+                Player player = ((PlayerLeftNetworkMessage)message).Player;
                 _players.Remove(player);
             }
         }

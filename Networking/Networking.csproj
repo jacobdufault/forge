@@ -71,7 +71,7 @@
     <Compile Include="Lobby\LobbyMember.cs" />
     <Compile Include="Lobby\LobbyPlayerDispatch.cs" />
     <Compile Include="Core\NetworkMessageRecipient.cs" />
-    <Compile Include="Core\NetworkPlayer.cs" />
+    <Compile Include="Core\Player.cs" />
     <Compile Include="Core\INetworkMessage.cs" />
     <Compile Include="Core\INetworkMessageHandler.cs" />
     <Compile Include="Lobby\LobbyCommon.cs" />

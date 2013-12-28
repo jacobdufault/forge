@@ -31,7 +31,7 @@ namespace Neon.Networking.Lobby {
 
         public bool IsLaunched;
 
-        public void HandleNetworkMessage(NetworkPlayer sender, INetworkMessage message) {
+        public void HandleNetworkMessage(Player sender, INetworkMessage message) {
             Contract.Requires(message is LobbyLaunchedNetworkMessage);
             IsLaunched = true;
         }

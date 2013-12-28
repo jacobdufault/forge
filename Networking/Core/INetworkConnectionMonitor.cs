@@ -25,11 +25,11 @@ namespace Neon.Networking.Core {
         /// <summary>
         /// The given player has connected.
         /// </summary>
-        void OnConnected(NetworkPlayer player);
+        void OnConnected(Player player);
 
         /// <summary>
         /// The given player has disconnected.
         /// </summary>
-        void OnDisconnected(NetworkPlayer player);
+        void OnDisconnected(Player player);
     }
 }

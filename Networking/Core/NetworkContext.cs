@@ -36,7 +36,7 @@ namespace Neon.Networking.Core {
         /// <summary>
         /// Enumerable container that merely contains LocalPlayer.
         /// </summary>
-        private IEnumerable<NetworkPlayer> _localPlayerEnumerable;
+        private IEnumerable<Player> _localPlayerEnumerable;
 
         /// <summary>
         /// If the context is a client, then this is the Lidgren.Network client object.
@@ -94,7 +94,7 @@ namespace Neon.Networking.Core {
         /// static helper methods.
         /// </summary>
         /// <param name="localPlayer">The local player</param>
-        private NetworkContext(NetworkPlayer localPlayer) {
+        private NetworkContext(Player localPlayer) {
             _dispatcher = new NetworkMessageDispatcher();
             LocalPlayer = localPlayer;
             _localPlayerEnumerable = new[] { localPlayer };
@@ -114,7 +114,7 @@ namespace Neon.Networking.Core {
         /// <param name="player">The player that is running this server.</param>
         /// <param name="password">The password that clients have to have to connect.</param>
         /// <returns>A network context for the created server.</returns>
-        public static NetworkContext CreateServer(NetworkPlayer player, string password) {
+        public static NetworkContext CreateServer(Player player, string password) {
             NetworkContext context = new NetworkContext(player);
 
             context._serverPassword = password;
@@ -163,7 +163,7 @@ namespace Neon.Networking.Core {
         /// <param name="player">This computer's player.</param>
         /// <param name="password">The password that the server is expecting.</param>
         /// <returns></returns>
-        public static Maybe<NetworkContext> CreateClient(string ip, NetworkPlayer player, string password) {
+        public static Maybe<NetworkContext> CreateClient(string ip, Player player, string password) {
             NetClient client = new NetClient(Configuration.GetConfiguration(server: false));
             client.Start();
 
@@ -212,7 +212,7 @@ namespace Neon.Networking.Core {
             // connection with the server player instance
             {
                 NetIncomingMessage msg = client.ServerConnection.RemoteHailMessage;
-                NetworkPlayer serverPlayer = SerializationHelpers.Deserialize<NetworkPlayer>(msg.ReadString());
+                Player serverPlayer = SerializationHelpers.Deserialize<Player>(msg.ReadString());
                 client.ServerConnection.Tag = serverPlayer;
                 NetworkContext context = new NetworkContext(player) {
                     _client = client
@@ -242,23 +242,23 @@ namespace Neon.Networking.Core {
         /// <summary>
         /// The local player.
         /// </summary>
-        public NetworkPlayer LocalPlayer {
+        public Player LocalPlayer {
             get;
             private set;
         }
 
         /// <summary>
-        /// Returns true if the given NetworkPlayer is the server.
+        /// Returns true if the given Player is the server.
         /// </summary>
         /// <param name="player">The player to check.</param>
         /// <returns>True if the player is the server, otherwise false.</returns>
-        public bool IsPlayerServer(NetworkPlayer player) {
+        public bool IsPlayerServer(Player player) {
             if (IsServer) {
-                return player == (NetworkPlayer)_server.Tag;
+                return player == (Player)_server.Tag;
             }
 
             if (IsClient) {
-                return player == (NetworkPlayer)_client.ServerConnection.Tag;
+                return player == (Player)_client.ServerConnection.Tag;
             }
 
             throw new InvalidOperationException("Bad internal state; not a server or client");
@@ -269,7 +269,7 @@ namespace Neon.Networking.Core {
         /// (otherwise an exception is thrown).
         /// </summary>
         /// <param name="player">The player to kick.</param>
-        public void Kick(NetworkPlayer player) {
+        public void Kick(Player player) {
             if (IsServer == false) {
                 throw new InvalidOperationException("Only servers can kick players");
             }
@@ -343,13 +343,13 @@ namespace Neon.Networking.Core {
                         switch (status) {
                             case NetConnectionStatus.Connected:
                                 foreach (var montitor in _connectionMonitors) {
-                                    montitor.OnConnected((NetworkPlayer)msg.SenderConnection.Tag);
+                                    montitor.OnConnected((Player)msg.SenderConnection.Tag);
                                 }
                                 break;
 
                             case NetConnectionStatus.Disconnected:
                                 foreach (var monitor in _connectionMonitors) {
-                                    monitor.OnDisconnected((NetworkPlayer)msg.SenderConnection.Tag);
+                                    monitor.OnDisconnected((Player)msg.SenderConnection.Tag);
                                 }
                                 break;
                         }
@@ -420,7 +420,7 @@ namespace Neon.Networking.Core {
                     }
                     else {
                         var msg = CreateMessage(LocalPlayer, message, broadcast: false);
-                        Log<NetworkContext>.Info("Sending message to all connections " + string.Join(", ", _server.Connections.Select(c => ((NetworkPlayer)c.Tag).Name).ToArray()));
+                        Log<NetworkContext>.Info("Sending message to all connections " + string.Join(", ", _server.Connections.Select(c => ((Player)c.Tag).Name).ToArray()));
 
                         _server.SendToAll(msg, NetDeliveryMethod.ReliableOrdered);
                         _dispatcher.InvokeHandlers(LocalPlayer, message);
@@ -461,7 +461,7 @@ namespace Neon.Networking.Core {
         /// </summary>
         /// <param name="recipient">The player that should receive the message.</param>
         /// <param name="message">Who to send the message to.</param>
-        public void SendMessage(NetworkPlayer recipient, INetworkMessage message) {
+        public void SendMessage(Player recipient, INetworkMessage message) {
             // If we're sending the message to ourselves (strange, but fine), then just directly
             // invoke the handlers -- there is not going to be a network connection
             if (recipient == LocalPlayer) {
@@ -483,7 +483,7 @@ namespace Neon.Networking.Core {
         /// <param name="message">The message to send.</param>
         /// <param name="broadcast">If the server receives this message, should it broadcast it out
         /// to all clients?</param>
-        private NetOutgoingMessage CreateMessage(NetworkPlayer sender, INetworkMessage message, bool broadcast) {
+        private NetOutgoingMessage CreateMessage(Player sender, INetworkMessage message, bool broadcast) {
             string serialized = SerializationHelpers.Serialize(new NetworkMessageFormat() {
                 IfServerRebroadcast = broadcast,
                 Sender = sender,
@@ -499,13 +499,13 @@ namespace Neon.Networking.Core {
         /// <summary>
         /// Helper method to lookup the network connection based on the given network player.
         /// </summary>
-        private NetConnection GetConnection(NetworkPlayer player) {
+        private NetConnection GetConnection(Player player) {
             NetPeer peer = Peer;
 
             for (int i = 0; i < peer.ConnectionsCount; ++i) {
                 NetConnection connection = peer.Connections[i];
 
-                if (player == (NetworkPlayer)connection.Tag) {
+                if (player == (Player)connection.Tag) {
                     return connection;
                 }
             }
@@ -522,7 +522,7 @@ namespace Neon.Networking.Core {
             public bool IfServerRebroadcast;
 
             [JsonProperty]
-            public NetworkPlayer Sender;
+            public Player Sender;
 
             [JsonProperty]
             public INetworkMessage NetworkMessage;
@@ -537,7 +537,7 @@ namespace Neon.Networking.Core {
             /// The player connecting.
             /// </summary>
             [JsonProperty]
-            public NetworkPlayer Player;
+            public Player Player;
 
             /// <summary>
             /// The password to use when connecting.

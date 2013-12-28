@@ -38,7 +38,7 @@ namespace Neon.Networking.Core {
         /// <param name="sender">The player that sent the message.</param>
         /// <param name="message">The message itself (an instance of a type from
         /// HandledTypes) .</param>
-        void HandleNetworkMessage(NetworkPlayer sender, INetworkMessage message);
+        void HandleNetworkMessage(Player sender, INetworkMessage message);
     }
 
     /// <summary>
@@ -46,9 +46,9 @@ namespace Neon.Networking.Core {
     /// </summary>
     /// <typeparam name="TNetworkMessage">The type of message that this handler handles.</typeparam>
     public abstract class BaseNetworkMessageHandler<TNetworkMessage> : INetworkMessageHandler {
-        protected abstract void HandleNetworkMessage(NetworkPlayer sender, TNetworkMessage message);
+        protected abstract void HandleNetworkMessage(Player sender, TNetworkMessage message);
 
-        void INetworkMessageHandler.HandleNetworkMessage(NetworkPlayer sender, INetworkMessage message) {
+        void INetworkMessageHandler.HandleNetworkMessage(Player sender, INetworkMessage message) {
             HandleNetworkMessage(sender, (TNetworkMessage)message);
         }
 

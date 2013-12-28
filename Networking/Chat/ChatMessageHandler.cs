@@ -31,7 +31,7 @@ namespace Neon.Networking.Chat {
         /// <summary>
         /// The local player.
         /// </summary>
-        private NetworkPlayer _localPlayer;
+        private Player _localPlayer;
 
         /// <summary>
         /// The relation determination object used to determine the relation between the sender of
@@ -61,7 +61,7 @@ namespace Neon.Networking.Chat {
             get { return new[] { typeof(ChatNetworkMessage) }; }
         }
 
-        public void HandleNetworkMessage(NetworkPlayer sender, INetworkMessage message) {
+        public void HandleNetworkMessage(Player sender, INetworkMessage message) {
             ChatNetworkMessage m = (ChatNetworkMessage)message;
 
             var receivedMessage = new ReceivedChatMessage() {
@@ -80,7 +80,7 @@ namespace Neon.Networking.Chat {
         /// Returns true if either the required relation if empty or if the sender has the required
         /// relation w.r.t. to the player.
         /// </summary>
-        private bool ShouldDisplay(Maybe<PlayerRelation> requiredRelation, NetworkPlayer sender) {
+        private bool ShouldDisplay(Maybe<PlayerRelation> requiredRelation, Player sender) {
             if (requiredRelation.IsEmpty) {
                 return true;
             }

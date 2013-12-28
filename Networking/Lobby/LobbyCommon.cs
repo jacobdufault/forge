@@ -64,14 +64,14 @@ namespace Neon.Networking.Lobby {
         /// <summary>
         /// Get all members of the lobby, including the host.
         /// </summary>
-        public IEnumerable<NetworkPlayer> GetLobbyMembers() {
+        public IEnumerable<Player> GetLobbyMembers() {
             return _playerManager.Players;
         }
 
         /// <summary>
         /// Is the given player the host of the lobby?
         /// </summary>
-        public bool IsHost(NetworkPlayer player) {
+        public bool IsHost(Player player) {
             return _context.IsPlayerServer(player);
         }
 

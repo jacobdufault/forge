@@ -33,7 +33,7 @@ namespace Neon.Networking.Chat {
         /// <summary>
         /// The player that sent the message.
         /// </summary>
-        public NetworkPlayer Sender;
+        public Player Sender;
 
         /// <summary>
         /// The content of the message.

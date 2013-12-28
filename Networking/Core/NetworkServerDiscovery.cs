@@ -16,7 +16,7 @@ namespace Neon.Networking.Core {
         /// The hosting player.
         /// </summary>
         [JsonProperty]
-        public NetworkPlayer Host;
+        public Player Host;
 
         /// <summary>
         /// The title of the game.
@@ -32,7 +32,7 @@ namespace Neon.Networking.Core {
         /// <summary>
         /// The player that is hosting the server.
         /// </summary>
-        public NetworkPlayer Host;
+        public Player Host;
 
         /// <summary>
         /// The title of the server.

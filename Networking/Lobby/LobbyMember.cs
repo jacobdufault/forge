@@ -53,7 +53,7 @@ namespace Neon.Networking.Lobby {
         /// <param name="player">This player that will be used to uniquely identify
         /// ourselves.</param>
         /// <param name="password">The password that the lobby host has set.</param>
-        public static Task<Maybe<LobbyMember>> JoinLobby(string host, NetworkPlayer player, IMapManager mapManager, string password) {
+        public static Task<Maybe<LobbyMember>> JoinLobby(string host, Player player, IMapManager mapManager, string password) {
             /*
             return Task.Factory.StartNew(() => {
                 try {
