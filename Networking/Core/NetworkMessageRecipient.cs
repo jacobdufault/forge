@@ -38,7 +38,7 @@ namespace Neon.Networking.Core {
 
         /// <summary>
         /// The message should be processed by *only* the server. This message type can only be sent
-        /// by clients.
+        /// by any computer in the network, whether it be a client or a server.
         /// </summary>
         Server,
 
@@ -46,6 +46,6 @@ namespace Neon.Networking.Core {
         /// The message should be processed by all clients but *not* the server. This message type
         /// can only be sent by the server.
         /// </summary>
-        Clients,
+        Clients
     }
 }

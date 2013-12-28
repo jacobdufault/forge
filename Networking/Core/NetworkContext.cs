@@ -443,12 +443,14 @@ namespace Neon.Networking.Core {
                     }
 
                 case NetworkMessageRecipient.Server: {
-                        if (IsClient == false) {
-                            throw new InvalidOperationException("Only clients can send messages to the server");
+                        if (IsServer) {
+                            _dispatcher.InvokeHandlers(LocalPlayer, message);
                         }
 
-                        var msg = CreateMessage(LocalPlayer, message, broadcast: false);
-                        _client.ServerConnection.SendMessage(msg, NetDeliveryMethod.ReliableOrdered, 0);
+                        else {
+                            var msg = CreateMessage(LocalPlayer, message, broadcast: false);
+                            _client.ServerConnection.SendMessage(msg, NetDeliveryMethod.ReliableOrdered, 0);
+                        }
                         break;
                     }
             }
