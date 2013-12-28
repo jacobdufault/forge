@@ -181,7 +181,7 @@ namespace Neon.Entities.Implementation.Runtime {
                     _removedLastFrame[id] = _toRemoveStage1[i];
                     // _removedLastFrame[id] is removed in stage2
 
-                    _eventDispatcher.Submit(new RemovedDataEvent(this, _data[id].Current.GetType()));
+                    _eventDispatcher.Submit(RemovedDataEvent.Create(this, _data[id].Current.GetType()));
                 }
 
                 for (int i = 0; i < _toRemoveStage2.Count; ++i) {
@@ -216,7 +216,7 @@ namespace Neon.Entities.Implementation.Runtime {
                 _data[id] = new DataContainer(added.Duplicate(), added.Duplicate(), added.Duplicate());
 
                 // visualize the initial data
-                _eventDispatcher.Submit(new AddedDataEvent(this, added.GetType()));
+                _eventDispatcher.Submit(AddedDataEvent.Create(this, added.GetType()));
             }
 
             for (int i = 0; i < _toAddStage2.Count; ++i) {

@@ -36,13 +36,13 @@ namespace Neon.Entities.Implementation.Shared {
         /// <summary>
         /// The queued set of events that have occurred; any thread can write to this list.
         /// </summary>
-        private List<object> _events = new List<object>();
+        private List<IEvent> _events = new List<IEvent>();
 
         /// <summary>
         /// Events that are currently being dispatched. This is only read from (its values are
         /// retrieved from _events).
         /// </summary>
-        private List<object> _dispatchingEvents = new List<object>();
+        private List<IEvent> _dispatchingEvents = new List<IEvent>();
 
         /// <summary>
         /// Called when an event has been dispatched to this event processor.
@@ -86,6 +86,10 @@ namespace Neon.Entities.Implementation.Shared {
             // dispatch all events in _dispatchingEvents
             for (int i = 0; i < _dispatchingEvents.Count; ++i) {
                 CallEventHandlers(_dispatchingEvents[i]);
+
+                // all event handlers have been called on the event, so the object instance can now
+                // be safely reused
+                _dispatchingEvents[i].Reuse();
             }
             _dispatchingEvents.Clear();
         }
@@ -95,9 +99,9 @@ namespace Neon.Entities.Implementation.Shared {
         /// time.
         /// </summary>
         /// <param name="eventInstance">The event instance to dispatch</param>
-        public void Submit(BaseEvent eventInstance) {
+        public void Submit<TEvent>(TEvent evnt) where TEvent : BaseEvent<TEvent> {
             lock (this) {
-                _events.Add(eventInstance);
+                _events.Add(evnt);
             }
             EventAddedNotifier.Notify();
         }
@@ -108,7 +112,7 @@ namespace Neon.Entities.Implementation.Shared {
         /// </summary>
         /// <typeparam name="TEvent">The event type to listen for.</typeparam>
         /// <param name="onEvent">The code to invoke.</param>
-        public void OnEvent<TEvent>(Action<TEvent> onEvent) where TEvent : BaseEvent {
+        public void OnEvent<TEvent>(Action<TEvent> onEvent) where TEvent : BaseEvent<TEvent> {
             Type eventType = typeof(TEvent);
 
             lock (this) {

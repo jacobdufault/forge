@@ -248,7 +248,7 @@ namespace Neon.Entities.Implementation.Runtime {
         /// <param name="toAdd">The entity to add.</param>
         private void InternalAddEntity(RuntimeEntity toAdd) {
             toAdd.GameEngine = this;
-            EventNotifier.Submit(new ShowEntityEvent(toAdd));
+            EventNotifier.Submit(ShowEntityEvent.Create(toAdd));
 
             // register listeners
             toAdd.ModificationNotifier.Listener += OnEntityModified;
@@ -264,7 +264,7 @@ namespace Neon.Entities.Implementation.Runtime {
             _entities.Add(toAdd, GetEntitiesListFromMetadata(toAdd));
 
             // notify listeners that we added an entity
-            ((EventNotifier)EventNotifier).Submit(new EntityAddedEvent(toAdd));
+            ((EventNotifier)EventNotifier).Submit(EntityAddedEvent.Create(toAdd));
         }
 
         private void SinglethreadFrameEnd() {
@@ -310,10 +310,10 @@ namespace Neon.Entities.Implementation.Runtime {
 
                 // remove the entity from the list of entities
                 _entities.Remove(toRemove, GetEntitiesListFromMetadata(toRemove));
-                EventNotifier.Submit(new DestroyedEntityEvent(toRemove));
+                EventNotifier.Submit(DestroyedEntityEvent.Create(toRemove));
 
                 // notify listeners we removed an event
-                EventNotifier.Submit(new EntityRemovedEvent(toRemove));
+                EventNotifier.Submit(EntityRemovedEvent.Create(toRemove));
             }
             // can't clear b/c it is shared
 
@@ -476,7 +476,7 @@ namespace Neon.Entities.Implementation.Runtime {
         /// <param name="instance">The instance to add</param>
         internal void AddEntity(RuntimeEntity instance) {
             _notifiedAddingEntities.Add(instance);
-            EventNotifier.Submit(new HideEntityEvent(instance));
+            EventNotifier.Submit(HideEntityEvent.Create(instance));
         }
 
         /// <summary>
@@ -485,7 +485,7 @@ namespace Neon.Entities.Implementation.Runtime {
         /// <param name="instance">The entity instance to remove</param>
         internal void RemoveEntity(RuntimeEntity instance) {
             _notifiedRemovedEntities.Add(instance);
-            EventNotifier.Submit(new HideEntityEvent(instance));
+            EventNotifier.Submit(HideEntityEvent.Create(instance));
         }
 
         /// <summary>

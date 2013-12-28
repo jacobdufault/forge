@@ -18,12 +18,52 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using System;
+using System.Collections;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace Neon.Entities {
+    internal interface IEvent {
+        /// <summary>
+        /// Reuse this event instance at a later point in time.
+        /// </summary>
+        void Reuse();
+    }
+
     /// <summary>
     /// Base event type that all events must derive from.
     /// </summary>
-    public abstract class BaseEvent {
+    /// <remarks>
+    /// BaseEvent provides a number of helpful static methods (available only to the derived type)
+    /// that make creating a factory for BaseEvent extremely simple. However, it is imperative that
+    /// the factory methods be used, otherwise a memory leak will occur. The factory methods are
+    /// thread-safe.
+    /// </remarks>
+    public abstract class BaseEvent<TDerived> : IEvent
+        where TDerived : BaseEvent<TDerived> {
+
+        /// <summary>
+        /// Events that have been constructed but are not in use.
+        /// </summary>
+        private static ConcurrentStack<TDerived> _availableEvents = new ConcurrentStack<TDerived>();
+
+        void IEvent.Reuse() {
+            _availableEvents.Push((TDerived)this);
+        }
+
+        /// <summary>
+        /// Helper method to get an instance of the event. The instance may be populated with data,
+        /// so make sure to fully initialize it. If there is no instance that can be reused, a new
+        /// one is allocated using the default constructor.
+        /// </summary>
+        protected static TDerived GetInstance() {
+            TDerived instance;
+            if (_availableEvents.TryPop(out instance)) {
+                return instance;
+            }
+
+            return (TDerived)Activator.CreateInstance(typeof(TDerived), nonPublic: true);
+        }
     }
 
     /// <summary>
@@ -38,7 +78,7 @@ namespace Neon.Entities {
         /// </summary>
         /// <typeparam name="TEvent">The event type to listen for.</typeparam>
         /// <param name="onEvent">The code to invoke.</param>
-        void OnEvent<TEvent>(Action<TEvent> onEvent) where TEvent : BaseEvent;
+        void OnEvent<TEvent>(Action<TEvent> onEvent) where TEvent : BaseEvent<TEvent>;
 
         /// <summary>
         /// Removes an event listener that was previously added with AddListener.

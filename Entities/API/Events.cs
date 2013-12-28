@@ -23,7 +23,10 @@ namespace Neon.Entities {
     /// <summary>
     /// Event that notifies listener that a new data instance has been added to the entity.
     /// </summary>
-    public class AddedDataEvent : BaseEvent {
+    public class AddedDataEvent : BaseEvent<AddedDataEvent> {
+        private AddedDataEvent() {
+        }
+
         /// <summary>
         /// The entity that had the data removed.
         /// </summary>
@@ -35,20 +38,25 @@ namespace Neon.Entities {
         public Type AddedDataType;
 
         /// <summary>
-        /// Initializes a new instance of the AddedDataEvent class.
+        /// Returns an instance of the AddedDataEvent class.
         /// </summary>
         /// <param name="entity">The entity that the data was removed from.</param>
         /// <param name="addedDataType">Type of the added data.</param>
-        internal AddedDataEvent(IEntity entity, Type addedDataType) {
-            Entity = entity;
-            AddedDataType = addedDataType;
+        internal static AddedDataEvent Create(IEntity entity, Type addedDataType) {
+            var instance = GetInstance();
+            instance.Entity = entity;
+            instance.AddedDataType = addedDataType;
+            return instance;
         }
     }
 
     /// <summary>
     /// Event that notifies listener that a new data instance has been added to the entity.
     /// </summary>
-    public class RemovedDataEvent : BaseEvent {
+    public class RemovedDataEvent : BaseEvent<RemovedDataEvent> {
+        private RemovedDataEvent() {
+        }
+
         /// <summary>
         /// The entity that had the data removed.
         /// </summary>
@@ -64,16 +72,21 @@ namespace Neon.Entities {
         /// </summary>
         /// <param name="entity">The entity that the data was removed from.</param>
         /// <param name="removedDataType">Type of the removed data.</param>
-        internal RemovedDataEvent(IEntity entity, Type removedDataType) {
-            Entity = entity;
-            RemovedDataType = removedDataType;
+        internal static RemovedDataEvent Create(IEntity entity, Type removedDataType) {
+            var instance = GetInstance();
+            instance.Entity = entity;
+            instance.RemovedDataType = removedDataType;
+            return instance;
         }
     }
 
     /// <summary>
     /// Event that notifies the listener that a new Entity has been added to the EntityManager.
     /// </summary>
-    public class EntityAddedEvent : BaseEvent {
+    public class EntityAddedEvent : BaseEvent<EntityAddedEvent> {
+        private EntityAddedEvent() {
+        }
+
         /// <summary>
         /// The entity that was added.
         /// </summary>
@@ -83,15 +96,20 @@ namespace Neon.Entities {
         /// Initializes a new instance of the EntityAddedEvent class.
         /// </summary>
         /// <param name="entity">The entity that was added.</param>
-        internal EntityAddedEvent(IEntity entity) {
-            Entity = entity;
+        internal static EntityAddedEvent Create(IEntity entity) {
+            var instance = GetInstance();
+            instance.Entity = entity;
+            return instance;
         }
     }
 
     /// <summary>
     /// Event that notifies the listener that a new Entity has been removed from the EntityManager.
     /// </summary>
-    public class EntityRemovedEvent : BaseEvent {
+    public class EntityRemovedEvent : BaseEvent<EntityRemovedEvent> {
+        private EntityRemovedEvent() {
+        }
+
         /// <summary>
         /// The entity that was removed.
         /// </summary>
@@ -101,41 +119,58 @@ namespace Neon.Entities {
         /// Initializes a new instance of the EntityRemovedEvent class.
         /// </summary>
         /// <param name="entity">The entity that was removed.</param>
-        internal EntityRemovedEvent(IEntity entity) {
-            Entity = entity;
+        internal static EntityRemovedEvent Create(IEntity entity) {
+            var instance = GetInstance();
+            instance.Entity = entity;
+            return instance;
         }
     }
 
     /// <summary>
     /// Event notifying listeners that the entity should be hidden.
     /// </summary>
-    public class HideEntityEvent : BaseEvent {
+    public class HideEntityEvent : BaseEvent<HideEntityEvent> {
+        private HideEntityEvent() {
+        }
+
         public IEntity Entity;
 
-        internal HideEntityEvent(IEntity entity) {
-            Entity = entity;
+        internal static HideEntityEvent Create(IEntity entity) {
+            var instance = GetInstance();
+            instance.Entity = entity;
+            return instance;
         }
     }
 
     /// <summary>
     /// Event notifying listeners that the entity should be visible.
     /// </summary>
-    public class ShowEntityEvent : BaseEvent {
+    public class ShowEntityEvent : BaseEvent<ShowEntityEvent> {
+        private ShowEntityEvent() {
+        }
+
         public IEntity Entity;
 
-        internal ShowEntityEvent(IEntity entity) {
-            Entity = entity;
+        internal static ShowEntityEvent Create(IEntity entity) {
+            var instance = GetInstance();
+            instance.Entity = entity;
+            return instance;
         }
     }
 
     /// <summary>
     /// Event notifying listeners that the entity has been destroyed.
     /// </summary>
-    public class DestroyedEntityEvent : BaseEvent {
+    public class DestroyedEntityEvent : BaseEvent<DestroyedEntityEvent> {
+        private DestroyedEntityEvent() {
+        }
+
         public IEntity Entity;
 
-        internal DestroyedEntityEvent(IEntity entity) {
-            Entity = entity;
+        internal static DestroyedEntityEvent Create(IEntity entity) {
+            var instance = GetInstance();
+            instance.Entity = entity;
+            return instance;
         }
     }
 }

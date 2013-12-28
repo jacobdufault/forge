@@ -26,6 +26,6 @@ namespace Neon.Entities {
         /// Submit an event that listeners will eventually be notified about.
         /// </summary>
         /// <param name="evnt">The event to submit.</param>
-        void Submit(BaseEvent evnt);
+        void Submit<TEvent>(TEvent evnt) where TEvent : BaseEvent<TEvent>;
     }
 }
