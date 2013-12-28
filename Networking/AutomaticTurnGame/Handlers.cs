@@ -42,7 +42,9 @@ using System.Collections.Generic;
 
 namespace Forge.Networking.AutomaticTurnGame {
     internal class GameServerHandler : INetworkMessageHandler {
-        private Dictionary<int, List<IGameCommand>> _commands;
+        internal static readonly int DefaultTurnDelay = 2;
+
+        private DelayedMessageAccumulator _commands;
         private NetworkContext _context;
         private int _lastSentTurn;
 
@@ -54,11 +56,21 @@ namespace Forge.Networking.AutomaticTurnGame {
         /// more likely to stutter from a missed update.
         /// </summary>
         // TODO: can we self-balance this value as the game runs?
-        private int TurnDelay = 2;
+        public int TurnDelay {
+            get {
+                return _turnDelay;
+            }
+            private set {
+                _turnDelay = value;
+                _commands.Resize(value);
+            }
+        }
+        private int _turnDelay;
 
         public GameServerHandler(NetworkContext context) {
             _context = context;
-            _commands = new Dictionary<int, List<IGameCommand>>();
+            _turnDelay = DefaultTurnDelay;
+            _commands = new DelayedMessageAccumulator(DefaultTurnDelay);
         }
 
         public Type[] HandledTypes {
@@ -76,17 +88,9 @@ namespace Forge.Networking.AutomaticTurnGame {
         public void SendCommands() {
             ++_lastSentTurn;
 
-            List<IGameCommand> commands;
-            if (_commands.TryGetValue(_lastSentTurn, out commands)) {
-                _commands.Remove(_lastSentTurn);
-            }
-            else {
-                commands = new List<IGameCommand>();
-            }
-
             _context.SendMessage(NetworkMessageRecipient.All, new EndTurnNetworkMessage() {
-                Commands = commands,
-                OnUpdate = _lastSentTurn + TurnDelay
+                Commands = _commands.Take(),
+                OnUpdate = _lastSentTurn
             });
         }
 
@@ -94,13 +98,8 @@ namespace Forge.Networking.AutomaticTurnGame {
             if (message is SubmitCommandsNetworkMessage) {
                 SubmitCommandsNetworkMessage m = (SubmitCommandsNetworkMessage)message;
 
-                List<IGameCommand> allCommands;
-                if (_commands.TryGetValue(_lastSentTurn, out allCommands) == false) {
-                    allCommands = new List<IGameCommand>();
-                    _commands[_lastSentTurn] = allCommands;
-                }
-
-                allCommands.AddRange(m.Commands);
+                int offset = Math.Min(_lastSentTurn, m.SubmittedOn + _turnDelay);
+                _commands.Add(offset, m.Commands);
             }
 
             else if (message is AdjustTurnDelayNetworkMessage) {
@@ -108,21 +107,117 @@ namespace Forge.Networking.AutomaticTurnGame {
                 TurnDelay = m.NewDelay;
             }
         }
+
+        /// <summary>
+        /// Helper class that simplifies the management of delayed messages.
+        /// </summary>
+        /// <typeparam name="T">The type of message to store.</typeparam>
+        private class DelayedMessageAccumulator {
+            private List<IGameCommand>[] _queue;
+            private int _head;
+
+            /// <summary>
+            /// Construct a new circular queue with the given capacity.
+            /// </summary>
+            /// <param name="capacity">How big the queue should be.</param>
+            public DelayedMessageAccumulator(int capacity) {
+                _queue = new List<IGameCommand>[capacity];
+                for (int i = 0; i < _queue.Length; ++i) {
+                    _queue[i] = new List<IGameCommand>();
+                }
+            }
+
+            public void Resize(int length) {
+                List<IGameCommand>[] newQueue = new List<IGameCommand>[length];
+                Array.Copy(_queue, newQueue, Math.Max(_queue.Length, newQueue.Length));
+
+                // the old queue is bigger than the new queue; we need to condense values
+                if (newQueue.Length < _queue.Length) {
+                    for (int i = newQueue.Length; i < _queue.Length; ++i) {
+                        newQueue[newQueue.Length - 1].AddRange(_queue[i]);
+                    }
+                }
+
+                // the new queue is bigger than the original queue; we need to populate the null
+                // values
+                else {
+                    for (int i = _queue.Length; i < newQueue.Length; ++i) {
+                        newQueue[i] = new List<IGameCommand>();
+                    }
+                }
+
+                _queue = newQueue;
+            }
+
+            public List<IGameCommand> Take() {
+                List<IGameCommand> element = _queue[_head];
+                _queue[_head] = new List<IGameCommand>();
+                _head = (_head + 1) % _queue.Length;
+                return element;
+            }
+
+            public void Add(int offset, List<IGameCommand> commands) {
+                int index = (_head + offset) % _queue.Length;
+                _queue[index].AddRange(commands);
+            }
+        }
     }
 
-    internal class GameClientHandler : BaseNetworkMessageHandler<EndTurnNetworkMessage> {
+    internal class GameClientHandler : INetworkMessageHandler {
         private Queue<List<IGameCommand>> _updates = new Queue<List<IGameCommand>>();
 
-        public bool HasUpdate() {
-            return _updates.Count > 0;
+        /// <summary>
+        /// Read only value to get the current turn delay that the server is using.
+        /// </summary>
+        public int TurnDelay {
+            get;
+            private set;
+        }
+
+        public GameClientHandler() {
+            TurnDelay = GameServerHandler.DefaultTurnDelay;
+        }
+
+        /// <summary>
+        /// Does the client has an update ready to be executed?
+        /// </summary>
+        public bool HasUpdate {
+            get {
+                return _updates.Count > 0;
+            }
+        }
+
+        /// <summary>
+        /// Does the client have a large backlog of updates that are waiting to be executed?
+        /// </summary>
+        public bool HasLargeBacklog {
+            get {
+                return _updates.Count > 3;
+            }
         }
 
         public List<IGameCommand> PopUpdate() {
             return _updates.Dequeue();
         }
 
-        protected override void HandleNetworkMessage(Player sender, EndTurnNetworkMessage message) {
-            _updates.Enqueue(message.Commands);
+        public void HandleNetworkMessage(Player sender, INetworkMessage message) {
+            if (message is EndTurnNetworkMessage) {
+                _updates.Enqueue(((EndTurnNetworkMessage)message).Commands);
+            }
+
+            if (message is AdjustTurnDelayNetworkMessage) {
+                TurnDelay = ((AdjustTurnDelayNetworkMessage)message).NewDelay;
+            }
         }
+
+        public Type[] HandledTypes {
+            get {
+                return new[] {
+                    typeof(AdjustTurnDelayNetworkMessage),
+                    typeof(EndTurnNetworkMessage)
+                };
+            }
+        }
+
     }
 }

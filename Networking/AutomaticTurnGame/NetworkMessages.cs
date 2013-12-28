@@ -47,6 +47,12 @@ namespace Forge.Networking.AutomaticTurnGame {
         /// </summary>
         [JsonProperty]
         public List<IGameCommand> Commands;
+
+        /// <summary>
+        /// The update number that the command was submitted on.
+        /// </summary>
+        [JsonProperty]
+        public int SubmittedOn;
     }
 
     /// <summary>
