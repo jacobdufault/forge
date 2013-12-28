@@ -44,11 +44,5 @@ namespace Neon.Entities {
         /// Removes an event listener that was previously added with AddListener.
         /// </summary>
         //bool RemoveListener<TEvent>(Action<TEvent> onEvent);
-
-        /// <summary>
-        /// Submit an event that listeners will eventually be notified about.
-        /// </summary>
-        /// <param name="evnt">The event to submit.</param>
-        void Submit(BaseEvent evnt);
     }
 }

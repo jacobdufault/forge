@@ -69,8 +69,6 @@ namespace Neon.Entities.Implementation.Content {
 
         private SparseArray<DataInstance> _data;
 
-        private EventNotifier _eventNotifier;
-
         public int UniqueId {
             get;
             private set;
@@ -91,7 +89,6 @@ namespace Neon.Entities.Implementation.Content {
 
         public ContentEntity() {
             _data = new SparseArray<DataInstance>();
-            _eventNotifier = new EventNotifier();
         }
 
         public ContentEntity(int uniqueId, string prettyName)
@@ -182,10 +179,6 @@ namespace Neon.Entities.Implementation.Content {
             }
 
             return storage;
-        }
-
-        public IEventNotifier EventNotifier {
-            get { return _eventNotifier; }
         }
 
         public IData Current(DataAccessor accessor) {

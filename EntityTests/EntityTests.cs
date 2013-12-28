@@ -20,6 +20,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neon.Entities.Implementation.Content;
 using Neon.Entities.Implementation.Runtime;
+using Neon.Entities.Implementation.Shared;
 using Neon.Utilities;
 using System;
 using System.Collections.Generic;
@@ -53,7 +54,7 @@ namespace Neon.Entities.Tests {
                 Data = new List<ContentEntity.DataInstance>(),
                 PrettyName = "",
                 UniqueId = _idGenerator.Next()
-            });
+            }, new EventNotifier());
             return runtime;
         }
     }

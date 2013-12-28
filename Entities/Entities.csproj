@@ -51,14 +51,16 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="API\DataReference.cs" />
+    <Compile Include="API\IEventDispatcher.cs" />
     <Compile Include="API\ITemplateGroup.cs" />
     <Compile Include="Implementation\Content\GameSnapshot.cs" />
     <Compile Include="Implementation\Content\ContentEntity.cs" />
     <Compile Include="Implementation\Content\ContentTemplate.cs" />
     <Compile Include="Implementation\Content\TemplateGroup.cs" />
+    <Compile Include="Implementation\ContextObjects\EventDispatcherContext.cs" />
     <Compile Include="Implementation\Runtime\PerformanceInformation.cs" />
     <Compile Include="Implementation\Runtime\RuntimeTemplate.cs" />
-    <Compile Include="Implementation\Shared\EventProcessor.cs" />
+    <Compile Include="Implementation\Shared\EventNotifier.cs" />
     <Compile Include="Implementation\ContextObjects\GameEngineContext.cs" />
     <Compile Include="Implementation\Shared\QueryableEntityConverter.cs" />
     <Compile Include="Implementation\Shared\RequiredConverters.cs" />

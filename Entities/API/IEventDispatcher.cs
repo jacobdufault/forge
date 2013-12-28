@@ -17,32 +17,15 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Neon.Entities.E2ETests {
-    [JsonObject(MemberSerialization.OptIn)]
-    internal class SystemCounter : System, ITriggerUpdate, ITriggerRemoved {
-        [JsonProperty("UpdateCount")]
-        public int UpdateCount;
-        [JsonProperty("RemovedCount")]
-        public int RemovedCount;
-        [JsonProperty("Filter")]
-        public Type[] Filter;
-
-        public void OnUpdate(IEntity entity) {
-            ++UpdateCount;
-        }
-
-        public Type[] ComputeEntityFilter() {
-            return Filter;
-        }
-
-        public void OnRemoved(IEntity entity) {
-            ++RemovedCount;
-        }
+namespace Neon.Entities {
+    /// <summary>
+    /// Interface the game-play code can use to submit events to the external world.
+    /// </summary>
+    public interface IEventDispatcher {
+        /// <summary>
+        /// Submit an event that listeners will eventually be notified about.
+        /// </summary>
+        /// <param name="evnt">The event to submit.</param>
+        void Submit(BaseEvent evnt);
     }
 }

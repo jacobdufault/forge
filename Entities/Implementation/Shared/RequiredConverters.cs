@@ -47,6 +47,9 @@ namespace Neon.Entities.Implementation.Shared {
 
             List<IContextObject> objects = new List<IContextObject>(additionalContextObjects);
             objects.Add(new GameEngineContext(engine));
+            if (engine.Exists) {
+                objects.Add(new EventDispatcherContext(engine.Value.EventNotifier));
+            }
             return objects.ToArray();
         }
     }

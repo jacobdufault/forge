@@ -55,23 +55,13 @@ namespace Neon.Entities.Implementation.Runtime {
         }
         #endregion
 
+        private IEventDispatcher _eventDispatcher;
+
         #region Metadata
         public EntityManagerMetadata Metadata = new EntityManagerMetadata();
         #endregion
 
-        #region Event Processor
-        IEventNotifier IQueryableEntity.EventNotifier {
-            get { return EventNotifier; }
-        }
-        public EventNotifier EventNotifier {
-            get;
-            private set;
-        }
-        #endregion
-
         public RuntimeEntity() {
-            EventNotifier = new EventNotifier();
-
             DataStateChangeNotifier = new Notifier<RuntimeEntity>(this);
             ModificationNotifier = new Notifier<RuntimeEntity>(this);
         }
@@ -92,7 +82,8 @@ namespace Neon.Entities.Implementation.Runtime {
             }
         }
 
-        public void Initialize(ContentEntitySerializationFormat format) {
+        public void Initialize(ContentEntitySerializationFormat format, IEventDispatcher eventDispatcher) {
+            _eventDispatcher = eventDispatcher;
             _uniqueId = format.UniqueId;
             PrettyName = format.PrettyName ?? "";
 
@@ -190,7 +181,7 @@ namespace Neon.Entities.Implementation.Runtime {
                     _removedLastFrame[id] = _toRemoveStage1[i];
                     // _removedLastFrame[id] is removed in stage2
 
-                    EventNotifier.Submit(new RemovedDataEvent(_data[id].Current.GetType()));
+                    _eventDispatcher.Submit(new RemovedDataEvent(this, _data[id].Current.GetType()));
                 }
 
                 for (int i = 0; i < _toRemoveStage2.Count; ++i) {
@@ -225,7 +216,7 @@ namespace Neon.Entities.Implementation.Runtime {
                 _data[id] = new DataContainer(added.Duplicate(), added.Duplicate(), added.Duplicate());
 
                 // visualize the initial data
-                EventNotifier.Submit(new AddedDataEvent(added.GetType()));
+                _eventDispatcher.Submit(new AddedDataEvent(this, added.GetType()));
             }
 
             for (int i = 0; i < _toAddStage2.Count; ++i) {

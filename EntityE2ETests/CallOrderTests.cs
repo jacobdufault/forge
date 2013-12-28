@@ -36,7 +36,7 @@ namespace Neon.Entities.E2ETests {
     }
 
     [JsonObject(MemberSerialization.OptIn)]
-    internal class TriggerEventLogger : ITriggerAdded, ITriggerRemoved, ITriggerModified, ITriggerUpdate, ITriggerGlobalPreUpdate, ITriggerGlobalPostUpdate, ITriggerInput, ITriggerGlobalInput {
+    internal class TriggerEventLogger : System, ITriggerAdded, ITriggerRemoved, ITriggerModified, ITriggerUpdate, ITriggerGlobalPreUpdate, ITriggerGlobalPostUpdate, ITriggerInput, ITriggerGlobalInput {
         public Type[] ComputeEntityFilter() {
             return EntityFilter;
         }
@@ -97,8 +97,8 @@ namespace Neon.Entities.E2ETests {
     }
 
     public static class IGameEngineExtensions {
-        public static TSystem GetSystem<TSystem>(this IGameEngine engine) where TSystem : ISystem {
-            foreach (ISystem system in engine.TakeSnapshot().Systems) {
+        public static TSystem GetSystem<TSystem>(this IGameEngine engine) where TSystem : System {
+            foreach (System system in engine.TakeSnapshot().Systems) {
                 if (system is TSystem) {
                     return (TSystem)system;
                 }
@@ -153,7 +153,7 @@ namespace Neon.Entities.E2ETests {
         }
 
         [JsonObject(MemberSerialization.OptIn)]
-        private class AddAndModifyOnAddedSystem : ITriggerAdded {
+        private class AddAndModifyOnAddedSystem : System, ITriggerAdded {
             public void OnAdded(IEntity entity) {
                 entity.AddData<TestData0>();
                 entity.Modify<TestData0>();
@@ -199,7 +199,7 @@ namespace Neon.Entities.E2ETests {
         }
 
         [JsonObject(MemberSerialization.OptIn)]
-        private class ModifyOnUpdateSystem : ITriggerUpdate {
+        private class ModifyOnUpdateSystem : System, ITriggerUpdate {
             public void OnUpdate(IEntity entity) {
                 entity.Modify<TestData0>();
             }
@@ -309,7 +309,7 @@ namespace Neon.Entities.E2ETests {
         }
 
         [JsonObject(MemberSerialization.OptIn)]
-        private class ModifyOnRemovedTrigger : ITriggerRemoved {
+        private class ModifyOnRemovedTrigger : System, ITriggerRemoved {
 
             public void OnRemoved(IEntity entity) {
                 entity.Modify<TestData0>();

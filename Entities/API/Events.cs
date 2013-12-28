@@ -21,29 +21,14 @@ using System;
 
 namespace Neon.Entities {
     /// <summary>
-    /// Wraps a common event pattern where there is only one instance of the event.
-    /// </summary>
-    /// <typeparam name="DerivedEventType">The type of the class that derives this type.</typeparam>
-    public class SingletonEvent<DerivedEventType> : BaseEvent
-        where DerivedEventType : SingletonEvent<DerivedEventType>, new() {
-
-        /// <summary>
-        /// Internal constructor to prevent more instances of the singleton event type from being
-        /// created.
-        /// </summary>
-        protected SingletonEvent() {
-        }
-
-        /// <summary>
-        /// The event's instance.
-        /// </summary>
-        public static DerivedEventType Instance = new DerivedEventType();
-    }
-
-    /// <summary>
     /// Event that notifies listener that a new data instance has been added to the entity.
     /// </summary>
     public class AddedDataEvent : BaseEvent {
+        /// <summary>
+        /// The entity that had the data removed.
+        /// </summary>
+        public IEntity Entity;
+
         /// <summary>
         /// The type of data that has been added.
         /// </summary>
@@ -52,8 +37,10 @@ namespace Neon.Entities {
         /// <summary>
         /// Initializes a new instance of the AddedDataEvent class.
         /// </summary>
+        /// <param name="entity">The entity that the data was removed from.</param>
         /// <param name="addedDataType">Type of the added data.</param>
-        internal AddedDataEvent(Type addedDataType) {
+        internal AddedDataEvent(IEntity entity, Type addedDataType) {
+            Entity = entity;
             AddedDataType = addedDataType;
         }
     }
@@ -63,6 +50,11 @@ namespace Neon.Entities {
     /// </summary>
     public class RemovedDataEvent : BaseEvent {
         /// <summary>
+        /// The entity that had the data removed.
+        /// </summary>
+        public IEntity Entity;
+
+        /// <summary>
         /// The type of data that has been added.
         /// </summary>
         public Type RemovedDataType;
@@ -70,8 +62,10 @@ namespace Neon.Entities {
         /// <summary>
         /// Initializes a new instance of the RemovedDataEvent class.
         /// </summary>
+        /// <param name="entity">The entity that the data was removed from.</param>
         /// <param name="removedDataType">Type of the removed data.</param>
-        internal RemovedDataEvent(Type removedDataType) {
+        internal RemovedDataEvent(IEntity entity, Type removedDataType) {
+            Entity = entity;
             RemovedDataType = removedDataType;
         }
     }
@@ -115,15 +109,33 @@ namespace Neon.Entities {
     /// <summary>
     /// Event notifying listeners that the entity should be hidden.
     /// </summary>
-    public class HideEntityEvent : SingletonEvent<HideEntityEvent> { }
+    public class HideEntityEvent : BaseEvent {
+        public IEntity Entity;
+
+        internal HideEntityEvent(IEntity entity) {
+            Entity = entity;
+        }
+    }
 
     /// <summary>
     /// Event notifying listeners that the entity should be visible.
     /// </summary>
-    public class ShowEntityEvent : SingletonEvent<ShowEntityEvent> { }
+    public class ShowEntityEvent : BaseEvent {
+        public IEntity Entity;
+
+        internal ShowEntityEvent(IEntity entity) {
+            Entity = entity;
+        }
+    }
 
     /// <summary>
     /// Event notifying listeners that the entity has been destroyed.
     /// </summary>
-    public class DestroyedEntityEvent : SingletonEvent<DestroyedEntityEvent> { }
+    public class DestroyedEntityEvent : BaseEvent {
+        public IEntity Entity;
+
+        internal DestroyedEntityEvent(IEntity entity) {
+            Entity = entity;
+        }
+    }
 }

@@ -22,13 +22,21 @@ using System;
 
 namespace Neon.Entities {
     /// <summary>
-    /// All triggers should extend this interface.
+    /// All systems need to extend the system class. Systems have callbacks automatically registered
+    /// by implementing ITrigger* interfaces.
     /// </summary>
     /// <remarks>
     /// Client code should not directly extend this, as it does not give any behavior by itself.
     /// </remarks>
     [JsonObject(MemberSerialization.OptIn)]
-    public interface ISystem {
+    public abstract class System {
+        /// <summary>
+        /// Get the event dispatcher that can be used to notify the external world of events.
+        /// </summary>
+        protected internal IEventDispatcher EventDispatcher {
+            get;
+            internal set;
+        }
     }
 
     /// <summary>
@@ -38,7 +46,7 @@ namespace Neon.Entities {
     /// <remarks>
     /// Client code should not extend this.
     /// </remarks>
-    public interface ITriggerBaseFilter : ISystem {
+    public interface ITriggerBaseFilter {
         /// <summary>
         /// Computes the entity filter.
         /// </summary>
@@ -98,9 +106,9 @@ namespace Neon.Entities {
     }
 
     /// <summary>
-    /// A trigger that is called once per update loop.
+    /// A trigger that is called once per update loop before the update happens.
     /// </summary>
-    public interface ITriggerGlobalPreUpdate : ISystem {
+    public interface ITriggerGlobalPreUpdate {
         /// <summary>
         /// Called once per update loop. This is expected to use the EntityManager's singleton data.
         /// </summary>
@@ -108,9 +116,9 @@ namespace Neon.Entities {
     }
 
     /// <summary>
-    /// A trigger that is called once per update loop.
+    /// A trigger that is called once per update loop after the update happens.
     /// </summary>
-    public interface ITriggerGlobalPostUpdate : ISystem {
+    public interface ITriggerGlobalPostUpdate {
         /// <summary>
         /// Called once per update loop. This is expected to use the EntityManager's singleton data.
         /// </summary>
@@ -138,7 +146,7 @@ namespace Neon.Entities {
     /// A trigger that globally reacts to input and is expected to use the EntityManager's singleton
     /// data.
     /// </summary>
-    public interface ITriggerGlobalInput : ISystem {
+    public interface ITriggerGlobalInput {
         /// <summary>
         /// The type of structured input that the trigger is interested in.
         /// </summary>

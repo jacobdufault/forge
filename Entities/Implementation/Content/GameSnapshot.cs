@@ -44,6 +44,13 @@ namespace Neon.Entities.Implementation.Content {
             EntityConversionContext conversionContext = generalContext.Get<EntityConversionContext>();
             GameEngineContext engineContext = generalContext.Get<GameEngineContext>();
 
+            // There is only an EventDispatcherContext when we have a GameEngineContext
+            IEventDispatcher eventDispatcher = null;
+            if (engineContext.GameEngine.Exists) {
+                EventDispatcherContext eventContext = generalContext.Get<EventDispatcherContext>();
+                eventDispatcher = eventContext.Dispatcher;
+            }
+
             // Restore our created entity instances
             List<IEntity> restored = new List<IEntity>();
             foreach (ContentEntitySerializationFormat format in serializedEntities) {
@@ -55,7 +62,7 @@ namespace Neon.Entities.Implementation.Content {
                     ((ContentEntity)entity).Initialize(format);
                 }
                 else {
-                    ((RuntimeEntity)entity).Initialize(format);
+                    ((RuntimeEntity)entity).Initialize(format, eventDispatcher);
                 }
             }
 
@@ -145,7 +152,7 @@ namespace Neon.Entities.Implementation.Content {
             ActiveEntities = new List<IEntity>();
             AddedEntities = new List<IEntity>();
             RemovedEntities = new List<IEntity>();
-            Systems = new List<ISystem>();
+            Systems = new List<System>();
         }
 
         [JsonProperty("EntityIdGenerator")]
@@ -181,7 +188,7 @@ namespace Neon.Entities.Implementation.Content {
         private EntitySerializationContainer _removedEntitiesContainer;
 
         [JsonProperty("Systems")]
-        public List<ISystem> Systems {
+        public List<System> Systems {
             get;
             set;
         }
@@ -305,7 +312,7 @@ namespace Neon.Entities.Implementation.Content {
             get { return AddedEntities.Cast<IEntity>(); }
         }
 
-        List<ISystem> IGameSnapshot.Systems {
+        List<System> IGameSnapshot.Systems {
             get { return Systems; }
         }
     }

@@ -38,18 +38,12 @@ namespace Neon.Entities.Implementation.Runtime {
         private SparseArray<IData> _defaultDataInstances;
 
         /// <summary>
-        /// The event notifier used to notify listeners of interesting events.
-        /// </summary>
-        private EventNotifier _eventNotifier;
-
-        /// <summary>
         /// The game engine that entities are added to when they are instantiated.
         /// </summary>
         private GameEngine _gameEngine;
 
         public RuntimeTemplate(int templateId, GameEngine engine) {
             _defaultDataInstances = new SparseArray<IData>();
-            _eventNotifier = new EventNotifier();
             _gameEngine = engine;
             TemplateId = templateId;
             PrettyName = "";
@@ -121,12 +115,6 @@ namespace Neon.Entities.Implementation.Runtime {
             }
 
             return storage;
-        }
-
-        public IEventNotifier EventNotifier {
-            get {
-                return _eventNotifier;
-            }
         }
 
         public IData Current(DataAccessor accessor) {

@@ -27,7 +27,7 @@ namespace Neon.Entities.Implementation.Shared {
     /// Handles event dispatch. Events are queued up until some point in time and then they are
     /// dispatched.
     /// </summary>
-    internal class EventNotifier : IEventNotifier {
+    internal class EventNotifier : IEventNotifier, IEventDispatcher {
         /// <summary>
         /// Event handlers.
         /// </summary>
@@ -148,61 +148,5 @@ namespace Neon.Entities.Implementation.Shared {
             }
         }
         */
-    }
-
-    /// <summary>
-    /// Manages a collection of EventProcessors by allowing for convenient, thread-safe dispatch.
-    /// </summary>
-    internal class EventProcessorManager {
-        /// <summary>
-        /// The list of event processors which are need notifications. This can be written to by any
-        /// number of threads, so locks are applied when writing.
-        /// </summary>
-        private List<EventNotifier> _dirtyEventProcessors = new List<EventNotifier>();
-
-        /// <summary>
-        /// The list of event processors that we are currently dispatching. This should be empty
-        /// except when we are dispatching. It is read-only (it gets values from
-        /// _dirtyEventProcessors) .
-        /// </summary>
-        private List<EventNotifier> _dispatchingEventProcessors = new List<EventNotifier>();
-
-        private void EventAddedNotifier_Listener(EventNotifier eventProcessor) {
-            lock (this) {
-                _dirtyEventProcessors.Add(eventProcessor);
-            }
-        }
-
-        /// <summary>
-        /// Begin to monitor an event processor for dispatch notifications.
-        /// </summary>
-        public void BeginMonitoring(EventNotifier processor) {
-            processor.EventAddedNotifier.Listener += EventAddedNotifier_Listener;
-        }
-
-        /// <summary>
-        /// Stops monitoring an event processor.
-        /// </summary>
-        public void StopMonitoring(EventNotifier processor) {
-            processor.EventAddedNotifier.Listener -= EventAddedNotifier_Listener;
-
-            lock (this) {
-                _dirtyEventProcessors.Remove(processor);
-            }
-        }
-
-        /// <summary>
-        /// Dispatches all event processors which have events.
-        /// </summary>
-        public void DispatchEvents() {
-            lock (this) {
-                Utils.Swap(ref _dirtyEventProcessors, ref _dispatchingEventProcessors);
-            }
-
-            for (int i = 0; i < _dispatchingEventProcessors.Count; ++i) {
-                _dispatchingEventProcessors[i].DispatchEvents();
-            }
-            _dispatchingEventProcessors.Clear();
-        }
     }
 }

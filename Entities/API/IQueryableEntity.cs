@@ -42,15 +42,6 @@ namespace Neon.Entities {
             Predicate<DataAccessor> filter = null, ICollection<DataAccessor> storage = null);
 
         /// <summary>
-        /// Returns an event dispatcher that is used to notify external code of interesting things
-        /// that have occurred during the last update, such as the removal of an entity or perhaps a
-        /// data addition to an entity.
-        /// </summary>
-        IEventNotifier EventNotifier {
-            get;
-        }
-
-        /// <summary>
         /// Gets the current data value for the given type.
         /// </summary>
         IData Current(DataAccessor accessor);

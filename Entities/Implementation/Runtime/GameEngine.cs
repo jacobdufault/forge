@@ -49,11 +49,6 @@ namespace Neon.Entities.Implementation.Runtime {
         public static bool EnableMultithreading = true;
 
         /// <summary>
-        /// Manages all of the event processors.
-        /// </summary>
-        private EventProcessorManager _eventProcessors = new EventProcessorManager();
-
-        /// <summary>
         /// The list of active Entities in the world.
         /// </summary>
         private UnorderedList<RuntimeEntity> _entities = new UnorderedList<RuntimeEntity>();
@@ -121,7 +116,7 @@ namespace Neon.Entities.Implementation.Runtime {
         /// </summary>
         private static int _entityUnorderedListMetadataKey = EntityManagerMetadata.GetUnorderedListMetadataIndex();
 
-        private List<ISystem> _systems;
+        private List<System> _systems;
 
         /// <summary>
         /// Events that the EntityManager dispatches.
@@ -166,7 +161,6 @@ namespace Neon.Entities.Implementation.Runtime {
             _systems = snapshot.Systems;
 
             SystemDoneEvent = new CountdownEvent(0);
-            _eventProcessors.BeginMonitoring((EventNotifier)EventNotifier);
 
             // TODO: ensure that when correctly restore UpdateNumber
             //UpdateNumber = updateNumber;
@@ -225,7 +219,15 @@ namespace Neon.Entities.Implementation.Runtime {
         /// <summary>
         /// Registers the given system with the EntityManager.
         /// </summary>
-        private void AddSystem(ISystem baseSystem) {
+        private void AddSystem(System baseSystem) {
+            if (baseSystem.EventDispatcher != null) {
+                throw new InvalidOperationException("System already has an event " +
+                    "dispatcher; either it got deserialized (it should not have), or the system " +
+                    "was already registered with another game engine (which means the reference " +
+                    "isolation is broken)");
+            }
+            baseSystem.EventDispatcher = EventNotifier;
+
             if (baseSystem is ITriggerBaseFilter) {
                 MultithreadedSystem multithreadingSystem = new MultithreadedSystem(this, (ITriggerBaseFilter)baseSystem);
                 foreach (var entity in _entities) {
@@ -246,12 +248,11 @@ namespace Neon.Entities.Implementation.Runtime {
         /// <param name="toAdd">The entity to add.</param>
         private void InternalAddEntity(RuntimeEntity toAdd) {
             toAdd.GameEngine = this;
-            ((EventNotifier)((IEntity)toAdd).EventNotifier).Submit(ShowEntityEvent.Instance);
+            EventNotifier.Submit(new ShowEntityEvent(toAdd));
 
             // register listeners
             toAdd.ModificationNotifier.Listener += OnEntityModified;
             toAdd.DataStateChangeNotifier.Listener += OnEntityDataStateChanged;
-            _eventProcessors.BeginMonitoring((EventNotifier)((IEntity)toAdd).EventNotifier);
 
             // notify ourselves of data state changes so that it the entity is pushed to systems
             toAdd.DataStateChangeNotifier.Notify();
@@ -300,7 +301,6 @@ namespace Neon.Entities.Implementation.Runtime {
                 // remove listeners
                 toRemove.ModificationNotifier.Listener -= OnEntityModified;
                 toRemove.DataStateChangeNotifier.Listener -= OnEntityDataStateChanged;
-                _eventProcessors.StopMonitoring((EventNotifier)((IEntity)toRemove).EventNotifier);
 
                 // remove all data from the entity and then push said changes out
                 foreach (DataAccessor accessor in toRemove.SelectData()) {
@@ -310,10 +310,10 @@ namespace Neon.Entities.Implementation.Runtime {
 
                 // remove the entity from the list of entities
                 _entities.Remove(toRemove, GetEntitiesListFromMetadata(toRemove));
-                ((EventNotifier)((IEntity)toRemove).EventNotifier).Submit(DestroyedEntityEvent.Instance);
+                EventNotifier.Submit(new DestroyedEntityEvent(toRemove));
 
                 // notify listeners we removed an event
-                ((EventNotifier)EventNotifier).Submit(new EntityRemovedEvent(toRemove));
+                EventNotifier.Submit(new EntityRemovedEvent(toRemove));
             }
             // can't clear b/c it is shared
 
@@ -467,7 +467,7 @@ namespace Neon.Entities.Implementation.Runtime {
         }
 
         public void DispatchEvents() {
-            _eventProcessors.DispatchEvents();
+            EventNotifier.DispatchEvents();
         }
 
         /// <summary>
@@ -476,7 +476,7 @@ namespace Neon.Entities.Implementation.Runtime {
         /// <param name="instance">The instance to add</param>
         internal void AddEntity(RuntimeEntity instance) {
             _notifiedAddingEntities.Add(instance);
-            instance.EventNotifier.Submit(HideEntityEvent.Instance);
+            EventNotifier.Submit(new HideEntityEvent(instance));
         }
 
         /// <summary>
@@ -485,7 +485,7 @@ namespace Neon.Entities.Implementation.Runtime {
         /// <param name="instance">The entity instance to remove</param>
         internal void RemoveEntity(RuntimeEntity instance) {
             _notifiedRemovedEntities.Add(instance);
-            instance.EventNotifier.Submit(HideEntityEvent.Instance);
+            EventNotifier.Submit(new HideEntityEvent(instance));
         }
 
         /// <summary>

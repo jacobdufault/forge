@@ -51,8 +51,6 @@ namespace Neon.Entities.Implementation.Content {
 
         private SparseArray<IData> _defaultDataInstances;
 
-        private EventNotifier _eventNotifier;
-
         [JsonProperty("TemplateId")]
         public int TemplateId {
             get;
@@ -67,7 +65,6 @@ namespace Neon.Entities.Implementation.Content {
 
         public ContentTemplate(int id) {
             _defaultDataInstances = new SparseArray<IData>();
-            _eventNotifier = new EventNotifier();
             TemplateId = id;
             PrettyName = "";
         }
@@ -138,12 +135,6 @@ namespace Neon.Entities.Implementation.Content {
             }
 
             return storage;
-        }
-
-        public IEventNotifier EventNotifier {
-            get {
-                return _eventNotifier;
-            }
         }
 
         public IData Current(DataAccessor accessor) {
