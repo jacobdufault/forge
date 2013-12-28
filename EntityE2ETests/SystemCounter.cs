@@ -25,7 +25,7 @@ using System.Text;
 
 namespace Neon.Entities.E2ETests {
     [JsonObject(MemberSerialization.OptIn)]
-    internal class SystemCounter : System, ITriggerUpdate, ITriggerRemoved {
+    internal class SystemCounter : BaseSystem, Trigger.Update, Trigger.Removed {
         [JsonProperty("UpdateCount")]
         public int UpdateCount;
         [JsonProperty("RemovedCount")]
@@ -37,7 +37,7 @@ namespace Neon.Entities.E2ETests {
             ++UpdateCount;
         }
 
-        public Type[] ComputeEntityFilter() {
+        public Type[] RequiredDataTypes() {
             return Filter;
         }
 

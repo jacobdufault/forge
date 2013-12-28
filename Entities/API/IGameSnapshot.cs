@@ -96,7 +96,7 @@ namespace Neon.Entities {
         /// <summary>
         /// All systems that are used when executing the game.
         /// </summary>
-        List<System> Systems {
+        List<BaseSystem> Systems {
             get;
         }
     }

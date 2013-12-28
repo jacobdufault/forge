@@ -36,8 +36,8 @@ namespace Neon.Entities.E2ETests {
     }
 
     [JsonObject(MemberSerialization.OptIn)]
-    internal class TriggerEventLogger : System, ITriggerAdded, ITriggerRemoved, ITriggerModified, ITriggerUpdate, ITriggerGlobalPreUpdate, ITriggerGlobalPostUpdate, ITriggerInput, ITriggerGlobalInput {
-        public Type[] ComputeEntityFilter() {
+    internal class TriggerEventLogger : BaseSystem, Trigger.Added, Trigger.Removed, Trigger.Modified, Trigger.Update, Trigger.GlobalPreUpdate, Trigger.GlobalPostUpdate, Trigger.Input, Trigger.GlobalInput {
+        public Type[] RequiredDataTypes() {
             return EntityFilter;
         }
 
@@ -83,8 +83,8 @@ namespace Neon.Entities.E2ETests {
             Events.Add(TriggerEvent.OnGlobalPostUpdate);
         }
 
-        public Type IStructuredInputType {
-            get { return typeof(int); }
+        public Type[] InputTypes {
+            get { return new Type[] { typeof(int) }; }
         }
 
         public void OnInput(IGameInput input, IEntity entity) {
@@ -97,8 +97,8 @@ namespace Neon.Entities.E2ETests {
     }
 
     public static class IGameEngineExtensions {
-        public static TSystem GetSystem<TSystem>(this IGameEngine engine) where TSystem : System {
-            foreach (System system in engine.TakeSnapshot().Systems) {
+        public static TSystem GetSystem<TSystem>(this IGameEngine engine) where TSystem : BaseSystem {
+            foreach (BaseSystem system in engine.TakeSnapshot().Systems) {
                 if (system is TSystem) {
                     return (TSystem)system;
                 }
@@ -153,13 +153,13 @@ namespace Neon.Entities.E2ETests {
         }
 
         [JsonObject(MemberSerialization.OptIn)]
-        private class AddAndModifyOnAddedSystem : System, ITriggerAdded {
+        private class AddAndModifyOnAddedSystem : BaseSystem, Trigger.Added {
             public void OnAdded(IEntity entity) {
                 entity.AddData<TestData0>();
                 entity.Modify<TestData0>();
             }
 
-            public Type[] ComputeEntityFilter() {
+            public Type[] RequiredDataTypes() {
                 return new Type[] { };
             }
         }
@@ -199,12 +199,12 @@ namespace Neon.Entities.E2ETests {
         }
 
         [JsonObject(MemberSerialization.OptIn)]
-        private class ModifyOnUpdateSystem : System, ITriggerUpdate {
+        private class ModifyOnUpdateSystem : BaseSystem, Trigger.Update {
             public void OnUpdate(IEntity entity) {
                 entity.Modify<TestData0>();
             }
 
-            public Type[] ComputeEntityFilter() {
+            public Type[] RequiredDataTypes() {
                 return new Type[] { };
             }
         }
@@ -309,13 +309,13 @@ namespace Neon.Entities.E2ETests {
         }
 
         [JsonObject(MemberSerialization.OptIn)]
-        private class ModifyOnRemovedTrigger : System, ITriggerRemoved {
+        private class ModifyOnRemovedTrigger : BaseSystem, Trigger.Removed {
 
             public void OnRemoved(IEntity entity) {
                 entity.Modify<TestData0>();
             }
 
-            public Type[] ComputeEntityFilter() {
+            public Type[] RequiredDataTypes() {
                 return new Type[] { };
             }
         }

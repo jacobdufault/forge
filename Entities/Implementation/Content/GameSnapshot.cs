@@ -152,7 +152,7 @@ namespace Neon.Entities.Implementation.Content {
             ActiveEntities = new List<IEntity>();
             AddedEntities = new List<IEntity>();
             RemovedEntities = new List<IEntity>();
-            Systems = new List<System>();
+            Systems = new List<BaseSystem>();
         }
 
         [JsonProperty("EntityIdGenerator")]
@@ -188,7 +188,7 @@ namespace Neon.Entities.Implementation.Content {
         private EntitySerializationContainer _removedEntitiesContainer;
 
         [JsonProperty("Systems")]
-        public List<System> Systems {
+        public List<BaseSystem> Systems {
             get;
             set;
         }
@@ -312,7 +312,7 @@ namespace Neon.Entities.Implementation.Content {
             get { return AddedEntities.Cast<IEntity>(); }
         }
 
-        List<System> IGameSnapshot.Systems {
+        List<BaseSystem> IGameSnapshot.Systems {
             get { return Systems; }
         }
     }

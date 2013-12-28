@@ -98,14 +98,14 @@ namespace Neon.Entities.Implementation.Runtime {
         private MultithreadedSystemSharedContext _shared;
 
         // Cached triggers
-        private ITriggerAdded _triggerAdded;
-        private ITriggerRemoved _triggerRemoved;
-        private ITriggerModified _triggerModified;
-        private ITriggerGlobalPreUpdate _triggerGlobalPreUpdate;
-        private ITriggerUpdate _triggerUpdate;
-        private ITriggerGlobalPostUpdate _triggerGlobalPostUpdate;
-        private ITriggerInput _triggerInput;
-        private ITriggerGlobalInput _triggerGlobalInput;
+        private Trigger.Added _triggerAdded;
+        private Trigger.Removed _triggerRemoved;
+        private Trigger.Modified _triggerModified;
+        private Trigger.GlobalPreUpdate _triggerGlobalPreUpdate;
+        private Trigger.Update _triggerUpdate;
+        private Trigger.GlobalPostUpdate _triggerGlobalPostUpdate;
+        private Trigger.Input _triggerInput;
+        private Trigger.GlobalInput _triggerGlobalInput;
 
         /// <summary>
         /// Filter we use for filtering entities
@@ -116,30 +116,30 @@ namespace Neon.Entities.Implementation.Runtime {
         /// The trigger that this system uses for filtering entities (_filter is the compiled
         /// version of this).
         /// </summary>
-        public ITriggerBaseFilter Trigger;
+        public ITriggerFilterProvider Trigger;
 
         /// <summary>
         /// Performance data
         /// </summary>
         public PerformanceInformation PerformanceData;
 
-        internal MultithreadedSystem(MultithreadedSystemSharedContext sharedData, ITriggerBaseFilter trigger) {
+        internal MultithreadedSystem(MultithreadedSystemSharedContext sharedData, ITriggerFilterProvider trigger) {
             PerformanceData = new PerformanceInformation();
 
             _shared = sharedData;
 
-            _filter = new Filter(DataAccessorFactory.MapTypesToDataAccessors(trigger.ComputeEntityFilter()));
+            _filter = new Filter(DataAccessorFactory.MapTypesToDataAccessors(trigger.RequiredDataTypes()));
             _entityCache = new EntityCache(_filter);
 
             Trigger = trigger;
-            _triggerAdded = trigger as ITriggerAdded;
-            _triggerRemoved = trigger as ITriggerRemoved;
-            _triggerModified = trigger as ITriggerModified;
-            _triggerGlobalPreUpdate = trigger as ITriggerGlobalPreUpdate;
-            _triggerUpdate = trigger as ITriggerUpdate;
-            _triggerGlobalPostUpdate = trigger as ITriggerGlobalPostUpdate;
-            _triggerInput = trigger as ITriggerInput;
-            _triggerGlobalInput = trigger as ITriggerGlobalInput;
+            _triggerAdded = trigger as Trigger.Added;
+            _triggerRemoved = trigger as Trigger.Removed;
+            _triggerModified = trigger as Trigger.Modified;
+            _triggerGlobalPreUpdate = trigger as Trigger.GlobalPreUpdate;
+            _triggerUpdate = trigger as Trigger.Update;
+            _triggerGlobalPostUpdate = trigger as Trigger.GlobalPostUpdate;
+            _triggerInput = trigger as Trigger.Input;
+            _triggerGlobalInput = trigger as Trigger.GlobalInput;
         }
 
         public void Restore(RuntimeEntity entity) {
@@ -309,7 +309,18 @@ namespace Neon.Entities.Implementation.Runtime {
                 // call input methods, if applicable
                 if (_triggerInput != null) {
                     for (int i = 0; i < input.Count; ++i) {
-                        if (_triggerInput.IStructuredInputType.IsInstanceOfType(input[i])) {
+                        // see if one of the input types match the given input
+                        bool accept = false;
+                        for (int j = 0; j < _triggerInput.InputTypes.Length; ++j) {
+                            if (_triggerInput.InputTypes[j].IsInstanceOfType(input[i])) {
+                                accept = true;
+                                break;
+                            }
+                        }
+
+                        // accept is true when one of the input types matched; aka, we execute
+                        // OnInput
+                        if (accept) {
                             for (int j = 0; j < _entityCache.CachedEntities.Length; ++j) {
                                 IEntity entity = _entityCache.CachedEntities[j];
                                 _triggerInput.OnInput(input[i], entity);
@@ -321,7 +332,15 @@ namespace Neon.Entities.Implementation.Runtime {
                 // call global input, if applicable
                 if (_triggerGlobalInput != null) {
                     for (int i = 0; i < input.Count; ++i) {
-                        if (_triggerGlobalInput.IStructuredInputType.IsInstanceOfType(input[i])) {
+                        bool accept = false;
+                        for (int j = 0; j < _triggerGlobalInput.InputTypes.Length; ++j) {
+                            if (_triggerGlobalInput.InputTypes[j].IsInstanceOfType(input[i])) {
+                                accept = true;
+                                break;
+                            }
+                        }
+
+                        if (accept) {
                             _triggerGlobalInput.OnGlobalInput(input[i], _shared.SingletonEntity);
                         }
                     }

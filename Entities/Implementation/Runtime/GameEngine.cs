@@ -116,7 +116,7 @@ namespace Neon.Entities.Implementation.Runtime {
         /// </summary>
         private static int _entityUnorderedListMetadataKey = EntityManagerMetadata.GetUnorderedListMetadataIndex();
 
-        private List<System> _systems;
+        private List<BaseSystem> _systems;
 
         /// <summary>
         /// Events that the EntityManager dispatches.
@@ -219,7 +219,7 @@ namespace Neon.Entities.Implementation.Runtime {
         /// <summary>
         /// Registers the given system with the EntityManager.
         /// </summary>
-        private void AddSystem(System baseSystem) {
+        private void AddSystem(BaseSystem baseSystem) {
             if (baseSystem.EventDispatcher != null) {
                 throw new InvalidOperationException("System already has an event " +
                     "dispatcher; either it got deserialized (it should not have), or the system " +
@@ -228,8 +228,8 @@ namespace Neon.Entities.Implementation.Runtime {
             }
             baseSystem.EventDispatcher = EventNotifier;
 
-            if (baseSystem is ITriggerBaseFilter) {
-                MultithreadedSystem multithreadingSystem = new MultithreadedSystem(this, (ITriggerBaseFilter)baseSystem);
+            if (baseSystem is ITriggerFilterProvider) {
+                MultithreadedSystem multithreadingSystem = new MultithreadedSystem(this, (ITriggerFilterProvider)baseSystem);
                 foreach (var entity in _entities) {
                     multithreadingSystem.Restore(entity);
                 }

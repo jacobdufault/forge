@@ -29,7 +29,7 @@ namespace Neon.Entities {
     /// Client code should not directly extend this, as it does not give any behavior by itself.
     /// </remarks>
     [JsonObject(MemberSerialization.OptIn)]
-    public abstract class System {
+    public abstract class BaseSystem {
         /// <summary>
         /// Get the event dispatcher that can be used to notify the external world of events.
         /// </summary>
@@ -40,123 +40,148 @@ namespace Neon.Entities {
     }
 
     /// <summary>
-    /// Base filter for triggers which require a filter. as it does not provide any trigger APIs by
-    /// itself.
+    /// * do not extend this type; it does not provide any functionality *
+    /// A base type for triggers which require a filter that exposes the common RequiredDataTypes
+    /// method.
     /// </summary>
     /// <remarks>
     /// Client code should not extend this.
     /// </remarks>
-    public interface ITriggerBaseFilter {
+    public interface ITriggerFilterProvider {
         /// <summary>
         /// Computes the entity filter.
         /// </summary>
+        /// <remarks>
+        /// Entities, by default, pass the filter. They pass the filter when we can prove they don't
+        /// belong, ie, they lack one of the data types in the entity filter. So, if the filter is
+        /// empty, then every entity will be within the filter.
+        /// </remarks>
         /// <returns>A list of Data types that the entity needs to have to pass the
         /// filter.</returns>
-        Type[] ComputeEntityFilter();
+        Type[] RequiredDataTypes();
     }
 
-    /// <summary>
-    /// A trigger that is activated when an entity has passed the entity filter.
-    /// </summary>
-    public interface ITriggerAdded : ITriggerBaseFilter {
+    public static class Trigger {
         /// <summary>
-        /// Called when an Entity has passed the filter.
+        /// Adds an OnAdded method to the system, which is called when the entity has passed the
+        /// given filter.
         /// </summary>
-        /// <param name="entity">The entity that passed the filter.</param>
-        void OnAdded(IEntity entity);
-    }
-
-    /// <summary>
-    /// A trigger that is activated when an entity is no longer passing the entity filter.
-    /// </summary>
-    public interface ITriggerRemoved : ITriggerBaseFilter {
-        /// <summary>
-        /// Called when an Entity, which was once passing the filter, is no longer doing so.
-        /// </summary>
-        /// <remarks>
-        /// This can occur for a number of reasons, such as a data state change or the Entity being
-        /// destroyed.
-        /// </remarks>
-        /// <param name="entity">The entity that is no longer passing the filter.</param>
-        void OnRemoved(IEntity entity);
-    }
-
-    /// <summary>
-    /// A trigger that is notified whenever an Entity is modified.
-    /// </summary>
-    public interface ITriggerModified : ITriggerBaseFilter {
-        /// <summary>
-        /// The given entity, which has passed the filter, has been modified.
-        /// </summary>
-        void OnModified(IEntity entity);
-    }
-
-    /// <summary>
-    /// A trigger that updates all entities which pass the filter per update loop.
-    /// </summary>
-    public interface ITriggerUpdate : ITriggerBaseFilter {
-        /// <summary>
-        /// This is called every update frame for all entities which pass the filter.
-        /// </summary>
-        /// <remarks>
-        /// If you need to know when the entities are added or are no longer going to be updated,
-        /// also implement ILifecycleTrigger.
-        /// </remarks>
-        void OnUpdate(IEntity entity);
-    }
-
-    /// <summary>
-    /// A trigger that is called once per update loop before the update happens.
-    /// </summary>
-    public interface ITriggerGlobalPreUpdate {
-        /// <summary>
-        /// Called once per update loop. This is expected to use the EntityManager's singleton data.
-        /// </summary>
-        void OnGlobalPreUpdate(IEntity singletonEntity);
-    }
-
-    /// <summary>
-    /// A trigger that is called once per update loop after the update happens.
-    /// </summary>
-    public interface ITriggerGlobalPostUpdate {
-        /// <summary>
-        /// Called once per update loop. This is expected to use the EntityManager's singleton data.
-        /// </summary>
-        void OnGlobalPostUpdate(IEntity singletonEntity);
-    }
-
-    /// <summary>
-    /// A trigger that reacts to input for entities which pass the filter.
-    /// </summary>
-    public interface ITriggerInput : ITriggerBaseFilter {
-        /// <summary>
-        /// The type of structured input that the trigger is interested in.
-        /// </summary>
-        Type IStructuredInputType {
-            get;
+        public interface Added : ITriggerFilterProvider {
+            /// <summary>
+            /// Called when an Entity has passed the filter.
+            /// </summary>
+            /// <param name="entity">An entity that is now passing the filter.</param>
+            void OnAdded(IEntity entity);
         }
 
         /// <summary>
-        /// Called on all entities which pass the filter.
+        /// Adds an OnRemoved method to the system, which is called when an entity no longer passes
+        /// the given filter after it has passed it.
         /// </summary>
-        void OnInput(IGameInput input, IEntity entity);
-    }
-
-    /// <summary>
-    /// A trigger that globally reacts to input and is expected to use the EntityManager's singleton
-    /// data.
-    /// </summary>
-    public interface ITriggerGlobalInput {
-        /// <summary>
-        /// The type of structured input that the trigger is interested in.
-        /// </summary>
-        Type IStructuredInputType {
-            get;
+        public interface Removed : ITriggerFilterProvider {
+            /// <summary>
+            /// Called when an Entity, which was once passing the filter, is no longer doing so.
+            /// </summary>
+            /// <remarks>
+            /// This can occur for a number of reasons, such as a data state change or the Entity
+            /// being destroyed.
+            /// </remarks>
+            /// <param name="entity">An entity that is no longer passing the filter.</param>
+            void OnRemoved(IEntity entity);
         }
 
         /// <summary>
-        /// Called whenever the given input type is received.
+        /// Adds an OnModified method to the system, which is called whenever an entity which passes
+        /// the filter is modified.
         /// </summary>
-        void OnGlobalInput(IGameInput input, IEntity singletonEntity);
+        public interface Modified : ITriggerFilterProvider {
+            /// <summary>
+            /// The given entity, which has passed the filter, has been modified.
+            /// </summary>
+            /// <param name="entity">An entity which has passed the filter.</param>
+            void OnModified(IEntity entity);
+        }
+
+        /// <summary>
+        /// Adds an OnUpdate method to the system, which is called on every entity that passes the
+        /// filter each update.
+        /// </summary>
+        public interface Update : ITriggerFilterProvider {
+            /// <summary>
+            /// This is called every update frame for all entities which pass the filter.
+            /// </summary>
+            /// <remarks>
+            /// If you need to know when the entities are added or are no longer going to be
+            /// updated, also implement ILifecycleTrigger.
+            /// </remarks>
+            /// <param name="entity">An entity which has passed the filter.</param>
+            void OnUpdate(IEntity entity);
+        }
+
+        /// <summary>
+        /// Adds an OnGlobalPreUpdate method to the system, which is called before OnUpdate has
+        /// started on the singleton entity object.
+        /// </summary>
+        public interface GlobalPreUpdate {
+            /// <summary>
+            /// Called once per update loop. This is expected to use the EntityManager's singleton
+            /// data.
+            /// </summary>
+            /// <param name="singletonEntity">The GameEngine's singleton entity instance.</param>
+            void OnGlobalPreUpdate(IEntity singletonEntity);
+        }
+
+        /// <summary>
+        /// Adds an OnGlobalPostUpdate method to the system, which is called after OnUpdate has
+        /// completed for this system on the singleton entity.
+        /// </summary>
+        public interface GlobalPostUpdate {
+            /// <summary>
+            /// Called once per update loop. This is expected to use the EntityManager's singleton
+            /// data.
+            /// </summary>
+            /// <param name="singletonEntity">The GameEngine's singleton entity instance.</param>
+            void OnGlobalPostUpdate(IEntity singletonEntity);
+        }
+
+        /// <summary>
+        /// Adds an OnInput method to the system, which is called on every entity that passes the
+        /// filter when one of the given input types has been received by the game engine.
+        /// </summary>
+        public interface Input : ITriggerFilterProvider {
+            /// <summary>
+            /// The types of game input that the trigger is interested in.
+            /// </summary>
+            Type[] InputTypes {
+                get;
+            }
+
+            /// <summary>
+            /// Called on all entities which pass the filter.
+            /// </summary>
+            /// <param name="input">The input that was received.</param>
+            /// <param name="entity">An entity which has passed the filter.</param>
+            void OnInput(IGameInput input, IEntity entity);
+        }
+
+        /// <summary>
+        /// Adds an OnGlobalInput method to the system, which is called on the singleton entity when
+        /// one of the given input types has been received by the game engine.
+        /// </summary>
+        public interface GlobalInput {
+            /// <summary>
+            /// The types of game input that the trigger is interested in.
+            /// </summary>
+            Type[] InputTypes {
+                get;
+            }
+
+            /// <summary>
+            /// Called whenever the given input type is received.
+            /// </summary>
+            /// <param name="input">The input that was received.</param>
+            /// <param name="singletonEntity">The GameEngine's singleton entity instance.</param>
+            void OnGlobalInput(IGameInput input, IEntity singletonEntity);
+        }
     }
 }
