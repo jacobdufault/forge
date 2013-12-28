@@ -171,6 +171,13 @@ namespace Neon.Entities {
         public static bool operator !=(DataAccessor x, DataAccessor y) {
             return !(x == y);
         }
+
+        /// <summary>
+        /// Helper method to get the type of data the given DataAccessor maps back to.
+        /// </summary>
+        public static Type GetDataType(DataAccessor accessor) {
+            return DataAccessorFactory.GetTypeFromAccessor(accessor);
+        }
     }
 
     /// <summary>
