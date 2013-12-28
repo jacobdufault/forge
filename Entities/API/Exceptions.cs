@@ -17,10 +17,10 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Neon.Entities.Implementation.Shared;
+using Forge.Entities.Implementation.Shared;
 using System;
 
-namespace Neon.Entities {
+namespace Forge.Entities {
     /// <summary>
     /// Exception thrown when a data type is added to an entity, but the entity already contains an
     /// instance of said data type.

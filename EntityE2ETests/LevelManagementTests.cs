@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Neon.Entities.E2ETests {
+namespace Forge.Entities.E2ETests {
     [TestClass]
     public class LevelManagementTests {
         [TestMethod]

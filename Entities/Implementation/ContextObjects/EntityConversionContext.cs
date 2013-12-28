@@ -17,17 +17,17 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Neon.Collections;
-using Neon.Entities.Implementation.Content;
-using Neon.Entities.Implementation.Runtime;
-using Neon.Utilities;
+using Forge.Collections;
+using Forge.Entities.Implementation.Content;
+using Forge.Entities.Implementation.Runtime;
+using Forge.Utilities;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Neon.Entities.Implementation.ContextObjects {
+namespace Forge.Entities.Implementation.ContextObjects {
     internal class EntityConversionContext : IContextObject {
         public SparseArray<IEntity> CreatedEntities = new SparseArray<IEntity>();
 

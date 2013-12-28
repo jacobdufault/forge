@@ -17,12 +17,12 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Neon.Utilities;
+using Forge.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-namespace Neon.Entities.Implementation.Shared {
+namespace Forge.Entities.Implementation.Shared {
     /// <summary>
     /// Handles event dispatch. Events are queued up until some point in time and then they are
     /// dispatched.

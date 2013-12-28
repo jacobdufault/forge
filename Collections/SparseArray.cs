@@ -17,13 +17,13 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Neon.Utilities;
+using Forge.Utilities;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Neon.Collections {
+namespace Forge.Collections {
     /// <summary>
     /// Stores a list of items where the are gaps between items; not every index in the array
     /// contains an element.

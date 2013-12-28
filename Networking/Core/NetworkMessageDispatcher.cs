@@ -17,17 +17,17 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Neon.Utilities;
+using Forge.Utilities;
 using System;
 using System.Collections.Generic;
 
-namespace Neon.Networking.Core {
+namespace Forge.Networking.Core {
     /// <summary>
     /// This class serves as a registry for INetworkMessageHandlers. It supports efficient lookup of
     /// message type to message handler responders.
     /// </summary>
     /// <remarks>
-    /// In the overall context of Neon.Network, this class serves a critical function as the core
+    /// In the overall context of Forge.Network, this class serves a critical function as the core
     /// mechanism for the event-based message processing loop. The NetworkContext is the primary
     /// user of this type. NetworkContext receives and sends out INetworkMessages; when it receives
     /// an INetworkMessage, it checks its NetworkMessageDispatcher to see if there are any handlers

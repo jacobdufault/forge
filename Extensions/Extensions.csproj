@@ -7,8 +7,8 @@
     <ProjectGuid>{34CA6106-4EBF-4F76-8D2D-1EA285C9554F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Neon.Extensions</RootNamespace>
-    <AssemblyName>Neon.Extensions</AssemblyName>
+    <RootNamespace>Forge.Extensions</RootNamespace>
+    <AssemblyName>Forge.Extensions</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -23,7 +23,7 @@
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
     <CodeAnalysisRuleSet>..\AnalysisRuleSet.ruleset</CodeAnalysisRuleSet>
-    <DocumentationFile>bin\Debug\Neon.Extensions.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\Forge.Extensions.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -33,7 +33,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
-    <DocumentationFile>bin\Release\Neon.Extensions.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\Forge.Extensions.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />

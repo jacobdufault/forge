@@ -22,7 +22,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Neon.Utilities {
+namespace Forge.Utilities {
     /// <summary>
     /// A Real value implements floating point operations on the CPU. It does not adhere any any
     /// IEEE standard, but has the extremely important attribute of providing identical semantics on

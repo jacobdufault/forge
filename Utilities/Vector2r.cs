@@ -19,7 +19,7 @@
 
 using Newtonsoft.Json;
 
-namespace Neon.Utilities {
+namespace Forge.Utilities {
     [JsonObject(MemberSerialization.OptIn)]
     public struct Vector2r {
         [JsonProperty("X")]

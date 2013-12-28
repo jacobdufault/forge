@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using Lidgren.Network;
-using Neon.Utilities;
+using Forge.Utilities;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -27,7 +27,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 
-namespace Neon.Networking.Core {
+namespace Forge.Networking.Core {
     /// <summary>
     /// Holds important information about the current network connection and additionally about
     /// INetworkMessage listeners.
@@ -56,7 +56,7 @@ namespace Neon.Networking.Core {
                 }
 
                 if (__server == null && value != null) {
-                    value.UPnP.ForwardPort(Configuration.Port, "Neon.Network Port Forward");
+                    value.UPnP.ForwardPort(Configuration.Port, "Forge.Network Port Forward");
                 }
 
                 __server = value;

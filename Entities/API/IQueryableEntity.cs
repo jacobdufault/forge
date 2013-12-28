@@ -17,12 +17,12 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Neon.Entities.Implementation.Shared;
+using Forge.Entities.Implementation.Shared;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 
-namespace Neon.Entities {
+namespace Forge.Entities {
     /// <summary>
     /// An entity within the game state that can be queried for information about its current data.
     /// </summary>

@@ -17,13 +17,13 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Neon.Utilities;
+using Forge.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-namespace Neon.Utilities {
+namespace Forge.Utilities {
     /// <summary>
     /// Provides a view of an arbitrary type that unifies a number of discrete concepts in the CLR.
     /// Arrays and Collection types have special support, but their APIs are unified by the

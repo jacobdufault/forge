@@ -17,12 +17,12 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Neon.Networking.Core;
-using Neon.Utilities;
+using Forge.Networking.Core;
+using Forge.Utilities;
 using System;
 using System.Collections.Generic;
 
-namespace Neon.Networking.Chat {
+namespace Forge.Networking.Chat {
     /// <summary>
     /// Processes ChatNetworkMessages and adds them to a displayable message list depending on if
     /// the local player should be allowed to see the message.

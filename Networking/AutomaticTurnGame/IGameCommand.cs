@@ -19,7 +19,7 @@
 
 using Newtonsoft.Json;
 
-namespace Neon.Networking.AutomaticTurnGame {
+namespace Forge.Networking.AutomaticTurnGame {
     /// <summary>
     /// An IGameCommand is some user input that modifies game state during a turn. This interface is
     /// not implemented internally; instead it gives some type safety for the API (otherwise only

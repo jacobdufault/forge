@@ -21,7 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace Neon.Collections {
+namespace Forge.Collections {
     /// <summary>
     /// Provides a queue where pushing is assumed to be done concurrently, but reading is done in a
     /// single-thread.

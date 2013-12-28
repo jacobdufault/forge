@@ -19,7 +19,7 @@
 
 using System;
 
-namespace Neon.Entities {
+namespace Forge.Entities {
     /// <summary>
     /// Event that notifies listener that a new data instance has been added to the entity.
     /// </summary>

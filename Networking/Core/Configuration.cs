@@ -19,7 +19,7 @@
 
 using Lidgren.Network;
 
-namespace Neon.Networking.Core {
+namespace Forge.Networking.Core {
     /// <summary>
     /// This class contains Lidgren.Network configuration settings that are used when creating
     /// NetPeer (typically either a NetServer or a NetClient type) instances.
@@ -31,12 +31,12 @@ namespace Neon.Networking.Core {
         public const int Port = 6009;
 
         /// <summary>
-        /// Global application name that is used to distinguish Neon.
+        /// Global application name that is used to distinguish Forge.
         /// </summary>
-        public const string AppName = "Neon.Network";
+        public const string AppName = "Forge.Network";
 
         public static NetPeerConfiguration GetConfiguration(bool server) {
-            NetPeerConfiguration config = new NetPeerConfiguration("Neon.Networking");
+            NetPeerConfiguration config = new NetPeerConfiguration("Forge.Networking");
 
             if (server) {
                 config.Port = Port;

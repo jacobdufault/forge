@@ -19,7 +19,7 @@
 
 using Newtonsoft.Json;
 
-namespace Neon.Networking.Core {
+namespace Forge.Networking.Core {
     /// <summary>
     /// A message transmitted over the network. Network messages are always transmitted in order and
     /// reliably.

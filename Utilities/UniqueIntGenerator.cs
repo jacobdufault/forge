@@ -20,7 +20,7 @@
 using Newtonsoft.Json;
 using System.Threading;
 
-namespace Neon.Utilities {
+namespace Forge.Utilities {
     /// <summary>
     /// Generates unique integers that are sequential. This class is thread-safe.
     /// </summary>

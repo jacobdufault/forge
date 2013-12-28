@@ -22,7 +22,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Neon.Utilities {
+namespace Forge.Utilities {
     [JsonObject(MemberSerialization.OptIn)]
     public struct Bound {
         [JsonProperty("X")]

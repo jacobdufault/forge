@@ -17,11 +17,11 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Neon.Networking.Core;
+using Forge.Networking.Core;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 
-namespace Neon.Networking.AutomaticTurnGame {
+namespace Forge.Networking.AutomaticTurnGame {
     [JsonObject(MemberSerialization.OptIn)]
     internal class EndTurnNetworkMessage : INetworkMessage {
         /// <summary>

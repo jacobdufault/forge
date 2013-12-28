@@ -17,14 +17,14 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Neon.Entities.Implementation.Runtime;
-using Neon.Utilities;
+using Forge.Entities.Implementation.Runtime;
+using Forge.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Neon.Entities.Implementation.ContextObjects {
+namespace Forge.Entities.Implementation.ContextObjects {
     /// <summary>
     /// A context object that just contains the current GameEngine that is being used to deserialize
     /// the object.

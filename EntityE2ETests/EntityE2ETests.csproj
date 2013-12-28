@@ -6,8 +6,8 @@
     <ProjectGuid>{9A3F46B0-F47A-45A1-BD79-12F7A9A47537}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Neon.Entities.E2ETests</RootNamespace>
-    <AssemblyName>Neon.Entities.E2ETests</AssemblyName>
+    <RootNamespace>Forge.Entities.E2ETests</RootNamespace>
+    <AssemblyName>Forge.Entities.E2ETests</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>

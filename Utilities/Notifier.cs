@@ -19,7 +19,7 @@
 
 using System;
 
-namespace Neon.Utilities {
+namespace Forge.Utilities {
     /// <summary>
     /// Wraps the notification pattern, where something happens multiple times but the listeners
     /// should only be notified once.

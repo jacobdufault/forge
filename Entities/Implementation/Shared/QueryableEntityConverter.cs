@@ -17,12 +17,12 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Neon.Entities.Implementation.ContextObjects;
-using Neon.Utilities;
+using Forge.Entities.Implementation.ContextObjects;
+using Forge.Utilities;
 using Newtonsoft.Json;
 using System;
 
-namespace Neon.Entities.Implementation.Shared {
+namespace Forge.Entities.Implementation.Shared {
 
     /// <summary>
     /// Proxy type that specifies the serialization format that IQueryableEntity derived type use

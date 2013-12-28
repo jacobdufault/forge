@@ -20,7 +20,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 
-namespace Neon.Utilities.Tests {
+namespace Forge.Utilities.Tests {
     [TestClass]
     public class BoundTests {
         [TestMethod]

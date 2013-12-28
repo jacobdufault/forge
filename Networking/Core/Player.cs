@@ -20,7 +20,7 @@
 using Newtonsoft.Json;
 using System;
 
-namespace Neon.Networking.Core {
+namespace Forge.Networking.Core {
     /// <summary>
     /// A network player is an abstraction over a network connection.
     /// </summary>

@@ -21,7 +21,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Neon.Utilities {
+namespace Forge.Utilities {
     public static class Utils {
         /// <summary>
         /// Swaps two ref objects.

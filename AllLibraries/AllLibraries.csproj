@@ -7,8 +7,8 @@
     <ProjectGuid>{565BB8E0-6223-4BD2-8E2B-39E18939A69F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Neon.AllLibraries</RootNamespace>
-    <AssemblyName>Neon.AllLibraries</AssemblyName>
+    <RootNamespace>Forge.AllLibraries</RootNamespace>
+    <AssemblyName>Forge.AllLibraries</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

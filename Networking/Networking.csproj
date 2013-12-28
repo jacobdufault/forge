@@ -7,8 +7,8 @@
     <ProjectGuid>{1E1D1B4B-1E31-45D0-A53C-597EFF87725A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Neon.Networking</RootNamespace>
-    <AssemblyName>Neon.Networking</AssemblyName>
+    <RootNamespace>Forge.Networking</RootNamespace>
+    <AssemblyName>Forge.Networking</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -28,7 +28,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Release\Neon.Networking.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\Forge.Networking.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Lidgren.Network">

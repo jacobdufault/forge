@@ -17,12 +17,12 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Neon.Networking.Core;
+using Forge.Networking.Core;
 using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
 
-namespace Neon.Networking.Lobby {
+namespace Forge.Networking.Lobby {
 
     /// <summary>
     /// Network message sent by the lobby server to verify that all clients have the given map.

@@ -23,7 +23,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
-namespace Neon.Utilities {
+namespace Forge.Utilities {
     /// <summary>
     /// Thread-safe activation trigger that only activates once.
     /// </summary>

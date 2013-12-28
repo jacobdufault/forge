@@ -21,7 +21,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Neon.Utilities {
+namespace Forge.Utilities {
     /// <summary>
     /// Container type that holds a reference to another object.
     /// </summary>

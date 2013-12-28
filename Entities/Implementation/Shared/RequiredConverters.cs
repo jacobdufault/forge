@@ -17,14 +17,14 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Neon.Entities.Implementation.ContextObjects;
-using Neon.Entities.Implementation.Runtime;
-using Neon.Utilities;
+using Forge.Entities.Implementation.ContextObjects;
+using Forge.Entities.Implementation.Runtime;
+using Forge.Utilities;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System.Collections.Generic;
 
-namespace Neon.Entities.Implementation.Shared {
+namespace Forge.Entities.Implementation.Shared {
     /// <summary>
     /// Helper class that just contains a list of all custom converters that should be used whenever
     /// Json.NET is used to serialize/deserialize values.

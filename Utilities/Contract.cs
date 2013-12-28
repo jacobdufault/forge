@@ -20,7 +20,7 @@
 using System;
 using System.Diagnostics;
 
-namespace Neon.Utilities {
+namespace Forge.Utilities {
     public static class Contract {
         public static void Requires(bool condition, string message = "") {
             if (condition == false) {

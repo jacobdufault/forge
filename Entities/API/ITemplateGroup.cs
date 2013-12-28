@@ -19,7 +19,7 @@
 
 using System.Collections.Generic;
 
-namespace Neon.Entities {
+namespace Forge.Entities {
     /// <summary>
     /// An ITemplateGroup is simply a collection of templates that IGameSnapshots use.
     /// </summary>

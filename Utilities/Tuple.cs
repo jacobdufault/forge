@@ -19,7 +19,7 @@
 
 using Newtonsoft.Json;
 
-namespace Neon.Utilities {
+namespace Forge.Utilities {
     [JsonObject(MemberSerialization.OptIn)]
     public class Tuple<T1> {
         public Tuple(T1 item1) {

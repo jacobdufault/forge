@@ -6,8 +6,8 @@
     <ProjectGuid>{CA62937B-CF47-40E6-89A3-612AC6DDC9D0}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Neon.Utilities.Tests</RootNamespace>
-    <AssemblyName>Neon.Utilities.Tests</AssemblyName>
+    <RootNamespace>Forge.Utilities.Tests</RootNamespace>
+    <AssemblyName>Forge.Utilities.Tests</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>

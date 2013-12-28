@@ -17,16 +17,16 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Neon.Collections;
-using Neon.Entities.Implementation.Runtime;
-using Neon.Entities.Implementation.Shared;
-using Neon.Utilities;
+using Forge.Collections;
+using Forge.Entities.Implementation.Runtime;
+using Forge.Entities.Implementation.Shared;
+using Forge.Utilities;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Neon.Entities.Implementation.Content {
+namespace Forge.Entities.Implementation.Content {
     [JsonObject(MemberSerialization.OptIn)]
     internal class ContentEntitySerializationFormat {
         [JsonProperty("UniqueId")]

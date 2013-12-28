@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Neon.Utilities {
+namespace Forge.Utilities {
     /// <summary>
     /// An object that can be used as a value in a GeneralStreamingContext instance.
     /// </summary>

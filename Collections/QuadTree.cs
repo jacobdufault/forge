@@ -18,11 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using log4net;
-using Neon.Collections;
-using Neon.Utilities;
+using Forge.Collections;
+using Forge.Utilities;
 using System;
 
-namespace Neon.Collections {
+namespace Forge.Collections {
     /*
     struct ThreadGroup {
     }

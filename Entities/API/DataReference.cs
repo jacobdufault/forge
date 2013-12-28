@@ -17,10 +17,13 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+// TODO: can this file be moved into Forge.Entities.Extensions? It doesn't appear to have require
+//       any internal implementation knowledge and relies only upon APIs.
+
 using Newtonsoft.Json;
 using System;
 
-namespace Neon.Entities {
+namespace Forge.Entities {
     /// <summary>
     /// Interface used for type erasure by BaseDataReferenceType.
     /// </summary>

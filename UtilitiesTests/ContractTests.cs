@@ -23,7 +23,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Neon.Utilities.Tests {
+namespace Forge.Utilities.Tests {
     [TestClass]
     public class ContractTests {
         private void TestParameters(object p) {

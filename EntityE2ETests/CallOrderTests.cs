@@ -18,12 +18,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neon.Entities.Implementation.Content;
+using Forge.Entities.Implementation.Content;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 
-namespace Neon.Entities.E2ETests {
+namespace Forge.Entities.E2ETests {
     internal enum TriggerEvent {
         OnAdded,
         OnRemoved,

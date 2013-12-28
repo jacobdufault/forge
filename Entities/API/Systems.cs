@@ -20,7 +20,7 @@
 using Newtonsoft.Json;
 using System;
 
-namespace Neon.Entities {
+namespace Forge.Entities {
     /// <summary>
     /// All systems need to extend the system class. Systems have callbacks automatically registered
     /// by implementing ITrigger* interfaces.

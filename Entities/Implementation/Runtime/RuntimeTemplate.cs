@@ -17,16 +17,16 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Neon.Collections;
-using Neon.Entities.Implementation.Content;
-using Neon.Entities.Implementation.Runtime;
-using Neon.Entities.Implementation.Shared;
-using Neon.Utilities;
+using Forge.Collections;
+using Forge.Entities.Implementation.Content;
+using Forge.Entities.Implementation.Runtime;
+using Forge.Entities.Implementation.Shared;
+using Forge.Utilities;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 
-namespace Neon.Entities.Implementation.Runtime {
+namespace Forge.Entities.Implementation.Runtime {
     /// <summary>
     /// A runtime version of an ITemplate designed for efficiency.
     /// </summary>

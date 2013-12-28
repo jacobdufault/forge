@@ -19,7 +19,7 @@
 
 using Newtonsoft.Json;
 
-namespace Neon.Entities {
+namespace Forge.Entities {
     /// <summary>
     /// Input that is given to the game manager.
     /// </summary>

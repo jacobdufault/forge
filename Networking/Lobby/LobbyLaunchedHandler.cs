@@ -17,13 +17,13 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Neon.Networking.Core;
-using Neon.Utilities;
+using Forge.Networking.Core;
+using Forge.Utilities;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 
-namespace Neon.Networking.Lobby {
+namespace Forge.Networking.Lobby {
     internal class LobbyLaunchedHandler : INetworkMessageHandler {
         public Type[] HandledTypes {
             get { return new[] { typeof(LobbyLaunchedNetworkMessage) }; }

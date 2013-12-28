@@ -17,10 +17,10 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Neon.Networking.Core;
+using Forge.Networking.Core;
 using System;
 
-namespace Neon.Networking.Chat {
+namespace Forge.Networking.Chat {
     /// <summary>
     /// A chat message that has been received.
     /// </summary>

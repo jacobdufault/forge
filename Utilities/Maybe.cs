@@ -20,7 +20,7 @@
 using Newtonsoft.Json;
 using System;
 
-namespace Neon.Utilities {
+namespace Forge.Utilities {
     /// <summary>
     /// Helper for Maybe[T] by providing local type inference at Just and Empty call sites.
     /// </summary>

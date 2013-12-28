@@ -17,10 +17,10 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Neon.Utilities;
+using Forge.Utilities;
 using System.Threading;
 
-namespace Neon.Entities.Implementation.Runtime {
+namespace Forge.Entities.Implementation.Runtime {
     /// <summary>
     /// Contains a set of three IData instances and allows swapping between those instances such
     /// that one of them is the previous state, one of them is the current state, and one of them is

@@ -23,7 +23,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Neon.Entities.E2ETests {
+namespace Forge.Entities.E2ETests {
     [JsonObject(MemberSerialization.OptIn)]
     internal class TestData0 : BaseData<TestData0> {
         public override bool SupportsConcurrentModifications {

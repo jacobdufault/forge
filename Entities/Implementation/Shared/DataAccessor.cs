@@ -17,12 +17,12 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Neon.Utilities;
+using Forge.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace Neon.Entities.Implementation.Shared {
+namespace Forge.Entities.Implementation.Shared {
     /// <summary>
     /// Maps different types of Data to a sequential set of integers.
     /// </summary>

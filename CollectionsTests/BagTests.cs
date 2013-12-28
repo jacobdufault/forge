@@ -19,7 +19,7 @@
 
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neon.Collections;
+using Forge.Collections;
 using System.Collections.Generic;
 
 namespace CollectionsTests {

@@ -7,8 +7,8 @@
     <ProjectGuid>{25DB9F16-ECAE-4A3F-B3C3-5794B8288587}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Neon.Utilities</RootNamespace>
-    <AssemblyName>Neon.Utilities</AssemblyName>
+    <RootNamespace>Forge.Utilities</RootNamespace>
+    <AssemblyName>Forge.Utilities</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile>
@@ -24,7 +24,7 @@
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
     <CodeAnalysisRuleSet>..\AnalysisRuleSet.ruleset</CodeAnalysisRuleSet>
-    <DocumentationFile>bin\Debug\Neon.Utilities.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\Forge.Utilities.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -34,7 +34,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
-    <DocumentationFile>bin\Release\Neon.Utilities.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\Forge.Utilities.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="log4net">

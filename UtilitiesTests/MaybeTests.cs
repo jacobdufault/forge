@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Neon.Utilities.Tests {
+namespace Forge.Utilities.Tests {
     public static class SerializationHelpers {
         public static T DeepClone<T>(T instance) {
             string json = JsonConvert.SerializeObject(instance, typeof(T), Formatting.Indented, null);

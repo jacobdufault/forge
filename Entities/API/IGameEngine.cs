@@ -17,11 +17,11 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Neon.Entities.Implementation.Runtime;
+using Forge.Entities.Implementation.Runtime;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace Neon.Entities {
+namespace Forge.Entities {
     /// <summary>
     /// Manages the execution of a game. Allows for players to input commands to the game, thereby
     /// modifying how the game plays out.

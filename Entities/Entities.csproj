@@ -7,8 +7,8 @@
     <ProjectGuid>{F3D00C86-F3DC-490E-8A49-744C30C01117}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Neon.Entities</RootNamespace>
-    <AssemblyName>Neon.Entities</AssemblyName>
+    <RootNamespace>Forge.Entities</RootNamespace>
+    <AssemblyName>Forge.Entities</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -23,7 +23,7 @@
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
     <CodeAnalysisRuleSet>..\AnalysisRuleSet.ruleset</CodeAnalysisRuleSet>
-    <DocumentationFile>bin\Debug\Neon.Entities.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\Forge.Entities.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -33,7 +33,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
-    <DocumentationFile>bin\Release\Neon.Entities.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\Forge.Entities.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json">

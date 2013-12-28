@@ -1,6 +1,6 @@
 ﻿using Lidgren.Network;
 using log4net;
-using Neon.Utilities;
+using Forge.Utilities;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -9,7 +9,7 @@ using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace Neon.Networking.Core {
+namespace Forge.Networking.Core {
     [JsonObject(MemberSerialization.OptIn)]
     internal class ServerDiscoveryFormat {
         /// <summary>

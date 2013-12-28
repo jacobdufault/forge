@@ -19,7 +19,7 @@
 
 using System.Collections.Generic;
 
-namespace Neon.Entities {
+namespace Forge.Entities {
     /// <summary>
     /// Represents the result of removing an entity.
     /// </summary>

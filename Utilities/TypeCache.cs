@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace Neon.Utilities {
+namespace Forge.Utilities {
     /// <summary>
     /// Caches type name to type lookups. Type lookups occur in all loaded assemblies.
     /// </summary>

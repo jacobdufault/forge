@@ -17,7 +17,7 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-namespace Neon.Networking.Chat {
+namespace Forge.Networking.Chat {
     /// <summary>
     /// An enum of the different relation types that can exist between two players. At least for
     /// IPlayerRelationDetermination, this is a directed graph, that is, player 1 can view player 2

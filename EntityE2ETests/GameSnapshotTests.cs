@@ -18,13 +18,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neon.Entities;
-using Neon.Entities.Implementation.Content;
+using Forge.Entities;
+using Forge.Entities.Implementation.Content;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Neon.Entities.E2ETests {
+namespace Forge.Entities.E2ETests {
     public static class GameEngineExtensions {
         public static void Update(this IGameEngine engine) {
             engine.Update(new List<IGameInput>()).WaitOne();

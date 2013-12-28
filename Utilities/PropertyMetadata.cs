@@ -20,7 +20,7 @@
 using System;
 using System.Reflection;
 
-namespace Neon.Utilities {
+namespace Forge.Utilities {
     /// <summary>
     /// A PropertyMetadata describes a discovered property or field in a TypeMetadata.
     /// </summary>

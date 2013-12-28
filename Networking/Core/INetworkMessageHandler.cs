@@ -19,7 +19,7 @@
 
 using System;
 
-namespace Neon.Networking.Core {
+namespace Forge.Networking.Core {
 
     /// <summary>
     /// Client code that is executed upon the receipt of a network message.

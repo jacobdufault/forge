@@ -19,7 +19,7 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Neon.Utilities.Tests {
+namespace Forge.Utilities.Tests {
     [TestClass]
     public class FastStringFormatTests {
         [TestMethod]

@@ -17,11 +17,11 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Neon.Networking.Core;
-using Neon.Utilities;
+using Forge.Networking.Core;
+using Forge.Utilities;
 using Newtonsoft.Json;
 
-namespace Neon.Networking.Chat {
+namespace Forge.Networking.Chat {
     /// <summary>
     /// A network message that is used when sending chat messages.
     /// </summary>

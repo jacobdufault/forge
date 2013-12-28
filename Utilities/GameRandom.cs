@@ -21,7 +21,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Neon.Utilities {
+namespace Forge.Utilities {
     public static class GameRandom {
         private static System.Random _random = new System.Random(32352);
 

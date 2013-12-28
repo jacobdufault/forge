@@ -1,10 +1,10 @@
-﻿using Neon.Entities.Implementation.Content;
+﻿using Forge.Entities.Implementation.Content;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Neon.Entities.E2ETests {
+namespace Forge.Entities.E2ETests {
     internal static class TestUtils {
         public static ITemplateGroup CreateDefaultTemplates() {
             ITemplateGroup templates = LevelManager.CreateTemplateGroup();

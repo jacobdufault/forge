@@ -18,14 +18,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neon.Entities.Implementation.Content;
-using Neon.Entities.Implementation.Runtime;
-using Neon.Entities.Implementation.Shared;
-using Neon.Utilities;
+using Forge.Entities.Implementation.Content;
+using Forge.Entities.Implementation.Runtime;
+using Forge.Entities.Implementation.Shared;
+using Forge.Utilities;
 using System;
 using System.Collections.Generic;
 
-namespace Neon.Entities.Tests {
+namespace Forge.Entities.Tests {
 
     internal class TestData0 : BaseData<TestData0> {
         public override bool SupportsConcurrentModifications {

@@ -17,10 +17,10 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Neon.Networking.Core;
-using Neon.Utilities;
+using Forge.Networking.Core;
+using Forge.Utilities;
 
-namespace Neon.Networking.Pausing {
+namespace Forge.Networking.Pausing {
     /// <summary>
     /// API for interacting with the pausing subsystem.
     /// </summary>

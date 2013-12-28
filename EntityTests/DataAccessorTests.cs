@@ -20,7 +20,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 
-namespace Neon.Entities.Tests {
+namespace Forge.Entities.Tests {
     [TestClass]
     public class DataAccessorTests {
         [TestMethod]
