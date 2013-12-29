@@ -1,5 +1,4 @@
 ﻿using Lidgren.Network;
-using log4net;
 using Forge.Utilities;
 using Newtonsoft.Json;
 using System;
@@ -112,7 +111,7 @@ namespace Forge.Networking.Core {
         public static void Update() {
             NetIncomingMessage msg;
             while ((msg = _client.ReadMessage()) != null) {
-                LogManager.GetLogger(typeof(NetworkServerDiscovery)).Info("Discovery service got message type " + msg.MessageType);
+                Log.Get(typeof(NetworkServerDiscovery)).Info("Discovery service got message type " + msg.MessageType);
                 switch (msg.MessageType) {
                     case NetIncomingMessageType.DiscoveryResponse:
                         var response = SerializationHelpers.Deserialize<ServerDiscoveryFormat>(msg.ReadString());
@@ -126,7 +125,7 @@ namespace Forge.Networking.Core {
                         break;
 
                     default:
-                        LogManager.GetLogger(typeof(NetworkServerDiscovery)).Error("Bad message type in NetworkServerDiscovery; got " + msg.MessageType);
+                        Log.Get(typeof(NetworkServerDiscovery)).Error("Bad message type in NetworkServerDiscovery; got " + msg.MessageType);
                         break;
                 }
             }

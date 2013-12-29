@@ -28,6 +28,18 @@ namespace Forge.Utilities {
     /// <summary>
     /// Log messages.
     /// </summary>
+    public static class Log {
+        /// <summary>
+        /// Get a logger for the given type.
+        /// </summary>
+        public static ILog Get(Type type) {
+            return LogManager.GetLogger(type);
+        }
+    }
+
+    /// <summary>
+    /// Log messages.
+    /// </summary>
     /// <typeparam name="T">The type that is sending the log message</typeparam>
     public static class Log<T> {
         /// <summary>

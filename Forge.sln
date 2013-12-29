@@ -3,27 +3,27 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Utilities", "Utilities\Utilities.csproj", "{25DB9F16-ECAE-4A3F-B3C3-5794B8288587}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Forge.Utilities", "Forge.Utilities\Forge.Utilities.csproj", "{25DB9F16-ECAE-4A3F-B3C3-5794B8288587}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Entities", "Entities\Entities.csproj", "{F3D00C86-F3DC-490E-8A49-744C30C01117}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Forge.Entities", "Forge.Entities\Forge.Entities.csproj", "{F3D00C86-F3DC-490E-8A49-744C30C01117}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Extensions", "Extensions\Extensions.csproj", "{34CA6106-4EBF-4F76-8D2D-1EA285C9554F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Forge.Extensions", "Forge.Extensions\Forge.Extensions.csproj", "{34CA6106-4EBF-4F76-8D2D-1EA285C9554F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Collections", "Collections\Collections.csproj", "{9D91D020-4291-4926-B76D-B73D138B0AEF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Forge.Collections", "Forge.Collections\Forge.Collections.csproj", "{9D91D020-4291-4926-B76D-B73D138B0AEF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AllLibraries", "AllLibraries\AllLibraries.csproj", "{565BB8E0-6223-4BD2-8E2B-39E18939A69F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Forge.AllLibraries", "Forge.AllLibraries\Forge.AllLibraries.csproj", "{565BB8E0-6223-4BD2-8E2B-39E18939A69F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UtilitiesTests", "UtilitiesTests\UtilitiesTests.csproj", "{CA62937B-CF47-40E6-89A3-612AC6DDC9D0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Forge.UtilitiesTests", "Forge.UtilitiesTests\Forge.UtilitiesTests.csproj", "{CA62937B-CF47-40E6-89A3-612AC6DDC9D0}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{4369454A-E69D-4CB3-99B6-F9CBAE16404F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CollectionsTests", "CollectionsTests\CollectionsTests.csproj", "{1973EECC-8908-47BC-9EA4-DC99530C888A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Forge.CollectionsTests", "Forge.CollectionsTests\Forge.CollectionsTests.csproj", "{1973EECC-8908-47BC-9EA4-DC99530C888A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Networking", "Networking\Networking.csproj", "{1E1D1B4B-1E31-45D0-A53C-597EFF87725A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Forge.Networking", "Forge.Networking\Forge.Networking.csproj", "{1E1D1B4B-1E31-45D0-A53C-597EFF87725A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkingDebug", "NetworkingDebug\NetworkingDebug.csproj", "{F63D780F-DAC5-412B-8CC2-AAF9B2728BF6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Forge.NetworkingDebug", "Forge.NetworkingDebug\Forge.NetworkingDebug.csproj", "{F63D780F-DAC5-412B-8CC2-AAF9B2728BF6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EntitiesTests", "EntitiesTests\EntitiesTests.csproj", "{9694BC6E-8124-469F-9F64-77EDCBC888F9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Forge.EntitiesTests", "Forge.EntitiesTests\Forge.EntitiesTests.csproj", "{9694BC6E-8124-469F-9F64-77EDCBC888F9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -17,7 +17,6 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using log4net;
 using Forge.Collections;
 using Forge.Utilities;
 using System;
@@ -305,8 +304,6 @@ namespace Forge.Collections {
     }
 
     public class QuadTree<T> {
-        internal static ILog Log = LogManager.GetLogger(typeof(QuadTree<T>));
-
         /// <summary>
         /// The width/height of each chunk
         /// </summary>
@@ -323,14 +320,14 @@ namespace Forge.Collections {
         }
 
         public void Add(T item, Vector2r position) {
-            if (Log.IsDebugEnabled) Log.Debug("Adding " + item + " at " + position);
+            Log<QuadTree<T>>.Debug("Adding " + item + " at " + position);
 
             Node<T> chunk = GetChunk(position.X.AsInt, position.Z.AsInt);
             chunk.Add(item, position);
         }
 
         public void Update(T item, Vector2r previous, Vector2r current) {
-            if (Log.IsDebugEnabled) Log.Debug("Updating " + item + " from " + previous + " to " + current);
+            Log<QuadTree<T>>.Debug("Updating " + item + " from " + previous + " to " + current);
 
             Node<T> previousChunk = GetChunk(previous.X.AsInt, previous.Z.AsInt);
             Node<T> currentChunk = GetChunk(current.X.AsInt, current.Z.AsInt);
@@ -345,7 +342,7 @@ namespace Forge.Collections {
         }
 
         public void Remove(T item, Vector2r position) {
-            if (Log.IsDebugEnabled) Log.Debug("Removing " + item + " at " + position);
+            Log<QuadTree<T>>.Debug("Removing " + item + " at " + position);
 
             Node<T> chunk = GetChunk(position.X.AsInt, position.Z.AsInt);
             chunk.Remove(item, position);
