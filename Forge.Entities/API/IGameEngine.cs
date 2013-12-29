@@ -20,6 +20,7 @@
 using Forge.Entities.Implementation.Runtime;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Forge.Entities {
     /// <summary>
@@ -36,7 +37,7 @@ namespace Forge.Entities {
         /// </summary>
         /// <returns>A WaitHandle that is activated (set to true) when the update has
         /// finished.</returns>
-        WaitHandle Update(IEnumerable<IGameInput> input);
+        Task Update(IEnumerable<IGameInput> input);
 
         /// <summary>
         /// Synchronizes the state of game.
@@ -51,7 +52,7 @@ namespace Forge.Entities {
         /// </remarks>
         /// <returns>A WaitHandle that is activated (set to true) when all state has been
         /// synchronized.</returns>
-        WaitHandle SynchronizeState();
+        Task SynchronizeState();
 
         /// <summary>
         /// Dispatches all of the events that have been triggered in the previous update on the

@@ -16,8 +16,20 @@ namespace Forge.Entities.Tests {
             IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templateGroup);
 
             for (int i = 0; i < 20; ++i) {
-                engine.SynchronizeState().WaitOne();
-                engine.Update().WaitOne();
+                engine.SynchronizeState().Wait();
+                engine.Update().Wait();
+                engine.DispatchEvents();
+            }
+        }
+
+        [Fact]
+        public void CreateEngineUpdateNonList() {
+            IGameEngine engine = GameEngineFactory.CreateEngine(LevelManager.CreateSnapshot(),
+                LevelManager.CreateTemplateGroup());
+
+            for (int i = 0; i < 20; ++i) {
+                engine.SynchronizeState().Wait();
+                engine.Update(new LinkedList<IGameInput>()).Wait();
                 engine.DispatchEvents();
             }
         }

@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Forge.Entities.Tests {
     public static class TestExtensions {
-        public static WaitHandle Update(this IGameEngine engine) {
+        public static Task Update(this IGameEngine engine) {
             return engine.Update(new List<IGameInput>());
         }
 

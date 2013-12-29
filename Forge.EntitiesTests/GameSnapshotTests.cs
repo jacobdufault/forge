@@ -12,8 +12,8 @@ namespace Forge.Entities.Tests {
         [Theory, ClassData(typeof(SnapshotTemplateData))]
         public void GotAddedEventsForInitialDatabase(IGameSnapshot snapshot, ITemplateGroup templates) {
             IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
-            engine.SynchronizeState().WaitOne();
-            engine.Update().WaitOne();
+            engine.SynchronizeState().Wait();
+            engine.Update().Wait();
 
             int notifiedCount = 0;
             engine.EventNotifier.OnEvent<EntityAddedEvent>(evnt => {
@@ -25,8 +25,8 @@ namespace Forge.Entities.Tests {
             Assert.Equal(1 + snapshot.AddedEntities.Count() + snapshot.ActiveEntities.Count() +
                 snapshot.RemovedEntities.Count(), notifiedCount);
 
-            engine.SynchronizeState().WaitOne();
-            engine.Update().WaitOne();
+            engine.SynchronizeState().Wait();
+            engine.Update().Wait();
 
             notifiedCount = 0;
             engine.DispatchEvents();
@@ -48,8 +48,8 @@ namespace Forge.Entities.Tests {
             });
 
             IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
-            engine.SynchronizeState().WaitOne();
-            engine.Update().WaitOne();
+            engine.SynchronizeState().Wait();
+            engine.Update().Wait();
 
             Assert.Equal(snapshot.ActiveEntities.Count(), engine.GetSystem<SystemCounter>().UpdateCount);
         }
@@ -71,8 +71,8 @@ namespace Forge.Entities.Tests {
             });
 
             IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
-            engine.SynchronizeState().WaitOne();
-            engine.Update().WaitOne();
+            engine.SynchronizeState().Wait();
+            engine.Update().Wait();
 
             Assert.Equal(snapshot.RemovedEntities.Count(), engine.GetSystem<SystemCounter>().RemovedCount);
         }

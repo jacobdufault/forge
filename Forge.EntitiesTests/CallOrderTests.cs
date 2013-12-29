@@ -20,8 +20,8 @@ namespace Forge.Entities.Tests {
 
             IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
 
-            engine.SynchronizeState().WaitOne();
-            engine.Update().WaitOne();
+            engine.SynchronizeState().Wait();
+            engine.Update().Wait();
 
             List<TriggerEvent> events = new List<TriggerEvent>();
             events.Add(TriggerEvent.OnAdded);
@@ -31,8 +31,8 @@ namespace Forge.Entities.Tests {
             Assert.Equal(events, engine.GetSystem<SystemEventLogger>().Events);
 
             for (int i = 0; i < 20; ++i) {
-                engine.SynchronizeState().WaitOne();
-                engine.Update().WaitOne();
+                engine.SynchronizeState().Wait();
+                engine.Update().Wait();
 
                 events.Add(TriggerEvent.OnGlobalPreUpdate);
                 events.Add(TriggerEvent.OnUpdate);
@@ -64,8 +64,8 @@ namespace Forge.Entities.Tests {
             snapshot.CreateEntity(GameSnapshot.EntityAddTarget.Added);
 
             IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
-            engine.SynchronizeState().WaitOne();
-            engine.Update().WaitOne();
+            engine.SynchronizeState().Wait();
+            engine.Update().Wait();
 
             List<TriggerEvent> events = new List<TriggerEvent>();
             events.Add(
@@ -76,8 +76,8 @@ namespace Forge.Entities.Tests {
             Assert.Equal(events, engine.GetSystem<SystemEventLogger>().Events);
 
             for (int i = 0; i < 20; ++i) {
-                engine.SynchronizeState().WaitOne();
-                engine.Update().WaitOne();
+                engine.SynchronizeState().Wait();
+                engine.Update().Wait();
 
                 events.Add(
                     TriggerEvent.OnGlobalPreUpdate,
@@ -112,8 +112,8 @@ namespace Forge.Entities.Tests {
             }
 
             IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
-            engine.SynchronizeState().WaitOne();
-            engine.Update().WaitOne();
+            engine.SynchronizeState().Wait();
+            engine.Update().Wait();
 
             List<TriggerEvent> events = new List<TriggerEvent>();
             events.Add(TriggerEvent.OnAdded,
@@ -123,8 +123,8 @@ namespace Forge.Entities.Tests {
             Assert.Equal(events, engine.GetSystem<SystemEventLogger>().Events);
 
             for (int i = 0; i < 20; ++i) {
-                engine.SynchronizeState().WaitOne();
-                engine.Update().WaitOne();
+                engine.SynchronizeState().Wait();
+                engine.Update().Wait();
 
                 events.Add(TriggerEvent.OnModified,
                     TriggerEvent.OnGlobalPreUpdate,
@@ -145,8 +145,8 @@ namespace Forge.Entities.Tests {
 
             IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
 
-            engine.SynchronizeState().WaitOne();
-            engine.Update().WaitOne();
+            engine.SynchronizeState().Wait();
+            engine.Update().Wait();
 
             List<TriggerEvent> events = new List<TriggerEvent>();
             events.Add(
@@ -156,8 +156,8 @@ namespace Forge.Entities.Tests {
             Assert.Equal(events, engine.GetSystem<SystemEventLogger>().Events);
 
             for (int i = 0; i < 20; ++i) {
-                engine.SynchronizeState().WaitOne();
-                engine.Update().WaitOne();
+                engine.SynchronizeState().Wait();
+                engine.Update().Wait();
 
                 events.Add(
                     TriggerEvent.OnGlobalPreUpdate,
@@ -178,8 +178,8 @@ namespace Forge.Entities.Tests {
 
             IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
 
-            engine.SynchronizeState().WaitOne();
-            engine.Update().WaitOne();
+            engine.SynchronizeState().Wait();
+            engine.Update().Wait();
 
             List<TriggerEvent> events = new List<TriggerEvent>();
             events.Add(TriggerEvent.OnRemoved);
@@ -188,8 +188,8 @@ namespace Forge.Entities.Tests {
             Assert.Equal(events, engine.GetSystem<SystemEventLogger>().Events);
 
             for (int i = 0; i < 20; ++i) {
-                engine.SynchronizeState().WaitOne();
-                engine.Update().WaitOne();
+                engine.SynchronizeState().Wait();
+                engine.Update().Wait();
 
                 events.Add(TriggerEvent.OnGlobalPreUpdate);
                 events.Add(TriggerEvent.OnGlobalPostUpdate);
@@ -228,8 +228,8 @@ namespace Forge.Entities.Tests {
 
             IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
 
-            engine.SynchronizeState().WaitOne();
-            engine.Update().WaitOne();
+            engine.SynchronizeState().Wait();
+            engine.Update().Wait();
 
             List<TriggerEvent> events = new List<TriggerEvent>();
             events.Add(
@@ -239,8 +239,8 @@ namespace Forge.Entities.Tests {
             Assert.Equal(events, engine.GetSystem<SystemEventLogger>().Events);
 
             for (int i = 0; i < 20; ++i) {
-                engine.SynchronizeState().WaitOne();
-                engine.Update().WaitOne();
+                engine.SynchronizeState().Wait();
+                engine.Update().Wait();
 
                 events.Add(
                     TriggerEvent.OnGlobalPreUpdate,

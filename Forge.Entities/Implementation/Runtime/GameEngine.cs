@@ -389,8 +389,8 @@ namespace Forge.Entities.Implementation.Runtime {
             }
         }
 
-        public void RunUpdateWorld(object commandsObject) {
-            List<IGameInput> commands = (List<IGameInput>)commandsObject;
+        public void RunUpdateWorld(IEnumerable<IGameInput> commandsObject) {
+            List<IGameInput> commands = commandsObject.ToList();
 
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -427,47 +427,44 @@ namespace Forge.Entities.Implementation.Runtime {
             Log<GameEngine>.Info(builder.ToString());
         }
 
-        private ManualResetEvent _updateWaitHandle = new ManualResetEvent(false);
+        private Task _updateWaitTask = null;
 
-        public WaitHandle Update(IEnumerable<IGameInput> input) {
+        public Task Update(IEnumerable<IGameInput> input) {
             if (_nextState != GameEngineNextState.Update) {
                 throw new InvalidOperationException("Invalid call to Update; was expecting " + _nextState);
             }
 
-            if (_updateWaitHandle.WaitOne(0)) {
-                throw new InvalidOperationException("Cannot call UpdateWorld before the returned " +
-                    "WaitHandle has completed");
+            if (_updateWaitTask != null) {
+                throw new InvalidOperationException("Currently running Update task has not finished");
             }
 
-            Task updateTask = Task.Factory.StartNew(RunUpdateWorld, input);
-            updateTask.ContinueWith(t => {
+            _updateWaitTask = Task.Factory.StartNew(() => {
+                RunUpdateWorld(input);
                 _nextState = GameEngineNextState.SynchronizeState;
-                _synchronizeStateWaitHandle.Reset();
-                _updateWaitHandle.Set();
+                _updateWaitTask = null;
             });
 
-            return _updateWaitHandle;
+            return _updateWaitTask;
         }
 
-        private ManualResetEvent _synchronizeStateWaitHandle = new ManualResetEvent(false);
-        public WaitHandle SynchronizeState() {
+        private Task _synchronizeStateTask = null;
+        public Task SynchronizeState() {
             if (_nextState != GameEngineNextState.SynchronizeState) {
                 throw new InvalidOperationException("Invalid call to SynchronizeState; was expecting " + _nextState);
             }
 
-            if (_synchronizeStateWaitHandle.WaitOne(0)) {
+            if (_synchronizeStateTask != null) {
                 throw new InvalidOperationException("Cannot call SynchronizeState before the " +
                     "returned WaitHandle has completed");
             }
 
-            Task.Factory.StartNew(() => {
+            _synchronizeStateTask = Task.Factory.StartNew(() => {
                 UpdateEntitiesWithStateChanges();
                 _nextState = GameEngineNextState.Update;
-                _updateWaitHandle.Reset();
-                _synchronizeStateWaitHandle.Set();
+                _synchronizeStateTask = null;
             });
 
-            return _synchronizeStateWaitHandle;
+            return _synchronizeStateTask;
         }
 
         public void DispatchEvents() {
