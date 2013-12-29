@@ -116,7 +116,7 @@ namespace Forge.Entities.Implementation.Runtime {
         /// </summary>
         private static int _entityUnorderedListMetadataKey = EntityManagerMetadata.GetUnorderedListMetadataIndex();
 
-        private List<BaseSystem> _systems;
+        private List<ISystem> _systems;
 
         /// <summary>
         /// Events that the EntityManager dispatches.
@@ -222,13 +222,7 @@ namespace Forge.Entities.Implementation.Runtime {
         /// <summary>
         /// Registers the given system with the EntityManager.
         /// </summary>
-        private void AddSystem(BaseSystem baseSystem) {
-            if (baseSystem.EventDispatcher != null) {
-                throw new InvalidOperationException("System already has an event " +
-                    "dispatcher; either it got deserialized (it should not have), or the system " +
-                    "was already registered with another game engine (which means the reference " +
-                    "isolation is broken)");
-            }
+        private void AddSystem(ISystem baseSystem) {
             baseSystem.EventDispatcher = EventNotifier;
 
             if (baseSystem is ITriggerFilterProvider) {

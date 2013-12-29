@@ -96,7 +96,7 @@ namespace Forge.Entities {
         /// <summary>
         /// All systems that are used when executing the game.
         /// </summary>
-        List<BaseSystem> Systems {
+        List<ISystem> Systems {
             get;
         }
     }

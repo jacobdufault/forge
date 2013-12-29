@@ -152,7 +152,7 @@ namespace Forge.Entities.Implementation.Content {
             ActiveEntities = new List<IEntity>();
             AddedEntities = new List<IEntity>();
             RemovedEntities = new List<IEntity>();
-            Systems = new List<BaseSystem>();
+            Systems = new List<ISystem>();
         }
 
         [JsonProperty("EntityIdGenerator")]
@@ -188,7 +188,7 @@ namespace Forge.Entities.Implementation.Content {
         private EntitySerializationContainer _removedEntitiesContainer;
 
         [JsonProperty("Systems")]
-        public List<BaseSystem> Systems {
+        public List<ISystem> Systems {
             get;
             set;
         }
@@ -312,7 +312,7 @@ namespace Forge.Entities.Implementation.Content {
             get { return AddedEntities.Cast<IEntity>(); }
         }
 
-        List<BaseSystem> IGameSnapshot.Systems {
+        List<ISystem> IGameSnapshot.Systems {
             get { return Systems; }
         }
     }
