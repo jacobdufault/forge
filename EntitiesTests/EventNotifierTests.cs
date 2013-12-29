@@ -1,12 +1,11 @@
 ﻿using Forge.Entities.Implementation.Shared;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Xunit;
 
 namespace Forge.Entities.Tests {
-    [TestClass]
     public class EventNotifierTests {
         private class TestEvent : BaseEvent<TestEvent> {
             private TestEvent() {
@@ -17,7 +16,7 @@ namespace Forge.Entities.Tests {
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void EventsAreNotRedispatched() {
             EventNotifier notifier = new EventNotifier();
 
@@ -25,28 +24,28 @@ namespace Forge.Entities.Tests {
             notifier.OnEvent<TestEvent>(evnt => ++callCount);
 
             notifier.DispatchEvents();
-            Assert.AreEqual(0, callCount);
+            Assert.Equal(0, callCount);
 
             notifier.Submit(TestEvent.Create());
             notifier.DispatchEvents();
-            Assert.AreEqual(1, callCount);
+            Assert.Equal(1, callCount);
             callCount = 0;
 
             notifier.DispatchEvents();
-            Assert.AreEqual(0, callCount);
+            Assert.Equal(0, callCount);
 
             notifier.Submit(TestEvent.Create());
             notifier.Submit(TestEvent.Create());
             notifier.Submit(TestEvent.Create());
             notifier.DispatchEvents();
-            Assert.AreEqual(3, callCount);
+            Assert.Equal(3, callCount);
             callCount = 0;
 
             notifier.DispatchEvents();
-            Assert.AreEqual(0, callCount);
+            Assert.Equal(0, callCount);
         }
 
-        [TestMethod]
+        [Fact]
         public void EventsAreNotRedispatchedWithConcurrentDispatch() {
             EventNotifier notifier = new EventNotifier();
 
@@ -57,16 +56,16 @@ namespace Forge.Entities.Tests {
             });
 
             notifier.DispatchEvents();
-            Assert.AreEqual(0, callCount);
+            Assert.Equal(0, callCount);
 
             notifier.Submit(TestEvent.Create());
             notifier.DispatchEvents();
-            Assert.AreEqual(1, callCount);
+            Assert.Equal(1, callCount);
 
             for (int i = 0; i < 20; ++i) {
                 callCount = 0;
                 notifier.DispatchEvents();
-                Assert.AreEqual(1, callCount);
+                Assert.Equal(1, callCount);
             }
 
             notifier.Submit(TestEvent.Create());
@@ -76,7 +75,7 @@ namespace Forge.Entities.Tests {
             for (int i = 0; i < 20; ++i) {
                 callCount = 0;
                 notifier.DispatchEvents();
-                Assert.AreEqual(4, callCount);
+                Assert.Equal(4, callCount);
             }
         }
 

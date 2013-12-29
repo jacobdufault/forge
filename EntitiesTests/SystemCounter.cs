@@ -17,23 +17,32 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace Forge.Entities.Tests {
-    [TestClass]
-    public class DataAccessorTests {
-        [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
-        public void DataAccessorRejectsSupertypeType() {
-            DataAccessor accessor = new DataAccessor(typeof(Object));
+    [JsonObject(MemberSerialization.OptIn)]
+    public class SystemCounter : BaseSystem, Trigger.Update, Trigger.Removed {
+        [JsonProperty("UpdateCount")]
+        public int UpdateCount;
+        [JsonProperty("RemovedCount")]
+        public int RemovedCount;
+        [JsonProperty("Filter")]
+        public Type[] Filter;
+
+        public void OnUpdate(IEntity entity) {
+            ++UpdateCount;
         }
 
-        [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
-        public void DataAccessorRejectsDataType() {
-            DataAccessor accessor = new DataAccessor(typeof(IData));
+        public Type[] RequiredDataTypes() {
+            return Filter;
         }
 
+        public void OnRemoved(IEntity entity) {
+            ++RemovedCount;
+        }
     }
 }

@@ -17,32 +17,20 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using Xunit;
 
-namespace Forge.Entities.E2ETests {
-    [JsonObject(MemberSerialization.OptIn)]
-    internal class SystemCounter : BaseSystem, Trigger.Update, Trigger.Removed {
-        [JsonProperty("UpdateCount")]
-        public int UpdateCount;
-        [JsonProperty("RemovedCount")]
-        public int RemovedCount;
-        [JsonProperty("Filter")]
-        public Type[] Filter;
-
-        public void OnUpdate(IEntity entity) {
-            ++UpdateCount;
+namespace Forge.Entities.Tests {
+    public class DataAccessorTests {
+        [Fact]
+        public void DataAccessorRejectsSupertypeType() {
+            Assert.Throws<ArgumentException>(() => new DataAccessor(typeof(Object)));
         }
 
-        public Type[] RequiredDataTypes() {
-            return Filter;
+        [Fact]
+        public void DataAccessorRejectsDataType() {
+            Assert.Throws<ArgumentException>(() => new DataAccessor(typeof(IData)));
         }
 
-        public void OnRemoved(IEntity entity) {
-            ++RemovedCount;
-        }
     }
 }

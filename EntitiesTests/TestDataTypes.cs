@@ -23,19 +23,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Forge.Entities.E2ETests {
+namespace Forge.Entities.Tests {
     [JsonObject(MemberSerialization.OptIn)]
-    internal class TestData0 : BaseData<TestData0> {
+    internal class DataEmpty : BaseData<DataEmpty> {
         public override bool SupportsConcurrentModifications {
             get { return false; }
         }
 
-        public override void CopyFrom(TestData0 source) {
+        public override void CopyFrom(DataEmpty source) {
         }
     }
 
     [JsonObject(MemberSerialization.OptIn)]
-    internal class TestData1 : BaseData<TestData1> {
+    internal class DataInt : BaseData<DataInt> {
         [JsonProperty("A")]
         public int A;
 
@@ -43,27 +43,47 @@ namespace Forge.Entities.E2ETests {
             get { return false; }
         }
 
-        public override void CopyFrom(TestData1 source) {
+        public override void CopyFrom(DataInt source) {
             A = source.A;
         }
     }
 
     [JsonObject(MemberSerialization.OptIn)]
-    internal class TestData2 : BaseData<TestData2> {
+    internal class DataTemplate : BaseData<DataTemplate> {
         [JsonProperty("Template")]
         public ITemplate Template;
 
-        public override void CopyFrom(TestData2 source) {
+        public override void CopyFrom(DataTemplate source) {
             Template = source.Template;
         }
     }
 
     [JsonObject(MemberSerialization.OptIn)]
-    internal class TestData3 : BaseData<TestData3> {
-        [JsonProperty("DataReference")]
-        public DataReference<TestData0> DataReference;
+    internal class DataEntity : BaseData<DataEntity> {
+        [JsonProperty("Entity")]
+        public IEntity Entity;
 
-        public override void CopyFrom(TestData3 source) {
+        public override void CopyFrom(DataEntity source) {
+            Entity = source.Entity;
+        }
+    }
+
+    [JsonObject(MemberSerialization.OptIn)]
+    internal class DataQueryableEntity : BaseData<DataQueryableEntity> {
+        [JsonProperty("QueryableEntity")]
+        public IQueryableEntity QueryableEntity;
+
+        public override void CopyFrom(DataQueryableEntity source) {
+            QueryableEntity = source.QueryableEntity;
+        }
+    }
+
+    [JsonObject(MemberSerialization.OptIn)]
+    internal class DataDataReference : BaseData<DataDataReference> {
+        [JsonProperty("DataReference")]
+        public DataReference<DataEmpty> DataReference;
+
+        public override void CopyFrom(DataDataReference source) {
             DataReference = source.DataReference;
         }
     }

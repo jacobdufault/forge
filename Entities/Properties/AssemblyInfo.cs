@@ -15,7 +15,6 @@ using System.Runtime.InteropServices;
 
 // Allow tests to see internals of this assembly so they can do more robust testing
 [assembly: InternalsVisibleTo("Forge.Entities.Tests")]
-[assembly: InternalsVisibleTo("Forge.Entities.E2ETests")]
 
 // Setting ComVisible to false makes the types in this assembly not visible to COM components. If
 // you need to access a type in this assembly from COM, set the ComVisible attribute to true on that
