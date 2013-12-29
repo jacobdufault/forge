@@ -422,40 +422,44 @@ namespace Forge.Entities.Implementation.Runtime {
         }
 
         private Task _updateWaitTask = null;
+        private Task _synchronizeStateTask = null;
 
         public Task Update(IEnumerable<IGameInput> input) {
             if (_nextState != GameEngineNextState.Update) {
                 throw new InvalidOperationException("Invalid call to Update; was expecting " + _nextState);
             }
 
-            if (_updateWaitTask != null) {
+            if (_updateWaitTask != null &&
+                _updateWaitTask.IsCompleted == false &&
+                _updateWaitTask.IsFaulted == false &&
+                _updateWaitTask.IsCanceled == false) {
                 throw new InvalidOperationException("Currently running Update task has not finished");
             }
 
             _updateWaitTask = Task.Factory.StartNew(() => {
                 RunUpdateWorld(input);
                 _nextState = GameEngineNextState.SynchronizeState;
-                _updateWaitTask = null;
             });
 
             return _updateWaitTask;
         }
 
-        private Task _synchronizeStateTask = null;
         public Task SynchronizeState() {
             if (_nextState != GameEngineNextState.SynchronizeState) {
                 throw new InvalidOperationException("Invalid call to SynchronizeState; was expecting " + _nextState);
             }
 
-            if (_synchronizeStateTask != null) {
+            if (_synchronizeStateTask != null &&
+                _synchronizeStateTask.IsCompleted == false &&
+                _synchronizeStateTask.IsFaulted == false &&
+                _synchronizeStateTask.IsCanceled == false) {
                 throw new InvalidOperationException("Cannot call SynchronizeState before the " +
-                    "returned WaitHandle has completed");
+                    "returned Task has completed");
             }
 
             _synchronizeStateTask = Task.Factory.StartNew(() => {
                 UpdateEntitiesWithStateChanges();
                 _nextState = GameEngineNextState.Update;
-                _synchronizeStateTask = null;
             });
 
             return _synchronizeStateTask;
