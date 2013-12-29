@@ -17,14 +17,13 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Xunit;
 
 namespace Forge.Utilities.Tests {
-    [TestClass]
     public class ContractTests {
         private void TestParameters(object p) {
             Contract.AssertArguments(p, "p");
@@ -37,10 +36,9 @@ namespace Forge.Utilities.Tests {
             Contract.AssertArguments(p0, "p0", p1, "p1", p2, "p2");
         }
 
-        [TestMethod]
-        [ExpectedException(typeof(ArgumentNullException))]
+        [Fact]
         public void VerifyParams() {
-            TestParameters(null, null);
+            Assert.Throws<ArgumentNullException>(() => TestParameters(null, null));
         }
     }
 }

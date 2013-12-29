@@ -17,61 +17,59 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using Xunit;
 
 namespace Forge.Utilities.Tests {
-    [TestClass]
     public class BoundTests {
-        [TestMethod]
+        [Fact]
         public void FullyContained() {
             Bound b1 = new Bound(0, 0, 30);
             Bound b2 = new Bound(0, 0, 1);
 
-            Assert.IsTrue(b1.Intersects(b2));
-            Assert.IsTrue(b2.Intersects(b1));
+            Assert.True(b1.Intersects(b2));
+            Assert.True(b2.Intersects(b1));
         }
 
-        [TestMethod]
+        [Fact]
         public void AwayFromOrigin() {
             Bound b1 = new Bound(500, 0, 10);
             Bound b2 = new Bound(495, 0, 1);
 
-            Assert.IsTrue(b1.Intersects(b2));
-            Assert.IsTrue(b2.Intersects(b1));
+            Assert.True(b1.Intersects(b2));
+            Assert.True(b2.Intersects(b1));
         }
 
-        [TestMethod]
+        [Fact]
         public void Intersecting() {
             Bound b1 = new Bound(0, 0, 5);
             Bound b2 = new Bound(0, 4, 3);
 
-            Assert.IsTrue(b1.Intersects(b2));
-            Assert.IsTrue(b2.Intersects(b1));
+            Assert.True(b1.Intersects(b2));
+            Assert.True(b2.Intersects(b1));
         }
 
-        [TestMethod]
+        [Fact]
         public void IntersectingEdge() {
             Bound b1 = new Bound(0, 0, 5);
             Bound b2 = new Bound(0, 5, 1);
 
-            Assert.IsTrue(b1.Intersects(b2));
-            Assert.IsTrue(b2.Intersects(b1));
+            Assert.True(b1.Intersects(b2));
+            Assert.True(b2.Intersects(b1));
         }
 
-        [TestMethod]
+        [Fact]
         public void NotIntersecting() {
             Bound b1 = new Bound(0, 0, 1);
             Bound b2 = new Bound(10, 10, 1);
 
-            Assert.IsFalse(b1.Intersects(b2));
-            Assert.IsFalse(b2.Intersects(b1));
+            Assert.False(b1.Intersects(b2));
+            Assert.False(b2.Intersects(b1));
         }
 
-        [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
+        [Fact]
         public void ZeroRadius() {
-            Bound b2 = new Bound(0, 0, 0);
+            Assert.Throws<ArgumentException>(() => new Bound(0, 0, 0));
         }
     }
 }

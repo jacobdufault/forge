@@ -17,33 +17,31 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
+using Xunit.Extensions;
 
 namespace Forge.Utilities.Tests {
-    [TestClass]
     public class RealTests {
-        [TestMethod]
+        [Fact]
         public void DecimalCreation() {
-            Assert.AreEqual(.105f, Real.CreateDecimal(0, 105, 3).AsFloat, 0.01);
-            Assert.AreEqual(10.105f, Real.CreateDecimal(10, 105, 3).AsFloat, 0.01);
-            Assert.AreEqual(5.105f, Real.CreateDecimal(5, 105, 3).AsFloat, 0.01);
-            Assert.AreEqual(20.1f, Real.CreateDecimal(20, 1, 1).AsFloat, 0.01);
-            Assert.AreEqual(-150.333, Real.CreateDecimal(-150, 333, 3).AsFloat, 0.01);
-            Assert.AreEqual(-150.0005, Real.CreateDecimal(-150, 0005, 4).AsFloat, 0.01);
+            Assert.Equal(.105f, Real.CreateDecimal(0, 105, 3).AsFloat, 3);
+            Assert.Equal(10.105f, Real.CreateDecimal(10, 105, 3).AsFloat, 3);
+            Assert.Equal(5.105f, Real.CreateDecimal(5, 105, 3).AsFloat, 3);
+            Assert.Equal(20.1f, Real.CreateDecimal(20, 1, 1).AsFloat, 3);
+            Assert.Equal(-150.333, Real.CreateDecimal(-150, 333, 3).AsFloat, 3);
+            Assert.Equal(-150.0005, Real.CreateDecimal(-150, 0005, 4).AsFloat, 3);
         }
 
-        private void VerifySerializatedEqual(Real real) {
-            Assert.AreEqual(real, SerializationHelpers.DeepClone(real));
-        }
-
-        [TestMethod]
-        public void SerializeRealAsFloat() {
-            VerifySerializatedEqual(Real.CreateDecimal(0, 105, 3));
-            VerifySerializatedEqual(Real.CreateDecimal(10, 105, 3));
-            VerifySerializatedEqual(Real.CreateDecimal(5, 105, 3));
-            VerifySerializatedEqual(Real.CreateDecimal(20, 1, 1));
-            VerifySerializatedEqual(Real.CreateDecimal(-150, 333, 3));
-            VerifySerializatedEqual(Real.CreateDecimal(-150, 0005, 4));
+        [Theory]
+        [InlineData(0, 105, 3)]
+        [InlineData(10, 105, 3)]
+        [InlineData(5, 105, 3)]
+        [InlineData(20, 1, 1)]
+        [InlineData(-150, 333, 3)]
+        [InlineData(-150, 0005, 4)]
+        public void SerailizeReal(long beforeDecimal, int afterDecimal, int afterDigits) {
+            Real real = Real.CreateDecimal(beforeDecimal, afterDecimal, afterDigits);
+            Assert.Equal(real, SerializationHelpers.DeepClone(real));
         }
     }
 }

@@ -18,12 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Forge.Collections;
 using System.Collections.Generic;
+using Xunit;
 
 namespace CollectionsTests {
-    [TestClass]
     public class BagTests {
         private IEnumerable<Bag<int>> GetBags() {
             yield return new Bag<int>() { };
@@ -33,7 +32,7 @@ namespace CollectionsTests {
             };
         }
 
-        [TestMethod]
+        [Fact]
         public void Insert() {
             const int length = 30;
 
@@ -45,7 +44,7 @@ namespace CollectionsTests {
                 }
 
                 for (int i = 0; i < length; ++i) {
-                    Assert.AreEqual(i, b[i]);
+                    Assert.Equal(i, b[i]);
                 }
             }
 
@@ -65,12 +64,12 @@ namespace CollectionsTests {
 
                 // ensure it is equal
                 for (int i = 0; i < length * 2; ++i) {
-                    Assert.AreEqual(i, b[i]);
+                    Assert.Equal(i, b[i]);
                 }
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void RemoveAt() {
             const int length = 60;
 
@@ -82,10 +81,10 @@ namespace CollectionsTests {
                 }
 
                 ((IList<int>)b).RemoveAt(0);
-                Assert.AreEqual(length - 1, b.Length);
+                Assert.Equal(length - 1, b.Length);
 
                 for (int i = 1; i < length; ++i) {
-                    Assert.AreEqual(i, b[i - 1]);
+                    Assert.Equal(i, b[i - 1]);
                 }
             }
         }
