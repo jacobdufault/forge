@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using Forge.Networking.Core;
+using Forge.Utilities;
 using System;
 using System.Collections.Generic;
 
@@ -62,6 +63,8 @@ namespace Forge.Networking.AutomaticTurnGame {
             }
             set {
                 _updateDeltaMs = 1000.0f / value;
+                Log<AutomaticTurnGame>.Info("Changed update delta to {0}ms ({1} updates per second)",
+                    _updateDeltaMs, value);
             }
         }
 

@@ -42,7 +42,10 @@ namespace Forge.Networking.Core {
         /// <summary>
         /// Determines whether the specified see cref="System.Object" }, is equal to this instance.
         /// </summary>
-        /// <param name="obj">The <see cref="System.Object" /> to compare with this instance.</param> <returns> <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>. </returns>
+        /// <param name="obj">The <see cref="System.Object" /> to compare with this
+        /// instance.</param>
+        /// <returns><c>true</c> if the specified <see cref="System.Object" /> is equal to this
+        /// instance; otherwise, /c>.</returns>
         public override bool Equals(object obj) {
             if (obj is Player == false) {
                 return false;
@@ -59,6 +62,10 @@ namespace Forge.Networking.Core {
         /// structures like a hash table.</returns>
         public override int GetHashCode() {
             return Guid.GetHashCode();
+        }
+
+        public override string ToString() {
+            return string.Format("Player [Name={0}, GUID={1}]", Name, Guid);
         }
     }
 }

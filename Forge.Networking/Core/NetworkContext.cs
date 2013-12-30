@@ -52,11 +52,17 @@ namespace Forge.Networking.Core {
             }
             set {
                 if (__server != null && value == null) {
-                    __server.UPnP.DeleteForwardingRule(Configuration.Port);
+                    Log<NetworkContext>.Info("Trying to delete UPnP forwarding rule (port {0})", Configuration.Port);
+                    bool success = __server.UPnP.DeleteForwardingRule(Configuration.Port);
+                    Log<NetworkContext>.Info("Attempt to delete UPnP forwarding rule (port {0}) {1}",
+                        Configuration.Port, success ? "was successful" : "failed");
                 }
 
                 if (__server == null && value != null) {
-                    value.UPnP.ForwardPort(Configuration.Port, "Forge.Network Port Forward");
+                    Log<NetworkContext>.Info("Trying to create UPnP forwarding rule (port {0})", Configuration.Port);
+                    bool success = value.UPnP.ForwardPort(Configuration.Port, "Forge.Network Port Forward");
+                    Log<NetworkContext>.Info("Attempt to create UPnP forwarding rule (port {0}) {1}",
+                        Configuration.Port, success ? "was successful" : "failed");
                 }
 
                 __server = value;
@@ -100,8 +106,6 @@ namespace Forge.Networking.Core {
             _localPlayerEnumerable = new[] { localPlayer };
 
             _connectionMonitors = new List<INetworkConnectionMonitor>();
-
-            Log<NetworkContext>.Info("Created network context with LocalPlayer=" + localPlayer);
         }
 
         ~NetworkContext() {
@@ -125,7 +129,7 @@ namespace Forge.Networking.Core {
             server.Start();
             context._server = server;
 
-            Log<NetworkContext>.Info("Created server network context");
+            Log<NetworkContext>.Info("Created server (LocalPlayer={0}, Password={1})", player, password);
 
             return context;
         }
@@ -420,7 +424,9 @@ namespace Forge.Networking.Core {
                     }
                     else {
                         var msg = CreateMessage(LocalPlayer, message, broadcast: false);
-                        Log<NetworkContext>.Info("Sending message to all connections " + string.Join(", ", _server.Connections.Select(c => ((Player)c.Tag).Name).ToArray()));
+                        Log<NetworkContext>.Info("Sending message {0} to all connections ({1})",
+                            SerializationHelpers.Serialize(message),
+                            string.Join(", ", _server.Connections.Select(c => ((Player)c.Tag).Name).ToArray()));
 
                         _server.SendToAll(msg, NetDeliveryMethod.ReliableOrdered);
                         _dispatcher.InvokeHandlers(LocalPlayer, message);
