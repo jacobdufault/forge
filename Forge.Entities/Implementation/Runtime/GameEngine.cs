@@ -234,7 +234,7 @@ namespace Forge.Entities.Implementation.Runtime {
                 _multithreadedSystems.Add(multithreadingSystem);
             }
             else {
-                throw new NotImplementedException();
+                throw new NotImplementedException("No support for systems which are not deriving for ITriggerFilterProvider as of yet for system " + baseSystem);
             }
         }
 
