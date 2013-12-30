@@ -56,11 +56,11 @@ namespace Forge.Entities.Tests {
             Events.Add(TriggerEvent.OnUpdate);
         }
 
-        public void OnGlobalPreUpdate(IEntity singletonEntity) {
+        public void OnGlobalPreUpdate() {
             Events.Add(TriggerEvent.OnGlobalPreUpdate);
         }
 
-        public void OnGlobalPostUpdate(IEntity singletonEntity) {
+        public void OnGlobalPostUpdate() {
             Events.Add(TriggerEvent.OnGlobalPostUpdate);
         }
 
@@ -72,7 +72,7 @@ namespace Forge.Entities.Tests {
             Events.Add(TriggerEvent.OnInput);
         }
 
-        public void OnGlobalInput(IGameInput input, IEntity singletonEntity) {
+        public void OnGlobalInput(IGameInput input) {
             Events.Add(TriggerEvent.OnGlobalInput);
         }
     }

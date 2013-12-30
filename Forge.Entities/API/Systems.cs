@@ -33,6 +33,13 @@ namespace Forge.Entities {
         IEventDispatcher EventDispatcher {
             set;
         }
+
+        /// <summary>
+        /// Set the singleton entity that can be used to store global data.
+        /// </summary>
+        IEntity SingletonEntity {
+            set;
+        }
     }
 
     /// <summary>
@@ -49,12 +56,26 @@ namespace Forge.Entities {
         /// </summary>
         protected internal IEventDispatcher EventDispatcher {
             get;
-            internal set;
+            private set;
         }
 
         IEventDispatcher ISystem.EventDispatcher {
             set {
                 EventDispatcher = value;
+            }
+        }
+
+        /// <summary>
+        /// Get the singleton entity that can be used to store global data.
+        /// </summary>
+        protected internal IEntity SingletonEntity {
+            get;
+            private set;
+        }
+
+        IEntity ISystem.SingletonEntity {
+            set {
+                SingletonEntity = value;
             }
         }
     }
@@ -143,28 +164,26 @@ namespace Forge.Entities {
 
         /// <summary>
         /// Adds an OnGlobalPreUpdate method to the system, which is called before OnUpdate has
-        /// started on the singleton entity object.
+        /// started.
         /// </summary>
         public interface GlobalPreUpdate : ISystem {
             /// <summary>
             /// Called once per update loop. This is expected to use the EntityManager's singleton
             /// data.
             /// </summary>
-            /// <param name="singletonEntity">The GameEngine's singleton entity instance.</param>
-            void OnGlobalPreUpdate(IEntity singletonEntity);
+            void OnGlobalPreUpdate();
         }
 
         /// <summary>
         /// Adds an OnGlobalPostUpdate method to the system, which is called after OnUpdate has
-        /// completed for this system on the singleton entity.
+        /// completed for this system.
         /// </summary>
         public interface GlobalPostUpdate : ISystem {
             /// <summary>
             /// Called once per update loop. This is expected to use the EntityManager's singleton
             /// data.
             /// </summary>
-            /// <param name="singletonEntity">The GameEngine's singleton entity instance.</param>
-            void OnGlobalPostUpdate(IEntity singletonEntity);
+            void OnGlobalPostUpdate();
         }
 
         /// <summary>
@@ -188,8 +207,8 @@ namespace Forge.Entities {
         }
 
         /// <summary>
-        /// Adds an OnGlobalInput method to the system, which is called on the singleton entity when
-        /// one of the given input types has been received by the game engine.
+        /// Adds an OnGlobalInput method to the system, which is called when one of the given input
+        /// types has been received by the game engine.
         /// </summary>
         public interface GlobalInput : ISystem {
             /// <summary>
@@ -203,8 +222,7 @@ namespace Forge.Entities {
             /// Called whenever the given input type is received.
             /// </summary>
             /// <param name="input">The input that was received.</param>
-            /// <param name="singletonEntity">The GameEngine's singleton entity instance.</param>
-            void OnGlobalInput(IGameInput input, IEntity singletonEntity);
+            void OnGlobalInput(IGameInput input);
         }
     }
 }

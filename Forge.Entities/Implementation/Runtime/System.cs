@@ -29,11 +29,6 @@ namespace Forge.Entities.Implementation.Runtime {
     /// </summary>
     internal interface MultithreadedSystemSharedContext {
         /// <summary>
-        /// Global singleton entity.
-        /// </summary>
-        RuntimeEntity SingletonEntity { get; }
-
-        /// <summary>
         /// Entities which have been added.
         /// </summary>
         List<RuntimeEntity> AddedEntities { get; }
@@ -289,7 +284,7 @@ namespace Forge.Entities.Implementation.Runtime {
 
                 // call the global pre-update method, if applicable
                 if (_triggerGlobalPreUpdate != null) {
-                    _triggerGlobalPreUpdate.OnGlobalPreUpdate(_shared.SingletonEntity);
+                    _triggerGlobalPreUpdate.OnGlobalPreUpdate();
                 }
 
                 // call the update method, if applicable
@@ -303,7 +298,7 @@ namespace Forge.Entities.Implementation.Runtime {
 
                 // call the global post-update method, if applicable
                 if (_triggerGlobalPostUpdate != null) {
-                    _triggerGlobalPostUpdate.OnGlobalPostUpdate(_shared.SingletonEntity);
+                    _triggerGlobalPostUpdate.OnGlobalPostUpdate();
                 }
 
                 // call input methods, if applicable
@@ -341,7 +336,7 @@ namespace Forge.Entities.Implementation.Runtime {
                         }
 
                         if (accept) {
-                            _triggerGlobalInput.OnGlobalInput(input[i], _shared.SingletonEntity);
+                            _triggerGlobalInput.OnGlobalInput(input[i]);
                         }
                     }
                 }
