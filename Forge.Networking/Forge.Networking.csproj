@@ -57,8 +57,6 @@
     <Compile Include="AutomaticTurnGame\IGameCommand.cs" />
     <Compile Include="Chat\ChatMessageHandler.cs" />
     <Compile Include="Chat\ChatNetworkMessage.cs" />
-    <Compile Include="Chat\IPlayerRelationGraph.cs" />
-    <Compile Include="Chat\PlayerRelation.cs" />
     <Compile Include="Chat\ReceivedChatMessage.cs" />
     <Compile Include="Core\Configuration.cs" />
     <Compile Include="Chat\ChatManager.cs" />

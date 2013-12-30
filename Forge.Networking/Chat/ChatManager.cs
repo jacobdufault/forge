@@ -42,10 +42,9 @@ namespace Forge.Networking.Chat {
         /// mapping network players to a directed player relation graph.
         /// </summary>
         /// <param name="context">The networking context.</param>
-        /// <param name="relationGraph">The player relationship mapper.</param>
-        public ChatManager(NetworkContext context, IPlayerRelationGraph relationGraph) {
+        public ChatManager(NetworkContext context) {
             _context = context;
-            _handler = new ChatMessageHandler(_context, relationGraph);
+            _handler = new ChatMessageHandler(_context);
             _context.AddMessageHandler(_handler);
         }
 
@@ -82,13 +81,12 @@ namespace Forge.Networking.Chat {
         /// player.
         /// </summary>
         /// <param name="message">The message to send.</param>
-        /// <param name="requiredRelation">The relationship that the local player has to have with
-        /// the message candidate in order to send the chat message.</param>
-        public void SendMessage(string message, PlayerRelation requiredRelation) {
+        /// <param name="receivers">The players that should receive the message.</param>
+        public void SendMessage(string message, List<Player> receivers) {
             _context.SendMessage(NetworkMessageRecipient.All, new ChatNetworkMessage() {
                 Content = message,
                 Sender = _context.LocalPlayer,
-                RequiredSenderToLocalRelation = Maybe.Just(requiredRelation)
+                Receivers = Maybe.Just(receivers)
             });
         }
 
@@ -100,7 +98,7 @@ namespace Forge.Networking.Chat {
             _context.SendMessage(NetworkMessageRecipient.All, new ChatNetworkMessage() {
                 Content = message,
                 Sender = _context.LocalPlayer,
-                RequiredSenderToLocalRelation = Maybe<PlayerRelation>.Empty
+                Receivers = Maybe<List<Player>>.Empty
             });
         }
     }

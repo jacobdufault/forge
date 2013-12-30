@@ -20,6 +20,7 @@
 using Forge.Networking.Core;
 using Forge.Utilities;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace Forge.Networking.Chat {
     /// <summary>
@@ -40,11 +41,10 @@ namespace Forge.Networking.Chat {
         public Player Sender;
 
         /// <summary>
-        /// Specifies what players should see the given message; only players which have a relation
-        /// going from Sender to LocalPlayer equal to RequiredSenderToLocalRelation can show the
-        /// message. If the maybe is empty, then every player should view the message.
+        /// Specifies what players should see the given message. This will be empty if every player
+        /// should see the message, and non-empty if not everyone should see it.
         /// </summary>
         [JsonProperty]
-        public Maybe<PlayerRelation> RequiredSenderToLocalRelation;
+        public Maybe<List<Player>> Receivers;
     }
 }

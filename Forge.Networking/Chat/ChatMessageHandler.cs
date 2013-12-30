@@ -34,12 +34,6 @@ namespace Forge.Networking.Chat {
         private Player _localPlayer;
 
         /// <summary>
-        /// The relation determination object used to determine the relation between the sender of
-        /// the chat message and the local player.
-        /// </summary>
-        private IPlayerRelationGraph _relationGraph;
-
-        /// <summary>
         /// All received chat messages.
         /// </summary>
         public List<ReceivedChatMessage> AllMessages;
@@ -49,9 +43,8 @@ namespace Forge.Networking.Chat {
         /// </summary>
         public List<ReceivedChatMessage> DisplayableMessages;
 
-        public ChatMessageHandler(NetworkContext context, IPlayerRelationGraph relationGraph) {
+        public ChatMessageHandler(NetworkContext context) {
             _localPlayer = context.LocalPlayer;
-            _relationGraph = relationGraph;
 
             AllMessages = new List<ReceivedChatMessage>();
             DisplayableMessages = new List<ReceivedChatMessage>();
@@ -71,23 +64,21 @@ namespace Forge.Networking.Chat {
             };
             AllMessages.Add(receivedMessage);
 
-            if (ShouldDisplay(m.RequiredSenderToLocalRelation, m.Sender)) {
+            if (ShouldDisplay(m.Receivers)) {
                 DisplayableMessages.Add(receivedMessage);
             }
         }
 
         /// <summary>
-        /// Returns true if either the required relation if empty or if the sender has the required
-        /// relation w.r.t. to the player.
+        /// Returns true if this computer should display the message for the given set of message
+        /// receivers.
         /// </summary>
-        private bool ShouldDisplay(Maybe<PlayerRelation> requiredRelation, Player sender) {
-            if (requiredRelation.IsEmpty) {
+        private bool ShouldDisplay(Maybe<List<Player>> receivers) {
+            if (receivers.IsEmpty) {
                 return true;
             }
 
-            // Get the relation that the sender has towards us
-            PlayerRelation currentRelation = _relationGraph.GetDirectedRelation(sender, _localPlayer);
-            return currentRelation == requiredRelation.Value;
+            return receivers.Value.Contains(_localPlayer);
         }
     }
 }
