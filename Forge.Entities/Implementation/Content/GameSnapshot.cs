@@ -148,7 +148,7 @@ namespace Forge.Entities.Implementation.Content {
         public GameSnapshot() {
             _entityIdGenerator = new UniqueIntGenerator();
 
-            SingletonEntity = new ContentEntity(_entityIdGenerator.Next(), "Global Singleton");
+            GlobalEntity = new ContentEntity(_entityIdGenerator.Next(), "Global Entity");
             ActiveEntities = new List<IEntity>();
             AddedEntities = new List<IEntity>();
             RemovedEntities = new List<IEntity>();
@@ -158,7 +158,7 @@ namespace Forge.Entities.Implementation.Content {
         [JsonProperty("EntityIdGenerator")]
         private UniqueIntGenerator _entityIdGenerator;
 
-        public IEntity SingletonEntity {
+        public IEntity GlobalEntity {
             get;
             set;
         }
@@ -178,8 +178,8 @@ namespace Forge.Entities.Implementation.Content {
             private set;
         }
 
-        [JsonProperty("SingletonEntity")]
-        private EntitySerializationContainer _singletonEntityContainer;
+        [JsonProperty("GlobalEntity")]
+        private EntitySerializationContainer _globalEntityContainer;
         [JsonProperty("AddedEntities")]
         private EntitySerializationContainer _addedEntitiesContainer;
         [JsonProperty("ActiveEntities")]
@@ -195,8 +195,8 @@ namespace Forge.Entities.Implementation.Content {
 
         [OnSerializing]
         private void CreateConverter(StreamingContext context) {
-            _singletonEntityContainer = new EntitySerializationContainer() {
-                Entities = new List<IEntity>() { SingletonEntity }
+            _globalEntityContainer = new EntitySerializationContainer() {
+                Entities = new List<IEntity>() { GlobalEntity }
             };
             _addedEntitiesContainer = new EntitySerializationContainer() {
                 Entities = AddedEntities
@@ -221,7 +221,7 @@ namespace Forge.Entities.Implementation.Content {
         /// </summary>
         [OnDeserialized]
         private void RestoreDataReferences(StreamingContext context) {
-            SingletonEntity = _singletonEntityContainer.Entities[0];
+            GlobalEntity = _globalEntityContainer.Entities[0];
             AddedEntities = _addedEntitiesContainer.Entities;
             ActiveEntities = _activeEntitiesContainer.Entities;
             RemovedEntities = _removedEntitiesContainer.Entities;
@@ -266,8 +266,8 @@ namespace Forge.Entities.Implementation.Content {
         }
 
         public GameSnapshotEntityRemoveResult RemoveEntity(IEntity entity) {
-            if (SingletonEntity == entity) {
-                throw new InvalidOperationException("Cannot remove SingletonEntity");
+            if (GlobalEntity == entity) {
+                throw new InvalidOperationException("Cannot remove GlobalEntity");
             }
 
             for (int i = 0; i < AddedEntities.Count; ++i) {
@@ -296,8 +296,8 @@ namespace Forge.Entities.Implementation.Content {
             throw new InvalidOperationException("Unable to find entity with UniqueId = " + entity.UniqueId);
         }
 
-        IEntity IGameSnapshot.SingletonEntity {
-            get { return SingletonEntity; }
+        IEntity IGameSnapshot.GlobalEntity {
+            get { return GlobalEntity; }
         }
 
         IEnumerable<IEntity> IGameSnapshot.ActiveEntities {

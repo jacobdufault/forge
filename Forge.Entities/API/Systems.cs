@@ -35,9 +35,9 @@ namespace Forge.Entities {
         }
 
         /// <summary>
-        /// Set the singleton entity that can be used to store global data.
+        /// Set the global entity that can be used to store global data.
         /// </summary>
-        IEntity SingletonEntity {
+        IEntity GlobalEntity {
             set;
         }
     }
@@ -66,16 +66,16 @@ namespace Forge.Entities {
         }
 
         /// <summary>
-        /// Get the singleton entity that can be used to store global data.
+        /// Get the global entity that can be used to store global data.
         /// </summary>
-        protected internal IEntity SingletonEntity {
+        protected internal IEntity GlobalEntity {
             get;
             private set;
         }
 
-        IEntity ISystem.SingletonEntity {
+        IEntity ISystem.GlobalEntity {
             set {
-                SingletonEntity = value;
+                GlobalEntity = value;
             }
         }
     }
@@ -168,7 +168,7 @@ namespace Forge.Entities {
         /// </summary>
         public interface GlobalPreUpdate : ISystem {
             /// <summary>
-            /// Called once per update loop. This is expected to use the EntityManager's singleton
+            /// Called once per update loop. This is expected to use the EntityManager's global
             /// data.
             /// </summary>
             void OnGlobalPreUpdate();
@@ -180,7 +180,7 @@ namespace Forge.Entities {
         /// </summary>
         public interface GlobalPostUpdate : ISystem {
             /// <summary>
-            /// Called once per update loop. This is expected to use the EntityManager's singleton
+            /// Called once per update loop. This is expected to use the EntityManager's global
             /// data.
             /// </summary>
             void OnGlobalPostUpdate();

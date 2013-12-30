@@ -130,9 +130,9 @@ namespace Forge.Entities.Implementation.Runtime {
         }
 
         /// <summary>
-        /// Singleton entity that contains global data.
+        /// Global entity that contains global data.
         /// </summary>
-        private RuntimeEntity _singletonEntity;
+        private RuntimeEntity _globalEntity;
 
         /// <summary>
         /// Gets the update number.
@@ -162,9 +162,9 @@ namespace Forge.Entities.Implementation.Runtime {
             // TODO: ensure that when correctly restore UpdateNumber
             //UpdateNumber = updateNumber;
 
-            _singletonEntity = (RuntimeEntity)snapshot.SingletonEntity;
+            _globalEntity = (RuntimeEntity)snapshot.GlobalEntity;
 
-            EventNotifier.Submit(EntityAddedEvent.Create(_singletonEntity));
+            EventNotifier.Submit(EntityAddedEvent.Create(_globalEntity));
 
             foreach (var entity in snapshot.AddedEntities) {
                 AddEntity((RuntimeEntity)entity);
@@ -220,7 +220,7 @@ namespace Forge.Entities.Implementation.Runtime {
         /// </summary>
         private void AddSystem(ISystem baseSystem) {
             baseSystem.EventDispatcher = EventNotifier;
-            baseSystem.SingletonEntity = _singletonEntity;
+            baseSystem.GlobalEntity = _globalEntity;
 
             if (baseSystem is ITriggerFilterProvider) {
                 MultithreadedSystem multithreadingSystem = new MultithreadedSystem(this, (ITriggerFilterProvider)baseSystem);
@@ -334,9 +334,9 @@ namespace Forge.Entities.Implementation.Runtime {
                 modified.ApplyModifications();
             });
 
-            // update the singleton data
-            _singletonEntity.ApplyModifications();
-            _singletonEntity.DataStateChangeUpdate();
+            // update the global entity
+            _globalEntity.ApplyModifications();
+            _globalEntity.DataStateChangeUpdate();
         }
 
         private void MultithreadRunSystems(List<IGameInput> input) {
@@ -541,7 +541,7 @@ namespace Forge.Entities.Implementation.Runtime {
         private GameSnapshot GetRawSnapshot() {
             GameSnapshot snapshot = new GameSnapshot();
 
-            snapshot.SingletonEntity = _singletonEntity;
+            snapshot.GlobalEntity = _globalEntity;
 
             foreach (var adding in _notifiedAddingEntities.ToList()) {
                 snapshot.AddedEntities.Add(adding);

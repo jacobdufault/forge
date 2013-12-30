@@ -57,7 +57,7 @@ namespace Forge.Entities {
         /// </summary>
         /// <remarks>
         /// This function does different operations depending on what collection the entity is
-        /// currently in. If it is the SingletonEntity, an exception is thrown. If it is in
+        /// currently in. If it is the GlobalEntity, an exception is thrown. If it is in
         /// AddedEntities, the entity is just destroyed completely. If it is in ActiveEntities, the
         /// entity is moved to RemovedEntities. If it is RemovedEntities, an exception is thrown.
         /// </remarks>
@@ -65,10 +65,10 @@ namespace Forge.Entities {
         GameSnapshotEntityRemoveResult RemoveEntity(IEntity entity);
 
         /// <summary>
-        /// The singleton entity. It is automatically created and cannot be destroyed, but it can be
+        /// The global entity. It is automatically created and cannot be destroyed, but it can be
         /// modified.
         /// </summary>
-        IEntity SingletonEntity {
+        IEntity GlobalEntity {
             get;
         }
 
