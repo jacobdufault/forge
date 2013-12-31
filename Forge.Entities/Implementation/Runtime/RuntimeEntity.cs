@@ -74,8 +74,9 @@ namespace Forge.Entities.Implementation.Runtime {
             PrettyName = prettyName ?? "";
         }
 
-        public RuntimeEntity(ITemplate template)
+        public RuntimeEntity(ITemplate template, IEventDispatcher eventDispatcher)
             : this(_idGenerator.Next(), "") {
+            _eventDispatcher = eventDispatcher;
             foreach (DataAccessor accessor in template.SelectData()) {
                 IData data = template.Current(accessor);
                 AddData_unlocked(accessor).CopyFrom(data);
