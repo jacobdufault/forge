@@ -153,6 +153,11 @@ namespace Forge.Entities.Implementation.Runtime {
         /// </summary>
         private string _templateJson;
 
+        /// <summary>
+        /// Contains any exceptions that have occurred when running systems.
+        /// </summary>
+        private ConcurrentWriterBag<Exception> _multithreadingExceptions = new ConcurrentWriterBag<Exception>();
+
         public GameEngine(string snapshotJson, string templateJson) {
             _templateJson = templateJson;
 
@@ -385,6 +390,13 @@ namespace Forge.Entities.Implementation.Runtime {
                 // block until the systems are done
                 SystemDoneEvent.Wait();
             }
+
+            // throw exceptions if any occurred while we were running the engine
+            List<Exception> exceptions = new List<Exception>();
+            _multithreadingExceptions.CopyIntoAndClear(exceptions);
+            if (exceptions.Count > 0) {
+                throw new AggregateException(exceptions.ToArray());
+            }
         }
 
         public void RunUpdateWorld(IEnumerable<IGameInput> commandsObject) {
@@ -527,6 +539,10 @@ namespace Forge.Entities.Implementation.Runtime {
         }
 
         #region MultithreadedSystemSharedContext Implementation
+        ConcurrentWriterBag<Exception> MultithreadedSystemSharedContext.Exceptions {
+            get { return _multithreadingExceptions; }
+        }
+
         List<RuntimeEntity> MultithreadedSystemSharedContext.AddedEntities {
             get { return _addedEntities; }
         }

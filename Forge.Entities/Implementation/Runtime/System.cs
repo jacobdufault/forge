@@ -19,6 +19,7 @@
 
 using Forge.Collections;
 using Forge.Entities.Implementation.Shared;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
@@ -47,6 +48,11 @@ namespace Forge.Entities.Implementation.Runtime {
         /// Event the system uses to notify the primary thread that it is done processing.
         /// </summary>
         CountdownEvent SystemDoneEvent { get; }
+
+        /// <summary>
+        /// Contains any exceptions that occurred while running systems.
+        /// </summary>
+        ConcurrentWriterBag<Exception> Exceptions { get; }
     }
 
     /// <summary>
@@ -233,6 +239,9 @@ namespace Forge.Entities.Implementation.Runtime {
                 }
                 PerformanceData.RemovedTicks = stopwatch.ElapsedTicks - PerformanceData.AddedTicks - PerformanceData.StateChangeTicks;
             }
+            catch (Exception e) {
+                _shared.Exceptions.Add(e);
+            }
             finally {
                 _shared.SystemDoneEvent.Signal();
                 PerformanceData.BookkeepingTicks = stopwatch.ElapsedTicks;
@@ -240,7 +249,12 @@ namespace Forge.Entities.Implementation.Runtime {
         }
 
         public void RunSystem(object input) {
-            RunSystem((List<IGameInput>)input);
+            try {
+                RunSystem((List<IGameInput>)input);
+            }
+            catch (Exception e) {
+                _shared.Exceptions.Add(e);
+            }
         }
 
         /// <summary>
