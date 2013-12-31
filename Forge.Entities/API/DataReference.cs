@@ -59,12 +59,7 @@ namespace Forge.Entities {
         /// parameters for this type; if it is not, then an exception is thrown.</typeparam>
         /// <returns>The current value for the given data type.</returns>
         public TData Current<TData>() where TData : IData {
-            if (VerifyRequest<TData>() == false) {
-                throw new InvalidOperationException("Cannot retrieve " + typeof(TData) +
-                    " with DataReference type " + GetType() +
-                    "; consider adding the given Data type to the data reference");
-            }
-
+            VerifyRequest<TData>();
             return _provider.Current<TData>();
         }
 
@@ -75,12 +70,7 @@ namespace Forge.Entities {
         /// parameters for this type; if it is not, then an exception is thrown.</typeparam>
         /// <returns>The current value for the given data type.</returns>
         public TData Previous<TData>() where TData : IData {
-            if (VerifyRequest<TData>() == false) {
-                throw new InvalidOperationException("Cannot retrieve " + typeof(TData) +
-                    " with DataReference type " + GetType() +
-                    "; consider adding the given Data type to the data reference");
-            }
-
+            VerifyRequest<TData>();
             return _provider.Previous<TData>();
         }
 
@@ -88,15 +78,17 @@ namespace Forge.Entities {
         /// Helper method to verify that the given generic type is one of the generic parameters for
         /// this type.
         /// </summary>
-        private bool VerifyRequest<TDataRequest>() {
-            Type[] acceptedDataTypes = GetType().BaseType.GetGenericArguments();
+        private void VerifyRequest<TDataRequest>() {
+            Type[] acceptedDataTypes = GetType().GetGenericArguments();
             for (int i = 0; i < acceptedDataTypes.Length; ++i) {
                 if (acceptedDataTypes[i] == typeof(TDataRequest)) {
-                    return true;
+                    return;
                 }
             }
 
-            return false;
+            throw new InvalidOperationException("Cannot retrieve " + typeof(TDataRequest) +
+                " with DataReference type " + GetType() +
+                "; consider adding the given Data type to the data reference");
         }
     }
 

@@ -52,6 +52,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CallOrderTests.cs" />
+    <Compile Include="DataReferenceTests.cs" />
     <Compile Include="EngineTests.cs" />
     <Compile Include="DataAccessorTests.cs" />
     <Compile Include="EntityTests.cs" />
