@@ -42,11 +42,6 @@ namespace Forge.Entities.Implementation.Runtime {
         #endregion
 
         #region Unique ID
-        /// <summary>
-        /// Generates unique identifiers.
-        /// </summary>
-        private static UniqueIntGenerator _idGenerator = new UniqueIntGenerator();
-
         // thread safe because we never write
         private int _uniqueId;
 
@@ -66,17 +61,15 @@ namespace Forge.Entities.Implementation.Runtime {
             ModificationNotifier = new Notifier<RuntimeEntity>(this);
         }
 
-        private RuntimeEntity(int uniqueId, string prettyName)
+        private RuntimeEntity(int uniqueId, IEventDispatcher eventDispatcher, string prettyName)
             : this() {
+            _eventDispatcher = eventDispatcher;
             _uniqueId = uniqueId;
-            _idGenerator.Consume(_uniqueId);
-
             PrettyName = prettyName ?? "";
         }
 
-        public RuntimeEntity(ITemplate template, IEventDispatcher eventDispatcher)
-            : this(_idGenerator.Next(), "") {
-            _eventDispatcher = eventDispatcher;
+        public RuntimeEntity(int uniqueId, ITemplate template, IEventDispatcher eventDispatcher)
+            : this(uniqueId, eventDispatcher, "") {
             foreach (DataAccessor accessor in template.SelectData()) {
                 IData data = template.Current(accessor);
                 AddData_unlocked(accessor).CopyFrom(data);

@@ -146,9 +146,9 @@ namespace Forge.Entities.Implementation.Content {
     [JsonObject(MemberSerialization.OptIn)]
     internal class GameSnapshot : IGameSnapshot {
         public GameSnapshot() {
-            _entityIdGenerator = new UniqueIntGenerator();
+            EntityIdGenerator = new UniqueIntGenerator();
 
-            GlobalEntity = new ContentEntity(_entityIdGenerator.Next(), "Global Entity");
+            GlobalEntity = new ContentEntity(EntityIdGenerator.Next(), "Global Entity");
             ActiveEntities = new List<IEntity>();
             AddedEntities = new List<IEntity>();
             RemovedEntities = new List<IEntity>();
@@ -156,7 +156,7 @@ namespace Forge.Entities.Implementation.Content {
         }
 
         [JsonProperty("EntityIdGenerator")]
-        private UniqueIntGenerator _entityIdGenerator;
+        public UniqueIntGenerator EntityIdGenerator;
 
         public IEntity GlobalEntity {
             get;
@@ -231,7 +231,7 @@ namespace Forge.Entities.Implementation.Content {
         }
 
         public IEntity CreateEntity(string prettyName = "") {
-            ContentEntity added = new ContentEntity(_entityIdGenerator.Next(), prettyName);
+            ContentEntity added = new ContentEntity(EntityIdGenerator.Next(), prettyName);
             AddedEntities.Add(added);
             return added;
         }
@@ -250,7 +250,7 @@ namespace Forge.Entities.Implementation.Content {
         /// AddedEntities.
         /// </summary>
         internal IEntity CreateEntity(EntityAddTarget target, string prettyName = "") {
-            ContentEntity added = new ContentEntity(_entityIdGenerator.Next(), prettyName);
+            ContentEntity added = new ContentEntity(EntityIdGenerator.Next(), prettyName);
 
             if (target == EntityAddTarget.Added) {
                 AddedEntities.Add(added);

@@ -94,7 +94,10 @@ namespace Forge.Entities.Implementation.Runtime {
         }
 
         public IEntity InstantiateEntity() {
-            RuntimeEntity entity = new RuntimeEntity(this, _gameEngine.EventNotifier);
+            int id = _gameEngine.EntityIdGenerator.Next();
+            EventNotifier eventNotifier = _gameEngine.EventNotifier;
+
+            RuntimeEntity entity = new RuntimeEntity(id, this, eventNotifier);
 
             _gameEngine.AddEntity(entity);
 

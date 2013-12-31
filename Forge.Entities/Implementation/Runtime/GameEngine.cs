@@ -119,6 +119,11 @@ namespace Forge.Entities.Implementation.Runtime {
         private List<ISystem> _systems;
 
         /// <summary>
+        /// Generator used for generating unique identifiers for entities.
+        /// </summary>
+        public UniqueIntGenerator EntityIdGenerator;
+
+        /// <summary>
         /// Events that the EntityManager dispatches.
         /// </summary>
         public EventNotifier EventNotifier = new EventNotifier();
@@ -154,6 +159,8 @@ namespace Forge.Entities.Implementation.Runtime {
             // Create our own little island of references with its own set of templates
             GameSnapshot snapshot = GameSnapshotRestorer.Restore(snapshotJson, templateJson,
                 Maybe.Just(this));
+
+            EntityIdGenerator = snapshot.EntityIdGenerator;
 
             _systems = snapshot.Systems;
 
