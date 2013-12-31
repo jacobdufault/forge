@@ -33,6 +33,13 @@ namespace Forge.Entities {
         /// The entity was moved into the Removed collection.
         /// </summary>
         IntoRemoved,
+
+        /// <summary>
+        /// The entity could not be removed (it was the singleton entity or was already in the
+        /// Removed collection). Removing such an entity would cause invalid state in systems; the
+        /// entity would not go through its life-cycle.
+        /// </summary>
+        Failed
     }
 
     /// <summary>

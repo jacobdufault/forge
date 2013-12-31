@@ -267,7 +267,7 @@ namespace Forge.Entities.Implementation.Content {
 
         public GameSnapshotEntityRemoveResult RemoveEntity(IEntity entity) {
             if (GlobalEntity == entity) {
-                throw new InvalidOperationException("Cannot remove GlobalEntity");
+                return GameSnapshotEntityRemoveResult.Failed;
             }
 
             for (int i = 0; i < AddedEntities.Count; ++i) {
@@ -288,8 +288,7 @@ namespace Forge.Entities.Implementation.Content {
 
             foreach (IEntity removed in RemovedEntities) {
                 if (entity.UniqueId == removed.UniqueId) {
-                    throw new InvalidOperationException("Unable to remove entity; it is already " +
-                        "being removed");
+                    return GameSnapshotEntityRemoveResult.Failed;
                 }
             }
 
