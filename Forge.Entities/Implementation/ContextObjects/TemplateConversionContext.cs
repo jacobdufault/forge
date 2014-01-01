@@ -29,7 +29,10 @@ using System.Text;
 
 namespace Forge.Entities.Implementation.ContextObjects {
     internal class TemplateConversionContext : IContextObject {
-        public SparseArray<ITemplate> CreatedTemplates = new SparseArray<ITemplate>();
+        /// <summary>
+        /// All of the created templates, indexed by template id.
+        /// </summary>
+        public Dictionary<int, ITemplate> CreatedTemplates = new Dictionary<int, ITemplate>();
 
         /// <summary>
         /// Returns a template instance for the given TemplateId. If an instance for the given id
@@ -40,7 +43,7 @@ namespace Forge.Entities.Implementation.ContextObjects {
         /// <param name="context">The GameEngineContext, used to determine if we should create a
         /// ContentTemplate or RuntimeTemplate instance.</param>
         public ITemplate GetTemplateInstance(int templateId, GameEngineContext context) {
-            if (CreatedTemplates.Contains(templateId)) {
+            if (CreatedTemplates.ContainsKey(templateId)) {
                 return CreatedTemplates[templateId];
             }
 
