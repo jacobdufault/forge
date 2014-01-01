@@ -107,7 +107,7 @@ namespace Forge.Collections {
         /// </summary>
         /// <param name="index">The index to check.</param>
         /// <returns>True if there is a contained element, false otherwise.</returns>
-        public bool Contains(int index) {
+        public bool ContainsKey(int index) {
             if (index >= _items.Length || _items[index].IsEmpty) {
                 return false;
             }
@@ -127,7 +127,7 @@ namespace Forge.Collections {
         /// specified key; otherwise, false.</returns>
         public bool TryGetValue(int key, out T value) {
             value = this[key];
-            return Contains(key);
+            return ContainsKey(key);
         }
 
         /// <summary>
@@ -147,10 +147,6 @@ namespace Forge.Collections {
 
         void IDictionary<int, T>.Add(int key, T value) {
             this[key] = value;
-        }
-
-        bool IDictionary<int, T>.ContainsKey(int key) {
-            return Contains(key);
         }
 
         ICollection<int> IDictionary<int, T>.Keys {

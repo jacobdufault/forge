@@ -40,7 +40,7 @@ namespace Forge.Entities.Implementation.ContextObjects {
         /// <param name="context">The GameEngineContext, used to determine if we should create a
         /// ContentTemplate or RuntimeTemplate instance.</param>
         public IEntity GetEntityInstance(int entityId, GameEngineContext context) {
-            if (CreatedEntities.Contains(entityId)) {
+            if (CreatedEntities.ContainsKey(entityId)) {
                 return CreatedEntities[entityId];
             }
 

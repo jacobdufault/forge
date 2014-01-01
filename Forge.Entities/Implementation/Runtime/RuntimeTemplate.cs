@@ -137,7 +137,7 @@ namespace Forge.Entities.Implementation.Runtime {
         }
 
         public bool ContainsData(DataAccessor accessor) {
-            return _defaultDataInstances.Contains(accessor.Id);
+            return _defaultDataInstances.ContainsKey(accessor.Id);
         }
 
         public bool WasModified(DataAccessor accessor) {

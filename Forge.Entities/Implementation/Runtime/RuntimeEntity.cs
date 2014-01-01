@@ -132,7 +132,7 @@ namespace Forge.Entities.Implementation.Runtime {
                 int id = dataAccessor.Id;
 
                 // if we removed the data, then don't bother apply/dispatching modifications on it
-                if (_data.Contains(id)) {
+                if (_data.ContainsKey(id)) {
                     _data[id].MotificationActivation.Reset();
                     _data[id].Increment();
 
@@ -200,7 +200,7 @@ namespace Forge.Entities.Implementation.Runtime {
                 int id = DataAccessorFactory.GetId(added.GetType());
 
                 // make sure we do not readd the same data instance twice
-                if (_data.Contains(id)) {
+                if (_data.ContainsKey(id)) {
                     exceptionToThrow = new AlreadyAddedDataException(this, new DataAccessor(added));
                     continue;
                 }
@@ -482,7 +482,7 @@ namespace Forge.Entities.Implementation.Runtime {
         #endregion
 
         public IData Current(DataAccessor accessor) {
-            if (_data.Contains(accessor.Id) == false) {
+            if (_data.ContainsKey(accessor.Id) == false) {
                 throw new NoSuchDataException(this, accessor);
             }
 
@@ -501,20 +501,20 @@ namespace Forge.Entities.Implementation.Runtime {
         public bool ContainsData(DataAccessor accessor) {
             // We contain data if a) data contains it and b) it was not removed in the last frame
             int id = accessor.Id;
-            return _data.Contains(id) && _removedLastFrame.Contains(id) == false;
+            return _data.ContainsKey(id) && _removedLastFrame.ContainsKey(id) == false;
         }
         #endregion
 
         public bool WasModified(DataAccessor accessor) {
-            return _modifiedLastFrame.Contains(accessor.Id);
+            return _modifiedLastFrame.ContainsKey(accessor.Id);
         }
 
         public bool WasAdded(DataAccessor accessor) {
-            return _addedLastFrame.Contains(accessor.Id);
+            return _addedLastFrame.ContainsKey(accessor.Id);
         }
 
         public bool WasRemoved(DataAccessor accessor) {
-            return _removedLastFrame.Contains(accessor.Id);
+            return _removedLastFrame.ContainsKey(accessor.Id);
         }
 
         public override string ToString() {
