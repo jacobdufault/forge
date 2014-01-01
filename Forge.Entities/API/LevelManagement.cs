@@ -102,7 +102,7 @@ namespace Forge.Entities {
                     int id = template.TemplateId;
 
                     // verify that we don't have any duplicate template ids
-                    if (ids.Add(id)) {
+                    if (ids.Add(id) == false) {
                         throw new InvalidOperationException("Duplicate template with id=" + id);
                     }
 
