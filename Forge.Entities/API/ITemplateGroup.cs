@@ -35,9 +35,11 @@ namespace Forge.Entities {
         ITemplate CreateTemplate();
 
         /// <summary>
-        /// Removes the given template from the template group. Be careful that no IGameSnapshots
-        /// are referencing the given template.
+        /// Attempts to remove the given template from the template group. Be careful that no
+        /// IGameSnapshots are referencing the given template.
         /// </summary>
-        void RemoveTemplate(ITemplate template);
+        /// <returns>True if the template was found and removed, false if it was not
+        /// found.</returns>
+        bool RemoveTemplate(ITemplate template);
     }
 }

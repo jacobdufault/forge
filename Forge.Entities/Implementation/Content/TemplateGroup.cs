@@ -151,16 +151,15 @@ namespace Forge.Entities.Implementation.Content {
             return template;
         }
 
-        void ITemplateGroup.RemoveTemplate(ITemplate template) {
+        bool ITemplateGroup.RemoveTemplate(ITemplate template) {
             for (int i = 0; i < Templates.Count; ++i) {
                 if (template.TemplateId == Templates[i].TemplateId) {
                     Templates.RemoveAt(i);
-                    return;
+                    return true;
                 }
             }
 
-            throw new InvalidOperationException("Unable to find template with TemplateId=" +
-                template.TemplateId);
+            return false;
         }
     }
 }
