@@ -110,12 +110,16 @@ namespace Forge.Entities {
         /// Creates a new game engine that can be used to simulate the game using the content from
         /// the given content database. The passed in snapshot will not be modified.
         /// </summary>
-        /// <param name="snapshotJson">The IGameSnapshot to use to create the engine.</param>
-        /// <param name="templateJson">The ITemplateGroup used to create the engine.</param>
+        /// <remarks>
+        /// This is a helper method; it serializes the arguments and then calls CreateEngine(string,
+        /// string).
+        /// </remarks>
+        /// <param name="snapshot">The IGameSnapshot to use to create the engine.</param>
+        /// <param name="templates">The ITemplateGroup used to create the engine.</param>
         /// <returns>A game engine that can play the given content.</returns>
         public static IGameEngine CreateEngine(IGameSnapshot snapshot, ITemplateGroup templates) {
             return CreateEngine(LevelManager.SaveSnapshot(snapshot),
-                LevelManager.SaveTemplates(templates));
+                LevelManager.SaveTemplateGroup(templates));
         }
     }
 }
