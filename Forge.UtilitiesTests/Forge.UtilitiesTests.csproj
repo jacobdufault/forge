@@ -84,6 +84,7 @@
     <Compile Include="MaybeTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RealTests.cs" />
+    <Compile Include="UniqueIntGeneratorTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Forge.Utilities\Forge.Utilities.csproj">

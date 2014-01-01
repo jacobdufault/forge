@@ -45,7 +45,7 @@ namespace Forge.Utilities {
         /// </summary>
         public void Consume(int value) {
             if (value >= _next) {
-                _next = value;
+                _next = value + 1;
             }
         }
     }
