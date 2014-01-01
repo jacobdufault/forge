@@ -61,6 +61,27 @@ namespace Forge.Entities {
         }
 
         /// <summary>
+        /// Merges a set of serialized template groups together into one template group. An
+        /// InvalidOperationException is thrown if there are two templates with the same TemplateId.
+        /// </summary>
+        /// <param name="groups">The serialized template groups to merge.</param>
+        /// <returns>A serialized template group that contains all of the templates within the given
+        /// groups.</returns>
+        public static string MergeTemplateGroups(IEnumerable<string> groups) {
+            // deserialize all of the groups
+            List<ITemplateGroup> deserializedGroups = new List<ITemplateGroup>();
+            foreach (string serializedGroup in groups) {
+                deserializedGroups.Add(LoadTemplateGroup(serializedGroup));
+            }
+
+            // merge them
+            ITemplateGroup merged = MergeTemplateGroups(deserializedGroups);
+
+            // return the serialized merge result
+            return SaveTemplateGroup(merged);
+        }
+
+        /// <summary>
         /// Merges a set of template groups together into one template group. An
         /// InvalidOperationException is thrown if there are two templates with the same TemplateId.
         /// </summary>
