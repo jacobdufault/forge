@@ -57,6 +57,14 @@ namespace Forge.Networking.Core {
         public override int GetHashCode() {
             return Host.GetHashCode() ^ Title.GetHashCode() ^ IP.GetHashCode();
         }
+
+        public static bool operator ==(DiscoveredServer a, DiscoveredServer b) {
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(DiscoveredServer a, DiscoveredServer b) {
+            return !(a == b);
+        }
     }
 
     /// <summary>
