@@ -69,7 +69,8 @@ namespace Forge.Utilities {
         private Action<ParamType> _listener;
 
         /// <summary>
-        /// Allows objects to listen for notifications.
+        /// Allows objects to listen for notifications. If the notifier has already been triggered,
+        /// then the added listener is immediately called.
         /// </summary>
         public event Action<ParamType> Listener {
             add {
