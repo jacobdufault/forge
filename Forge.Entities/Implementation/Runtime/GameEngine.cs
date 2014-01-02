@@ -169,8 +169,6 @@ namespace Forge.Entities.Implementation.Runtime {
 
             _systems = snapshot.Systems;
 
-            SystemDoneEvent = new CountdownEvent(0);
-
             // TODO: ensure that when correctly restore UpdateNumber
             //UpdateNumber = updateNumber;
 
@@ -274,13 +272,10 @@ namespace Forge.Entities.Implementation.Runtime {
             _entities.Add(toAdd, GetEntitiesListFromMetadata(toAdd));
         }
 
-        private void SinglethreadFrameEnd() {
+        private void UpdateEntitiesWithStateChanges() {
+            // update our list of added and removed entities
             _addedEntities.Clear();
             _removedEntities.Clear();
-        }
-
-        public void UpdateEntitiesWithStateChanges() {
-            // _addedEntities and _removedEntities were cleared in SinglethreadFrameEnd()
             _notifiedAddingEntities.CopyIntoAndClear(_addedEntities);
             _notifiedRemovedEntities.CopyIntoAndClear(_removedEntities);
 
@@ -352,56 +347,37 @@ namespace Forge.Entities.Implementation.Runtime {
         }
 
         private void MultithreadRunSystems(List<IGameInput> input) {
-            // run all bookkeeping
-            {
-                SystemDoneEvent.Reset(_multithreadedSystems.Count);
+            // run systems in a parallel context
+            if (EnableMultithreading) {
+                var result = Parallel.ForEach(_multithreadedSystems,
+                    system => system.BookkeepingBeforeRunningSystems());
+                Contract.Requires(result.IsCompleted, "Bookkeeping failed to complete");
 
-                // run all systems
-                for (int i = 0; i < _multithreadedSystems.Count; ++i) {
-                    if (EnableMultithreading) {
-                        Task.Factory.StartNew(_multithreadedSystems[i].BookkeepingBeforeRunningSystems);
-                        //bool success = ThreadPool.UnsafeQueueUserWorkItem(_multithreadedSystems[i].BookkeepingAfterAllSystemsHaveRun, null);
-                        //Contract.Requires(success, "Unable to submit threading task to ThreadPool");
-                    }
-                    else {
-                        _multithreadedSystems[i].BookkeepingBeforeRunningSystems();
-                    }
-                }
-
-                // block until the systems are done
-                SystemDoneEvent.Wait();
+                result = Parallel.ForEach(_multithreadedSystems,
+                    system => system.RunSystem(input));
+                Contract.Requires(result.IsCompleted, "Bookkeeping failed to complete");
             }
 
-            // run all systems
-            {
-                SystemDoneEvent.Reset(_multithreadedSystems.Count);
-
+            // run systems in a single-threaded context
+            else {
                 for (int i = 0; i < _multithreadedSystems.Count; ++i) {
-                    if (EnableMultithreading) {
-                        Task.Factory.StartNew(_multithreadedSystems[i].RunSystem, input);
-                        //bool success = ThreadPool.UnsafeQueueUserWorkItem(_multithreadedSystems[i].RunSystem, input);
-                        //Contract.Requires(success, "Unable to submit threading task to ThreadPool");
-                    }
-                    else {
-                        _multithreadedSystems[i].RunSystem(input);
-                    }
+                    _multithreadedSystems[i].BookkeepingBeforeRunningSystems();
                 }
 
-                // block until the systems are done
-                SystemDoneEvent.Wait();
+                for (int i = 0; i < _multithreadedSystems.Count; ++i) {
+                    _multithreadedSystems[i].RunSystem(input);
+                }
             }
 
             // throw exceptions if any occurred while we were running the engine
-            List<Exception> exceptions = new List<Exception>();
+            var exceptions = new List<Exception>();
             _multithreadingExceptions.CopyIntoAndClear(exceptions);
             if (exceptions.Count > 0) {
                 throw new AggregateException(exceptions.ToArray());
             }
         }
 
-        public void RunUpdateWorld(IEnumerable<IGameInput> commandsObject) {
-            List<IGameInput> commands = commandsObject.ToList();
-
+        private void DoUpdate(List<IGameInput> commands) {
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
@@ -409,8 +385,6 @@ namespace Forge.Entities.Implementation.Runtime {
 
             MultithreadRunSystems(commands);
             long multithreadEnd = stopwatch.ElapsedTicks;
-
-            SinglethreadFrameEnd();
 
             stopwatch.Stop();
 
@@ -453,7 +427,7 @@ namespace Forge.Entities.Implementation.Runtime {
             }
 
             _updateWaitTask = Task.Factory.StartNew(() => {
-                RunUpdateWorld(input);
+                DoUpdate(input.ToList());
                 _nextState = GameEngineNextState.SynchronizeState;
             });
 
@@ -554,14 +528,13 @@ namespace Forge.Entities.Implementation.Runtime {
         List<RuntimeEntity> MultithreadedSystemSharedContext.StateChangedEntities {
             get { return _stateChangeEntities; }
         }
-
-        /// <summary>
-        /// Event the system uses to notify the primary thread that it is done processing.
-        /// </summary>
-        public CountdownEvent SystemDoneEvent { get; private set; }
         #endregion
 
         private GameSnapshot GetRawSnapshot() {
+            if (_nextState != GameEngineNextState.Update) {
+                throw new InvalidOperationException("You can only get a snapshot after synchronizing state");
+            }
+
             GameSnapshot snapshot = new GameSnapshot();
 
             snapshot.GlobalEntity = _globalEntity;

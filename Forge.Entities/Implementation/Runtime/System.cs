@@ -22,7 +22,6 @@ using Forge.Entities.Implementation.Shared;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
 
 namespace Forge.Entities.Implementation.Runtime {
     /// <summary>
@@ -43,11 +42,6 @@ namespace Forge.Entities.Implementation.Runtime {
         /// Entities which have state changes.
         /// </summary>
         List<RuntimeEntity> StateChangedEntities { get; }
-
-        /// <summary>
-        /// Event the system uses to notify the primary thread that it is done processing.
-        /// </summary>
-        CountdownEvent SystemDoneEvent { get; }
 
         /// <summary>
         /// Contains any exceptions that occurred while running systems.
@@ -203,8 +197,7 @@ namespace Forge.Entities.Implementation.Runtime {
                 }
 
                 // process entities that were added to the system
-                int addedCount = _shared.AddedEntities.Count; // immutable
-                for (int i = 0; i < addedCount; ++i) {
+                for (int i = 0; i < _shared.AddedEntities.Count; ++i) {
                     RuntimeEntity added = _shared.AddedEntities[i];
                     if (_entityCache.UpdateCache(added) == EntityCache.CacheChangeResult.Added) {
                         DoAdd(added);
@@ -216,21 +209,21 @@ namespace Forge.Entities.Implementation.Runtime {
                 // process state changes
                 for (int i = 0; i < _shared.StateChangedEntities.Count; ++i) { // immutable
                     RuntimeEntity stateChanged = _shared.StateChangedEntities[i];
-                    EntityCache.CacheChangeResult change = _entityCache.UpdateCache(stateChanged);
-                    if (change == EntityCache.CacheChangeResult.Added) {
-                        DoAdd(stateChanged);
-                        _dispatchAdded.Add(stateChanged);
-                    }
-                    else if (change == EntityCache.CacheChangeResult.Removed) {
-                        DoRemove(stateChanged);
-                        _dispatchRemoved.Add(stateChanged);
+                    switch (_entityCache.UpdateCache(stateChanged)) {
+                        case EntityCache.CacheChangeResult.Added:
+                            DoAdd(stateChanged);
+                            _dispatchAdded.Add(stateChanged);
+                            break;
+                        case EntityCache.CacheChangeResult.Removed:
+                            DoRemove(stateChanged);
+                            _dispatchRemoved.Add(stateChanged);
+                            break;
                     }
                 }
                 PerformanceData.StateChangeTicks = stopwatch.ElapsedTicks - PerformanceData.AddedTicks;
 
                 // process entities that were removed from the system
-                int removedCount = _shared.RemovedEntities.Count; // immutable
-                for (int i = 0; i < removedCount; ++i) {
+                for (int i = 0; i < _shared.RemovedEntities.Count; ++i) {
                     RuntimeEntity removed = _shared.RemovedEntities[i];
                     if (_entityCache.Remove(removed)) {
                         DoRemove(removed);
@@ -243,17 +236,7 @@ namespace Forge.Entities.Implementation.Runtime {
                 _shared.Exceptions.Add(e);
             }
             finally {
-                _shared.SystemDoneEvent.Signal();
                 PerformanceData.BookkeepingTicks = stopwatch.ElapsedTicks;
-            }
-        }
-
-        public void RunSystem(object input) {
-            try {
-                RunSystem((List<IGameInput>)input);
-            }
-            catch (Exception e) {
-                _shared.Exceptions.Add(e);
             }
         }
 
@@ -356,7 +339,6 @@ namespace Forge.Entities.Implementation.Runtime {
                 }
             }
             finally {
-                _shared.SystemDoneEvent.Signal();
                 PerformanceData.RunSystemTicks = stopwatch.ElapsedTicks;
             }
         }
