@@ -68,7 +68,7 @@ namespace Forge.Entities {
         /// <summary>
         /// Get the global entity that can be used to store global data.
         /// </summary>
-        protected internal IEntity GlobalEntity {
+        protected IEntity GlobalEntity {
             get;
             private set;
         }
