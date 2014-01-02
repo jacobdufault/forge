@@ -28,7 +28,7 @@ namespace Forge.Collections {
     /// Stores a list of items where the are gaps between items; not every index in the array
     /// contains an element.
     /// </summary>
-    public class SparseArray<T> : IDictionary<int, T> {
+    public sealed class SparseArray<T> : IDictionary<int, T> {
         /// <summary>
         /// The internal array of elements inside of the array.
         /// </summary>

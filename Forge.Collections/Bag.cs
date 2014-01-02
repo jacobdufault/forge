@@ -26,7 +26,7 @@ namespace Forge.Collections {
     /// <summary>
     /// An unordered collection of items.
     /// </summary>
-    public class Bag<T> : IList<T>, ICollection<T>, ICollection, IEnumerable<T>, IEnumerable {
+    public sealed class Bag<T> : IList<T>, ICollection<T>, ICollection, IEnumerable<T>, IEnumerable {
         private T[] _items;
 
         public Bag()
