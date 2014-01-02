@@ -421,7 +421,7 @@ namespace Forge.Entities.Implementation.Runtime {
         #region AddData
         private IData AddData_unlocked(DataAccessor accessor) {
             // ensure that we have not already added a data of this type
-            if (GetAddedData_unlocked(accessor) != null) {
+            if (GetAddedData_unlocked(accessor) != null || ContainsData(accessor)) {
                 throw new AlreadyAddedDataException(this, accessor);
             }
 
