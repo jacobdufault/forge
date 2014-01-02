@@ -24,7 +24,7 @@ using System.Threading;
 namespace Forge.Collections {
     /// <summary>
     /// Provides a queue where pushing is assumed to be done concurrently, but reading is done in a
-    /// single-thread.
+    /// single-thread where no writing is done.
     /// </summary>
     /// <typeparam name="T">The type of object stored.</typeparam>
     // TODO: consider making this class disposable
@@ -37,18 +37,51 @@ namespace Forge.Collections {
         /// <summary>
         /// The thread-local bag that is used for appending items.
         /// </summary>
-        private ThreadLocal<Bag<T>> _collection;
+        private ThreadLocal<Bag<T>> _localCollection;
 
+        // Constant value used if adding elements is enabled
+        private const long ENABLE_WRITING = 1;
+
+        // Constant value used if adding elements is disabled
+        private const long DISABLE_WRITING = 0;
+
+        // Stores the current value if writing is enabled/disabled
+        private long _canWrite;
+
+        /// <summary>
+        /// Gets/sets if writing is enabled or disabled. Thread-safe. Provides debug diagnostics
+        /// only and is not critical for correct behavior. This is set to false by the methods which
+        /// read collections as they are doing their reading.
+        /// </summary>
+        private bool CanWrite {
+            get {
+                return Interlocked.Read(ref _canWrite) == ENABLE_WRITING;
+            }
+            set {
+                if (value) {
+                    Interlocked.Exchange(ref _canWrite, ENABLE_WRITING);
+                }
+                else {
+                    Interlocked.Exchange(ref _canWrite, DISABLE_WRITING);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Construct a new concurrent writer bag.
+        /// </summary>
         public ConcurrentWriterBag() {
             _allCollections = new List<Bag<T>>();
 
-            _collection = new ThreadLocal<Bag<T>>(() => {
+            _localCollection = new ThreadLocal<Bag<T>>(() => {
                 Bag<T> bag = new Bag<T>();
                 lock (_allCollections) {
                     _allCollections.Add(bag);
                 }
                 return bag;
             });
+
+            CanWrite = true;
         }
 
         /// <summary>
@@ -59,7 +92,11 @@ namespace Forge.Collections {
         /// </remarks>
         /// <param name="item">The item to enqueue</param>
         public void Add(T item) {
-            _collection.Value.Add(item);
+            if (CanWrite == false) {
+                throw new InvalidOperationException("Cannot add to ConcurrentWriterBag when reading values");
+            }
+
+            _localCollection.Value.Add(item);
         }
 
         /// <summary>
@@ -67,14 +104,22 @@ namespace Forge.Collections {
         /// method does *not* clear the collection.
         /// </summary>
         public List<T> ToList() {
-            List<T> result = new List<T>();
-            for (int i = 0; i < _allCollections.Count; ++i) {
-                Bag<T> collection = _allCollections[i];
-                for (int j = 0; j < collection.Length; ++j) {
-                    result.Add(collection[j]);
+            try {
+                CanWrite = false;
+
+                List<T> result = new List<T>();
+                for (int i = 0; i < _allCollections.Count; ++i) {
+                    Bag<T> collection = _allCollections[i];
+                    for (int j = 0; j < collection.Length; ++j) {
+                        result.Add(collection[j]);
+                    }
                 }
+
+                return result;
             }
-            return result;
+            finally {
+                CanWrite = true;
+            }
         }
 
         /// <summary>
@@ -86,12 +131,19 @@ namespace Forge.Collections {
         /// </remarks>
         /// <param name="iterator">The function to invoke on the items.</param>
         public void IterateAndClear(Action<T> iterator) {
-            for (int i = 0; i < _allCollections.Count; ++i) {
-                Bag<T> collection = _allCollections[i];
-                for (int j = 0; j < collection.Length; ++j) {
-                    iterator(collection[j]);
+            try {
+                CanWrite = false;
+
+                for (int i = 0; i < _allCollections.Count; ++i) {
+                    Bag<T> collection = _allCollections[i];
+                    for (int j = 0; j < collection.Length; ++j) {
+                        iterator(collection[j]);
+                    }
+                    collection.Clear();
                 }
-                collection.Clear();
+            }
+            finally {
+                CanWrite = true;
             }
         }
 
@@ -103,12 +155,19 @@ namespace Forge.Collections {
         /// </remarks>
         /// <param name="destination">The collection to copy items into.</param>
         public void CopyIntoAndClear(ICollection<T> destination) {
-            for (int i = 0; i < _allCollections.Count; ++i) {
-                Bag<T> collection = _allCollections[i];
-                for (int j = 0; j < collection.Length; ++j) {
-                    destination.Add(collection[j]);
+            try {
+                CanWrite = false;
+
+                for (int i = 0; i < _allCollections.Count; ++i) {
+                    Bag<T> collection = _allCollections[i];
+                    for (int j = 0; j < collection.Length; ++j) {
+                        destination.Add(collection[j]);
+                    }
+                    collection.Clear();
                 }
-                collection.Clear();
+            }
+            finally {
+                CanWrite = true;
             }
         }
     }
