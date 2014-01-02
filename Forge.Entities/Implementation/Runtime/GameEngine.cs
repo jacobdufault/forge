@@ -276,8 +276,8 @@ namespace Forge.Entities.Implementation.Runtime {
             // update our list of added and removed entities
             _addedEntities.Clear();
             _removedEntities.Clear();
-            _notifiedAddingEntities.CopyIntoAndClear(_addedEntities);
-            _notifiedRemovedEntities.CopyIntoAndClear(_removedEntities);
+            _notifiedAddingEntities.IterateAndClear(entity => _addedEntities.Add(entity));
+            _notifiedRemovedEntities.IterateAndClear(entity => _removedEntities.Add(entity));
 
             ++UpdateNumber;
 
@@ -294,7 +294,7 @@ namespace Forge.Entities.Implementation.Runtime {
 
             // copy our state change entities notice that we do this after adding entities, because
             // adding entities triggers the data state change notifier
-            _notifiedStateChangeEntities.CopyIntoAndClear(_stateChangeEntities);
+            _notifiedStateChangeEntities.IterateAndClear(entity => _stateChangeEntities.Add(entity));
 
             // Remove entities
             for (int i = 0; i < _removedEntities.Count; ++i) {
@@ -370,8 +370,7 @@ namespace Forge.Entities.Implementation.Runtime {
             }
 
             // throw exceptions if any occurred while we were running the engine
-            var exceptions = new List<Exception>();
-            _multithreadingExceptions.CopyIntoAndClear(exceptions);
+            var exceptions = _multithreadingExceptions.ToList();
             if (exceptions.Count > 0) {
                 throw new AggregateException(exceptions.ToArray());
             }

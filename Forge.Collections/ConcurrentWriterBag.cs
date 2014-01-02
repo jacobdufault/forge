@@ -17,6 +17,7 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+using Forge.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -38,14 +39,10 @@ namespace Forge.Collections {
         /// </summary>
         private ThreadLocal<Bag<T>> _localCollection;
 
-        // Constant value used if adding elements is enabled
-        private const long ENABLE_WRITING = 1;
-
-        // Constant value used if adding elements is disabled
-        private const long DISABLE_WRITING = 0;
-
-        // Stores the current value if writing is enabled/disabled
-        private long _canWrite;
+        /// <summary>
+        /// Used to set the value of CanWrite.
+        /// </summary>
+        private AtomicActivation _canWrite = new AtomicActivation();
 
         /// <summary>
         /// Gets/sets if writing is enabled or disabled. Thread-safe. Provides debug diagnostics
@@ -54,14 +51,14 @@ namespace Forge.Collections {
         /// </summary>
         private bool CanWrite {
             get {
-                return Interlocked.Read(ref _canWrite) == ENABLE_WRITING;
+                return _canWrite.IsActivated;
             }
             set {
                 if (value) {
-                    Interlocked.Exchange(ref _canWrite, ENABLE_WRITING);
+                    _canWrite.TryActivate();
                 }
                 else {
-                    Interlocked.Exchange(ref _canWrite, DISABLE_WRITING);
+                    _canWrite.Reset();
                 }
             }
         }
@@ -103,22 +100,9 @@ namespace Forge.Collections {
         /// method does *not* clear the collection.
         /// </summary>
         public List<T> ToList() {
-            try {
-                CanWrite = false;
-
-                List<T> result = new List<T>();
-                for (int i = 0; i < _allCollections.Count; ++i) {
-                    Bag<T> collection = _allCollections[i];
-                    for (int j = 0; j < collection.Length; ++j) {
-                        result.Add(collection[j]);
-                    }
-                }
-
-                return result;
-            }
-            finally {
-                CanWrite = true;
-            }
+            List<T> result = new List<T>();
+            IterateAndClear(item => result.Add(item));
+            return result;
         }
 
         /// <summary>
@@ -137,30 +121,6 @@ namespace Forge.Collections {
                     Bag<T> collection = _allCollections[i];
                     for (int j = 0; j < collection.Length; ++j) {
                         iterator(collection[j]);
-                    }
-                    collection.Clear();
-                }
-            }
-            finally {
-                CanWrite = true;
-            }
-        }
-
-        /// <summary>
-        /// Adds all of the elements inside of this bag into the given destination collection.
-        /// </summary>
-        /// <remarks>
-        /// This method is **NOT** thread-safe; do NOT call Add before this method has returned.
-        /// </remarks>
-        /// <param name="destination">The collection to copy items into.</param>
-        public void CopyIntoAndClear(ICollection<T> destination) {
-            try {
-                CanWrite = false;
-
-                for (int i = 0; i < _allCollections.Count; ++i) {
-                    Bag<T> collection = _allCollections[i];
-                    for (int j = 0; j < collection.Length; ++j) {
-                        destination.Add(collection[j]);
                     }
                     collection.Clear();
                 }

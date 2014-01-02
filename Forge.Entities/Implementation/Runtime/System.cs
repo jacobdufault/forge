@@ -193,7 +193,7 @@ namespace Forge.Entities.Implementation.Runtime {
                 // _notifiedModifiedEntities
                 if (_triggerModified != null) {
                     _dispatchModified.Clear();
-                    _notifiedModifiedEntities.CopyIntoAndClear(_dispatchModified);
+                    _notifiedModifiedEntities.IterateAndClear(entity => _dispatchModified.Add(entity));
                 }
 
                 // process entities that were added to the system
