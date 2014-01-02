@@ -426,8 +426,8 @@ namespace Forge.Entities.Implementation.Runtime {
             /// </summary>
             private UnorderedListMetadata GetMetadata(RuntimeEntity entity) {
                 // get our unordered list metadata or create it
-                UnorderedListMetadata metadata = entity.Metadata.UnorderedListMetadata[_metadataKey];
-                if (metadata == null) {
+                UnorderedListMetadata metadata;
+                if (entity.Metadata.UnorderedListMetadata.TryGetValue(_metadataKey, out metadata) == false) {
                     metadata = new UnorderedListMetadata();
                     entity.Metadata.UnorderedListMetadata[_metadataKey] = metadata;
                 }

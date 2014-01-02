@@ -20,6 +20,7 @@
 using Forge.Collections;
 using Forge.Utilities;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -34,6 +35,6 @@ namespace Forge.Entities.Implementation.Runtime {
             return _unorderedListKeys.Next();
         }
 
-        public SparseArray<UnorderedListMetadata> UnorderedListMetadata = new SparseArray<UnorderedListMetadata>();
+        public ConcurrentDictionary<int, UnorderedListMetadata> UnorderedListMetadata = new ConcurrentDictionary<int, UnorderedListMetadata>();
     }
 }
