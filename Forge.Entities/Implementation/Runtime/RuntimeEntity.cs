@@ -27,7 +27,7 @@ using System.Collections.Generic;
 
 namespace Forge.Entities.Implementation.Runtime {
     [JsonConverter(typeof(QueryableEntityConverter))]
-    internal class RuntimeEntity : IEntity {
+    internal sealed class RuntimeEntity : IEntity, IDisposable {
         #region Pretty Name
         /// <summary>
         /// The Entity's pretty name, used for debugging / printing purposes.
@@ -524,6 +524,10 @@ namespace Forge.Entities.Implementation.Runtime {
             else {
                 return string.Format("Entity [uid={0}]", _uniqueId);
             }
+        }
+
+        public void Dispose() {
+            _concurrentModifications.Dispose();
         }
     }
 }

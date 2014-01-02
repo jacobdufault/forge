@@ -52,7 +52,7 @@ namespace Forge.Entities.Implementation.Runtime {
     /// <summary>
     /// Runs an ISystem in another thread.
     /// </summary>
-    internal class MultithreadedSystem {
+    internal sealed class MultithreadedSystem : IDisposable {
         /// <summary>
         /// Entities that were added to the system that need to be dispatched to the system.
         /// </summary>
@@ -436,5 +436,8 @@ namespace Forge.Entities.Implementation.Runtime {
             }
         }
 
+        public void Dispose() {
+            _notifiedModifiedEntities.Dispose();
+        }
     }
 }

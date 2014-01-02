@@ -36,7 +36,7 @@ namespace Forge.Entities.Implementation.Runtime {
     /// The EntityManager requires an associated Entity which is not injected into the
     /// EntityManager.
     /// </summary>
-    internal class GameEngine : MultithreadedSystemSharedContext, IGameEngine {
+    internal sealed class GameEngine : MultithreadedSystemSharedContext, IGameEngine {
         private enum GameEngineNextState {
             SynchronizeState,
             Update
@@ -574,6 +574,19 @@ namespace Forge.Entities.Implementation.Runtime {
                 RequiredConverters.GetConverters(),
                 RequiredConverters.GetContextObjects(Maybe<GameEngine>.Empty));
             return json.GetHashCode();
+        }
+
+        public void Dispose() {
+            _multithreadingExceptions.Dispose();
+            _notifiedAddingEntities.Dispose();
+            _notifiedModifiedEntities.Dispose();
+            _notifiedRemovedEntities.Dispose();
+            _notifiedStateChangeEntities.Dispose();
+
+            foreach (RuntimeEntity entity in _entities) {
+                entity.Dispose();
+            }
+            _globalEntity.Dispose();
         }
     }
 }

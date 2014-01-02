@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using Forge.Entities.Implementation.Runtime;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,7 +31,7 @@ namespace Forge.Entities {
     /// <remarks>
     /// Instances of this class are allocated when loading levels.
     /// </remarks>
-    public interface IGameEngine {
+    public interface IGameEngine : IDisposable {
         /// <summary>
         /// Runs a game update tick using the given input. Make sure that SynchronizeState call both
         /// starts and completes before calling Update again.
@@ -112,7 +113,7 @@ namespace Forge.Entities {
         /// </summary>
         /// <remarks>
         /// This is a helper method; it serializes the arguments and then calls CreateEngine(string,
-        /// string).
+        /// string) which does the actual work.
         /// </remarks>
         /// <param name="snapshot">The IGameSnapshot to use to create the engine.</param>
         /// <param name="templates">The ITemplateGroup used to create the engine.</param>

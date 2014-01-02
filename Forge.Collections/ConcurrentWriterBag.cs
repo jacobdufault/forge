@@ -27,8 +27,7 @@ namespace Forge.Collections {
     /// single-thread where no writing is done.
     /// </summary>
     /// <typeparam name="T">The type of object stored.</typeparam>
-    // TODO: consider making this class disposable
-    public class ConcurrentWriterBag<T> {
+    public sealed class ConcurrentWriterBag<T> : IDisposable {
         /// <summary>
         /// All thread-local bags; this is used when iterating over the entire contents of the bag.
         /// </summary>
@@ -169,6 +168,10 @@ namespace Forge.Collections {
             finally {
                 CanWrite = true;
             }
+        }
+
+        public void Dispose() {
+            _localCollection.Dispose();
         }
     }
 }
