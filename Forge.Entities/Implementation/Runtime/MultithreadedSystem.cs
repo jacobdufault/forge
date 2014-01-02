@@ -108,10 +108,9 @@ namespace Forge.Entities.Implementation.Runtime {
         private Filter _filter;
 
         /// <summary>
-        /// The trigger that this system uses for filtering entities (_filter is the compiled
-        /// version of this).
+        /// The system that this MultithreadedSystem maps to.
         /// </summary>
-        public ITriggerFilterProvider Trigger;
+        public ISystem System;
 
         /// <summary>
         /// Performance data
@@ -126,7 +125,7 @@ namespace Forge.Entities.Implementation.Runtime {
             _filter = new Filter(DataAccessorFactory.MapTypesToDataAccessors(trigger.RequiredDataTypes()));
             _entityCache = new EntityCache(_filter);
 
-            Trigger = trigger;
+            System = trigger;
             _triggerAdded = trigger as Trigger.Added;
             _triggerRemoved = trigger as Trigger.Removed;
             _triggerModified = trigger as Trigger.Modified;

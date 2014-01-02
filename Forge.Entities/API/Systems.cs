@@ -22,6 +22,27 @@ using System;
 
 namespace Forge.Entities {
     /// <summary>
+    /// An enum that specifies the relative execution ordering of a group of systems. It expresses
+    /// the execution ordering within the context of precisely two systems.
+    /// </summary>
+    public enum SystemExecutionOrdering {
+        /// <summary>
+        /// The execution order doesn't matter; both systems can be ran concurrently.
+        /// </summary>
+        Concurrent,
+
+        /// <summary>
+        /// This system should be executed before the other system.
+        /// </summary>
+        BeforeOther,
+
+        /// <summary>
+        /// This system should be executed after the other system.
+        /// </summary>
+        AfterOther
+    }
+
+    /// <summary>
     /// All systems need to extend this interface, but it should be done by extending BaseSystem.
     /// See documentation on BaseSystem.
     /// </summary>
@@ -40,6 +61,13 @@ namespace Forge.Entities {
         IEntity GlobalEntity {
             set;
         }
+
+        /// <summary>
+        /// Return the order of system execution for this system relative to the given system.
+        /// </summary>
+        /// <param name="system">The system to compare our execution ordering against.</param>
+        /// <returns>The order that execution needs to happen in.</returns>
+        SystemExecutionOrdering GetExecutionOrdering(ISystem system);
     }
 
     /// <summary>
@@ -78,6 +106,21 @@ namespace Forge.Entities {
                 GlobalEntity = value;
             }
         }
+
+        /// <summary>
+        /// Return the order of system execution for this system relative to the given system. This
+        /// method defaults to SystemExecutionOrdering.Concurrent, which means that there is no
+        /// explicit execution ordering required between the two systems.
+        /// </summary>
+        /// <param name="system">The system to compare our execution ordering against.</param>
+        /// <returns>The order that execution needs to happen in.</returns>
+        protected virtual SystemExecutionOrdering GetExecutionOrdering(ISystem system) {
+            return SystemExecutionOrdering.Concurrent;
+        }
+
+        SystemExecutionOrdering ISystem.GetExecutionOrdering(ISystem system) {
+            return GetExecutionOrdering(system);
+        }
     }
 
     /// <summary>
@@ -88,7 +131,7 @@ namespace Forge.Entities {
     /// <remarks>
     /// Client code should not extend this.
     /// </remarks>
-    public interface ITriggerFilterProvider {
+    public interface ITriggerFilterProvider : ISystem {
         /// <summary>
         /// Computes the entity filter.
         /// </summary>

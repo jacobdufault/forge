@@ -102,11 +102,6 @@ namespace Forge.Entities.Implementation.Runtime {
         private ConcurrentWriterBag<RuntimeEntity> _notifiedStateChangeEntities = new ConcurrentWriterBag<RuntimeEntity>();
 
         /// <summary>
-        /// All of the multithreaded systems.
-        /// </summary>
-        private List<MultithreadedSystem> _multithreadedSystems = new List<MultithreadedSystem>();
-
-        /// <summary>
         /// Lock used when modifying _updateTask.
         /// </summary>
         private object _updateTaskLock = new object();
@@ -115,6 +110,8 @@ namespace Forge.Entities.Implementation.Runtime {
         /// The key we use to access unordered list metadata from the entity.
         /// </summary>
         private static int _entityUnorderedListMetadataKey = EntityManagerMetadata.GetUnorderedListMetadataIndex();
+
+        private List<ExecutionGroup> _executionGroups;
 
         private List<ISystem> _systems;
 
@@ -218,17 +215,43 @@ namespace Forge.Entities.Implementation.Runtime {
                 RemoveEntity(runtimeEntity);
             }
 
-            foreach (var system in snapshot.Systems) {
-                AddSystem(system);
+            _executionGroups = new List<ExecutionGroup>();
+            var executionGroups = SystemExecutionGroup.GetExecutionGroups(snapshot.Systems);
+            foreach (var executionGroup in executionGroups) {
+                List<MultithreadedSystem> multithreadedSystems = new List<MultithreadedSystem>();
+                foreach (var system in executionGroup.Systems) {
+                    MultithreadedSystem multithreaded = CreateMultithreadedSystem(system);
+                    multithreadedSystems.Add(multithreaded);
+                }
+                _executionGroups.Add(new ExecutionGroup(multithreadedSystems));
             }
 
             _nextState = GameEngineNextState.SynchronizeState;
         }
 
+        private class ExecutionGroup {
+            public List<MultithreadedSystem> Systems;
+            public ExecutionGroup(List<MultithreadedSystem> systems) {
+                Systems = systems;
+            }
+
+            public void BookkeepingBeforeRunningSystems() {
+                for (int i = 0; i < Systems.Count; ++i) {
+                    Systems[i].BookkeepingBeforeRunningSystems();
+                }
+            }
+
+            public void RunSystems(List<IGameInput> input) {
+                for (int i = 0; i < Systems.Count; ++i) {
+                    Systems[i].RunSystem(input);
+                }
+            }
+        }
+
         /// <summary>
-        /// Registers the given system with the EntityManager.
+        /// Creates a multithreaded system from the given base system.
         /// </summary>
-        private void AddSystem(ISystem baseSystem) {
+        private MultithreadedSystem CreateMultithreadedSystem(ISystem baseSystem) {
             baseSystem.EventDispatcher = EventNotifier;
             baseSystem.GlobalEntity = _globalEntity;
 
@@ -237,8 +260,7 @@ namespace Forge.Entities.Implementation.Runtime {
                 foreach (var entity in _entities) {
                     multithreadingSystem.Restore(entity);
                 }
-
-                _multithreadedSystems.Add(multithreadingSystem);
+                return multithreadingSystem;
             }
             else {
                 throw new NotImplementedException("No support for systems which are not deriving for ITriggerFilterProvider as of yet for system " + baseSystem);
@@ -349,23 +371,23 @@ namespace Forge.Entities.Implementation.Runtime {
         private void MultithreadRunSystems(List<IGameInput> input) {
             // run systems in a parallel context
             if (EnableMultithreading) {
-                var result = Parallel.ForEach(_multithreadedSystems,
-                    system => system.BookkeepingBeforeRunningSystems());
+                var result = Parallel.ForEach(_executionGroups,
+                    group => group.BookkeepingBeforeRunningSystems());
                 Contract.Requires(result.IsCompleted, "Bookkeeping failed to complete");
 
-                result = Parallel.ForEach(_multithreadedSystems,
-                    system => system.RunSystem(input));
+                result = Parallel.ForEach(_executionGroups,
+                    group => group.RunSystems(input));
                 Contract.Requires(result.IsCompleted, "Bookkeeping failed to complete");
             }
 
             // run systems in a single-threaded context
             else {
-                for (int i = 0; i < _multithreadedSystems.Count; ++i) {
-                    _multithreadedSystems[i].BookkeepingBeforeRunningSystems();
+                for (int i = 0; i < _executionGroups.Count; ++i) {
+                    _executionGroups[i].BookkeepingBeforeRunningSystems();
                 }
 
-                for (int i = 0; i < _multithreadedSystems.Count; ++i) {
-                    _multithreadedSystems[i].RunSystem(input);
+                for (int i = 0; i < _executionGroups.Count; ++i) {
+                    _executionGroups[i].RunSystems(input);
                 }
             }
 
@@ -392,20 +414,21 @@ namespace Forge.Entities.Implementation.Runtime {
 
             builder.AppendFormat("Frame updating took {0} ticks (before {1}, concurrent {2})", stopwatch.ElapsedTicks, frameBegin, multithreadEnd - frameBegin);
 
-            for (int i = 0; i < _multithreadedSystems.Count; ++i) {
-                builder.AppendLine();
-                builder.AppendFormat(@"  {1}/{2} ({3}|{4}|{5}|{6}|{7}) ticks for system {0}",
-                    _multithreadedSystems[i].Trigger.GetType(),
+            for (int i = 0; i < _executionGroups.Count; ++i) {
+                for (int j = 0; j < _executionGroups[i].Systems.Count; ++j) {
+                    builder.AppendLine();
+                    builder.AppendFormat(@"  {1}/{2} ({3}|{4}|{5}|{6}|{7}) ticks for system {0}",
+                        _executionGroups[i].Systems[j].System.GetType(),
 
-                    _multithreadedSystems[i].PerformanceData.BookkeepingTicks,
-                    _multithreadedSystems[i].PerformanceData.RunSystemTicks,
+                        _executionGroups[i].Systems[j].PerformanceData.BookkeepingTicks,
+                        _executionGroups[i].Systems[j].PerformanceData.RunSystemTicks,
 
-                    _multithreadedSystems[i].PerformanceData.AddedTicks,
-                    _multithreadedSystems[i].PerformanceData.RemovedTicks,
-                    _multithreadedSystems[i].PerformanceData.StateChangeTicks,
-                    _multithreadedSystems[i].PerformanceData.ModificationTicks,
-                    _multithreadedSystems[i].PerformanceData.UpdateTicks);
-
+                        _executionGroups[i].Systems[j].PerformanceData.AddedTicks,
+                        _executionGroups[i].Systems[j].PerformanceData.RemovedTicks,
+                        _executionGroups[i].Systems[j].PerformanceData.StateChangeTicks,
+                        _executionGroups[i].Systems[j].PerformanceData.ModificationTicks,
+                        _executionGroups[i].Systems[j].PerformanceData.UpdateTicks);
+                }
             }
             Log<GameEngine>.Info(builder.ToString());
         }

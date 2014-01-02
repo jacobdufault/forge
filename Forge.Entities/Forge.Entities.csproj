@@ -60,6 +60,7 @@
     <Compile Include="Implementation\ContextObjects\EventDispatcherContext.cs" />
     <Compile Include="Implementation\Runtime\PerformanceInformation.cs" />
     <Compile Include="Implementation\Runtime\RuntimeTemplate.cs" />
+    <Compile Include="Implementation\Runtime\SystemExecutionGroup.cs" />
     <Compile Include="Implementation\Shared\EventNotifier.cs" />
     <Compile Include="Implementation\ContextObjects\GameEngineContext.cs" />
     <Compile Include="Implementation\Shared\QueryableEntityConverter.cs" />
@@ -81,7 +82,7 @@
     <Compile Include="API\ITemplate.cs" />
     <Compile Include="API\LevelManagement.cs" />
     <Compile Include="API\Systems.cs" />
-    <Compile Include="Implementation\Runtime\System.cs" />
+    <Compile Include="Implementation\Runtime\MultithreadedSystem.cs" />
     <Compile Include="Implementation\Runtime\GameEngine.cs" />
     <Compile Include="Implementation\Shared\Filter.cs" />
     <Compile Include="Implementation\ContextObjects\EntityConversionContext.cs" />
