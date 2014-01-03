@@ -117,7 +117,7 @@ namespace Forge.Entities.Implementation.Content {
             return _defaultDataInstances.Remove(accessor.Id);
         }
 
-        public IEntity InstantiateEntity() {
+        public IEntity Instantiate() {
             throw new InvalidOperationException("Unable to instantiate an entity from a ContentTemplate");
         }
 

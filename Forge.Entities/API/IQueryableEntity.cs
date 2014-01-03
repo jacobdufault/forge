@@ -32,7 +32,8 @@ namespace Forge.Entities {
         /// Selects data inside of the entity that passes the given filter.
         /// </summary>
         /// <param name="includeRemoved">Should data that has been removed, but is still in the
-        /// queryable entity, be considered for selection?</param>
+        /// queryable entity, be considered for selection? This means that Contains(accessor) will
+        /// return false but WasRemoved(accessor) will return true.</param>
         /// <param name="filter">The predicate to check items to see if they should be contained
         /// inside of the result.</param>
         /// <param name="storage">An optional collection to append result to, instead of creating a

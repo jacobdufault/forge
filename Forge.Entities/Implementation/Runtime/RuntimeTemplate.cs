@@ -93,7 +93,7 @@ namespace Forge.Entities.Implementation.Runtime {
             private set;
         }
 
-        public IEntity InstantiateEntity() {
+        public IEntity Instantiate() {
             int id = _gameEngine.EntityIdGenerator.Next();
             EventNotifier eventNotifier = _gameEngine.EventNotifier;
 

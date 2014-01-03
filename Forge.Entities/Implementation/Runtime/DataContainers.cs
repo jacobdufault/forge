@@ -22,21 +22,26 @@ using System;
 using System.Threading;
 
 namespace Forge.Entities.Implementation.Runtime {
-    internal interface DataContainer {
-    }
-
-    internal class NonVersionedDataContainer : DataContainer {
+    internal abstract class DataContainer {
         /// <summary>
         /// Used by the Entity to determine if the data inside of this container has already been
         /// modified.
         /// </summary>
-        public AtomicActivation MotificationActivation;
+        public AtomicActivation ModificationActivation;
 
+        public DataContainer() {
+            ModificationActivation = new AtomicActivation();
+        }
+    }
+
+    /// <summary>
+    /// Contains a single data instance.
+    /// </summary>
+    internal class NonVersionedDataContainer : DataContainer {
         public Data.NonVersioned Data;
 
         public NonVersionedDataContainer(Data.NonVersioned data) {
             Data = data;
-            MotificationActivation = new AtomicActivation();
         }
     }
 
@@ -57,17 +62,10 @@ namespace Forge.Entities.Implementation.Runtime {
         private int _previousIndex;
 
         /// <summary>
-        /// Used by the Entity to determine if the data inside of this container has already been
-        /// modified.
-        /// </summary>
-        public AtomicActivation MotificationActivation;
-
-        /// <summary>
         /// Initializes a new instance of the ImmutableContainer class.
         /// </summary>
         public VersionedDataContainer(Data.Versioned previous, Data.Versioned current, Data.Versioned modified) {
             Items = new Data.Versioned[] { previous, current, modified };
-            MotificationActivation = new AtomicActivation();
         }
 
         /// <summary>

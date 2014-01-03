@@ -111,7 +111,7 @@ namespace Forge.Entities.Implementation.Runtime {
                         // the true Previous value, not the Current one.
 
                         // Internal signal that a modification is going to take place
-                        ((IEntity)this).Modify(accessor);
+                        Modify(accessor);
 
                         if (data.CurrentData is Data.Versioned) {
                             // Move Previous into Current, so that after the ApplyModification we
@@ -122,7 +122,7 @@ namespace Forge.Entities.Implementation.Runtime {
                     }
 
                     if (data.WasRemoved) {
-                        ((IEntity)this).RemoveData(accessor);
+                        RemoveData(accessor);
                     }
                 }
             }
@@ -145,14 +145,10 @@ namespace Forge.Entities.Implementation.Runtime {
                 if (_data.ContainsKey(id)) {
                     if (_data[id] is VersionedDataContainer) {
                         VersionedDataContainer container = (VersionedDataContainer)_data[id];
-                        container.MotificationActivation.Reset();
                         container.Increment();
                     }
-                    else {
-                        NonVersionedDataContainer container = (NonVersionedDataContainer)_data[id];
-                        container.MotificationActivation.Reset();
-                    }
 
+                    _data[id].ModificationActivation.Reset();
                     _modifiedLastFrame[id] = _data[id];
                 }
             });
@@ -424,7 +420,7 @@ namespace Forge.Entities.Implementation.Runtime {
         #endregion
 
         public Data.IData AddOrModify(DataAccessor accessor) {
-            if (((IEntity)this).ContainsData(accessor) == false) {
+            if (ContainsData(accessor) == false) {
                 lock (_toAddStage1) {
                     Data.IData added = GetAddedData_unlocked(accessor);
                     if (added == null) {
@@ -435,7 +431,7 @@ namespace Forge.Entities.Implementation.Runtime {
                 }
             }
 
-            return ((IEntity)this).Modify(accessor);
+            return Modify(accessor);
         }
 
         public ICollection<DataAccessor> SelectData(bool includeRemoved = false,
@@ -502,7 +498,9 @@ namespace Forge.Entities.Implementation.Runtime {
         public Data.IData Modify(DataAccessor accessor) {
             var id = accessor.Id;
 
-            if (((IEntity)this).ContainsData(accessor) == false) {
+            // if we don't contain the data, then we might have added in this frame, which means we
+            // want to just return the added data -- otherwise, there is no data to modify
+            if (ContainsData(accessor) == false) {
                 Data.IData added = GetAddedData_unlocked(accessor);
                 if (added != null) {
                     return added;
@@ -511,31 +509,35 @@ namespace Forge.Entities.Implementation.Runtime {
                 throw new NoSuchDataException(this, accessor);
             }
 
-            if (_data[id] is VersionedDataContainer) {
-                VersionedDataContainer container = (VersionedDataContainer)_data[id];
-                if (container.MotificationActivation.TryActivate()) {
-                    _concurrentModifications.Add(accessor);
-                    ModificationNotifier.Notify();
-                }
-                else if (container.Current is Data.ConcurrentVersioned == false) {
-                    throw new RemodifiedDataException(this, accessor);
-                }
-
-                return container.Modifying;
+            // notify everyone that the data has been modified and see if we're the first ones to
+            // modify the data
+            if (_data[id].ModificationActivation.TryActivate()) {
+                _concurrentModifications.Add(accessor);
+                ModificationNotifier.Notify();
             }
 
+            // someone else already modified the data
             else {
-                NonVersionedDataContainer container = (NonVersionedDataContainer)_data[id];
-                if (container.MotificationActivation.TryActivate()) {
-                    _concurrentModifications.Add(accessor);
-                    ModificationNotifier.Notify();
-                }
-                // nonversioned data can only be modified once per update
-                else {
-                    throw new RemodifiedDataException(this, accessor);
+                // nonversioned data cannot be modified multiple times unless its concurrent
+                if (_data[id] is NonVersionedDataContainer) {
+                    if (((NonVersionedDataContainer)_data[id]).Data is Data.ConcurrentNonVersioned == false) {
+                        throw new RemodifiedDataException(this, accessor);
+                    }
                 }
 
-                return container.Data;
+                // versioned data cannot be modified multiple times unless its concurrent
+                if (_data[id] is VersionedDataContainer) {
+                    if (((VersionedDataContainer)_data[id]).Current is Data.ConcurrentVersioned == false) {
+                        throw new RemodifiedDataException(this, accessor);
+                    }
+                }
+            }
+
+            if (_data[id] is VersionedDataContainer) {
+                return ((VersionedDataContainer)_data[id]).Modifying;
+            }
+            else {
+                return ((NonVersionedDataContainer)_data[id]).Data;
             }
         }
         #endregion
@@ -551,8 +553,9 @@ namespace Forge.Entities.Implementation.Runtime {
             }
 
             else {
+                // nonversioned data cannot get current values after modification has occurred
                 var container = (NonVersionedDataContainer)_data[accessor.Id];
-                if (container.MotificationActivation.IsActivated) {
+                if (container.ModificationActivation.IsActivated) {
                     throw new InvalidOperationException("Cannot retrieve current value for modified non-versioned data");
                 }
                 return container.Data;

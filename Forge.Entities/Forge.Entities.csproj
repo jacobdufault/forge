@@ -72,7 +72,7 @@
     <Compile Include="API\Events.cs" />
     <Compile Include="API\Exceptions.cs" />
     <Compile Include="API\IEntityExtensions.cs" />
-    <Compile Include="Implementation\Runtime\ImmutableContainer.cs" />
+    <Compile Include="Implementation\Runtime\DataContainers.cs" />
     <Compile Include="API\IGameSnapshot.cs" />
     <Compile Include="API\Data.cs" />
     <Compile Include="API\IEntity.cs" />
