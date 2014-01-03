@@ -417,17 +417,7 @@ namespace Forge.Entities.Implementation.Runtime {
             for (int i = 0; i < _executionGroups.Count; ++i) {
                 for (int j = 0; j < _executionGroups[i].Systems.Count; ++j) {
                     builder.AppendLine();
-                    builder.AppendFormat(@"  {1}/{2} ({3}|{4}|{5}|{6}|{7}) ticks for system {0}",
-                        _executionGroups[i].Systems[j].System.GetType(),
-
-                        _executionGroups[i].Systems[j].PerformanceData.BookkeepingTicks,
-                        _executionGroups[i].Systems[j].PerformanceData.RunSystemTicks,
-
-                        _executionGroups[i].Systems[j].PerformanceData.AddedTicks,
-                        _executionGroups[i].Systems[j].PerformanceData.RemovedTicks,
-                        _executionGroups[i].Systems[j].PerformanceData.StateChangeTicks,
-                        _executionGroups[i].Systems[j].PerformanceData.ModificationTicks,
-                        _executionGroups[i].Systems[j].PerformanceData.UpdateTicks);
+                    builder.Append(_executionGroups[i].Systems[j].PerformanceData.Format);
                 }
             }
             Log<GameEngine>.Info(builder.ToString());

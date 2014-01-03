@@ -23,6 +23,12 @@ namespace Forge.Entities.Implementation.Runtime {
     /// in Systems when they are updated.
     /// </summary>
     internal class PerformanceInformation {
+        private ISystem _system;
+
+        public PerformanceInformation(ISystem system) {
+            _system = system;
+        }
+
         /// <summary>
         /// Total number of ticks running the system required.
         /// </summary>
@@ -57,5 +63,19 @@ namespace Forge.Entities.Implementation.Runtime {
         /// Ticks required for updating the system.
         /// </summary>
         public long UpdateTicks;
+
+        public string Format {
+            get {
+                return string.Format(@"  {1}/{2} ({3}|{4}|{5}|{6}|{7}) ticks for system {0}",
+                    _system.GetType(),
+                    BookkeepingTicks,
+                    RunSystemTicks,
+                    AddedTicks,
+                    RemovedTicks,
+                    StateChangeTicks,
+                    ModificationTicks,
+                    UpdateTicks);
+            }
+        }
     }
 }

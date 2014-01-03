@@ -118,7 +118,7 @@ namespace Forge.Entities.Implementation.Runtime {
         public PerformanceInformation PerformanceData;
 
         internal MultithreadedSystem(MultithreadedSystemSharedContext sharedData, ITriggerFilterProvider trigger) {
-            PerformanceData = new PerformanceInformation();
+            PerformanceData = new PerformanceInformation(trigger);
 
             _shared = sharedData;
 
