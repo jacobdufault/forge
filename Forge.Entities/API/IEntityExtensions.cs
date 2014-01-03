@@ -22,43 +22,43 @@ namespace Forge.Entities {
     /// Helper methods built on top of the core IEntity API.
     /// </summary>
     public static class IEntityExtensions {
-        public static T Current<T>(this IQueryableEntity entity) where T : IData {
+        public static T Current<T>(this IQueryableEntity entity) where T : Data.IData {
             return (T)entity.Current(DataMap<T>.Accessor);
         }
 
-        public static T Previous<T>(this IQueryableEntity entity) where T : IData {
+        public static T Previous<T>(this IQueryableEntity entity) where T : Data.Versioned {
             return (T)entity.Previous(DataMap<T>.Accessor);
         }
 
-        public static bool ContainsData<T>(this IQueryableEntity entity) where T : IData {
+        public static bool ContainsData<T>(this IQueryableEntity entity) where T : Data.IData {
             return entity.ContainsData(DataMap<T>.Accessor);
         }
 
-        public static T AddOrModify<T>(this IEntity entity) where T : IData {
+        public static T AddOrModify<T>(this IEntity entity) where T : Data.IData {
             return (T)entity.AddOrModify(DataMap<T>.Accessor);
         }
 
-        public static T AddData<T>(this IEntity entity) where T : IData {
+        public static T AddData<T>(this IEntity entity) where T : Data.IData {
             return (T)entity.AddData(DataMap<T>.Accessor);
         }
 
-        public static void RemoveData<T>(this IEntity entity) where T : IData {
+        public static void RemoveData<T>(this IEntity entity) where T : Data.IData {
             entity.RemoveData(DataMap<T>.Accessor);
         }
 
-        public static T Modify<T>(this IEntity entity) where T : IData {
+        public static T Modify<T>(this IEntity entity) where T : Data.IData {
             return (T)entity.Modify(DataMap<T>.Accessor);
         }
 
-        public static bool WasModified<T>(this IEntity entity) where T : IData {
+        public static bool WasModified<T>(this IEntity entity) where T : Data.IData {
             return entity.WasModified(DataMap<T>.Accessor);
         }
 
-        public static bool WasAdded<T>(this IEntity entity) where T : IData {
+        public static bool WasAdded<T>(this IEntity entity) where T : Data.IData {
             return entity.WasAdded(DataMap<T>.Accessor);
         }
 
-        public static bool WasRemoved<T>(this IEntity entity) where T : IData {
+        public static bool WasRemoved<T>(this IEntity entity) where T : Data.IData {
             return entity.WasRemoved(DataMap<T>.Accessor);
         }
     }

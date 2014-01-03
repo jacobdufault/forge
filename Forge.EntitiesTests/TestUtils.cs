@@ -25,8 +25,8 @@ namespace Forge.Entities.Tests {
             Entity = entity;
         }
 
-        public TestEntityBuilder AddData<TData>(TData data) where TData : IData {
-            Entity.AddData(new DataAccessor(data)).CopyFrom(data);
+        public TestEntityBuilder AddData<TData>(TData data) where TData : Data.Versioned {
+            ((TData)Entity.AddData(new DataAccessor(data))).CopyFrom(data);
             return this;
         }
     }
@@ -47,7 +47,7 @@ namespace Forge.Entities.Tests {
             Template = template;
         }
 
-        public TestTemplateBuilder AddData<TData>(TData data) where TData : IData {
+        public TestTemplateBuilder AddData<TData>(TData data) where TData : Data.IData {
             Template.AddDefaultData(data);
             return this;
         }
@@ -83,7 +83,7 @@ namespace Forge.Entities.Tests {
         }
 
         public static DataReference<TData> CreateDataReference<TData>(IQueryableEntity entity)
-            where TData : IData {
+            where TData : Data.IData {
             var dataReference = new DataReference<TData>();
             ((IDataReference)dataReference).Provider = entity;
             return dataReference;

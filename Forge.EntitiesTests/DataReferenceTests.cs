@@ -8,7 +8,7 @@ using Xunit;
 namespace Forge.Entities.Tests {
     public class DataReferenceTests {
         private static DataReference<TData> CreateDataReference<TData>(IQueryableEntity entity)
-            where TData : IData {
+            where TData : Data.IData {
             var dataReference = new DataReference<TData>();
             ((IDataReference)dataReference).Provider = entity;
             return dataReference;

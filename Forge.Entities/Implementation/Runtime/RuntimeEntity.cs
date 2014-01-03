@@ -71,8 +71,8 @@ namespace Forge.Entities.Implementation.Runtime {
         public RuntimeEntity(int uniqueId, ITemplate template, IEventDispatcher eventDispatcher)
             : this(uniqueId, eventDispatcher, "") {
             foreach (DataAccessor accessor in template.SelectData()) {
-                IData data = template.Current(accessor);
-                AddData_unlocked(accessor).CopyFrom(data);
+                Data.IData data = template.Current(accessor);
+                AddData_unlocked(accessor, data.Duplicate());
             }
         }
 
@@ -89,10 +89,17 @@ namespace Forge.Entities.Implementation.Runtime {
                 }
 
                 else {
-                    IData current = data.CurrentData;
-                    IData previous = data.PreviousData;
+                    if (data.CurrentData is Data.NonVersioned) {
+                        _data[accessor.Id] = new NonVersionedDataContainer(
+                            (Data.NonVersioned)data.CurrentData);
+                    }
 
-                    _data[accessor.Id] = new DataContainer(previous, current, current.Duplicate());
+                    else {
+                        _data[accessor.Id] = new VersionedDataContainer(
+                            (Data.Versioned)data.PreviousData,
+                            (Data.Versioned)data.CurrentData,
+                            (Data.Versioned)data.CurrentData.Duplicate());
+                    }
 
                     // There is going to be an ApplyModification call before systems actually view
                     // this Entity instance. With that in mind, we can treat our data initialization
@@ -106,9 +113,12 @@ namespace Forge.Entities.Implementation.Runtime {
                         // Internal signal that a modification is going to take place
                         ((IEntity)this).Modify(accessor);
 
-                        // Move Previous into Current, so that after the ApplyModification we have
-                        // the correct data values
-                        _data[accessor.Id].Current.CopyFrom(_data[accessor.Id].Previous);
+                        if (data.CurrentData is Data.Versioned) {
+                            // Move Previous into Current, so that after the ApplyModification we
+                            // have the correct data values
+                            var container = (VersionedDataContainer)_data[accessor.Id];
+                            container.Current.CopyFrom(container.Previous);
+                        }
                     }
 
                     if (data.WasRemoved) {
@@ -133,8 +143,15 @@ namespace Forge.Entities.Implementation.Runtime {
 
                 // if we removed the data, then don't bother apply/dispatching modifications on it
                 if (_data.ContainsKey(id)) {
-                    _data[id].MotificationActivation.Reset();
-                    _data[id].Increment();
+                    if (_data[id] is VersionedDataContainer) {
+                        VersionedDataContainer container = (VersionedDataContainer)_data[id];
+                        container.MotificationActivation.Reset();
+                        container.Increment();
+                    }
+                    else {
+                        NonVersionedDataContainer container = (NonVersionedDataContainer)_data[id];
+                        container.MotificationActivation.Reset();
+                    }
 
                     _modifiedLastFrame[id] = _data[id];
                 }
@@ -175,7 +192,7 @@ namespace Forge.Entities.Implementation.Runtime {
                     _removedLastFrame[id] = _toRemoveStage1[i];
                     // _removedLastFrame[id] is removed in stage2
 
-                    _eventDispatcher.Submit(RemovedDataEvent.Create(this, _data[id].Current.GetType()));
+                    _eventDispatcher.Submit(RemovedDataEvent.Create(this, DataAccessorFactory.GetTypeFromAccessor(new DataAccessor(id))));
                 }
 
                 for (int i = 0; i < _toRemoveStage2.Count; ++i) {
@@ -196,7 +213,7 @@ namespace Forge.Entities.Implementation.Runtime {
 
             // do additions
             for (int i = 0; i < _toAddStage1.Count; ++i) {
-                IData added = _toAddStage1[i];
+                Data.IData added = _toAddStage1[i];
                 int id = DataAccessorFactory.GetId(added.GetType());
 
                 // make sure we do not readd the same data instance twice
@@ -207,7 +224,15 @@ namespace Forge.Entities.Implementation.Runtime {
 
                 _addedLastFrame[id] = added;
 
-                _data[id] = new DataContainer(added.Duplicate(), added.Duplicate(), added.Duplicate());
+                if (added is Data.Versioned) {
+                    Data.Versioned versioned = (Data.Versioned)added;
+
+                    _data[id] = new VersionedDataContainer(versioned.Duplicate(), versioned.Duplicate(), versioned.Duplicate());
+                }
+                else {
+                    Data.NonVersioned nonVersioned = (Data.NonVersioned)added;
+                    _data[id] = new NonVersionedDataContainer(nonVersioned);
+                }
 
                 // visualize the initial data
                 _eventDispatcher.Submit(AddedDataEvent.Create(this, added.GetType()));
@@ -257,9 +282,8 @@ namespace Forge.Entities.Implementation.Runtime {
                 }
             }
 
-            foreach (var tuple in _data) {
-                DataContainer container = tuple.Value;
-                DataAccessor accessor = new DataAccessor(container.Current);
+            foreach (KeyValuePair<int, DataContainer> tuple in _data) {
+                DataAccessor accessor = new DataAccessor(tuple.Key);
 
                 // If the data was removed this frame, then next frame it won't exist anymore, so we
                 // don't serialize it
@@ -280,16 +304,32 @@ namespace Forge.Entities.Implementation.Runtime {
                 // WasModified to true)
                 if (modifiedThisFrame.Contains(accessor.Id)) {
                     // do a data swap so our modified data is correct
-                    dataInstance.CurrentData = container.Modifying;
-                    dataInstance.PreviousData = container.Current;
+                    if (_data[accessor.Id] is VersionedDataContainer) {
+                        VersionedDataContainer container = (VersionedDataContainer)_data[accessor.Id];
+                        dataInstance.CurrentData = container.Modifying;
+                        dataInstance.PreviousData = container.Current;
+                    }
+                    else {
+                        NonVersionedDataContainer container = (NonVersionedDataContainer)_data[accessor.Id];
+                        dataInstance.CurrentData = container.Data;
+                    }
 
                     dataInstance.WasModified = true;
                 }
 
                 // we were not modified this frame, so don't perform a data swap
                 else {
-                    dataInstance.CurrentData = container.Current;
-                    dataInstance.PreviousData = container.Previous;
+                    // do a data swap so our modified data is correct
+                    if (_data[accessor.Id] is VersionedDataContainer) {
+                        VersionedDataContainer container = (VersionedDataContainer)_data[accessor.Id];
+                        dataInstance.CurrentData = container.Current;
+                        dataInstance.PreviousData = container.Previous;
+                    }
+                    else {
+                        NonVersionedDataContainer container = (NonVersionedDataContainer)_data[accessor.Id];
+                        dataInstance.CurrentData = container.Data;
+                    }
+
                     dataInstance.WasModified = false;
                 }
 
@@ -337,9 +377,9 @@ namespace Forge.Entities.Implementation.Runtime {
         /// <summary>
         /// Items that are pending addition in the next update call
         /// </summary>
-        private List<IData> _toAddStage1 = new List<IData>();
-        private List<IData> _toAddStage2 = new List<IData>();
-        private SparseArray<IData> _addedLastFrame = new SparseArray<IData>();
+        private List<Data.IData> _toAddStage1 = new List<Data.IData>();
+        private List<Data.IData> _toAddStage2 = new List<Data.IData>();
+        private SparseArray<Data.IData> _addedLastFrame = new SparseArray<Data.IData>();
 
         /// <summary>
         /// Items that are going to be removed. Removal is a two stage process, because after a data
@@ -368,7 +408,7 @@ namespace Forge.Entities.Implementation.Runtime {
         /// </summary>
         /// <param name="accessor">The DataAccessor to lookup</param>
         /// <returns>A data instance, or null if it cannot be found</returns>
-        private IData GetAddedData_unlocked(DataAccessor accessor) {
+        private Data.IData GetAddedData_unlocked(DataAccessor accessor) {
             int id = accessor.Id;
             // TODO: optimize this so we don't have to search through all added data... though
             // this should actually be pretty quick
@@ -383,10 +423,10 @@ namespace Forge.Entities.Implementation.Runtime {
         }
         #endregion
 
-        public IData AddOrModify(DataAccessor accessor) {
+        public Data.IData AddOrModify(DataAccessor accessor) {
             if (((IEntity)this).ContainsData(accessor) == false) {
                 lock (_toAddStage1) {
-                    IData added = GetAddedData_unlocked(accessor);
+                    Data.IData added = GetAddedData_unlocked(accessor);
                     if (added == null) {
                         added = AddData_unlocked(accessor);
                     }
@@ -419,7 +459,7 @@ namespace Forge.Entities.Implementation.Runtime {
         }
 
         #region AddData
-        private IData AddData_unlocked(DataAccessor accessor) {
+        private Data.IData AddData_unlocked(DataAccessor accessor, Data.IData instance = null) {
             // ensure that we have not already added a data of this type
             if (GetAddedData_unlocked(accessor) != null || ContainsData(accessor)) {
                 throw new AlreadyAddedDataException(this, accessor);
@@ -427,18 +467,20 @@ namespace Forge.Entities.Implementation.Runtime {
 
             // add our data
             Type dataType = DataAccessorFactory.GetTypeFromAccessor(accessor);
-            IData data = (IData)Activator.CreateInstance(dataType);
-            _toAddStage1.Add(data);
+            if (instance == null) {
+                instance = (Data.IData)Activator.CreateInstance(dataType);
+            }
+            _toAddStage1.Add(instance);
 
             // notify the entity manager
             ModificationNotifier.Notify();
             DataStateChangeNotifier.Notify();
 
             // return the new instance
-            return data;
+            return instance;
         }
 
-        public IData AddData(DataAccessor accessor) {
+        public Data.IData AddData(DataAccessor accessor) {
             lock (_toAddStage1) {
                 return AddData_unlocked(accessor);
             }
@@ -457,11 +499,11 @@ namespace Forge.Entities.Implementation.Runtime {
         #endregion
 
         #region Modify
-        public IData Modify(DataAccessor accessor) {
+        public Data.IData Modify(DataAccessor accessor) {
             var id = accessor.Id;
 
             if (((IEntity)this).ContainsData(accessor) == false) {
-                IData added = GetAddedData_unlocked(accessor);
+                Data.IData added = GetAddedData_unlocked(accessor);
                 if (added != null) {
                     return added;
                 }
@@ -469,32 +511,60 @@ namespace Forge.Entities.Implementation.Runtime {
                 throw new NoSuchDataException(this, accessor);
             }
 
-            if (_data[id].MotificationActivation.TryActivate()) {
-                _concurrentModifications.Add(accessor);
-                ModificationNotifier.Notify();
-            }
-            else if (_data[id].Current.SupportsConcurrentModifications == false) {
-                throw new RemodifiedDataException(this, accessor);
+            if (_data[id] is VersionedDataContainer) {
+                VersionedDataContainer container = (VersionedDataContainer)_data[id];
+                if (container.MotificationActivation.TryActivate()) {
+                    _concurrentModifications.Add(accessor);
+                    ModificationNotifier.Notify();
+                }
+                else if (container.Current is Data.ConcurrentVersioned == false) {
+                    throw new RemodifiedDataException(this, accessor);
+                }
+
+                return container.Modifying;
             }
 
-            return _data[id].Modifying;
+            else {
+                NonVersionedDataContainer container = (NonVersionedDataContainer)_data[id];
+                if (container.MotificationActivation.TryActivate()) {
+                    _concurrentModifications.Add(accessor);
+                    ModificationNotifier.Notify();
+                }
+                // nonversioned data can only be modified once per update
+                else {
+                    throw new RemodifiedDataException(this, accessor);
+                }
+
+                return container.Data;
+            }
         }
         #endregion
 
-        public IData Current(DataAccessor accessor) {
+        public Data.IData Current(DataAccessor accessor) {
             if (_data.ContainsKey(accessor.Id) == false) {
                 throw new NoSuchDataException(this, accessor);
             }
 
-            return _data[accessor.Id].Current;
+            if (_data[accessor.Id] is VersionedDataContainer) {
+                var container = (VersionedDataContainer)_data[accessor.Id];
+                return container.Current;
+            }
+
+            else {
+                var container = (NonVersionedDataContainer)_data[accessor.Id];
+                if (container.MotificationActivation.IsActivated) {
+                    throw new InvalidOperationException("Cannot retrieve current value for modified non-versioned data");
+                }
+                return container.Data;
+            }
         }
 
-        public IData Previous(DataAccessor accessor) {
-            if (((IEntity)this).ContainsData(accessor) == false) {
+        public Data.Versioned Previous(DataAccessor accessor) {
+            if (ContainsData(accessor) == false) {
                 throw new NoSuchDataException(this, accessor);
             }
 
-            return _data[accessor.Id].Previous;
+            return ((VersionedDataContainer)_data[accessor.Id]).Previous;
         }
 
         #region ContainsData

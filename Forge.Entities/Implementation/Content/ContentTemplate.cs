@@ -36,7 +36,7 @@ namespace Forge.Entities.Implementation.Content {
         public string PrettyName;
 
         [JsonProperty("DefaultDataInstances")]
-        public List<IData> DefaultDataInstances;
+        public List<Data.IData> DefaultDataInstances;
     }
 
     [JsonConverter(typeof(QueryableEntityConverter))]
@@ -49,7 +49,7 @@ namespace Forge.Entities.Implementation.Content {
             };
         }
 
-        private SparseArray<IData> _defaultDataInstances;
+        private SparseArray<Data.IData> _defaultDataInstances;
 
         [JsonProperty("TemplateId")]
         public int TemplateId {
@@ -64,7 +64,7 @@ namespace Forge.Entities.Implementation.Content {
         }
 
         public ContentTemplate(int id) {
-            _defaultDataInstances = new SparseArray<IData>();
+            _defaultDataInstances = new SparseArray<Data.IData>();
             TemplateId = id;
             PrettyName = "";
         }
@@ -85,7 +85,7 @@ namespace Forge.Entities.Implementation.Content {
             TemplateId = template.TemplateId;
             PrettyName = template.PrettyName;
 
-            foreach (IData data in template.DefaultDataInstances) {
+            foreach (Data.IData data in template.DefaultDataInstances) {
                 _defaultDataInstances[DataAccessorFactory.GetId(data)] = data;
             }
         }
@@ -99,7 +99,7 @@ namespace Forge.Entities.Implementation.Content {
         /// InvalidOperationException.
         /// </remarks>
         /// <param name="data">The data instance to copy from.</param>
-        public void AddDefaultData(IData data) {
+        public void AddDefaultData(Data.IData data) {
             _defaultDataInstances[DataAccessorFactory.GetId(data)] = data;
         }
 
@@ -137,7 +137,7 @@ namespace Forge.Entities.Implementation.Content {
             return storage;
         }
 
-        public IData Current(DataAccessor accessor) {
+        public Data.IData Current(DataAccessor accessor) {
             if (ContainsData(accessor) == false) {
                 throw new NoSuchDataException(this, accessor);
             }
@@ -145,12 +145,12 @@ namespace Forge.Entities.Implementation.Content {
             return _defaultDataInstances[accessor.Id];
         }
 
-        public IData Previous(DataAccessor accessor) {
+        public Data.Versioned Previous(DataAccessor accessor) {
             if (ContainsData(accessor) == false) {
                 throw new NoSuchDataException(this, accessor);
             }
 
-            return _defaultDataInstances[accessor.Id];
+            return (Data.Versioned)_defaultDataInstances[accessor.Id];
         }
 
         public bool ContainsData(DataAccessor accessor) {

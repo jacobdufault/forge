@@ -54,7 +54,7 @@ namespace Forge.Entities.Implementation.Shared {
         /// <summary>
         /// Returns the id for the given data type. Forwards the call to GetId(Type).
         /// </summary>
-        public static int GetId(IData data) {
+        public static int GetId(Data.IData data) {
             return GetId(data.GetType());
         }
 
@@ -64,7 +64,16 @@ namespace Forge.Entities.Implementation.Shared {
         /// <param name="type">The type to get.</param>
         /// <returns>The identifier/integer</returns>
         public static int GetId(Type type) {
-            Contract.Requires(typeof(IData).IsAssignableFrom(type));
+            if (type == typeof(Data.IData) ||
+                type == typeof(Data.Versioned) ||
+                type == typeof(Data.NonVersioned) ||
+                type == typeof(Data.ConcurrentVersioned) ||
+                type == typeof(Data.ConcurrentNonVersioned) ||
+                typeof(Data.IData).IsAssignableFrom(type) == false) {
+
+                throw new ArgumentException(string.Format("Type {0} is not a subtype of {1}",
+                    type, typeof(Data.IData)));
+            }
 
             if (_ids.ContainsKey(type) == false) {
                 _ids[type] = _idGenerator.Next();

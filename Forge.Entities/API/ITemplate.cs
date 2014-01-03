@@ -53,7 +53,7 @@ namespace Forge.Entities {
         /// InvalidOperationException.
         /// </remarks>
         /// <param name="data">The data instance to copy from.</param>
-        void AddDefaultData(IData data);
+        void AddDefaultData(Data.IData data);
 
         /// <summary>
         /// Remove the given type of data from the template instance. New instances will not longer

@@ -50,6 +50,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="API\DataAccessor.cs" />
     <Compile Include="API\DataReference.cs" />
     <Compile Include="API\IEventDispatcher.cs" />
     <Compile Include="API\ITemplateGroup.cs" />
@@ -73,7 +74,7 @@
     <Compile Include="API\IEntityExtensions.cs" />
     <Compile Include="Implementation\Runtime\ImmutableContainer.cs" />
     <Compile Include="API\IGameSnapshot.cs" />
-    <Compile Include="API\IData.cs" />
+    <Compile Include="API\Data.cs" />
     <Compile Include="API\IEntity.cs" />
     <Compile Include="API\IEventNotifier.cs" />
     <Compile Include="API\IGameEngine.cs" />

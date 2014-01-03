@@ -29,7 +29,7 @@ namespace Forge.Entities.Tests {
 
         [Fact]
         public void DataAccessorRejectsDataType() {
-            Assert.Throws<ArgumentException>(() => new DataAccessor(typeof(IData)));
+            Assert.Throws<ArgumentException>(() => new DataAccessor(typeof(Data.IData)));
         }
 
     }

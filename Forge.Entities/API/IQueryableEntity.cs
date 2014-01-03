@@ -44,12 +44,12 @@ namespace Forge.Entities {
         /// <summary>
         /// Gets the current data value for the given type.
         /// </summary>
-        IData Current(DataAccessor accessor);
+        Data.IData Current(DataAccessor accessor);
 
         /// <summary>
         /// Gets the previous data value for the data type.
         /// </summary>
-        IData Previous(DataAccessor accessor);
+        Data.Versioned Previous(DataAccessor accessor);
 
         /// <summary>
         /// Checks to see if this Entity contains the given type of data and if that data can be

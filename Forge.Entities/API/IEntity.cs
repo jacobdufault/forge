@@ -52,13 +52,13 @@ namespace Forge.Entities {
         /// Adds the given data type, or modifies an instance of it.
         /// </summary>
         /// <returns>A modifiable instance of data of type T</returns>
-        IData AddOrModify(DataAccessor accessor);
+        Data.IData AddOrModify(DataAccessor accessor);
 
         /// <summary>
         /// Add a Data instance of with the given accessor to the Entity.
         /// </summary>
         /// <returns>The data instance that can be used to initialize the data</returns>
-        IData AddData(DataAccessor accessor);
+        Data.IData AddData(DataAccessor accessor);
 
         /// <summary>
         /// Removes the given data type from the entity.
@@ -76,7 +76,7 @@ namespace Forge.Entities {
         /// one instance is modified multiple times.
         /// </summary>
         /// <param name="accessor">The data type to modify.</param>
-        IData Modify(DataAccessor accessor);
+        Data.IData Modify(DataAccessor accessor);
 
         /// <summary>
         /// Returns if the given data was modified in the previous update.

@@ -43,27 +43,27 @@ namespace Forge.Entities.Implementation.Content {
     internal class ContentEntity : IEntity {
         [JsonObject(MemberSerialization.OptIn)]
         public class DataInstance {
-            [JsonProperty("CurrentData")]
-            public IData CurrentData;
-            [JsonProperty("PreviousData")]
-            public IData PreviousData;
+            [JsonProperty("CurrentData", Required = Required.Always)]
+            public Data.IData CurrentData;
+            [JsonProperty("PreviousData", Required = Required.Default)]
+            public Data.IData PreviousData;
 
             /// <summary>
             /// Did the data get added in the last updated frame?
             /// </summary>
-            [JsonProperty("WasAdded")]
+            [JsonProperty("WasAdded", Required = Required.Always)]
             public bool WasAdded;
 
             /// <summary>
             /// Did the data get removed in the last update frame?
             /// </summary>
-            [JsonProperty("WasRemoved")]
+            [JsonProperty("WasRemoved", Required = Required.Always)]
             public bool WasRemoved;
 
             /// <summary>
             /// Did the data get modified in the last update frame?
             /// </summary>
-            [JsonProperty("WasModified")]
+            [JsonProperty("WasModified", Required = Required.Default)]
             public bool WasModified;
         }
 
@@ -119,19 +119,19 @@ namespace Forge.Entities.Implementation.Content {
             throw new InvalidOperationException("Cannot destroy a ContentEntity; use GameSnapshot.Remove instead");
         }
 
-        public IData AddOrModify(DataAccessor accessor) {
+        public Data.IData AddOrModify(DataAccessor accessor) {
             throw new InvalidOperationException("Cannot AddOrModify data in a ContentEntity (use Add)");
         }
 
-        public IData AddData(DataAccessor accessor) {
+        public Data.IData AddData(DataAccessor accessor) {
             if (ContainsData(accessor) == true) {
                 throw new AlreadyAddedDataException(this, accessor);
             }
 
             Type dataType = DataAccessorFactory.GetTypeFromAccessor(accessor);
             _data[accessor.Id] = new DataInstance() {
-                CurrentData = (IData)Activator.CreateInstance(dataType),
-                PreviousData = (IData)Activator.CreateInstance(dataType),
+                CurrentData = (Data.IData)Activator.CreateInstance(dataType),
+                PreviousData = (Data.IData)Activator.CreateInstance(dataType),
                 WasAdded = true,
                 WasModified = false,
                 WasRemoved = false
@@ -156,7 +156,7 @@ namespace Forge.Entities.Implementation.Content {
             }
         }
 
-        public IData Modify(DataAccessor accessor) {
+        public Data.IData Modify(DataAccessor accessor) {
             throw new InvalidOperationException("Cannot modify data in a ContentEntity");
         }
 
@@ -181,7 +181,7 @@ namespace Forge.Entities.Implementation.Content {
             return storage;
         }
 
-        public IData Current(DataAccessor accessor) {
+        public Data.IData Current(DataAccessor accessor) {
             if (ContainsData(accessor) == false) {
                 throw new NoSuchDataException(this, accessor);
             }
@@ -189,14 +189,14 @@ namespace Forge.Entities.Implementation.Content {
             return _data[accessor.Id].CurrentData;
         }
 
-        public IData Previous(DataAccessor accessor) {
+        public Data.Versioned Previous(DataAccessor accessor) {
             // use _data.Contains instead of ContainsData because WasRemoved may be true (and
             // Previous can return the last data instance for removed data).
             if (_data.ContainsKey(accessor.Id) == false) {
                 throw new NoSuchDataException(this, accessor);
             }
 
-            return _data[accessor.Id].PreviousData;
+            return (Data.Versioned)_data[accessor.Id].PreviousData;
         }
 
         public bool ContainsData(DataAccessor accessor) {

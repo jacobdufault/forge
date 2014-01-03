@@ -25,23 +25,15 @@ using System.Text;
 
 namespace Forge.Entities.Tests {
     [JsonObject(MemberSerialization.OptIn)]
-    internal class DataEmpty : BaseData<DataEmpty> {
-        public override bool SupportsConcurrentModifications {
-            get { return false; }
-        }
-
+    internal class DataEmpty : Data.Versioned<DataEmpty> {
         public override void CopyFrom(DataEmpty source) {
         }
     }
 
     [JsonObject(MemberSerialization.OptIn)]
-    internal class DataInt : BaseData<DataInt> {
+    internal class DataInt : Data.Versioned<DataInt> {
         [JsonProperty("A")]
         public int A;
-
-        public override bool SupportsConcurrentModifications {
-            get { return false; }
-        }
 
         public override void CopyFrom(DataInt source) {
             A = source.A;
@@ -49,7 +41,7 @@ namespace Forge.Entities.Tests {
     }
 
     [JsonObject(MemberSerialization.OptIn)]
-    internal class DataTemplate : BaseData<DataTemplate> {
+    internal class DataTemplate : Data.Versioned<DataTemplate> {
         [JsonProperty("Template")]
         public ITemplate Template;
 
@@ -59,7 +51,7 @@ namespace Forge.Entities.Tests {
     }
 
     [JsonObject(MemberSerialization.OptIn)]
-    internal class DataEntity : BaseData<DataEntity> {
+    internal class DataEntity : Data.Versioned<DataEntity> {
         [JsonProperty("Entity")]
         public IEntity Entity;
 
@@ -69,7 +61,7 @@ namespace Forge.Entities.Tests {
     }
 
     [JsonObject(MemberSerialization.OptIn)]
-    internal class DataQueryableEntity : BaseData<DataQueryableEntity> {
+    internal class DataQueryableEntity : Data.Versioned<DataQueryableEntity> {
         [JsonProperty("QueryableEntity")]
         public IQueryableEntity QueryableEntity;
 
@@ -79,7 +71,7 @@ namespace Forge.Entities.Tests {
     }
 
     [JsonObject(MemberSerialization.OptIn)]
-    internal class DataDataReference : BaseData<DataDataReference> {
+    internal class DataDataReference : Data.Versioned<DataDataReference> {
         [JsonProperty("DataReference")]
         public DataReference<DataEmpty> DataReference;
 

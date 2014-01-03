@@ -35,7 +35,7 @@ namespace Forge.Entities.Implementation.Runtime {
         /// <summary>
         /// The data instances inside of the template.
         /// </summary>
-        private SparseArray<IData> _defaultDataInstances;
+        private SparseArray<Data.IData> _defaultDataInstances;
 
         /// <summary>
         /// The game engine that entities are added to when they are instantiated.
@@ -43,7 +43,7 @@ namespace Forge.Entities.Implementation.Runtime {
         private GameEngine _gameEngine;
 
         public RuntimeTemplate(int templateId, GameEngine engine) {
-            _defaultDataInstances = new SparseArray<IData>();
+            _defaultDataInstances = new SparseArray<Data.IData>();
             _gameEngine = engine;
             TemplateId = templateId;
             PrettyName = "";
@@ -56,7 +56,7 @@ namespace Forge.Entities.Implementation.Runtime {
             TemplateId = template.TemplateId;
             PrettyName = template.PrettyName;
 
-            foreach (IData data in template.DefaultDataInstances) {
+            foreach (Data.IData data in template.DefaultDataInstances) {
                 _defaultDataInstances[DataAccessorFactory.GetId(data)] = data;
             }
         }
@@ -70,7 +70,7 @@ namespace Forge.Entities.Implementation.Runtime {
         /// InvalidOperationException.
         /// </remarks>
         /// <param name="data">The data instance to copy from.</param>
-        public void AddDefaultData(IData data) {
+        public void AddDefaultData(Data.IData data) {
             throw new InvalidOperationException("Template cannot be modified while game is being played");
         }
 
@@ -120,7 +120,7 @@ namespace Forge.Entities.Implementation.Runtime {
             return storage;
         }
 
-        public IData Current(DataAccessor accessor) {
+        public Data.IData Current(DataAccessor accessor) {
             if (ContainsData(accessor) == false) {
                 throw new NoSuchDataException(this, accessor);
             }
@@ -128,12 +128,12 @@ namespace Forge.Entities.Implementation.Runtime {
             return _defaultDataInstances[accessor.Id];
         }
 
-        public IData Previous(DataAccessor accessor) {
+        public Data.Versioned Previous(DataAccessor accessor) {
             if (ContainsData(accessor) == false) {
                 throw new NoSuchDataException(this, accessor);
             }
 
-            return _defaultDataInstances[accessor.Id];
+            return (Data.Versioned)_defaultDataInstances[accessor.Id];
         }
 
         public bool ContainsData(DataAccessor accessor) {

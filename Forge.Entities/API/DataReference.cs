@@ -58,7 +58,7 @@ namespace Forge.Entities {
         /// <typeparam name="TData">The type of data to retrieve. It has to be one of the generic
         /// parameters for this type; if it is not, then an exception is thrown.</typeparam>
         /// <returns>The current value for the given data type.</returns>
-        public TData Current<TData>() where TData : IData {
+        public TData Current<TData>() where TData : Data.IData {
             VerifyRequest<TData>();
             return _provider.Current<TData>();
         }
@@ -69,7 +69,7 @@ namespace Forge.Entities {
         /// <typeparam name="TData">The type of data to retrieve. It has to be one of the generic
         /// parameters for this type; if it is not, then an exception is thrown.</typeparam>
         /// <returns>The current value for the given data type.</returns>
-        public TData Previous<TData>() where TData : IData {
+        public TData Previous<TData>() where TData : Data.Versioned {
             VerifyRequest<TData>();
             return _provider.Previous<TData>();
         }
@@ -120,19 +120,12 @@ namespace Forge.Entities {
     /// </summary>
     /// <typeparam name="TData0">A referenced data type.</typeparam>
     public class DataReference<TData0> : BaseDataReferenceType
-        where TData0 : IData {
+        where TData0 : Data.IData {
         /// <summary>
         /// Returns the current value for the type of data that this DataReference references.
         /// </summary>
         public TData0 Current() {
             return Current<TData0>();
-        }
-
-        /// <summary>
-        /// Returns the previous value for the type of data that this DataReference references.
-        /// </summary>
-        public TData0 Previous() {
-            return Previous<TData0>();
         }
     }
 

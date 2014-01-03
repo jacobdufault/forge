@@ -18,19 +18,38 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using Forge.Utilities;
+using System;
 using System.Threading;
 
 namespace Forge.Entities.Implementation.Runtime {
+    internal interface DataContainer {
+    }
+
+    internal class NonVersionedDataContainer : DataContainer {
+        /// <summary>
+        /// Used by the Entity to determine if the data inside of this container has already been
+        /// modified.
+        /// </summary>
+        public AtomicActivation MotificationActivation;
+
+        public Data.NonVersioned Data;
+
+        public NonVersionedDataContainer(Data.NonVersioned data) {
+            Data = data;
+            MotificationActivation = new AtomicActivation();
+        }
+    }
+
     /// <summary>
     /// Contains a set of three IData instances and allows swapping between those instances such
     /// that one of them is the previous state, one of them is the current state, and one of them is
     /// a modifiable state.
     /// </summary>
-    internal class DataContainer {
+    internal class VersionedDataContainer : DataContainer {
         /// <summary>
         /// All stored immutable data items.
         /// </summary>
-        public IData[] Items;
+        public Data.Versioned[] Items;
 
         /// <summary>
         /// The index of the previous item.
@@ -46,15 +65,15 @@ namespace Forge.Entities.Implementation.Runtime {
         /// <summary>
         /// Initializes a new instance of the ImmutableContainer class.
         /// </summary>
-        public DataContainer(IData previous, IData current, IData modified) {
-            Items = new IData[] { previous, current, modified };
+        public VersionedDataContainer(Data.Versioned previous, Data.Versioned current, Data.Versioned modified) {
+            Items = new Data.Versioned[] { previous, current, modified };
             MotificationActivation = new AtomicActivation();
         }
 
         /// <summary>
         /// Return the data instance that contains the current values.
         /// </summary>
-        public IData Current {
+        public Data.Versioned Current {
             get {
                 return Items[(_previousIndex + 1) % Items.Length];
             }
@@ -63,7 +82,7 @@ namespace Forge.Entities.Implementation.Runtime {
         /// <summary>
         /// Return the data instance that can be modified.
         /// </summary>
-        public IData Modifying {
+        public Data.Versioned Modifying {
             get {
                 return Items[(_previousIndex + 2) % Items.Length];
             }
@@ -72,7 +91,7 @@ namespace Forge.Entities.Implementation.Runtime {
         /// <summary>
         /// Return the data instance that contains the previous values.
         /// </summary>
-        public IData Previous {
+        public Data.Versioned Previous {
             get {
                 return Items[(_previousIndex + 0) % Items.Length];
             }
@@ -84,8 +103,8 @@ namespace Forge.Entities.Implementation.Runtime {
         public void Increment() {
             // If the object we modified supports multiple modifications, then we need to give it a
             // chance to resolve those modifications so that it is in a consistent state
-            if (Modifying.SupportsConcurrentModifications) {
-                Modifying.ResolveConcurrentModifications();
+            if (Modifying is Data.ConcurrentVersioned) {
+                ((Data.ConcurrentVersioned)Modifying).ResolveConcurrentModifications();
             }
 
             // this code is tricky because we change what data.{Previous,Current,Modifying} refer to
