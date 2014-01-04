@@ -39,6 +39,11 @@ namespace Forge.Networking.Core {
         [JsonProperty("Guid")]
         public Guid Guid;
 
+        public Player(string name) {
+            Name = name;
+            Guid = Guid.NewGuid();
+        }
+
         /// <summary>
         /// Determines whether the specified see cref="System.Object" }, is equal to this instance.
         /// </summary>

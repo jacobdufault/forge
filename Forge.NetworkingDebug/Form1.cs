@@ -25,10 +25,7 @@ namespace NetworkDebug {
         }
 
         private Player CreatePlayer() {
-            return new Player() {
-                Guid = Guid.NewGuid(),
-                Name = TextName.Text
-            };
+            return new Player("");
         }
 
         private void ButtonConnect_Click(object sender, EventArgs e) {
