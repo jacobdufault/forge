@@ -124,7 +124,7 @@ namespace Forge.Entities.Implementation.Content {
         }
 
         public Data.IData AddData(DataAccessor accessor) {
-            if (ContainsData(accessor) == true) {
+            if (ContainsData(accessor) == true && _data[accessor.Id].WasRemoved == false) {
                 throw new AlreadyAddedDataException(this, accessor);
             }
 
@@ -141,7 +141,7 @@ namespace Forge.Entities.Implementation.Content {
         }
 
         public void RemoveData(DataAccessor accessor) {
-            if (_data.ContainsKey(accessor.Id) == false) {
+            if (ContainsData(accessor) == false) {
                 throw new NoSuchDataException(this, accessor);
             }
 
@@ -190,9 +190,7 @@ namespace Forge.Entities.Implementation.Content {
         }
 
         public Data.Versioned Previous(DataAccessor accessor) {
-            // use _data.Contains instead of ContainsData because WasRemoved may be true (and
-            // Previous can return the last data instance for removed data).
-            if (_data.ContainsKey(accessor.Id) == false) {
+            if (ContainsData(accessor) == false) {
                 throw new NoSuchDataException(this, accessor);
             }
 
@@ -204,7 +202,7 @@ namespace Forge.Entities.Implementation.Content {
         }
 
         public bool ContainsData(DataAccessor accessor) {
-            return _data.ContainsKey(accessor.Id) && _data[accessor.Id].WasRemoved == false;
+            return _data.ContainsKey(accessor.Id);
         }
 
         public bool WasModified(DataAccessor accessor) {

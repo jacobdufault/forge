@@ -420,7 +420,7 @@ namespace Forge.Entities.Implementation.Runtime {
         #endregion
 
         public Data.IData AddOrModify(DataAccessor accessor) {
-            if (ContainsData(accessor) == false) {
+            if (ContainsData(accessor) == false || WasRemoved(accessor)) {
                 lock (_toAddStage1) {
                     Data.IData added = GetAddedData_unlocked(accessor);
                     if (added == null) {
@@ -543,7 +543,7 @@ namespace Forge.Entities.Implementation.Runtime {
         #endregion
 
         public Data.IData Current(DataAccessor accessor) {
-            if (_data.ContainsKey(accessor.Id) == false) {
+            if (ContainsData(accessor) == false) {
                 throw new NoSuchDataException(this, accessor);
             }
 
@@ -566,6 +566,7 @@ namespace Forge.Entities.Implementation.Runtime {
             if (ContainsData(accessor) == false) {
                 throw new NoSuchDataException(this, accessor);
             }
+
             if (_data[accessor.Id] is VersionedDataContainer == false) {
                 throw new PreviousRequiresVersionedData(this, accessor);
             }
@@ -575,9 +576,7 @@ namespace Forge.Entities.Implementation.Runtime {
 
         #region ContainsData
         public bool ContainsData(DataAccessor accessor) {
-            // We contain data if a) data contains it and b) it was not removed in the last frame
-            int id = accessor.Id;
-            return _data.ContainsKey(id) && _removedLastFrame.ContainsKey(id) == false;
+            return _data.ContainsKey(accessor.Id);
         }
         #endregion
 

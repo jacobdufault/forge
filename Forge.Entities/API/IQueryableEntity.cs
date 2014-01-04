@@ -53,13 +53,10 @@ namespace Forge.Entities {
         Data.Versioned Previous(DataAccessor accessor);
 
         /// <summary>
-        /// Checks to see if this Entity contains the given type of data and if that data can be
-        /// modified.
+        /// Checks to see if this Entity contains an instance of the given data type. Keep in mind
+        /// that an IQueryableEntity contains data one frame after it has been removed; both
+        /// ContainsData(accessor) and WasRemoved(accessor) can return true.
         /// </summary>
-        /// <remarks>
-        /// Interestingly, if the data has been removed, ContainsData will return false but Current
-        /// will return an instance (though Previous and Modify will both throw exceptions).
-        /// </remarks>
         bool ContainsData(DataAccessor accessor);
 
         /// <summary>
