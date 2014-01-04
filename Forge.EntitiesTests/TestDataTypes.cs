@@ -79,4 +79,9 @@ namespace Forge.Entities.Tests {
             DataReference = source.DataReference;
         }
     }
+
+    [JsonObject(MemberSerialization.OptIn)]
+    internal class DataNonVersionedInt : Data.NonVersioned {
+        public int A;
+    }
 }

@@ -29,6 +29,12 @@ namespace Forge.Entities.Tests {
             ((TData)Entity.AddData(new DataAccessor(data))).CopyFrom(data);
             return this;
         }
+
+        public TestEntityBuilder AddData<TData>(Action<TData> initializer) where TData : Data.IData {
+            TData allocated = Entity.AddData<TData>();
+            initializer(allocated);
+            return this;
+        }
     }
 
     internal class TestTemplateGroupBuilder {
@@ -109,6 +115,13 @@ namespace Forge.Entities.Tests {
                 .AddData(new DataInt() { A = 100 });
 
             builder.NewTemplate
+                .AddData(new DataNonVersionedInt() { A = 110 });
+
+            builder.NewTemplate
+                .AddData(new DataEmpty())
+                .AddData(new DataNonVersionedInt() { A = 110 });
+
+            builder.NewTemplate
                 .AddData(new DataTemplate() { Template = template1 });
 
             builder.NewTemplate
@@ -140,9 +153,15 @@ namespace Forge.Entities.Tests {
                     .AddData(new DataEmpty())
                     .AddData(new DataInt() { A = 20 });
 
-                IEntity entity3 = builder.NewEntity()
-                    .AddData(new DataDataReference() { DataReference = CreateDataReference<DataEmpty>(entity1) })
-                    .Entity;
+                builder.NewEntity()
+                    .AddData(new DataDataReference() { DataReference = CreateDataReference<DataEmpty>(entity1) });
+
+                builder.NewEntity()
+                    .AddData<DataNonVersionedInt>(data => data.A = 500);
+
+                builder.NewEntity()
+                    .AddData(new DataEmpty())
+                    .AddData<DataNonVersionedInt>(data => data.A = 510);
             }
 
             {
