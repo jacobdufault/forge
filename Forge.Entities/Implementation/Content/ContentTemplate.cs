@@ -150,6 +150,10 @@ namespace Forge.Entities.Implementation.Content {
                 throw new NoSuchDataException(this, accessor);
             }
 
+            if (_defaultDataInstances[accessor.Id] is Data.Versioned == false) {
+                throw new PreviousRequiresVersionedData(this, accessor);
+            }
+
             return (Data.Versioned)_defaultDataInstances[accessor.Id];
         }
 

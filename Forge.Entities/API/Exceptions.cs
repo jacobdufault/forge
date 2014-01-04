@@ -50,8 +50,21 @@ namespace Forge.Entities {
         /// <param name="context">The entity that triggered the exception.</param>
         /// <param name="accessor">The data type that the entity lacks.</param>
         internal NoSuchDataException(IQueryableEntity context, DataAccessor accessor)
-            : base("No such data for type=" + DataAccessorFactory.GetTypeFromAccessor(accessor) +
-            " in " + context) {
+            : base(string.Format("No such data for type={0} in context={1}",
+            DataAccessorFactory.GetTypeFromAccessor(accessor), context)) {
+        }
+    }
+
+    /// <summary>
+    /// Exception thrown when Previous(accessor) is requested but accessor does not map to a
+    /// versioned data type.
+    /// </summary>
+    [Serializable]
+    public class PreviousRequiresVersionedData : Exception {
+        internal PreviousRequiresVersionedData(IQueryableEntity context, DataAccessor accessor)
+            : base(string.Format("Retrieving previous data requires that the data extends " +
+            "Data.Versioned, but type={0} in context={1} does not",
+            DataAccessorFactory.GetTypeFromAccessor(accessor), context)) {
         }
     }
 

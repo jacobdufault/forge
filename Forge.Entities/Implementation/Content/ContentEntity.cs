@@ -196,6 +196,10 @@ namespace Forge.Entities.Implementation.Content {
                 throw new NoSuchDataException(this, accessor);
             }
 
+            if (_data[accessor.Id].CurrentData is Data.Versioned == false) {
+                throw new PreviousRequiresVersionedData(this, accessor);
+            }
+
             return (Data.Versioned)_data[accessor.Id].PreviousData;
         }
 

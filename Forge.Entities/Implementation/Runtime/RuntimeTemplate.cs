@@ -132,6 +132,9 @@ namespace Forge.Entities.Implementation.Runtime {
             if (ContainsData(accessor) == false) {
                 throw new NoSuchDataException(this, accessor);
             }
+            if (_defaultDataInstances[accessor.Id] is Data.Versioned == false) {
+                throw new PreviousRequiresVersionedData(this, accessor);
+            }
 
             return (Data.Versioned)_defaultDataInstances[accessor.Id];
         }
