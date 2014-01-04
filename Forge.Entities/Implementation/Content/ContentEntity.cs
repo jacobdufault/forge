@@ -195,7 +195,7 @@ namespace Forge.Entities.Implementation.Content {
             }
 
             if (_data[accessor.Id].CurrentData is Data.Versioned == false) {
-                throw new PreviousRequiresVersionedData(this, accessor);
+                throw new PreviousRequiresVersionedDataException(this, accessor);
             }
 
             return (Data.Versioned)_data[accessor.Id].PreviousData;

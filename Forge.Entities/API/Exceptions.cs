@@ -60,8 +60,9 @@ namespace Forge.Entities {
     /// versioned data type.
     /// </summary>
     [Serializable]
-    public class PreviousRequiresVersionedData : Exception {
-        internal PreviousRequiresVersionedData(IQueryableEntity context, DataAccessor accessor)
+    public class PreviousRequiresVersionedDataException : Exception {
+        internal PreviousRequiresVersionedDataException(IQueryableEntity context,
+            DataAccessor accessor)
             : base(string.Format("Retrieving previous data requires that the data extends " +
             "Data.Versioned, but type={0} in context={1} does not",
             DataAccessorFactory.GetTypeFromAccessor(accessor), context)) {

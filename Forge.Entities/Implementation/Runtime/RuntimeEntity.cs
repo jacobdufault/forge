@@ -568,7 +568,7 @@ namespace Forge.Entities.Implementation.Runtime {
             }
 
             if (_data[accessor.Id] is VersionedDataContainer == false) {
-                throw new PreviousRequiresVersionedData(this, accessor);
+                throw new PreviousRequiresVersionedDataException(this, accessor);
             }
 
             return ((VersionedDataContainer)_data[accessor.Id]).Previous;

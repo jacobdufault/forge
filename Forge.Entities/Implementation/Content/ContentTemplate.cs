@@ -151,7 +151,7 @@ namespace Forge.Entities.Implementation.Content {
             }
 
             if (_defaultDataInstances[accessor.Id] is Data.Versioned == false) {
-                throw new PreviousRequiresVersionedData(this, accessor);
+                throw new PreviousRequiresVersionedDataException(this, accessor);
             }
 
             return (Data.Versioned)_defaultDataInstances[accessor.Id];
