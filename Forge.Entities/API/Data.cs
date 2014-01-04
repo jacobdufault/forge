@@ -35,7 +35,9 @@ namespace Forge.Entities {
             /// <summary>
             /// Return an exact copy of this data instance.
             /// </summary>
-            public abstract Data.NonVersioned Duplicate();
+            public virtual NonVersioned Duplicate() {
+                return (NonVersioned)MemberwiseClone();
+            }
 
             IData IData.Duplicate() {
                 return Duplicate();
@@ -50,27 +52,27 @@ namespace Forge.Entities {
             /// the difference.
             /// </summary>
             /// <param name="source">The source to move from.</param>
-            public abstract void CopyFrom(Data.Versioned source);
+            public abstract void CopyFrom(Versioned source);
 
             /// <summary>
             /// Return an exact copy of this data instance.
             /// </summary>
-            public abstract Data.Versioned Duplicate();
+            public abstract Versioned Duplicate();
 
             IData IData.Duplicate() {
                 return Duplicate();
             }
         }
         public abstract class Versioned<TData> : Versioned
-            where TData : Data.Versioned<TData> {
+            where TData : Versioned<TData> {
             public abstract void CopyFrom(TData source);
 
-            public sealed override void CopyFrom(Data.Versioned source) {
+            public sealed override void CopyFrom(Versioned source) {
                 CopyFrom((TData)source);
             }
 
-            public override Data.Versioned Duplicate() {
-                return (Data.Versioned)MemberwiseClone();
+            public override Versioned Duplicate() {
+                return (Versioned)MemberwiseClone();
             }
         }
 
@@ -89,7 +91,7 @@ namespace Forge.Entities {
         }
         [JsonObject(MemberSerialization.OptIn)]
         public abstract class ConcurrentVersioned<TData> : Versioned<TData>
-            where TData : Data.ConcurrentVersioned<TData> {
+            where TData : ConcurrentVersioned<TData> {
             /// <summary>
             /// This method is called after all modifications have been made during an update have
             /// been made to the data instance. The purpose is to allow for client code to resolve
