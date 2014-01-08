@@ -50,7 +50,7 @@ namespace Forge.Entities {
         /// <summary>
         /// Gets the previous data value for the data type.
         /// </summary>
-        Data.Versioned Previous(DataAccessor accessor);
+        Data.IVersioned Previous(DataAccessor accessor);
 
         /// <summary>
         /// Checks to see if this Entity contains an instance of the given data type. Keep in mind

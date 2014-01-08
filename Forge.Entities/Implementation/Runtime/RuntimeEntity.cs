@@ -96,9 +96,9 @@ namespace Forge.Entities.Implementation.Runtime {
 
                     else {
                         _data[accessor.Id] = new VersionedDataContainer(
-                            (Data.Versioned)data.PreviousData,
-                            (Data.Versioned)data.CurrentData,
-                            (Data.Versioned)data.CurrentData.Duplicate());
+                            (Data.IVersioned)data.PreviousData,
+                            (Data.IVersioned)data.CurrentData,
+                            (Data.IVersioned)data.CurrentData.Duplicate());
                     }
 
                     // There is going to be an ApplyModification call before systems actually view
@@ -113,7 +113,7 @@ namespace Forge.Entities.Implementation.Runtime {
                         // Internal signal that a modification is going to take place
                         Modify(accessor);
 
-                        if (data.CurrentData is Data.Versioned) {
+                        if (data.CurrentData is Data.IVersioned) {
                             // Move Previous into Current, so that after the ApplyModification we
                             // have the correct data values
                             var container = (VersionedDataContainer)_data[accessor.Id];
@@ -220,8 +220,8 @@ namespace Forge.Entities.Implementation.Runtime {
 
                 _addedLastFrame[id] = added;
 
-                if (added is Data.Versioned) {
-                    Data.Versioned versioned = (Data.Versioned)added;
+                if (added is Data.IVersioned) {
+                    Data.IVersioned versioned = (Data.IVersioned)added;
 
                     _data[id] = new VersionedDataContainer(versioned.Duplicate(), versioned.Duplicate(), versioned.Duplicate());
                 }
@@ -562,7 +562,7 @@ namespace Forge.Entities.Implementation.Runtime {
             }
         }
 
-        public Data.Versioned Previous(DataAccessor accessor) {
+        public Data.IVersioned Previous(DataAccessor accessor) {
             if (ContainsData(accessor) == false) {
                 throw new NoSuchDataException(this, accessor);
             }

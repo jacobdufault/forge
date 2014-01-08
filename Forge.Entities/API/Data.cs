@@ -44,7 +44,7 @@ namespace Forge.Entities {
             }
         }
         [JsonObject(MemberSerialization.OptIn)]
-        public abstract class Versioned : IData {
+        public interface IVersioned : IData {
             /// <summary>
             /// Moves all of the data from the specified source into this instance. After this call,
             /// this data instance must be identical to source, such that this instance could
@@ -52,32 +52,30 @@ namespace Forge.Entities {
             /// the difference.
             /// </summary>
             /// <param name="source">The source to move from.</param>
-            public abstract void CopyFrom(Versioned source);
+            void CopyFrom(IVersioned source);
 
-            /// <summary>
-            /// Return an exact copy of this data instance.
-            /// </summary>
-            public abstract Versioned Duplicate();
-
-            IData IData.Duplicate() {
-                return Duplicate();
-            }
+            IVersioned Duplicate();
         }
-        public abstract class Versioned<TData> : Versioned
+
+        public abstract class Versioned<TData> : IVersioned
             where TData : Versioned<TData> {
             public abstract void CopyFrom(TData source);
 
-            public sealed override void CopyFrom(Versioned source) {
+            void IVersioned.CopyFrom(IVersioned source) {
                 CopyFrom((TData)source);
             }
 
-            public override Versioned Duplicate() {
-                return (Versioned)MemberwiseClone();
+            IData IData.Duplicate() {
+                return (IData)MemberwiseClone();
+            }
+
+            IVersioned IVersioned.Duplicate() {
+                return (IVersioned)MemberwiseClone();
             }
         }
 
         [JsonObject(MemberSerialization.OptIn)]
-        public abstract class ConcurrentVersioned : Versioned {
+        public abstract class ConcurrentVersioned : IVersioned {
             /// <summary>
             /// This method is called after all modifications have been made during an update have
             /// been made to the data instance. The purpose is to allow for client code to resolve
@@ -88,6 +86,22 @@ namespace Forge.Entities {
             /// executed.
             /// </remarks>
             public abstract void ResolveConcurrentModifications();
+
+            /// <summary>
+            /// Moves all of the data from the specified source into this instance. After this call,
+            /// this data instance must be identical to source, such that this instance could
+            /// completely replace source in other code and the other code would be unable to tell
+            /// the difference.
+            /// </summary>
+            /// <param name="source">The source to move from.</param>
+            public abstract void CopyFrom(IVersioned source);
+
+            IData IData.Duplicate() {
+                return (IData)MemberwiseClone();
+            }
+            IVersioned IVersioned.Duplicate() {
+                return (IVersioned)MemberwiseClone();
+            }
         }
         [JsonObject(MemberSerialization.OptIn)]
         public abstract class ConcurrentVersioned<TData> : Versioned<TData>

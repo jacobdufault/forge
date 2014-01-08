@@ -26,7 +26,7 @@ namespace Forge.Entities {
             return (T)entity.Current(DataMap<T>.Accessor);
         }
 
-        public static T Previous<T>(this IQueryableEntity entity) where T : Data.Versioned {
+        public static T Previous<T>(this IQueryableEntity entity) where T : Data.IVersioned {
             return (T)entity.Previous(DataMap<T>.Accessor);
         }
 

@@ -54,7 +54,7 @@ namespace Forge.Entities.Implementation.Runtime {
         /// <summary>
         /// All stored immutable data items.
         /// </summary>
-        public Data.Versioned[] Items;
+        public Data.IVersioned[] Items;
 
         /// <summary>
         /// The index of the previous item.
@@ -64,14 +64,14 @@ namespace Forge.Entities.Implementation.Runtime {
         /// <summary>
         /// Initializes a new instance of the ImmutableContainer class.
         /// </summary>
-        public VersionedDataContainer(Data.Versioned previous, Data.Versioned current, Data.Versioned modified) {
-            Items = new Data.Versioned[] { previous, current, modified };
+        public VersionedDataContainer(Data.IVersioned previous, Data.IVersioned current, Data.IVersioned modified) {
+            Items = new Data.IVersioned[] { previous, current, modified };
         }
 
         /// <summary>
         /// Return the data instance that contains the current values.
         /// </summary>
-        public Data.Versioned Current {
+        public Data.IVersioned Current {
             get {
                 return Items[(_previousIndex + 1) % Items.Length];
             }
@@ -80,7 +80,7 @@ namespace Forge.Entities.Implementation.Runtime {
         /// <summary>
         /// Return the data instance that can be modified.
         /// </summary>
-        public Data.Versioned Modifying {
+        public Data.IVersioned Modifying {
             get {
                 return Items[(_previousIndex + 2) % Items.Length];
             }
@@ -89,7 +89,7 @@ namespace Forge.Entities.Implementation.Runtime {
         /// <summary>
         /// Return the data instance that contains the previous values.
         /// </summary>
-        public Data.Versioned Previous {
+        public Data.IVersioned Previous {
             get {
                 return Items[(_previousIndex + 0) % Items.Length];
             }

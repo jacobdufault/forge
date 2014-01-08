@@ -65,7 +65,7 @@ namespace Forge.Entities.Implementation.Shared {
         /// <returns>The identifier/integer</returns>
         public static int GetId(Type type) {
             if (type == typeof(Data.IData) ||
-                type == typeof(Data.Versioned) ||
+                type == typeof(Data.IVersioned) ||
                 type == typeof(Data.NonVersioned) ||
                 type == typeof(Data.ConcurrentVersioned) ||
                 type == typeof(Data.ConcurrentNonVersioned) ||

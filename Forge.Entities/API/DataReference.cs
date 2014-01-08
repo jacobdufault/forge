@@ -69,7 +69,7 @@ namespace Forge.Entities {
         /// <typeparam name="TData">The type of data to retrieve. It has to be one of the generic
         /// parameters for this type; if it is not, then an exception is thrown.</typeparam>
         /// <returns>The current value for the given data type.</returns>
-        public TData Previous<TData>() where TData : Data.Versioned {
+        public TData Previous<TData>() where TData : Data.IVersioned {
             VerifyRequest<TData>();
             return _provider.Previous<TData>();
         }

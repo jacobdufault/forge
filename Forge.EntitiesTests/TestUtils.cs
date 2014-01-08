@@ -25,7 +25,7 @@ namespace Forge.Entities.Tests {
             Entity = entity;
         }
 
-        public TestEntityBuilder AddData<TData>(TData data) where TData : Data.Versioned {
+        public TestEntityBuilder AddData<TData>(TData data) where TData : Data.IVersioned {
             ((TData)Entity.AddData(new DataAccessor(data))).CopyFrom(data);
             return this;
         }

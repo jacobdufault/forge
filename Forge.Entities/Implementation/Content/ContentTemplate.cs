@@ -145,16 +145,16 @@ namespace Forge.Entities.Implementation.Content {
             return _defaultDataInstances[accessor.Id];
         }
 
-        public Data.Versioned Previous(DataAccessor accessor) {
+        public Data.IVersioned Previous(DataAccessor accessor) {
             if (ContainsData(accessor) == false) {
                 throw new NoSuchDataException(this, accessor);
             }
 
-            if (_defaultDataInstances[accessor.Id] is Data.Versioned == false) {
+            if (_defaultDataInstances[accessor.Id] is Data.IVersioned == false) {
                 throw new PreviousRequiresVersionedDataException(this, accessor);
             }
 
-            return (Data.Versioned)_defaultDataInstances[accessor.Id];
+            return (Data.IVersioned)_defaultDataInstances[accessor.Id];
         }
 
         public bool ContainsData(DataAccessor accessor) {
