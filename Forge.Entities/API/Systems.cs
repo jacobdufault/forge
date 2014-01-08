@@ -311,5 +311,27 @@ namespace Forge.Entities {
             /// <param name="input">The input that was received.</param>
             void OnGlobalInput(IGameInput input);
         }
+
+        /// <summary>
+        /// A trigger that is **NOT** deterministic. Instead, this allows for code to be executed
+        /// when the game engine has been created (such as when a new level has started or a saved
+        /// game has been loaded). This is primarily useful for dispatching custom events to notify
+        /// the rendering engine of initial state.
+        /// </summary>
+        /// <remarks>
+        /// Notice that this interface does *not* extend ISystem. This means that GlobalEntity,
+        /// EntityIndex, TemplateIndex, etc, are not available for use. They may be null when
+        /// OnEngineLoaded is called.
+        /// </remarks>
+        public interface OnEngineLoaded {
+            /// <summary>
+            /// This method is called when the system has been loaded into a game. It should *NOT*
+            /// make any modifications to the game state. This method is primarily intended for
+            /// sending out initial game messages to setup, ie, renderer state.
+            /// </summary>
+            /// <param name="eventDispatcher">The event dispatcher to use for sending out
+            /// events</param>
+            void OnEngineLoaded(IEventDispatcher eventDispatcher);
+        }
     }
 }

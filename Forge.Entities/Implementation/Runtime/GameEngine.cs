@@ -263,6 +263,12 @@ namespace Forge.Entities.Implementation.Runtime {
         private MultithreadedSystem CreateMultithreadedSystem(ISystem baseSystem,
             TemplateIndex templateIndex) {
 
+            // does the system want to run some code on engine initialization?
+            Trigger.OnEngineLoaded onLoaded = baseSystem as Trigger.OnEngineLoaded;
+            if (onLoaded != null) {
+                onLoaded.OnEngineLoaded(EventNotifier);
+            }
+
             baseSystem.EventDispatcher = EventNotifier;
             baseSystem.GlobalEntity = _globalEntity;
             baseSystem.EntityIndex = _entityIndex;
