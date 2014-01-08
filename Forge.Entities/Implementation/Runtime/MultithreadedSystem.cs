@@ -117,26 +117,37 @@ namespace Forge.Entities.Implementation.Runtime {
         /// </summary>
         public PerformanceInformation PerformanceData;
 
-        internal MultithreadedSystem(MultithreadedSystemSharedContext sharedData, ITriggerFilterProvider trigger) {
-            PerformanceData = new PerformanceInformation(trigger);
-
+        internal MultithreadedSystem(MultithreadedSystemSharedContext sharedData, ISystem system) {
+            System = system;
             _shared = sharedData;
 
-            _filter = new Filter(DataAccessorFactory.MapTypesToDataAccessors(trigger.RequiredDataTypes));
-            _entityCache = new EntityCache(_filter);
+            PerformanceData = new PerformanceInformation(system);
 
-            System = trigger;
-            _triggerAdded = trigger as Trigger.Added;
-            _triggerRemoved = trigger as Trigger.Removed;
-            _triggerModified = trigger as Trigger.Modified;
-            _triggerGlobalPreUpdate = trigger as Trigger.GlobalPreUpdate;
-            _triggerUpdate = trigger as Trigger.Update;
-            _triggerGlobalPostUpdate = trigger as Trigger.GlobalPostUpdate;
-            _triggerInput = trigger as Trigger.Input;
-            _triggerGlobalInput = trigger as Trigger.GlobalInput;
+            ITriggerFilterProvider trigger = system as ITriggerFilterProvider;
+            if (trigger != null) {
+                _filter = new Filter(DataAccessorFactory.MapTypesToDataAccessors(trigger.RequiredDataTypes));
+                _entityCache = new EntityCache(_filter);
+
+                // all of these triggers require a filter
+                _triggerAdded = trigger as Trigger.Added;
+                _triggerRemoved = trigger as Trigger.Removed;
+                _triggerModified = trigger as Trigger.Modified;
+                _triggerUpdate = trigger as Trigger.Update;
+                _triggerInput = trigger as Trigger.Input;
+            }
+
+            // these triggers don't require a filter
+            _triggerGlobalPreUpdate = system as Trigger.GlobalPreUpdate;
+            _triggerGlobalPostUpdate = system as Trigger.GlobalPostUpdate;
+            _triggerGlobalInput = system as Trigger.GlobalInput;
         }
 
         public void Restore(RuntimeEntity entity) {
+            // if we don't have an entity cache then we have nothing to restore
+            if (_entityCache == null) {
+                return;
+            }
+
             if (_entityCache.UpdateCache(entity) == EntityCache.CacheChangeResult.Added) {
                 DoAdd(entity);
             }
@@ -187,6 +198,12 @@ namespace Forge.Entities.Implementation.Runtime {
             stopwatch.Start();
 
             try {
+                // if we don't have entity cache (for example, the system could just have a
+                // GlobalInput trigger), then we don't need to do any bookkeeping
+                if (_entityCache == null) {
+                    return;
+                }
+
                 // copy our modified entities into our dispatch modified list we do this before
                 // state changes so that we only have to remove from _dispatchModified and not
                 // _notifiedModifiedEntities

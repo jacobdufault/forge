@@ -268,16 +268,11 @@ namespace Forge.Entities.Implementation.Runtime {
             baseSystem.EntityIndex = _entityIndex;
             baseSystem.TemplateIndex = templateIndex;
 
-            if (baseSystem is ITriggerFilterProvider) {
-                MultithreadedSystem multithreadingSystem = new MultithreadedSystem(this, (ITriggerFilterProvider)baseSystem);
-                foreach (var entity in _entities) {
-                    multithreadingSystem.Restore(entity);
-                }
-                return multithreadingSystem;
+            MultithreadedSystem multithreadingSystem = new MultithreadedSystem(this, baseSystem);
+            foreach (var entity in _entities) {
+                multithreadingSystem.Restore(entity);
             }
-            else {
-                throw new NotImplementedException("No support for systems which are not deriving for ITriggerFilterProvider as of yet for system " + baseSystem);
-            }
+            return multithreadingSystem;
         }
 
         /// <summary>

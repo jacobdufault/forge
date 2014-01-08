@@ -1,4 +1,5 @@
 ﻿using Forge.Entities.Implementation.Content;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +9,38 @@ using Xunit.Extensions;
 
 namespace Forge.Entities.Tests {
     public class GameSnapshotTests {
+        private class MyInputType : IGameInput { }
+
+        [JsonObject(MemberSerialization.OptIn)]
+        private class GlobalInputSystem : BaseSystem, Trigger.GlobalInput {
+            public Type[] InputTypes {
+                get { return new[] { typeof(MyInputType) }; }
+            }
+
+            [JsonProperty]
+            public int CallCount = 0;
+
+            public void OnGlobalInput(IGameInput input) {
+                ++CallCount;
+            }
+        }
+
+        [Theory, ClassData(typeof(SnapshotTemplateData))]
+        public void TestGlobalInputOnlySystem(IGameSnapshot snapshot, ITemplateGroup templates) {
+            snapshot.Systems.Add(new GlobalInputSystem());
+
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
+            engine.SynchronizeState().Wait();
+            engine.DispatchEvents();
+
+            engine.Update(new List<IGameInput>() { new MyInputType() }).Wait();
+            engine.SynchronizeState().Wait();
+            Assert.Equal(1, engine.GetSystem<GlobalInputSystem>().CallCount);
+
+            engine.Update(new List<IGameInput>() { new MyInputType(), new MyInputType() }).Wait();
+            engine.SynchronizeState().Wait();
+            Assert.Equal(3, engine.GetSystem<GlobalInputSystem>().CallCount);
+        }
 
         [Theory, ClassData(typeof(SnapshotTemplateData))]
         public void GotAddedEventsForInitialDatabase(IGameSnapshot snapshot, ITemplateGroup templates) {
