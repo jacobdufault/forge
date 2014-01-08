@@ -184,7 +184,9 @@ namespace Forge.Entities {
         /// </remarks>
         /// <returns>A list of Data types that the entity needs to have to pass the
         /// filter.</returns>
-        Type[] RequiredDataTypes();
+        Type[] RequiredDataTypes {
+            get;
+        }
     }
 
     /// <summary>

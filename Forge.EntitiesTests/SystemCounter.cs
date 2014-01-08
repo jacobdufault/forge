@@ -37,8 +37,8 @@ namespace Forge.Entities.Tests {
             ++UpdateCount;
         }
 
-        public Type[] RequiredDataTypes() {
-            return Filter;
+        public Type[] RequiredDataTypes {
+            get { return Filter; }
         }
 
         public void OnRemoved(IEntity entity) {

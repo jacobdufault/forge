@@ -70,8 +70,8 @@ namespace Forge.Entities.Tests {
                 entity.Modify<DataEmpty>();
             }
 
-            public Type[] RequiredDataTypes() {
-                return new Type[] { };
+            public Type[] RequiredDataTypes {
+                get { return new Type[] { }; }
             }
         }
 
@@ -117,8 +117,8 @@ namespace Forge.Entities.Tests {
                 entity.Modify<DataEmpty>();
             }
 
-            public Type[] RequiredDataTypes() {
-                return new Type[] { };
+            public Type[] RequiredDataTypes {
+                get { return new Type[] { }; }
             }
         }
 
@@ -232,8 +232,8 @@ namespace Forge.Entities.Tests {
                 entity.Modify<DataEmpty>();
             }
 
-            public Type[] RequiredDataTypes() {
-                return new Type[] { };
+            public Type[] RequiredDataTypes {
+                get { return new Type[] { }; }
             }
         }
 

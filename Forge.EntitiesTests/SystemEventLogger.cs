@@ -18,8 +18,8 @@ namespace Forge.Entities.Tests {
     internal class SystemEventLogger : BaseSystem, Trigger.Added, Trigger.Removed, Trigger.Modified,
         Trigger.Update, Trigger.GlobalPreUpdate, Trigger.GlobalPostUpdate, Trigger.Input,
         Trigger.GlobalInput {
-        public Type[] RequiredDataTypes() {
-            return EntityFilter;
+        public Type[] RequiredDataTypes {
+            get { return EntityFilter; }
         }
 
         [JsonProperty("EntityFilter")]

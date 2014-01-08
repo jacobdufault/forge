@@ -122,7 +122,7 @@ namespace Forge.Entities.Implementation.Runtime {
 
             _shared = sharedData;
 
-            _filter = new Filter(DataAccessorFactory.MapTypesToDataAccessors(trigger.RequiredDataTypes()));
+            _filter = new Filter(DataAccessorFactory.MapTypesToDataAccessors(trigger.RequiredDataTypes));
             _entityCache = new EntityCache(_filter);
 
             System = trigger;
