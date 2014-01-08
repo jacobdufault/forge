@@ -96,7 +96,7 @@ namespace Forge.Entities {
         /// <summary>
         /// Get the event dispatcher that can be used to notify the external world of events.
         /// </summary>
-        protected internal IEventDispatcher EventDispatcher {
+        protected IEventDispatcher EventDispatcher {
             get;
             private set;
         }
