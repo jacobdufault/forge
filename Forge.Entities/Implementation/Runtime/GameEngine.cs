@@ -137,6 +137,11 @@ namespace Forge.Entities.Implementation.Runtime {
         private RuntimeEntity _globalEntity;
 
         /// <summary>
+        /// The entity index, which needs to be updated whenever an entity is added or destroyed.
+        /// </summary>
+        private EntityIndex _entityIndex;
+
+        /// <summary>
         /// Gets the update number.
         /// </summary>
         /// <value>The update number.</value>
@@ -159,12 +164,14 @@ namespace Forge.Entities.Implementation.Runtime {
             _templateJson = templateJson;
 
             // Create our own little island of references with its own set of templates
-            GameSnapshot snapshot = GameSnapshotRestorer.Restore(snapshotJson, templateJson,
-                Maybe.Just(this));
+            GameSnapshotRestorer restorer = GameSnapshotRestorer.Restore(
+                snapshotJson, templateJson, Maybe.Just(this));
+            GameSnapshot snapshot = restorer.GameSnapshot;
 
             EntityIdGenerator = snapshot.EntityIdGenerator;
 
             _systems = snapshot.Systems;
+            _entityIndex = new EntityIndex();
 
             // TODO: ensure that when correctly restore UpdateNumber
             //UpdateNumber = updateNumber;
@@ -215,12 +222,14 @@ namespace Forge.Entities.Implementation.Runtime {
                 RemoveEntity(runtimeEntity);
             }
 
+            TemplateIndex templateIndex = new TemplateIndex(restorer.Templates.Templates);
+
             _executionGroups = new List<ExecutionGroup>();
             var executionGroups = SystemExecutionGroup.GetExecutionGroups(snapshot.Systems);
             foreach (var executionGroup in executionGroups) {
                 List<MultithreadedSystem> multithreadedSystems = new List<MultithreadedSystem>();
                 foreach (var system in executionGroup.Systems) {
-                    MultithreadedSystem multithreaded = CreateMultithreadedSystem(system);
+                    MultithreadedSystem multithreaded = CreateMultithreadedSystem(system, templateIndex);
                     multithreadedSystems.Add(multithreaded);
                 }
                 _executionGroups.Add(new ExecutionGroup(multithreadedSystems));
@@ -251,9 +260,13 @@ namespace Forge.Entities.Implementation.Runtime {
         /// <summary>
         /// Creates a multithreaded system from the given base system.
         /// </summary>
-        private MultithreadedSystem CreateMultithreadedSystem(ISystem baseSystem) {
+        private MultithreadedSystem CreateMultithreadedSystem(ISystem baseSystem,
+            TemplateIndex templateIndex) {
+
             baseSystem.EventDispatcher = EventNotifier;
             baseSystem.GlobalEntity = _globalEntity;
+            baseSystem.EntityIndex = _entityIndex;
+            baseSystem.TemplateIndex = templateIndex;
 
             if (baseSystem is ITriggerFilterProvider) {
                 MultithreadedSystem multithreadingSystem = new MultithreadedSystem(this, (ITriggerFilterProvider)baseSystem);
@@ -279,6 +292,9 @@ namespace Forge.Entities.Implementation.Runtime {
             Log<GameEngine>.Info("Submitting internal EntityAddedEvent for " + toAdd);
             EventNotifier.Submit(EntityAddedEvent.Create(toAdd));
             EventNotifier.Submit(ShowEntityEvent.Create(toAdd));
+
+            // add it to the entity index
+            _entityIndex.AddEntity(toAdd);
 
             // register listeners
             toAdd.ModificationNotifier.Listener += OnEntityModified;
@@ -338,6 +354,9 @@ namespace Forge.Entities.Implementation.Runtime {
 
                 // notify listeners we removed an event
                 EventNotifier.Submit(EntityRemovedEvent.Create(toRemove));
+
+                // remove it from the index
+                _entityIndex.RemoveEntity(toRemove);
             }
             // can't clear b/c it is shared
 
@@ -578,7 +597,9 @@ namespace Forge.Entities.Implementation.Runtime {
                 RequiredConverters.GetConverters(),
                 RequiredConverters.GetContextObjects(Maybe<GameEngine>.Empty));
 
-            return GameSnapshotRestorer.Restore(snapshotJson, _templateJson, Maybe<GameEngine>.Empty);
+            var restored = GameSnapshotRestorer.Restore(snapshotJson, _templateJson,
+                Maybe<GameEngine>.Empty);
+            return restored.GameSnapshot;
         }
 
         public int GetVerificationHash() {

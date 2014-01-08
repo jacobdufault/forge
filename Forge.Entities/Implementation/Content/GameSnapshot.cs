@@ -102,10 +102,16 @@ namespace Forge.Entities.Implementation.Content {
     [JsonObject(MemberSerialization.OptIn)]
     internal class GameSnapshotRestorer {
         [JsonProperty("Snapshot")]
-        private GameSnapshot _gameSnapshot;
+        public GameSnapshot GameSnapshot {
+            get;
+            private set;
+        }
 
         [JsonProperty("Templates")]
-        private TemplateGroup _templates;
+        public TemplateGroup Templates {
+            get;
+            private set;
+        }
 
         [OnDeserializing]
         private void AddTemplateContext(StreamingContext context) {
@@ -132,14 +138,13 @@ namespace Forge.Entities.Implementation.Content {
         /// Restores a GameSnapshot using the given GameSnapshot JSON and the given TemplateGroup
         /// JSON.
         /// </summary>
-        public static GameSnapshot Restore(string snapshotJson, string templateJson,
+        public static GameSnapshotRestorer Restore(string snapshotJson, string templateJson,
             Maybe<GameEngine> gameEngine) {
             string json = CombineJson(snapshotJson, templateJson);
 
-            var restorer = SerializationHelpers.Deserialize<GameSnapshotRestorer>(json,
+            return SerializationHelpers.Deserialize<GameSnapshotRestorer>(json,
                 RequiredConverters.GetConverters(),
                 RequiredConverters.GetContextObjects(gameEngine));
-            return restorer._gameSnapshot;
         }
     }
 

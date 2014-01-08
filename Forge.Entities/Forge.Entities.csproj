@@ -53,6 +53,7 @@
     <Compile Include="API\DataAccessor.cs" />
     <Compile Include="API\DataReference.cs" />
     <Compile Include="API\IEventDispatcher.cs" />
+    <Compile Include="API\Indexes.cs" />
     <Compile Include="API\ITemplateGroup.cs" />
     <Compile Include="Implementation\Content\GameSnapshot.cs" />
     <Compile Include="Implementation\Content\ContentEntity.cs" />

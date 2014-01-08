@@ -63,6 +63,20 @@ namespace Forge.Entities {
         }
 
         /// <summary>
+        /// Set the entity index.
+        /// </summary>
+        EntityIndex EntityIndex {
+            set;
+        }
+
+        /// <summary>
+        /// Set the template index.
+        /// </summary>
+        TemplateIndex TemplateIndex {
+            set;
+        }
+
+        /// <summary>
         /// Return the order of system execution for this system relative to the given system.
         /// </summary>
         /// <param name="system">The system to compare our execution ordering against.</param>
@@ -104,6 +118,34 @@ namespace Forge.Entities {
         IEntity ISystem.GlobalEntity {
             set {
                 GlobalEntity = value;
+            }
+        }
+
+        /// <summary>
+        /// Returns the EntityIndex, which can be used to lookup entities by their UniqueIds.
+        /// </summary>
+        protected EntityIndex EntityIndex {
+            get;
+            private set;
+        }
+
+        EntityIndex ISystem.EntityIndex {
+            set {
+                EntityIndex = value;
+            }
+        }
+
+        /// <summary>
+        /// Returns the TemplateIndex, when can be used to lookup templates by their TemplateIds.
+        /// </summary>
+        protected TemplateIndex TemplateIndex {
+            get;
+            private set;
+        }
+
+        TemplateIndex ISystem.TemplateIndex {
+            set {
+                TemplateIndex = value;
             }
         }
 
