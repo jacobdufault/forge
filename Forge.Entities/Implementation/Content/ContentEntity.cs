@@ -22,6 +22,7 @@ using Forge.Entities.Implementation.Runtime;
 using Forge.Entities.Implementation.Shared;
 using Forge.Utilities;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,29 +42,99 @@ namespace Forge.Entities.Implementation.Content {
 
     [JsonConverter(typeof(QueryableEntityConverter))]
     internal class ContentEntity : IEntity {
-        [JsonObject(MemberSerialization.OptIn)]
+        /// <summary>
+        /// A custom converter for DataInstances. This supports a more sophisticated serialization
+        /// format that only emits data as necessary and additionally allows for custom converters
+        /// to be defined on Data.IData derived types.
+        /// </summary>
+        private class DataInstanceConverter : JsonConverter {
+            public override bool CanConvert(Type objectType) {
+                throw new NotSupportedException();
+            }
+
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
+                DataInstance instance = existingValue as DataInstance;
+                if (instance == null) {
+                    instance = new DataInstance();
+                }
+
+                JObject obj = serializer.Deserialize<JObject>(reader);
+
+                instance.WasAdded = Read<bool>(obj, "WasAdded");
+                instance.WasRemoved = Read<bool>(obj, "WasRemoved");
+                instance.WasModified = Read<bool>(obj, "WasModified");
+
+                Type dataType = obj["DataType"].ToObject<Type>();
+                instance.CurrentData = TryReadData(obj, serializer, "CurrentData", dataType);
+                instance.PreviousData = TryReadData(obj, serializer, "PreviousData", dataType);
+
+                return instance;
+            }
+
+            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
+                DataInstance instance = (DataInstance)value;
+
+                JObject obj = new JObject();
+
+                if (instance.WasAdded) obj["WasAdded"] = true;
+                if (instance.WasModified) obj["WasModified"] = true;
+                if (instance.WasRemoved) obj["WasRemoved"] = true;
+
+                obj["DataType"] = JToken.FromObject(instance.CurrentData.GetType(), serializer);
+                obj["CurrentData"] = JToken.FromObject(instance.CurrentData, serializer);
+                if (instance.PreviousData != null) {
+                    obj["PreviousData"] = JToken.FromObject(instance.PreviousData, serializer);
+                }
+
+                serializer.Serialize(writer, obj);
+            }
+
+            private static T Read<T>(JObject obj, string key) {
+                JToken token = obj[key];
+                if (token == null) {
+                    return default(T);
+                }
+
+                return token.Value<T>();
+            }
+
+            private static Data.IData TryReadData(JObject obj, JsonSerializer serializer,
+                string key, Type dataType) {
+
+                JToken token = obj[key];
+                if (token == null) {
+                    return null;
+                }
+
+                return (Data.IData)token.ToObject(dataType, serializer);
+            }
+        }
+
+        [JsonConverter(typeof(DataInstanceConverter))]
         public class DataInstance {
-            [JsonProperty("CurrentData", Required = Required.Always)]
+            /// <summary>
+            /// The current data instance. Never null.
+            /// </summary>
             public Data.IData CurrentData;
-            [JsonProperty("PreviousData", Required = Required.Default)]
+
+            /// <summary>
+            /// The previous data instance. This is null if the data is not versioned.
+            /// </summary>
             public Data.IData PreviousData;
 
             /// <summary>
             /// Did the data get added in the last updated frame?
             /// </summary>
-            [JsonProperty("WasAdded", Required = Required.Always)]
             public bool WasAdded;
 
             /// <summary>
             /// Did the data get removed in the last update frame?
             /// </summary>
-            [JsonProperty("WasRemoved", Required = Required.Always)]
             public bool WasRemoved;
 
             /// <summary>
             /// Did the data get modified in the last update frame?
             /// </summary>
-            [JsonProperty("WasModified", Required = Required.Default)]
             public bool WasModified;
         }
 
