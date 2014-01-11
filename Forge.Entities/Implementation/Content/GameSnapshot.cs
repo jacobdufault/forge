@@ -22,6 +22,7 @@ using Forge.Entities.Implementation.Runtime;
 using Forge.Entities.Implementation.Shared;
 using Forge.Utilities;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -148,6 +149,33 @@ namespace Forge.Entities.Implementation.Content {
         }
     }
 
+    /// <summary>
+    /// (De)serializes ISystem types
+    /// </summary>
+    internal class SystemConverter : JsonConverter {
+        public override bool CanConvert(Type objectType) {
+            throw new NotSupportedException();
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
+            if (existingValue != null) {
+                throw new InvalidOperationException("SystemConvert cannot handle existing values");
+            }
+
+            JObject obj = serializer.Deserialize<JObject>(reader);
+            Type systemType = obj["Type"].ToObject<Type>();
+            return obj["System"].ToObject(systemType, serializer);
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
+            JObject obj = new JObject();
+            obj["Type"] = JToken.FromObject(value.GetType());
+            obj["System"] = JToken.FromObject(value, serializer);
+
+            serializer.Serialize(writer, obj);
+        }
+    }
+
     [JsonObject(MemberSerialization.OptIn)]
     internal class GameSnapshot : IGameSnapshot {
         public GameSnapshot() {
@@ -192,7 +220,7 @@ namespace Forge.Entities.Implementation.Content {
         [JsonProperty("RemovedEntities")]
         private EntitySerializationContainer _removedEntitiesContainer;
 
-        [JsonProperty("Systems")]
+        [JsonProperty("Systems", ItemConverterType = typeof(SystemConverter))]
         public List<ISystem> Systems {
             get;
             set;
