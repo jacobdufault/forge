@@ -577,6 +577,7 @@ namespace Forge.Entities.Implementation.Runtime {
 
             GameSnapshot snapshot = new GameSnapshot();
 
+            snapshot.EntityIdGenerator = EntityIdGenerator;
             snapshot.GlobalEntity = _globalEntity;
 
             foreach (var adding in _notifiedAddingEntities.ToList()) {
