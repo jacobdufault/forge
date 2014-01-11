@@ -54,6 +54,15 @@ namespace Forge.Entities {
         }
 
         /// <summary>
+        /// Helper method to get the type of data that this given DataAccessor maps back to.
+        /// </summary>
+        public Type DataType {
+            get {
+                return DataAccessorFactory.GetTypeFromAccessor(this);
+            }
+        }
+
+        /// <summary>
         /// Returns the mapped id for this accessor.
         /// </summary>
         public readonly int Id;
@@ -81,13 +90,6 @@ namespace Forge.Entities {
         /// </summary>
         public static bool operator !=(DataAccessor x, DataAccessor y) {
             return !(x == y);
-        }
-
-        /// <summary>
-        /// Helper method to get the type of data the given DataAccessor maps back to.
-        /// </summary>
-        public static Type GetDataType(DataAccessor accessor) {
-            return DataAccessorFactory.GetTypeFromAccessor(accessor);
         }
     }
 

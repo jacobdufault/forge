@@ -92,13 +92,26 @@ namespace Forge.Entities.Implementation.Shared {
         /// <returns>The type used for the given accessor, or an exception if there is
         /// none.</returns>
         public static Type GetTypeFromAccessor(DataAccessor accessor) {
+            return GetTypeFromId(accessor.Id);
+        }
+
+        /// <summary>
+        /// Looks up the type of data is used for the given accessor.
+        /// </summary>
+        /// <remarks>
+        /// The current implementation of this method runs in O(n) time (instead of O(1)).
+        /// </remarks>
+        /// <param name="accessor">The data accessor id.</param>
+        /// <returns>The type used for the given accessor, or an exception if there is
+        /// none.</returns>
+        public static Type GetTypeFromId(int accessorId) {
             foreach (var item in _ids) {
-                if (item.Value == accessor.Id) {
+                if (item.Value == accessorId) {
                     return item.Key;
                 }
             }
 
-            throw new Exception("No such type of accessor=" + accessor.Id);
+            throw new Exception("No such type of accessor=" + accessorId);
         }
     }
 }

@@ -128,10 +128,9 @@ namespace Forge.Entities.Implementation.Content {
                 throw new AlreadyAddedDataException(this, accessor);
             }
 
-            Type dataType = DataAccessorFactory.GetTypeFromAccessor(accessor);
             _data[accessor.Id] = new DataInstance() {
-                CurrentData = (Data.IData)Activator.CreateInstance(dataType),
-                PreviousData = (Data.IData)Activator.CreateInstance(dataType),
+                CurrentData = (Data.IData)Activator.CreateInstance(accessor.DataType),
+                PreviousData = (Data.IData)Activator.CreateInstance(accessor.DataType),
                 WasAdded = true,
                 WasModified = false,
                 WasRemoved = false

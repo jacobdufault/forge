@@ -188,7 +188,7 @@ namespace Forge.Entities.Implementation.Runtime {
                     _removedLastFrame[id] = _toRemoveStage1[i];
                     // _removedLastFrame[id] is removed in stage2
 
-                    _eventDispatcher.Submit(RemovedDataEvent.Create(this, DataAccessorFactory.GetTypeFromAccessor(new DataAccessor(id))));
+                    _eventDispatcher.Submit(RemovedDataEvent.Create(this, DataAccessorFactory.GetTypeFromId(id)));
                 }
 
                 for (int i = 0; i < _toRemoveStage2.Count; ++i) {
@@ -462,9 +462,8 @@ namespace Forge.Entities.Implementation.Runtime {
             }
 
             // add our data
-            Type dataType = DataAccessorFactory.GetTypeFromAccessor(accessor);
             if (instance == null) {
-                instance = (Data.IData)Activator.CreateInstance(dataType);
+                instance = (Data.IData)Activator.CreateInstance(accessor.DataType);
             }
             _toAddStage1.Add(instance);
 

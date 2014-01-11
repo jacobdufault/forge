@@ -33,8 +33,8 @@ namespace Forge.Entities {
         /// <param name="context">The entity that triggered the exception.</param>
         /// <param name="accessor">The data type that was already added.</param>
         internal AlreadyAddedDataException(IEntity context, DataAccessor accessor)
-            : base("The entity already has a data instance for type=" +
-            DataAccessorFactory.GetTypeFromAccessor(accessor) + " in " + context) {
+            : base("The entity already has a data instance for type=" + accessor.DataType + " in " +
+            context) {
         }
     }
 
@@ -50,8 +50,8 @@ namespace Forge.Entities {
         /// <param name="context">The entity that triggered the exception.</param>
         /// <param name="accessor">The data type that the entity lacks.</param>
         internal NoSuchDataException(IQueryableEntity context, DataAccessor accessor)
-            : base(string.Format("No such data for type={0} in context={1}",
-            DataAccessorFactory.GetTypeFromAccessor(accessor), context)) {
+            : base(string.Format("No such data for type={0} in context={1}", accessor.DataType,
+            context)) {
         }
     }
 
@@ -64,8 +64,7 @@ namespace Forge.Entities {
         internal PreviousRequiresVersionedDataException(IQueryableEntity context,
             DataAccessor accessor)
             : base(string.Format("Retrieving previous data requires that the data extends " +
-            "Data.IVersioned, but type={0} in context={1} does not",
-            DataAccessorFactory.GetTypeFromAccessor(accessor), context)) {
+            "Data.IVersioned, but type={0} in context={1} does not", accessor.DataType, context)) {
         }
     }
 
@@ -81,8 +80,7 @@ namespace Forge.Entities {
         /// <param name="context">The entity that triggered the exception.</param>
         /// <param name="accessor">The data type that was concurrently modified.</param>
         internal RemodifiedDataException(IEntity context, DataAccessor accessor)
-            : base("Already modified data for type=" +
-            DataAccessorFactory.GetTypeFromAccessor(accessor) + " in " + context) {
+            : base("Already modified data for type=" + accessor.DataType + " in " + context) {
         }
     }
 }
