@@ -29,8 +29,6 @@ namespace Forge.Entities.Tests {
             snapshot.Systems.Add(new OnEngineLoadedSystem());
 
             IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
-            engine.SynchronizeState().Wait();
-
             Assert.Equal(1, engine.GetSystem<OnEngineLoadedSystem>().CallCount);
         }
 
@@ -42,8 +40,8 @@ namespace Forge.Entities.Tests {
             IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templateGroup);
 
             for (int i = 0; i < 20; ++i) {
-                engine.SynchronizeState().Wait();
                 engine.Update().Wait();
+                engine.SynchronizeState().Wait();
                 engine.DispatchEvents();
             }
         }
@@ -54,8 +52,8 @@ namespace Forge.Entities.Tests {
                 LevelManager.CreateTemplateGroup());
 
             for (int i = 0; i < 20; ++i) {
-                engine.SynchronizeState().Wait();
                 engine.Update(new LinkedList<IGameInput>()).Wait();
+                engine.SynchronizeState().Wait();
                 engine.DispatchEvents();
             }
         }

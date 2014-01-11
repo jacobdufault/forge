@@ -30,8 +30,6 @@ namespace Forge.Entities.Tests {
             snapshot.Systems.Add(new GlobalInputSystem());
 
             IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
-            engine.SynchronizeState().Wait();
-            engine.DispatchEvents();
 
             engine.Update(new List<IGameInput>() { new MyInputType() }).Wait();
             engine.SynchronizeState().Wait();
@@ -45,7 +43,7 @@ namespace Forge.Entities.Tests {
         [Theory, ClassData(typeof(SnapshotTemplateData))]
         public void GotAddedEventsForInitialDatabase(IGameSnapshot snapshot, ITemplateGroup templates) {
             IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
-            engine.SynchronizeState().Wait();
+
             engine.Update().Wait();
 
             int notifiedCount = 0;
@@ -81,7 +79,6 @@ namespace Forge.Entities.Tests {
             });
 
             IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
-            engine.SynchronizeState().Wait();
 
             engine.Update().Wait();
             engine.SynchronizeState().Wait();
@@ -92,11 +89,9 @@ namespace Forge.Entities.Tests {
         [Theory, ClassData(typeof(SnapshotTemplateData))]
         public void ToFromContentDatabase(IGameSnapshot snapshot0, ITemplateGroup templates) {
             IGameEngine engine0 = GameEngineFactory.CreateEngine(snapshot0, templates);
-            engine0.SynchronizeState().Wait();
 
             IGameSnapshot snapshot1 = engine0.TakeSnapshot();
             IGameEngine engine1 = GameEngineFactory.CreateEngine(snapshot1, templates);
-            engine1.SynchronizeState().Wait();
 
             Assert.Equal(engine0.GetVerificationHash(), engine1.GetVerificationHash());
         }
@@ -108,7 +103,6 @@ namespace Forge.Entities.Tests {
             });
 
             IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
-            engine.SynchronizeState().Wait();
 
             engine.Update().Wait();
             engine.SynchronizeState().Wait();

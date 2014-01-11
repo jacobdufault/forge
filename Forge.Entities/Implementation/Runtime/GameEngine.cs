@@ -236,6 +236,19 @@ namespace Forge.Entities.Implementation.Runtime {
             }
 
             _nextState = GameEngineNextState.SynchronizeState;
+            SynchronizeState().Wait();
+
+            // call of the engine loaded systems
+            foreach (var group in _executionGroups) {
+                foreach (var system in group.Systems) {
+                    var onLoaded = system.System as Trigger.OnEngineLoaded;
+                    if (onLoaded != null) {
+                        onLoaded.OnEngineLoaded(EventNotifier);
+
+                        // TODO: verify that OnEngineLoaded didn't change any state (via hashing)
+                    }
+                }
+            }
         }
 
         private class ExecutionGroup {
@@ -268,14 +281,6 @@ namespace Forge.Entities.Implementation.Runtime {
             baseSystem.GlobalEntity = _globalEntity;
             baseSystem.EntityIndex = _entityIndex;
             baseSystem.TemplateIndex = templateIndex;
-
-            // does the system want to run some code on engine initialization?
-            Trigger.OnEngineLoaded onLoaded = baseSystem as Trigger.OnEngineLoaded;
-            if (onLoaded != null) {
-                onLoaded.OnEngineLoaded(EventNotifier);
-
-                // TODO: verify that OnEngineLoaded didn't change any state (via hashing)
-            }
 
             MultithreadedSystem multithreadingSystem = new MultithreadedSystem(this, baseSystem);
             foreach (var entity in _entities) {
