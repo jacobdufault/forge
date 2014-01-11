@@ -33,15 +33,14 @@ namespace Forge.Entities {
     /// </remarks>
     public interface IGameEngine : IDisposable {
         /// <summary>
-        /// Runs a game update tick using the given input. Make sure that SynchronizeState call both
-        /// starts and completes before calling Update again.
+        /// Runs a game update tick using the given input. This means that systems get executed
+        /// based on the current game state and the given input.
         /// </summary>
-        /// <returns>A WaitHandle that is activated (set to true) when the update has
-        /// finished.</returns>
+        /// <returns>A task that is completed when the engine has finished the update.</returns>
         Task Update(IEnumerable<IGameInput> input);
 
         /// <summary>
-        /// Synchronizes the state of game.
+        /// Synchronizes the state of game. No systems are executed in this method.
         /// </summary>
         /// <remarks>
         /// The game manager will typically run in a multithreaded context, with the rendering
@@ -51,13 +50,13 @@ namespace Forge.Entities {
         /// and the engine is modified. Instead, it will be modified after this method has been
         /// called.
         /// </remarks>
-        /// <returns>A WaitHandle that is activated (set to true) when all state has been
-        /// synchronized.</returns>
+        /// <returns>A task that is completed when all state has been synchronized.</returns>
         Task SynchronizeState();
 
         /// <summary>
-        /// Dispatches all of the events that have been triggered in the previous update on the
-        /// calling thread.
+        /// Dispatches all of the events that have accumulated from updates since the last call to
+        /// DispatchEvents(). This method operates on the calling thread, so ensure that the event
+        /// handlers don't consume lots of processing time.
         /// </summary>
         void DispatchEvents();
 
