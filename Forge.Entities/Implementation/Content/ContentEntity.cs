@@ -201,7 +201,9 @@ namespace Forge.Entities.Implementation.Content {
 
             _data[accessor.Id] = new DataInstance() {
                 CurrentData = (Data.IData)Activator.CreateInstance(accessor.DataType),
-                PreviousData = (Data.IData)Activator.CreateInstance(accessor.DataType),
+                PreviousData = typeof(Data.IVersioned).IsAssignableFrom(accessor.DataType) ?
+                                    (Data.IData)Activator.CreateInstance(accessor.DataType) :
+                                    null,
                 WasAdded = true,
                 WasModified = false,
                 WasRemoved = false
