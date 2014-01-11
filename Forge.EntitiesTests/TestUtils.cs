@@ -60,28 +60,27 @@ namespace Forge.Entities.Tests {
     }
 
     internal class SnapshotTemplateData : IEnumerable<object[]> {
-        private static readonly List<object[]> _data;
+        private static void AddData(List<object[]> data,
+            Func<ITemplateGroup, IGameSnapshot> snapshot, ITemplateGroup templateGroup) {
 
-        static SnapshotTemplateData() {
-            _data = new List<object[]>();
+            data.Add(new object[] { snapshot(templateGroup), templateGroup });
+        }
+
+        public IEnumerator<object[]> GetEnumerator() {
+            var data = new List<object[]>();
+
             foreach (ITemplateGroup templateGroup in new[]  {
                 // list all template group providers here
                 TemplateGroup1(),
                 TemplateGroup2()
             }) {
                 // list all snapshot providers here
-                AddData(Snapshot1, templateGroup);
-                AddData(Snapshot2, templateGroup);
-                AddData(Snapshot3, templateGroup);
+                AddData(data, Snapshot1, templateGroup);
+                AddData(data, Snapshot2, templateGroup);
+                AddData(data, Snapshot3, templateGroup);
             }
-        }
 
-        private static void AddData(Func<ITemplateGroup, IGameSnapshot> snapshot, ITemplateGroup templateGroup) {
-            _data.Add(new object[] { snapshot(templateGroup), templateGroup });
-        }
-
-        public IEnumerator<object[]> GetEnumerator() {
-            return _data.GetEnumerator();
+            return data.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator() {
