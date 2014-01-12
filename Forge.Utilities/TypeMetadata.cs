@@ -292,5 +292,21 @@ namespace Forge.Utilities {
             }
         }
         private List<PropertyMetadata> _properties;
+
+        /// <summary>
+        /// Attempts to remove the property with the given name.
+        /// </summary>
+        /// <param name="propertyName">The name of the property to remove.</param>
+        /// <returns>True if the property was removed, false if it was not found.</returns>
+        public bool RemoveProperty(string propertyName) {
+            for (int i = 0; i < _properties.Count; ++i) {
+                if (_properties[i].Name == propertyName) {
+                    _properties.RemoveAt(i);
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
 }
