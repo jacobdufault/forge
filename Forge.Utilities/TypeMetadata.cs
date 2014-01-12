@@ -141,19 +141,20 @@ namespace Forge.Utilities {
 
         /// <summary>
         /// Recursive method that adds all of the properties and fields from the given type into the
-        /// given list. This method recurses up on the inheritance hierarchy.
+        /// given list. This method also fetches inherited properties by using the TypeCache to
+        /// retrieve the TypeMetadata for the parent type.
         /// </summary>
-        /// <param name="type">The type to process. This method will recurse up the type's
-        /// inheritance hierarchy</param>
+        /// <param name="reflectedType">The type to process to collect properties from.</param>
         /// <param name="properties">The list of properties that should be appended to</param>
-        private static void CollectProperties(Type type, HashSet<PropertyMetadata> properties) {
+        private static void CollectProperties(Type reflectedType, HashSet<PropertyMetadata> properties) {
+
             BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance;
 
-            foreach (PropertyInfo property in type.GetProperties(flags)) {
+            foreach (PropertyInfo property in reflectedType.GetProperties(flags)) {
                 // We don't serialize delegates
                 if (typeof(Delegate).IsAssignableFrom(property.PropertyType)) {
                     Log<TypeMetadata>.Info("Ignoring property {0}.{1} because it is a delegate",
-                        type.FullName, property.Name);
+                        reflectedType.FullName, property.Name);
                     continue;
                 }
 
@@ -161,7 +162,7 @@ namespace Forge.Utilities {
                 foreach (var attribute in property.GetCustomAttributes(true)) {
                     if (attribute is NonSerializedAttribute) {
                         Log<TypeMetadata>.Info("Ignoring property {0}.{1} because it has a " +
-                            "NonSerialized or a NotSerializable attribute", type.FullName,
+                            "NonSerialized or a NotSerializable attribute", reflectedType.FullName,
                             property.Name);
                         goto loop_end;
                     }
@@ -170,7 +171,7 @@ namespace Forge.Utilities {
                 // If the property cannot be both read and written to, we don't serialize it
                 if (property.CanRead == false || property.CanWrite == false) {
                     Log<TypeMetadata>.Info("Ignoring property {0}.{1} because it cannot both be " +
-                        "read from and written to", type.FullName, property.Name);
+                        "read from and written to", reflectedType.FullName, property.Name);
                     continue;
                 }
 
@@ -184,23 +185,26 @@ namespace Forge.Utilities {
                     }
                 }
 
-                properties.Add(new PropertyMetadata(property));
+                if (properties.Add(new PropertyMetadata(property))) {
+                    Log<TypeMetadata>.Info("Adding property {0}.{1} to metadata for {2}",
+                        reflectedType.FullName, property.Name, reflectedType.FullName);
+                }
 
             loop_end: { }
             }
 
-            foreach (FieldInfo field in type.GetFields(flags)) {
+            foreach (FieldInfo field in reflectedType.GetFields(flags)) {
                 // We don't serialize delegates
                 if (typeof(Delegate).IsAssignableFrom(field.FieldType)) {
                     Log<TypeMetadata>.Info("Ignoring field {0}.{1} because it is a delegate",
-                        type.FullName, field.Name);
+                        reflectedType.FullName, field.Name);
                     continue;
                 }
 
                 // We don't serialize non-serializable properties
                 if (field.IsNotSerialized) {
                     Log<TypeMetadata>.Info("Ignoring field {0}.{1} because it is marked " +
-                        "NoNSerialized", type.FullName, field.Name);
+                        "NoNSerialized", reflectedType.FullName, field.Name);
                     continue;
                 }
 
@@ -208,7 +212,7 @@ namespace Forge.Utilities {
                 foreach (var attribute in field.GetCustomAttributes(true)) {
                     if (attribute is NonSerializedAttribute) {
                         Log<TypeMetadata>.Info("Ignoring field {0}.{1} because it has a " +
-                            "NonSerialized or a NotSerializable attribute", type.FullName,
+                            "NonSerialized or a NotSerializable attribute", reflectedType.FullName,
                             field.Name);
                         goto loop_end;
                     }
@@ -220,13 +224,20 @@ namespace Forge.Utilities {
                     continue;
                 }
 
-                properties.Add(new PropertyMetadata(field));
+                if (properties.Add(new PropertyMetadata(field))) {
+                    Log<TypeMetadata>.Info("Adding field {0}.{1} to metadata for {2}",
+                        reflectedType.FullName, field.Name, reflectedType.FullName);
+                }
 
             loop_end: { }
             }
 
-            if (type.BaseType != null) {
-                CollectProperties(type.BaseType, properties);
+            // add the parent properties
+            if (reflectedType.BaseType != null) {
+                TypeMetadata parent = TypeCache.FindTypeMetadata(reflectedType.BaseType);
+                foreach (PropertyMetadata parentProperty in parent.Properties) {
+                    properties.Add(parentProperty);
+                }
             }
         }
 
