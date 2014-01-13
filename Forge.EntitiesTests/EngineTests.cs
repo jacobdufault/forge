@@ -19,6 +19,43 @@ namespace Forge.Entities.Tests {
             }
         }
 
+        private class DoubleModifySystem : BaseSystem, Trigger.Added, Trigger.Update {
+            public Type[] RequiredDataTypes {
+                get { return new Type[] { }; }
+            }
+
+            public void OnAdded(IEntity entity) {
+                for (int i = 0; i < 20; ++i) {
+                    entity.Modify<DataConcurrentVersioned>();
+                    entity.Modify<DataConcurrentNonVersioned>();
+                }
+            }
+
+            public void OnUpdate(IEntity entity) {
+                for (int i = 0; i < 20; ++i) {
+                    entity.Modify<DataConcurrentVersioned>();
+                    entity.Modify<DataConcurrentNonVersioned>();
+                }
+            }
+        }
+
+        [Fact]
+        public void RemodifyCurrentData() {
+            IGameSnapshot snapshot = LevelManager.CreateSnapshot();
+            IEntity entity = snapshot.CreateEntity();
+            entity.AddData<DataConcurrentNonVersioned>();
+            entity.AddData<DataConcurrentVersioned>();
+            snapshot.Systems.Add(new DoubleModifySystem());
+
+            ITemplateGroup templates = LevelManager.CreateTemplateGroup();
+
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates).Value;
+            for (int i = 0; i < 20; ++i) {
+                engine.Update().Wait();
+                engine.SynchronizeState().Wait();
+            }
+        }
+
         /// <summary>
         /// Tests that Trigger.OnEngineLoaded is called.
         /// </summary>

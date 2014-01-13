@@ -101,8 +101,8 @@ namespace Forge.Entities.Implementation.Runtime {
         public void Increment() {
             // If the object we modified supports multiple modifications, then we need to give it a
             // chance to resolve those modifications so that it is in a consistent state
-            if (Modifying is Data.ConcurrentVersioned) {
-                ((Data.ConcurrentVersioned)Modifying).ResolveConcurrentModifications();
+            if (Modifying is Data.IConcurrent) {
+                ((Data.IConcurrent)Modifying).ResolveConcurrentModifications();
             }
 
             // this code is tricky because we change what data.{Previous,Current,Modifying} refer to

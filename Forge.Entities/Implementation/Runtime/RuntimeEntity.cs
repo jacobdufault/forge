@@ -526,7 +526,7 @@ namespace Forge.Entities.Implementation.Runtime {
 
                 // versioned data cannot be modified multiple times unless its concurrent
                 if (_data[id] is VersionedDataContainer) {
-                    if (((VersionedDataContainer)_data[id]).Current is Data.ConcurrentVersioned == false) {
+                    if (((VersionedDataContainer)_data[id]).Current is Data.IConcurrent == false) {
                         throw new RemodifiedDataException(this, accessor);
                     }
                 }

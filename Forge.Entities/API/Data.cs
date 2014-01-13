@@ -75,7 +75,7 @@ namespace Forge.Entities {
         }
 
         [JsonObject(MemberSerialization.OptIn)]
-        public abstract class ConcurrentVersioned : IVersioned {
+        public interface IConcurrent {
             /// <summary>
             /// This method is called after all modifications have been made during an update have
             /// been made to the data instance. The purpose is to allow for client code to resolve
@@ -85,26 +85,11 @@ namespace Forge.Entities {
             /// No other calls will be made to the data instance while this function is being
             /// executed.
             /// </remarks>
-            public abstract void ResolveConcurrentModifications();
-
-            /// <summary>
-            /// Moves all of the data from the specified source into this instance. After this call,
-            /// this data instance must be identical to source, such that this instance could
-            /// completely replace source in other code and the other code would be unable to tell
-            /// the difference.
-            /// </summary>
-            /// <param name="source">The source to move from.</param>
-            public abstract void CopyFrom(IVersioned source);
-
-            IData IData.Duplicate() {
-                return (IData)MemberwiseClone();
-            }
-            IVersioned IVersioned.Duplicate() {
-                return (IVersioned)MemberwiseClone();
-            }
+            void ResolveConcurrentModifications();
         }
+
         [JsonObject(MemberSerialization.OptIn)]
-        public abstract class ConcurrentVersioned<TData> : Versioned<TData>
+        public abstract class ConcurrentVersioned<TData> : Versioned<TData>, IConcurrent
             where TData : ConcurrentVersioned<TData> {
             /// <summary>
             /// This method is called after all modifications have been made during an update have
@@ -119,7 +104,7 @@ namespace Forge.Entities {
         }
 
         [JsonObject(MemberSerialization.OptIn)]
-        public abstract class ConcurrentNonVersioned : NonVersioned {
+        public abstract class ConcurrentNonVersioned : NonVersioned, IConcurrent {
             /// <summary>
             /// This method is called after all modifications have been made during an update have
             /// been made to the data instance. The purpose is to allow for client code to resolve

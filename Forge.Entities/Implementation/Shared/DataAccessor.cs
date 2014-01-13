@@ -67,7 +67,7 @@ namespace Forge.Entities.Implementation.Shared {
             if (type == typeof(Data.IData) ||
                 type == typeof(Data.IVersioned) ||
                 type == typeof(Data.NonVersioned) ||
-                type == typeof(Data.ConcurrentVersioned) ||
+                type == typeof(Data.IConcurrent) ||
                 type == typeof(Data.ConcurrentNonVersioned) ||
                 typeof(Data.IData).IsAssignableFrom(type) == false) {
 

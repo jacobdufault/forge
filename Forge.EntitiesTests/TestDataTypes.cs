@@ -84,4 +84,24 @@ namespace Forge.Entities.Tests {
     internal class DataNonVersionedInt : Data.NonVersioned {
         public int A;
     }
+
+    [JsonObject(MemberSerialization.OptIn)]
+    internal class DataConcurrentVersioned : Data.ConcurrentVersioned<DataConcurrentVersioned> {
+        public int A;
+
+        public override void ResolveConcurrentModifications() {
+        }
+
+        public override void CopyFrom(DataConcurrentVersioned source) {
+            this.A = source.A;
+        }
+    }
+
+    [JsonObject(MemberSerialization.OptIn)]
+    internal class DataConcurrentNonVersioned : Data.ConcurrentNonVersioned {
+        public int A;
+
+        public override void ResolveConcurrentModifications() {
+        }
+    }
 }
