@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using Forge.Entities.Implementation.Runtime;
+using Forge.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -102,8 +103,17 @@ namespace Forge.Entities {
         /// <param name="templateJson">The serialized ITemplateGroup used to create the
         /// engine.</param>
         /// <returns>A game engine that can play the given content.</returns>
-        public static IGameEngine CreateEngine(string snapshotJson, string templateJson) {
-            return new GameEngine(snapshotJson, templateJson);
+        public static Maybe<IGameEngine> CreateEngine(string snapshotJson, string templateJson) {
+            try {
+                IGameEngine engine = new GameEngine(snapshotJson, templateJson);
+                return Maybe.Just(engine);
+            }
+            catch (Exception e) {
+                Log.Get(typeof(GameEngineFactory)).Warn(string.Format("Failed to create engine " +
+                    "with snapshot={0}, template={1}, exception={2}", snapshotJson, templateJson, e));
+            }
+
+            return Maybe<IGameEngine>.Empty;
         }
 
         /// <summary>
@@ -117,7 +127,7 @@ namespace Forge.Entities {
         /// <param name="snapshot">The IGameSnapshot to use to create the engine.</param>
         /// <param name="templates">The ITemplateGroup used to create the engine.</param>
         /// <returns>A game engine that can play the given content.</returns>
-        public static IGameEngine CreateEngine(IGameSnapshot snapshot, ITemplateGroup templates) {
+        public static Maybe<IGameEngine> CreateEngine(IGameSnapshot snapshot, ITemplateGroup templates) {
             return CreateEngine(LevelManager.SaveSnapshot(snapshot),
                 LevelManager.SaveTemplateGroup(templates));
         }

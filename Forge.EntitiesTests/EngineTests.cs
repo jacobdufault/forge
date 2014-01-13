@@ -28,7 +28,7 @@ namespace Forge.Entities.Tests {
         public void CreateEngineOnEngineLoaded(IGameSnapshot snapshot, ITemplateGroup templates) {
             snapshot.Systems.Add(new OnEngineLoadedSystem());
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates).Value;
             Assert.Equal(1, engine.GetSystem<OnEngineLoadedSystem>().CallCount);
         }
 
@@ -37,7 +37,7 @@ namespace Forge.Entities.Tests {
         /// </summary>
         [Theory, ClassData(typeof(SnapshotTemplateData))]
         public void CreateEngine(IGameSnapshot snapshot, ITemplateGroup templateGroup) {
-            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templateGroup);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templateGroup).Value;
 
             for (int i = 0; i < 20; ++i) {
                 engine.Update().Wait();
@@ -47,9 +47,14 @@ namespace Forge.Entities.Tests {
         }
 
         [Fact]
+        public void CreateBadEngine() {
+            Assert.True(GameEngineFactory.CreateEngine("bad data", "bad data").IsEmpty);
+        }
+
+        [Fact]
         public void CreateEngineUpdateNonList() {
             IGameEngine engine = GameEngineFactory.CreateEngine(LevelManager.CreateSnapshot(),
-                LevelManager.CreateTemplateGroup());
+                LevelManager.CreateTemplateGroup()).Value;
 
             for (int i = 0; i < 20; ++i) {
                 engine.Update(new LinkedList<IGameInput>()).Wait();

@@ -34,7 +34,7 @@ namespace Forge.Entities.Tests {
 
             IEntity entity = snapshot.CreateEntity(GameSnapshot.EntityAddTarget.Added);
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates).Value;
 
             engine.Update().Wait();
             engine.SynchronizeState().Wait();
@@ -84,7 +84,7 @@ namespace Forge.Entities.Tests {
 
             snapshot.CreateEntity(GameSnapshot.EntityAddTarget.Added);
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates).Value;
 
             engine.Update().Wait();
             engine.SynchronizeState().Wait();
@@ -133,7 +133,7 @@ namespace Forge.Entities.Tests {
                 e.AddData<DataEmpty>();
             }
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates).Value;
 
             engine.Update().Wait();
             engine.SynchronizeState().Wait();
@@ -166,7 +166,7 @@ namespace Forge.Entities.Tests {
 
             IEntity entity = snapshot.CreateEntity(GameSnapshot.EntityAddTarget.Removed);
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates).Value;
 
             engine.Update().Wait();
             engine.SynchronizeState().Wait();
@@ -199,7 +199,7 @@ namespace Forge.Entities.Tests {
             IEntity entity = snapshot.CreateEntity(GameSnapshot.EntityAddTarget.Removed);
             entity.AddData<DataEmpty>();
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates).Value;
 
             engine.Update().Wait();
             engine.SynchronizeState().Wait();
@@ -249,7 +249,7 @@ namespace Forge.Entities.Tests {
                 e.AddData<DataEmpty>();
             }
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates).Value;
 
             engine.Update().Wait();
             engine.SynchronizeState().Wait();

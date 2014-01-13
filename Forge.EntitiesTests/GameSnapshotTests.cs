@@ -29,7 +29,7 @@ namespace Forge.Entities.Tests {
         public void TestGlobalInputOnlySystem(IGameSnapshot snapshot, ITemplateGroup templates) {
             snapshot.Systems.Add(new GlobalInputSystem());
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates).Value;
 
             engine.Update(new List<IGameInput>() { new MyInputType() }).Wait();
             engine.SynchronizeState().Wait();
@@ -42,7 +42,7 @@ namespace Forge.Entities.Tests {
 
         [Theory, ClassData(typeof(SnapshotTemplateData))]
         public void GotAddedEventsForInitialDatabase(IGameSnapshot snapshot, ITemplateGroup templates) {
-            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates).Value;
 
             engine.Update().Wait();
 
@@ -78,7 +78,7 @@ namespace Forge.Entities.Tests {
                 Filter = new[] { typeof(DataEmpty) }
             });
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates).Value;
 
             engine.Update().Wait();
             engine.SynchronizeState().Wait();
@@ -88,10 +88,10 @@ namespace Forge.Entities.Tests {
 
         [Theory, ClassData(typeof(SnapshotTemplateData))]
         public void ToFromContentDatabase(IGameSnapshot snapshot0, ITemplateGroup templates) {
-            IGameEngine engine0 = GameEngineFactory.CreateEngine(snapshot0, templates);
+            IGameEngine engine0 = GameEngineFactory.CreateEngine(snapshot0, templates).Value;
 
             IGameSnapshot snapshot1 = engine0.TakeSnapshot();
-            IGameEngine engine1 = GameEngineFactory.CreateEngine(snapshot1, templates);
+            IGameEngine engine1 = GameEngineFactory.CreateEngine(snapshot1, templates).Value;
 
             Assert.Equal(engine0.GetVerificationHash(), engine1.GetVerificationHash());
         }
@@ -102,7 +102,7 @@ namespace Forge.Entities.Tests {
                 Filter = new Type[] { }
             });
 
-            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates);
+            IGameEngine engine = GameEngineFactory.CreateEngine(snapshot, templates).Value;
 
             engine.Update().Wait();
             engine.SynchronizeState().Wait();
