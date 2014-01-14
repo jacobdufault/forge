@@ -1,0 +1,177 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd"><html>
+  <head>
+    <META http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>
+                    xUnit.net Test Results - </title>
+    <style type="text/css">
+                    body { font-family: Calibri, Verdana, Arial, sans-serif; background-color: White; color: Black; }
+                    h2,h3,h4,h5 { margin: 0; padding: 0; }
+                    h3 { font-weight: normal; }
+                    h5 { font-weight: normal; font-style: italic; margin-bottom: 0.75em; }
+                    pre { font-family: Consolas; font-size: 85%; margin: 0 0 0 1em; padding: 0; }
+                    .divided { border-top: solid 1px #f0f5fa; padding-top: 0.5em; }
+                    .row, .altrow { padding: 0.1em 0.3em; }
+                    .row { background-color: #f0f5fa; }
+                    .altrow { background-color: #e1ebf4; }
+                    .success, .failure, .skipped { font-family: Arial Unicode MS; font-weight: normal; float: left; width: 1em; display: block; }
+                    .success { color: #0c0; }
+                    .failure { color: #c00; }
+                    .skipped { color: #cc0; }
+                    .timing { float: right; }
+                    .indent { margin: 0.25em 0 0.5em 2em; }
+                    .clickable { cursor: pointer; }
+                    .testcount { font-size: 85%; }
+                </style><script language="javascript">
+                    function ToggleClass(id) {
+                        var elem = document.getElementById(id);
+                        if (elem.style.display == "none") {
+                            elem.style.display = "block";
+                        }
+                        else {
+                            elem.style.display = "none";
+                        }
+                    }
+                </script></head>
+  <body>
+    <h3 class="divided"><b>Assemblies Run</b></h3>
+    <div>C:\Users\jacob_000\Documents\forge\Forge.EntitiesTests\bin\Release\Forge.Entities.Tests.dll</div>
+    <h3 class="divided"><b>Summary</b></h3>
+    <div>
+                    Tests run: <a href="#all"><b>43</b></a>  
+                    Failures: <a href="#failures"><b>1</b></a>,
+                    Skipped: <a href="#skipped"><b>0</b></a>,
+                    Run time: <b>11.806s</b></div><br><h2><a name="failures"></a>Failed tests</h2>
+    <div class="row"><span class="timing">0.192s</span><span class="failure">✘</span>
+             Forge.Entities.Tests.CallOrderTests.AddEntityAndModifyInAdd : Assert.Equal() Failure
+Position: First difference is at position 4
+Expected: List&lt;TriggerEvent&gt; { OnAdded, OnGlobalPreUpdate, OnUpdate, OnGlobalPostUpdate, OnGlobalPreUpdate, OnUpdate, OnGlobalPostUpdate }
+Actual:   List&lt;TriggerEvent&gt; { OnAdded, OnGlobalPreUpdate, OnUpdate, OnGlobalPostUpdate, OnAdded, OnGlobalPreUpdate, OnUpdate, OnUpdate, OnGlobalPostUpdate }<br clear="all"><pre>   at Forge.Entities.Tests.CallOrderTests.AddEntityAndModifyInAdd() in c:\Users\jacob_000\Documents\forge\Forge.EntitiesTests\CallOrderTests.cs:line 81</pre>
+    </div><br><h2><a name="all"></a>All tests</h2>
+    <h5>Click test class name to expand/collapse test details</h5>
+    <h3><span class="timing">8.350s</span><span class="clickable" onclick="ToggleClass('classID0EO')" ondblclick="ToggleClass('classID0EO')"><span class="failure">✘</span>
+                 Forge.Entities.Tests.CallOrderTests
+                 <span class="testcount">(6 tests)</span></span><br clear="all"></h3>
+    <div class="indent" id="classID0EO">
+      <div class="row"><span class="timing">1.102s</span><span class="success">✔</span>
+             Forge.Entities.Tests.CallOrderTests.AddAndUpdateEntity<br clear="all"></div>
+      <div class="altrow"><span class="timing">0.192s</span><span class="failure">✘</span>
+             Forge.Entities.Tests.CallOrderTests.AddEntityAndModifyInAdd : Assert.Equal() Failure
+Position: First difference is at position 4
+Expected: List&lt;TriggerEvent&gt; { OnAdded, OnGlobalPreUpdate, OnUpdate, OnGlobalPostUpdate, OnGlobalPreUpdate, OnUpdate, OnGlobalPostUpdate }
+Actual:   List&lt;TriggerEvent&gt; { OnAdded, OnGlobalPreUpdate, OnUpdate, OnGlobalPostUpdate, OnAdded, OnGlobalPreUpdate, OnUpdate, OnUpdate, OnGlobalPostUpdate }<br clear="all"><pre>   at Forge.Entities.Tests.CallOrderTests.AddEntityAndModifyInAdd() in c:\Users\jacob_000\Documents\forge\Forge.EntitiesTests\CallOrderTests.cs:line 81</pre>
+      </div>
+      <div class="row"><span class="timing">1.385s</span><span class="success">✔</span>
+             Forge.Entities.Tests.CallOrderTests.AddEntityAndModifyInUpdate<br clear="all"></div>
+      <div class="altrow"><span class="timing">1.108s</span><span class="success">✔</span>
+             Forge.Entities.Tests.CallOrderTests.RemoveEntityAndModifyInRemoveNotification<br clear="all"></div>
+      <div class="row"><span class="timing">1.132s</span><span class="success">✔</span>
+             Forge.Entities.Tests.CallOrderTests.RemoveEntityWithData<br clear="all"></div>
+      <div class="altrow"><span class="timing">3.431s</span><span class="success">✔</span>
+             Forge.Entities.Tests.CallOrderTests.RemoveEntityWithNoData<br clear="all"></div>
+    </div>
+    <h3><span class="timing">0.000s</span><span class="clickable" onclick="ToggleClass('classID0E2D')" ondblclick="ToggleClass('classID0E2D')"><span class="success">✔</span>
+                 Forge.Entities.Tests.DataAccessorTests
+                 <span class="testcount">(2 tests)</span></span><br clear="all"></h3>
+    <div class="indent" style="display: none;" id="classID0E2D">
+      <div class="row"><span class="timing">0.000s</span><span class="success">✔</span>
+             Forge.Entities.Tests.DataAccessorTests.DataAccessorRejectsDataType<br clear="all"></div>
+      <div class="altrow"><span class="timing">0.000s</span><span class="success">✔</span>
+             Forge.Entities.Tests.DataAccessorTests.DataAccessorRejectsSupertypeType<br clear="all"></div>
+    </div>
+    <h3><span class="timing">0.016s</span><span class="clickable" onclick="ToggleClass('classID0E4B')" ondblclick="ToggleClass('classID0E4B')"><span class="success">✔</span>
+                 Forge.Entities.Tests.DataReferenceTests
+                 <span class="testcount">(1 test)</span></span><br clear="all"></h3>
+    <div class="indent" style="display: none;" id="classID0E4B">
+      <div class="row"><span class="timing">0.016s</span><span class="success">✔</span>
+             Forge.Entities.Tests.DataReferenceTests.DataReference<br clear="all"></div>
+    </div>
+    <h3><span class="timing">0.473s</span><span class="clickable" onclick="ToggleClass('classID0EKC')" ondblclick="ToggleClass('classID0EKC')"><span class="success">✔</span>
+                 Forge.Entities.Tests.EngineTests
+                 <span class="testcount">(7 tests)</span></span><br clear="all"></h3>
+    <div class="indent" style="display: none;" id="classID0EKC">
+      <div class="row"><span class="timing">0.061s</span><span class="success">✔</span>
+             Forge.Entities.Tests.EngineTests.CreateEngine(snapshot: Forge.Entities.Implementation.Content.GameSnapshot, templateGroup: Forge.Entities.Implementation.Content.TemplateGroup)<br clear="all"></div>
+      <div class="altrow"><span class="timing">0.075s</span><span class="success">✔</span>
+             Forge.Entities.Tests.EngineTests.CreateEngine(snapshot: Forge.Entities.Implementation.Content.GameSnapshot, templateGroup: Forge.Entities.Implementation.Content.TemplateGroup)<br clear="all"></div>
+      <div class="row"><span class="timing">0.061s</span><span class="success">✔</span>
+             Forge.Entities.Tests.EngineTests.CreateEngine(snapshot: Forge.Entities.Implementation.Content.GameSnapshot, templateGroup: Forge.Entities.Implementation.Content.TemplateGroup)<br clear="all"></div>
+      <div class="altrow"><span class="timing">0.081s</span><span class="success">✔</span>
+             Forge.Entities.Tests.EngineTests.CreateEngine(snapshot: Forge.Entities.Implementation.Content.GameSnapshot, templateGroup: Forge.Entities.Implementation.Content.TemplateGroup)<br clear="all"></div>
+      <div class="row"><span class="timing">0.071s</span><span class="success">✔</span>
+             Forge.Entities.Tests.EngineTests.CreateEngine(snapshot: Forge.Entities.Implementation.Content.GameSnapshot, templateGroup: Forge.Entities.Implementation.Content.TemplateGroup)<br clear="all"></div>
+      <div class="altrow"><span class="timing">0.086s</span><span class="success">✔</span>
+             Forge.Entities.Tests.EngineTests.CreateEngine(snapshot: Forge.Entities.Implementation.Content.GameSnapshot, templateGroup: Forge.Entities.Implementation.Content.TemplateGroup)<br clear="all"></div>
+      <div class="row"><span class="timing">0.038s</span><span class="success">✔</span>
+             Forge.Entities.Tests.EngineTests.CreateEngineUpdateNonList<br clear="all"></div>
+    </div>
+    <h3><span class="timing">0.019s</span><span class="clickable" onclick="ToggleClass('classID0EOE')" ondblclick="ToggleClass('classID0EOE')"><span class="success">✔</span>
+                 Forge.Entities.Tests.EntityTest
+                 <span class="testcount">(6 tests)</span></span><br clear="all"></h3>
+    <div class="indent" style="display: none;" id="classID0EOE">
+      <div class="row"><span class="timing">0.005s</span><span class="success">✔</span>
+             Forge.Entities.Tests.EntityTest.AddedDataIsNotContainedRuntime<br clear="all"></div>
+      <div class="altrow"><span class="timing">0.001s</span><span class="success">✔</span>
+             Forge.Entities.Tests.EntityTest.CannotAddMultipleDataInstances(entity: Entity [uid=0])<br clear="all"></div>
+      <div class="row"><span class="timing">0.000s</span><span class="success">✔</span>
+             Forge.Entities.Tests.EntityTest.CannotAddMultipleDataInstances(entity: Entity [uid=1])<br clear="all"></div>
+      <div class="altrow"><span class="timing">0.001s</span><span class="success">✔</span>
+             Forge.Entities.Tests.EntityTest.EntityUniqueId<br clear="all"></div>
+      <div class="row"><span class="timing">0.004s</span><span class="success">✔</span>
+             Forge.Entities.Tests.EntityTest.InitializingReturnsOneConstantInstanceRuntime<br clear="all"></div>
+      <div class="altrow"><span class="timing">0.008s</span><span class="success">✔</span>
+             Forge.Entities.Tests.EntityTest.RemovedDataIsNotReturnedInSelectData<br clear="all"></div>
+    </div>
+    <h3><span class="timing">0.016s</span><span class="clickable" onclick="ToggleClass('classID0EZF')" ondblclick="ToggleClass('classID0EZF')"><span class="success">✔</span>
+                 Forge.Entities.Tests.EventNotifierTests
+                 <span class="testcount">(2 tests)</span></span><br clear="all"></h3>
+    <div class="indent" style="display: none;" id="classID0EZF">
+      <div class="row"><span class="timing">0.004s</span><span class="success">✔</span>
+             Forge.Entities.Tests.EventNotifierTests.EventsAreNotRedispatched<br clear="all"></div>
+      <div class="altrow"><span class="timing">0.012s</span><span class="success">✔</span>
+             Forge.Entities.Tests.EventNotifierTests.EventsAreNotRedispatchedWithConcurrentDispatch<br clear="all"></div>
+    </div>
+    <h3><span class="timing">2.932s</span><span class="clickable" onclick="ToggleClass('classID0EMG')" ondblclick="ToggleClass('classID0EMG')"><span class="success">✔</span>
+                 Forge.Entities.Tests.GameSnapshotTests
+                 <span class="testcount">(19 tests)</span></span><br clear="all"></h3>
+    <div class="indent" style="display: none;" id="classID0EMG">
+      <div class="row"><span class="timing">0.115s</span><span class="success">✔</span>
+             Forge.Entities.Tests.GameSnapshotTests.CorrectUpdateCount<br clear="all"></div>
+      <div class="altrow"><span class="timing">0.053s</span><span class="success">✔</span>
+             Forge.Entities.Tests.GameSnapshotTests.GotAddedEventsForInitialDatabase(snapshot: Forge.Entities.Implementation.Content.GameSnapshot, templates: Forge.Entities.Implementation.Content.TemplateGroup)<br clear="all"></div>
+      <div class="row"><span class="timing">0.090s</span><span class="success">✔</span>
+             Forge.Entities.Tests.GameSnapshotTests.GotAddedEventsForInitialDatabase(snapshot: Forge.Entities.Implementation.Content.GameSnapshot, templates: Forge.Entities.Implementation.Content.TemplateGroup)<br clear="all"></div>
+      <div class="altrow"><span class="timing">0.074s</span><span class="success">✔</span>
+             Forge.Entities.Tests.GameSnapshotTests.GotAddedEventsForInitialDatabase(snapshot: Forge.Entities.Implementation.Content.GameSnapshot, templates: Forge.Entities.Implementation.Content.TemplateGroup)<br clear="all"></div>
+      <div class="row"><span class="timing">0.067s</span><span class="success">✔</span>
+             Forge.Entities.Tests.GameSnapshotTests.GotAddedEventsForInitialDatabase(snapshot: Forge.Entities.Implementation.Content.GameSnapshot, templates: Forge.Entities.Implementation.Content.TemplateGroup)<br clear="all"></div>
+      <div class="altrow"><span class="timing">0.078s</span><span class="success">✔</span>
+             Forge.Entities.Tests.GameSnapshotTests.GotAddedEventsForInitialDatabase(snapshot: Forge.Entities.Implementation.Content.GameSnapshot, templates: Forge.Entities.Implementation.Content.TemplateGroup)<br clear="all"></div>
+      <div class="row"><span class="timing">0.086s</span><span class="success">✔</span>
+             Forge.Entities.Tests.GameSnapshotTests.GotAddedEventsForInitialDatabase(snapshot: Forge.Entities.Implementation.Content.GameSnapshot, templates: Forge.Entities.Implementation.Content.TemplateGroup)<br clear="all"></div>
+      <div class="altrow"><span class="timing">0.106s</span><span class="success">✔</span>
+             Forge.Entities.Tests.GameSnapshotTests.SendRemoveFromContentDatabase(snapshot: Forge.Entities.Implementation.Content.GameSnapshot, templates: Forge.Entities.Implementation.Content.TemplateGroup)<br clear="all"></div>
+      <div class="row"><span class="timing">0.127s</span><span class="success">✔</span>
+             Forge.Entities.Tests.GameSnapshotTests.SendRemoveFromContentDatabase(snapshot: Forge.Entities.Implementation.Content.GameSnapshot, templates: Forge.Entities.Implementation.Content.TemplateGroup)<br clear="all"></div>
+      <div class="altrow"><span class="timing">0.134s</span><span class="success">✔</span>
+             Forge.Entities.Tests.GameSnapshotTests.SendRemoveFromContentDatabase(snapshot: Forge.Entities.Implementation.Content.GameSnapshot, templates: Forge.Entities.Implementation.Content.TemplateGroup)<br clear="all"></div>
+      <div class="row"><span class="timing">0.125s</span><span class="success">✔</span>
+             Forge.Entities.Tests.GameSnapshotTests.SendRemoveFromContentDatabase(snapshot: Forge.Entities.Implementation.Content.GameSnapshot, templates: Forge.Entities.Implementation.Content.TemplateGroup)<br clear="all"></div>
+      <div class="altrow"><span class="timing">0.176s</span><span class="success">✔</span>
+             Forge.Entities.Tests.GameSnapshotTests.SendRemoveFromContentDatabase(snapshot: Forge.Entities.Implementation.Content.GameSnapshot, templates: Forge.Entities.Implementation.Content.TemplateGroup)<br clear="all"></div>
+      <div class="row"><span class="timing">0.164s</span><span class="success">✔</span>
+             Forge.Entities.Tests.GameSnapshotTests.SendRemoveFromContentDatabase(snapshot: Forge.Entities.Implementation.Content.GameSnapshot, templates: Forge.Entities.Implementation.Content.TemplateGroup)<br clear="all"></div>
+      <div class="altrow"><span class="timing">0.194s</span><span class="success">✔</span>
+             Forge.Entities.Tests.GameSnapshotTests.ToFromContentDatabase(snapshot0: Forge.Entities.Implementation.Content.GameSnapshot, templates: Forge.Entities.Implementation.Content.TemplateGroup)<br clear="all"></div>
+      <div class="row"><span class="timing">0.241s</span><span class="success">✔</span>
+             Forge.Entities.Tests.GameSnapshotTests.ToFromContentDatabase(snapshot0: Forge.Entities.Implementation.Content.GameSnapshot, templates: Forge.Entities.Implementation.Content.TemplateGroup)<br clear="all"></div>
+      <div class="altrow"><span class="timing">0.288s</span><span class="success">✔</span>
+             Forge.Entities.Tests.GameSnapshotTests.ToFromContentDatabase(snapshot0: Forge.Entities.Implementation.Content.GameSnapshot, templates: Forge.Entities.Implementation.Content.TemplateGroup)<br clear="all"></div>
+      <div class="row"><span class="timing">0.221s</span><span class="success">✔</span>
+             Forge.Entities.Tests.GameSnapshotTests.ToFromContentDatabase(snapshot0: Forge.Entities.Implementation.Content.GameSnapshot, templates: Forge.Entities.Implementation.Content.TemplateGroup)<br clear="all"></div>
+      <div class="altrow"><span class="timing">0.301s</span><span class="success">✔</span>
+             Forge.Entities.Tests.GameSnapshotTests.ToFromContentDatabase(snapshot0: Forge.Entities.Implementation.Content.GameSnapshot, templates: Forge.Entities.Implementation.Content.TemplateGroup)<br clear="all"></div>
+      <div class="row"><span class="timing">0.292s</span><span class="success">✔</span>
+             Forge.Entities.Tests.GameSnapshotTests.ToFromContentDatabase(snapshot0: Forge.Entities.Implementation.Content.GameSnapshot, templates: Forge.Entities.Implementation.Content.TemplateGroup)<br clear="all"></div>
+    </div>
+  </body>
+</html>
