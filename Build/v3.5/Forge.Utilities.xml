@@ -1,0 +1,714 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Forge.Utilities</name>
+    </assembly>
+    <members>
+        <member name="T:Forge.Utilities.AtomicActivation">
+            <summary>
+            Thread-safe activation trigger that only activates once.
+            </summary>
+            <remarks>
+            In a sense, this is equivalent to extending Interlocked to operate on booleans.
+            </remarks>
+        </member>
+        <member name="F:Forge.Utilities.AtomicActivation.ACTIVATED">
+            <summary>
+            An activated activation state
+            </summary>
+        </member>
+        <member name="F:Forge.Utilities.AtomicActivation.UNACTIVATED">
+            <summary>
+            A deactivated activation state.
+            </summary>
+        </member>
+        <member name="F:Forge.Utilities.AtomicActivation._activated">
+            <summary>
+            Have we been activated?
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.AtomicActivation.#ctor">
+            <summary>
+            Initializes a new instance of the AtomicActivation class in an unactivated state.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.AtomicActivation.Reset">
+            <summary>
+            Resets the activation state, so that Activate() will return true on then next call.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.AtomicActivation.TryActivate">
+            <summary>
+            Returns true if the activation state was previously unactivated.
+            </summary>
+            <returns>True if the activation activated for this call</returns>
+        </member>
+        <member name="P:Forge.Utilities.AtomicActivation.IsActivated">
+            <summary>
+            Returns true if the current activation state is activated.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.Bound.Intersects(Forge.Utilities.Bound)">
+            <summary>
+            Returns true if this bound is either intersecting or colliding with the other bound.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.Bound.Contains(Forge.Utilities.Vector2r)">
+            <summary>
+            Returns true if the given point is contained within this bound.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.Bound.Contains(Forge.Utilities.Real,Forge.Utilities.Real)">
+            <summary>
+            Returns true if the given point is contained within this bound.
+            </summary>
+        </member>
+        <member name="T:Forge.Utilities.FastStringFormat">
+            <summary>
+            Provides methods which format a string without garbage allocation.
+            </summary>
+            <remarks>
+            The format strings only go from {0} to {9} and do not support any customizations.
+            Backslashes are also not supported.
+            </remarks>
+        </member>
+        <member name="M:Forge.Utilities.RandomExtensionMethods.NextLong(System.Random,System.Int64,System.Int64)">
+            <summary>
+            Returns a random long from min (inclusive) to max (exclusive)
+            </summary>
+            <param name="random">The given random instance</param>
+            <param name="min">The inclusive minimum bound</param>
+            <param name="max">The exclusive maximum bound. Must be greater than min</param>
+        </member>
+        <member name="M:Forge.Utilities.RandomExtensionMethods.NextLong(System.Random,System.Int64)">
+            <summary>
+            Returns a random long from 0 (inclusive) to max (exclusive)
+            </summary>
+            <param name="random">The given random instance</param>
+            <param name="max">The exclusive maximum bound. Must be greater than 0</param>
+        </member>
+        <member name="M:Forge.Utilities.RandomExtensionMethods.NextLong(System.Random)">
+            <summary>
+            Returns a random long over all possible values of long (except long.MaxValue, similar to
+            random.Next())
+            </summary>
+            <param name="random">The given random instance</param>
+        </member>
+        <member name="T:Forge.Utilities.Log">
+            <summary>
+            Log messages.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.Log.Get(System.Type)">
+            <summary>
+            Get a logger for the given type.
+            </summary>
+        </member>
+        <member name="T:Forge.Utilities.Log`1">
+            <summary>
+            Log messages.
+            </summary>
+            <typeparam name="T">The type that is sending the log message</typeparam>
+        </member>
+        <member name="F:Forge.Utilities.Log`1._log">
+            <summary>
+            The log4net logger used to log messages.
+            </summary>
+        </member>
+        <member name="T:Forge.Utilities.Maybe">
+            <summary>
+            Helper for Maybe[T] by providing local type inference at Just and Empty call sites.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.Maybe.Just``1(``0)">
+            <summary>
+            Returns a new Maybe instance containing the given value.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.Maybe.Empty``1">
+            <summary>
+            Returns a maybe instance that is empty.
+            </summary>
+            <typeparam name="T">The type of the maybe instance.</typeparam>
+            <returns>An empty Maybe[T] instance.</returns>
+        </member>
+        <member name="T:Forge.Utilities.MaybeExtensions">
+            <summary>
+            Some common extensions for the maybe class.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.MaybeExtensions.Lift``2(Forge.Utilities.Maybe{``0},System.Func{``0,Forge.Utilities.Maybe{``1}})">
+            <summary>
+            Lifts a maybe into another maybe using the given lifting function. If the given maybe is
+            empty, then an empty maybe is returned.
+            </summary>
+            <typeparam name="T0">The type of the original maybe</typeparam> <typeparam name="T1">The
+            type of the new maybe</typeparam>
+            <param name="maybe">The maybe to transform</param>
+            <param name="lifter">The lifting function that will transform the maybe</param>
+            <returns>A new maybe created by the lifting function</returns>
+        </member>
+        <member name="M:Forge.Utilities.MaybeExtensions.Lift``2(Forge.Utilities.Maybe{``0},System.Func{``0,``1})">
+            <summary>
+            Lifts a maybe into another maybe using the given lifting function. If the given maybe is
+            empty, then an empty maybe is returned.The returned maybe is never empty.
+            </summary>
+            <typeparam name="T0">The type of the original maybe</typeparam> <typeparam name="T1">The
+            type of the new maybe</typeparam>
+            <param name="maybe">The maybe to transform</param>
+            <param name="lifter">The lifting function that will transform the maybe</param>
+            <returns>A new maybe created by the lifting function</returns>
+        </member>
+        <member name="M:Forge.Utilities.MaybeExtensions.Lift``2(Forge.Utilities.Maybe{``0})">
+            <summary>
+            C# has a limitation where non-reference generic types cannot be contravariant (the Maybe
+            generic type should be contravariant). This function eases that limitation by providing
+            automatic casting to a higher Maybe type.
+            </summary>
+        </member>
+        <member name="T:Forge.Utilities.Maybe`1">
+            <summary>
+            Maybe wraps another type and is used to signal to other code that it might not return a
+            result. It performs the same function as null, but in a more type-safe manner that provides
+            more clarity into the contract that function exhibits.
+            </summary>
+            <typeparam name="T">The type of value stored in the Maybe instance</typeparam>
+        </member>
+        <member name="F:Forge.Utilities.Maybe`1._value">
+            <summary>
+            The stored value in the maybe instance. Only contains interesting data if _hasValue is
+            true (otherwise the data is garbage).
+            </summary>
+        </member>
+        <member name="F:Forge.Utilities.Maybe`1._hasValue">
+            <summary>
+            True if the maybe instance is currently holding a value.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.Maybe`1.#ctor(`0)">
+            <summary>
+            Creates a new Maybe container that holds the given value.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.Maybe`1.#ctor(`0,System.Boolean)">
+            <summary>
+            Internal constructor used to construct the maybe. Used primarily in construction of the
+            Empty element.
+            </summary>
+        </member>
+        <member name="F:Forge.Utilities.Maybe`1.Empty">
+            <summary>
+            Default empty instance.
+            </summary>
+        </member>
+        <member name="P:Forge.Utilities.Maybe`1.Value">
+            <summary>
+            Gets the underlying value.
+            </summary>
+            <remarks>
+            If IsEmpty returns true, then this method will throw an InvalidOperationException.
+            </remarks>
+        </member>
+        <member name="P:Forge.Utilities.Maybe`1.Exists">
+            <summary>
+            Returns true if this Maybe has a value stored in it.
+            </summary>
+        </member>
+        <member name="P:Forge.Utilities.Maybe`1.IsEmpty">
+            <summary>
+            Returns true if this Maybe is empty, it, it does not have a value stored in it.
+            </summary>
+        </member>
+        <member name="T:Forge.Utilities.IContextObject">
+            <summary>
+            An object that can be used as a value in a GeneralStreamingContext instance.
+            </summary>
+        </member>
+        <member name="T:Forge.Utilities.GeneralStreamingContext">
+            <summary>
+            Object that implements the streaming context that all converters which expect a streaming
+            context expect the streaming context to be a type of.
+            </summary>
+        </member>
+        <member name="F:Forge.Utilities.GeneralStreamingContext._contextObjects">
+            <summary>
+            The context objects
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.GeneralStreamingContext.#ctor(Forge.Utilities.IContextObject[])">
+            <summary>
+            Creates a new GeneralStreamingContext with the given initial objects.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.GeneralStreamingContext.Get``1">
+            <summary>
+            Returns the context object associated with the type T.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.GeneralStreamingContext.Create``1">
+            <summary>
+            Sets the context object of type T to an instance of new T().
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.GeneralStreamingContext.Set``1(``0)">
+            <summary>
+            Sets the context object of type T with the given value.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.GeneralStreamingContext.Remove``1">
+            <summary>
+            Removes the context object associated with type T.
+            </summary>
+        </member>
+        <member name="T:Forge.Utilities.Notifier`1">
+            <summary>
+            Wraps the notification pattern, where something happens multiple times but the listeners
+            should only be notified once.
+            </summary>
+            <remarks>
+            The Notifier API is thread-safe.
+            </remarks>
+            <typeparam name="ParamType">The type of the parameter.</typeparam>
+        </member>
+        <member name="F:Forge.Utilities.Notifier`1._activated">
+            <summary>
+            Have we already notified the listeners?
+            </summary>
+        </member>
+        <member name="F:Forge.Utilities.Notifier`1._notificationParam">
+            <summary>
+            Parameter to notify listeners with.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.Notifier`1.#ctor(`0)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Forge.Utilities.Notifier`1"/> class.
+            </summary>
+            <param name="param">The parameter to notify listeners with.</param>
+        </member>
+        <member name="M:Forge.Utilities.Notifier`1.Reset">
+            <summary>
+            Resets this notifier so that it will notify listeners again.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.Notifier`1.Notify">
+            <summary>
+            Notify the listeners if they have not already been notified.
+            </summary>
+        </member>
+        <member name="E:Forge.Utilities.Notifier`1.Listener">
+            <summary>
+            Allows objects to listen for notifications. If the notifier has already been triggered,
+            then the added listener is immediately called.
+            </summary>
+        </member>
+        <member name="T:Forge.Utilities.PropertyMetadata">
+            <summary>
+            A PropertyMetadata describes a discovered property or field in a TypeMetadata.
+            </summary>
+        </member>
+        <member name="F:Forge.Utilities.PropertyMetadata.Name">
+            <summary>
+            The cached name of the property/field.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.PropertyMetadata.Write(System.Object,System.Object)">
+            <summary>
+            Writes a value to the property that this property metadata represents, using given
+            object instance as the context.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.PropertyMetadata.Read(System.Object)">
+            <summary>
+            Reads a value from the property that this property metadata represents, using the given
+            object instance as the context.
+            </summary>
+        </member>
+        <member name="F:Forge.Utilities.PropertyMetadata.StorageType">
+            <summary>
+            The type of value that is stored inside of the property. For example, for an int field,
+            StorageType will be typeof(int).
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.PropertyMetadata.#ctor(System.Reflection.PropertyInfo)">
+            <summary>
+            Initializes a new instance of the PropertyMetadata class from a property member.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.PropertyMetadata.#ctor(System.Reflection.FieldInfo)">
+            <summary>
+            Initializes a new instance of the PropertyMetadata class from a field member.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.PropertyMetadata.Equals(System.Object)">
+            <summary>
+            Determines whether the specified object is equal to this one.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.PropertyMetadata.Equals(Forge.Utilities.PropertyMetadata)">
+            <summary>
+            Determines whether the specified object is equal to this one.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.PropertyMetadata.GetHashCode">
+            <summary>
+            Returns a hash code for this instance.
+            </summary>
+            <returns>A hash code for this instance, suitable for use in hashing algorithms and data
+            structures like a hash table.</returns>
+        </member>
+        <member name="P:Forge.Utilities.PropertyMetadata.MemberInfo">
+            <summary>
+            The member info that we read to and write from.
+            </summary>
+        </member>
+        <member name="T:Forge.Utilities.Real">
+            <summary>
+            A Real value implements floating point operations on the CPU. It does not adhere any any
+            IEEE standard, but has the extremely important attribute of providing identical semantics on
+            every CPU which executes it. This is otherwise impossible to guarantee in the CLR,
+            especially when 3rd party code is running and/or C++ DLL access is unavailable to set x87
+            FPU rounding modes.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.Real.ShiftDecimal(System.Int32)">
+            <summary>
+            Assuming this real has a base 10 representation, this shifts the decimal value to the
+            left by count digits.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.Real.GetDigitCount(System.Int32)">
+            <summary>
+            Returns the number of digits in the given value. The negative sign is not considered a
+            digit.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.Real.CreateDecimal(System.Int64,System.Int32,System.Int32)">
+            <summary>
+            Creates a real value with that is 0.number. For example, CreateDecimal(123) will create
+            a real value that is equal to "0.123".
+            </summary>
+            <remarks>
+            CreateDecimal(1, 0005, 4) will create 1.0005 CreateDecimal(1, 5, 4) will create 1.0005
+            </remarks>
+            <returns></returns>
+        </member>
+        <member name="M:Forge.Utilities.Real.FromParts(System.Int32,System.Int32)">
+            <summary>
+            Create a fixed-int number from parts. For example, to create 1.5 pass in 1 and 500.
+            </summary>
+            <param name="PreDecimal">The number above the decimal. For 1.5, this would be 1.</param>
+            <param name="PostDecimal">The number below the decimal, to three digits. For 1.5, this
+            would be 500. For 1.005, this would be 5.</param>
+            <returns>A fixed-int representation of the number parts</returns>
+        </member>
+        <member name="T:Forge.Utilities.Real.RealJsonConverter">
+            <summary>
+            Serializes Real values to JSON and back as floats. Without using a converter, Reals
+            would be serialized as an object ({}) which would create a lot of unnecessary bloat.
+            </summary>
+        </member>
+        <member name="T:Forge.Utilities.Reference`1">
+            <summary>
+            Container type that holds a reference to another object.
+            </summary>
+            <typeparam name="T">The type of object to store a reference to.</typeparam>
+        </member>
+        <member name="T:Forge.Utilities.SerializationHelpers">
+            <summary>
+            Helper methods for Newtonsoft.JSON
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.SerializationHelpers.MergeArrays``1(``0[],``0[])">
+            <summary>
+            Returns the two arrays merged together.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.SerializationHelpers.CreateSettings(Newtonsoft.Json.JsonConverter[],Forge.Utilities.IContextObject[])">
+            <summary>
+            Helper method to create the JsonSerializerSettings that all of the serialization methods
+            use.
+            </summary>
+            <param name="converters">The converters to use in the settings.</param>
+            <param name="contextObjects">Context objects to use</param>
+            <returns>An appropriate JsonSerializerSettings instance.</returns>
+        </member>
+        <member name="M:Forge.Utilities.SerializationHelpers.DeepClone``1(``0,Newtonsoft.Json.JsonConverter[],Forge.Utilities.IContextObject[])">
+            <summary>
+            Returns a deep clone of the given object instance.
+            </summary>
+            <typeparam name="T">The type of object to clone.</typeparam>
+            <param name="instance">The original object to clone.</param>
+            <param name="converters">Specific JSON converters to use when deserializing the
+            object.</param>
+            <param name="contextObjects">Initial context objects to use when deserializing</param>
+            <returns>An identical clone to the given instance.</returns>
+        </member>
+        <member name="M:Forge.Utilities.SerializationHelpers.DeepClone``1(``0)">
+            <summary>
+            Returns a deep clone of the given object instance.
+            </summary>
+            <typeparam name="T">The type of object to clone.</typeparam>
+            <param name="instance">The original object to clone.</param>
+            <returns>An identical clone to the given instance.</returns>
+        </member>
+        <member name="M:Forge.Utilities.SerializationHelpers.Serialize``1(``0,Newtonsoft.Json.JsonConverter[],Forge.Utilities.IContextObject[])">
+            <summary>
+            Returns the serialized version of the given instance, optionally using the given
+            converters during the serialization process.
+            </summary>
+            <typeparam name="T">The type of object to serialize.</typeparam>
+            <param name="instance">The object instance itself to serialize.</param>
+            <param name="converters">The converters to use during the serialization process.</param>
+            <param name="contextObjects">Context objects to use</param>
+            <returns>A serialized version of the given object.</returns>
+        </member>
+        <member name="M:Forge.Utilities.SerializationHelpers.Serialize``1(``0)">
+            <summary>
+            Returns the serialized version of the given instance, optionally using the given
+            converters during the serialization process.
+            </summary>
+            <typeparam name="T">The type of object to serialize.</typeparam>
+            <param name="instance">The object instance itself to serialize.</param>
+            <returns>A serialized version of the given object.</returns>
+        </member>
+        <member name="M:Forge.Utilities.SerializationHelpers.Deserialize``1(System.String,Newtonsoft.Json.JsonConverter[],Forge.Utilities.IContextObject[])">
+            <summary>
+            Deserializes the given JSON data (hopefully created using Serialize for maximal
+            compatibility) into an object instance of type T.
+            </summary>
+            <typeparam name="T">The type of the object to deserialize.</typeparam>
+            <param name="json">The serialized state of the object.</param>
+            <param name="converters">Converters to use during the deserialization process.</param>
+            <param name="contextObjects">Context objects to use</param>
+            <returns>A deserialized object of type T (or a derived type) that was generated from the
+            given JSON data.</returns>
+        </member>
+        <member name="M:Forge.Utilities.SerializationHelpers.Deserialize``1(System.String)">
+            <summary>
+            Deserializes the given JSON data (hopefully created using Serialize for maximal
+            compatibility) into an object instance of type T.
+            </summary>
+            <typeparam name="T">The type of the object to deserialize.</typeparam>
+            <param name="json">The serialized state of the object.</param>
+            <returns>A deserialized object of type T (or a derived type) that was generated from the
+            given JSON data.</returns>
+        </member>
+        <member name="T:Forge.Utilities.SerializationHelpers.FlexibleTypeConverter">
+            <summary>
+            We completely override how Json.NET serializes types
+            </summary>
+        </member>
+        <member name="T:Forge.Utilities.SerializationHelpers.FlexibleBinder">
+            <summary>
+            Discover types, even if they are not in the proper assembly.
+            </summary>
+        </member>
+        <member name="F:Forge.Utilities.SerializationHelpers.FlexibleBinder.Instance">
+            <summary>
+            Singleton instance
+            </summary>
+        </member>
+        <member name="T:Forge.Utilities.TypeCache">
+            <summary>
+            Caches type name to type lookups. Type lookups occur in all loaded assemblies.
+            </summary>
+        </member>
+        <member name="F:Forge.Utilities.TypeCache._cachedTypes">
+            <summary>
+            Cache from fully qualified type name to type instances.
+            </summary>
+        </member>
+        <member name="F:Forge.Utilities.TypeCache._cachedMetadata">
+            <summary>
+            Cache from Type to the respective TypeMetadata.
+            </summary>
+        </member>
+        <member name="F:Forge.Utilities.TypeCache._assemblies">
+            <summary>
+            Assemblies indexed by their name.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.TypeCache.TryDirectTypeLookup(System.String,System.String,System.Type@)">
+            <summary>
+            Does a direct lookup for the given type, ie, goes directly to the assembly identified by
+            assembly name and finds it there.
+            </summary>
+            <param name="assemblyName">The assembly to find the type in.</param>
+            <param name="typeName">The name of the type.</param>
+            <param name="type">The found type.</param>
+            <returns>True if the type was found, false otherwise.</returns>
+        </member>
+        <member name="M:Forge.Utilities.TypeCache.TryIndirectTypeLookup(System.String,System.Type@)">
+            <summary>
+            Tries to do an indirect type lookup by scanning through every loaded assembly until the
+            type is found in one of them.
+            </summary>
+            <param name="typeName">The name of the type.</param>
+            <param name="type">The found type.</param>
+            <returns>True if the type was found, false otherwise.</returns>
+        </member>
+        <member name="M:Forge.Utilities.TypeCache.FindType(System.String,System.String)">
+            <summary>
+            Find a type with the given name. An exception is thrown if no type with the given name
+            can be found. This method searches all currently loaded assemblies for the given type.
+            </summary>
+            <param name="name">The fully qualified name of the type.</param>
+            <param name="assemblyHint">A hint for the assembly to start the search with</param>
+        </member>
+        <member name="M:Forge.Utilities.TypeCache.FindTypeMetadata(System.Type)">
+            <summary>
+            Finds the associated TypeMetadata for the given type.
+            </summary>
+            <param name="type">The type to find the type metadata for.</param>
+            <returns>A TypeMetadata that models the given type.</returns>
+        </member>
+        <member name="T:Forge.Utilities.TypeExtensions">
+            <summary>
+            Extensions to the Type API.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.TypeExtensions.GetInterface(System.Type,System.Type)">
+            <summary>
+            Searches for a particular implementation of the given interface type inside of the type.
+            This is particularly useful if the interface type is an open type, ie, typeof(IFace[]),
+            because this method will then return IFace[] but with appropriate type parameters
+            inserted.
+            </summary>
+            <param name="type">The base type to search for interface</param>
+            <param name="interfaceType">The interface type to search for. Can be an open generic
+            type.</param>
+            <returns>The actual interface type that the type contains, or null if there is no
+            implementation of the given interfaceType on type.</returns>
+        </member>
+        <member name="M:Forge.Utilities.TypeExtensions.IsImplementationOf(System.Type,System.Type)">
+            <summary>
+            Returns true if the baseType is an implementation of the given interface type. The
+            interface type can be generic.
+            </summary>
+            <param name="type">The type to search for an implementation of the given
+            interface</param>
+            <param name="interfaceType">The interface type to search for</param>
+            <returns></returns>
+        </member>
+        <member name="T:Forge.Utilities.TypeMetadata">
+            <summary>
+            Provides a view of an arbitrary type that unifies a number of discrete concepts in the CLR.
+            Arrays and Collection types have special support, but their APIs are unified by the
+            TypeMetadata so that they can be treated as if they were a regular type.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.TypeMetadata.CreateInstance">
+            <summary>
+            Creates a new instance of the type that this metadata points back to.
+            </summary>
+            <remarks>
+            Activator.CreateInstance cannot be used because TypeMetadata can point to an Array.
+            </remarks>
+        </member>
+        <member name="M:Forge.Utilities.TypeMetadata.CollectionSizeHint(System.Object@,System.Int32)">
+            <summary>
+            Hint that there will be size number of elements stored in the given collection. This
+            method is completely optional, but if the collection is an array then it will improve
+            the performance of AppendValue.
+            </summary>
+            <param name="context">The collection type.</param>
+            <param name="size">The size hint to use for the collection</param>
+        </member>
+        <member name="M:Forge.Utilities.TypeMetadata.AppendValue(System.Object@,System.Object,System.Int32)">
+            <summary>
+            Appends a value to the end of the array or collection. If the collection is an array,
+            then the item is added to array[indexHint]. If it is a collection, then the item is just
+            appended to the end of the collection.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.TypeMetadata.#ctor(System.Type)">
+            <summary>
+            Initializes a new instance of the TypeMetadata class from a type. Use TypeCache to get
+            instances of TypeMetadata; do not use this constructor directly.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.TypeMetadata.CollectProperties(System.Type,System.Collections.Generic.HashSet{Forge.Utilities.PropertyMetadata})">
+            <summary>
+            Recursive method that adds all of the properties and fields from the given type into the
+            given list. This method also fetches inherited properties by using the TypeCache to
+            retrieve the TypeMetadata for the parent type.
+            </summary>
+            <param name="reflectedType">The type to process to collect properties from.</param>
+            <param name="properties">The list of properties that should be appended to</param>
+        </member>
+        <member name="F:Forge.Utilities.TypeMetadata._collectionAddMethod">
+            <summary>
+            The cached Add method in ICollection[T]. This only contains a value if IsCollection is
+            true.
+            </summary>
+        </member>
+        <member name="F:Forge.Utilities.TypeMetadata._isArray">
+            <summary>
+            True if the base type is an array. If true, accessing Properties will throw an
+            exception. IsCollection is also true if _isArray is true.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.TypeMetadata.RemoveProperty(System.String)">
+            <summary>
+            Attempts to remove the property with the given name.
+            </summary>
+            <param name="propertyName">The name of the property to remove.</param>
+            <returns>True if the property was removed, false if it was not found.</returns>
+        </member>
+        <member name="P:Forge.Utilities.TypeMetadata.ReflectedType">
+            <summary>
+            The type that this metadata is modeling, ie, the type that the metadata was constructed
+            off of.
+            </summary>
+        </member>
+        <member name="P:Forge.Utilities.TypeMetadata.ElementType">
+            <summary>
+            Iff this metadata maps back to a Collection or an Array type, then this is the type of
+            element stored inside the array or collection. Otherwise, this method throws an
+            exception.
+            </summary>
+        </member>
+        <member name="P:Forge.Utilities.TypeMetadata.IsCollection">
+            <summary>
+            True if the base type is a collection. If true, accessing Properties will throw an
+            exception.
+            </summary>
+        </member>
+        <member name="P:Forge.Utilities.TypeMetadata.Properties">
+            <summary>
+            The properties on the type. This is used when importing/exporting a type that does not
+            have a user-defined importer/exporter.
+            </summary>
+        </member>
+        <member name="T:Forge.Utilities.UniqueIntGenerator">
+            <summary>
+            Generates unique integers that are sequential. This class is thread-safe.
+            </summary>
+        </member>
+        <member name="F:Forge.Utilities.UniqueIntGenerator._next">
+            <summary>
+            The next integer to generate.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.UniqueIntGenerator.Next">
+            <summary>
+            Returns the next unique int.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.UniqueIntGenerator.Consume(System.Int32)">
+            <summary>
+            Notifies that UniqueIdGenerator that the given ID has already been consumed. Please note
+            that this API is not thread-safe.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.Utils.Swap``1(``0@,``0@)">
+            <summary>
+            Swaps two ref objects.
+            </summary>
+            <typeparam name="T">The type of objects to swap.</typeparam>
+            <param name="a">Object a</param>
+            <param name="b">Object b</param>
+        </member>
+    </members>
+</doc>

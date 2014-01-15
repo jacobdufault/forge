@@ -1,0 +1,956 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Forge.Networking</name>
+    </assembly>
+    <members>
+        <member name="T:Forge.Networking.AutomaticTurnGame.AutomaticTurnGame">
+            <summary>
+            Supports turn-based games where there are a high number of game turns per second (>5) that
+            are automatically ended.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.AutomaticTurnGame.AutomaticTurnGame._interpolationAccumulator">
+            <summary>
+            How much time has elapsed since the last time we popped an update?
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.AutomaticTurnGame.AutomaticTurnGame._clientUpdateAccumulator">
+            <summary>
+            Accumulator used for clients when they are updating (so if we receive two updates really
+            quickly, we don't want to actually execute those updates immediately; we instead want to
+            wait until we can update them).
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.AutomaticTurnGame.AutomaticTurnGame._serverUpdateAccumulator">
+            <summary>
+            How much time has elapsed since the last time we updated?
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.AutomaticTurnGame.AutomaticTurnGame._updateDeltaMs">
+            <summary>
+            How much time should elapse between updates for us to meet our target updates/second?
+            </summary>
+        </member>
+        <member name="M:Forge.Networking.AutomaticTurnGame.AutomaticTurnGame.#ctor(Forge.Networking.Core.NetworkContext,System.Int32)">
+            <summary>
+            Create a new AutomaticTurnGame.
+            </summary>
+            <param name="context">The networking context.</param>
+            <param name="targetUpdatesPerSecond">The number of updates/turns that will occur every
+            second.</param>
+        </member>
+        <member name="M:Forge.Networking.AutomaticTurnGame.AutomaticTurnGame.Dispose">
+            <summary>
+            Clean up the game from the NetworkContext.
+            </summary>
+        </member>
+        <member name="M:Forge.Networking.AutomaticTurnGame.AutomaticTurnGame.SendCommand(System.Collections.Generic.List{Forge.Networking.AutomaticTurnGame.IGameCommand})">
+            <summary>
+            Send the given set of game commands to the server. It will be processed at a later point
+            by every client.
+            </summary>
+            <param name="commands">The commands to send.</param>
+        </member>
+        <member name="M:Forge.Networking.AutomaticTurnGame.AutomaticTurnGame.Update(System.Single)">
+            <summary>
+            Update the game. Potentially dispatch game commands for execution by all computers if
+            enough time has elapsed.
+            </summary>
+            <param name="deltaTime">The amount of time that has elapsed since the last call to
+            Update.</param>
+        </member>
+        <member name="P:Forge.Networking.AutomaticTurnGame.AutomaticTurnGame.TargetUpdatesPerSecond">
+            <summary>
+            The number of updates we second the game should run at.
+            </summary>
+        </member>
+        <member name="P:Forge.Networking.AutomaticTurnGame.AutomaticTurnGame.TurnDelay">
+            <summary>
+            Configure the lag between giving input and actually receiving that input. A lower value
+            will cause stuttering on slow networks, but user responsiveness will be higher. A higher
+            value will cause less stuttering, but lower user responsiveness.
+            </summary>
+        </member>
+        <member name="P:Forge.Networking.AutomaticTurnGame.AutomaticTurnGame.InterpolationPercentage">
+            <summary>
+            Returns how far along we are until the next update.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Core.INetworkMessageHandler">
+            <summary>
+            Client code that is executed upon the receipt of a network message.
+            </summary>
+        </member>
+        <member name="M:Forge.Networking.Core.INetworkMessageHandler.HandleNetworkMessage(Forge.Networking.Core.Player,Forge.Networking.Core.INetworkMessage)">
+            <summary>
+            Handle a network message.
+            </summary>
+            <param name="sender">The player that sent the message.</param>
+            <param name="message">The message itself (an instance of a type from
+            HandledTypes) .</param>
+        </member>
+        <member name="P:Forge.Networking.Core.INetworkMessageHandler.HandledTypes">
+            <summary>
+            The types that this message handler can process.
+            </summary>
+        </member>
+        <member name="M:Forge.Networking.AutomaticTurnGame.GameServerHandler.SendCommands">
+            <summary>
+            Sends commands out for the network turn.
+            </summary>
+        </member>
+        <member name="P:Forge.Networking.AutomaticTurnGame.GameServerHandler.TurnDelay">
+            <summary>
+            If the local computer issues a command turn N, then the command will actually be
+            executed on turn (N+TurnDelay). This parameter heavily impacts responsiveness. This
+            value is only used on the server but can be changed by any computer on the network. A
+            low value will mean that user input will get processed more quickly, but the game is
+            more likely to stutter from a missed update.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.AutomaticTurnGame.GameServerHandler.DelayedMessageAccumulator">
+            <summary>
+            Helper class that simplifies the management of delayed messages.
+            </summary>
+            <typeparam name="T">The type of message to store.</typeparam>
+        </member>
+        <member name="M:Forge.Networking.AutomaticTurnGame.GameServerHandler.DelayedMessageAccumulator.#ctor(System.Int32)">
+            <summary>
+            Construct a new circular queue with the given capacity.
+            </summary>
+            <param name="capacity">How big the queue should be.</param>
+        </member>
+        <member name="P:Forge.Networking.AutomaticTurnGame.GameClientHandler.TurnDelay">
+            <summary>
+            Read only value to get the current turn delay that the server is using.
+            </summary>
+        </member>
+        <member name="P:Forge.Networking.AutomaticTurnGame.GameClientHandler.HasUpdate">
+            <summary>
+            Does the client has an update ready to be executed?
+            </summary>
+        </member>
+        <member name="P:Forge.Networking.AutomaticTurnGame.GameClientHandler.HasLargeBacklog">
+            <summary>
+            Does the client have a large backlog of updates that are waiting to be executed?
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Core.INetworkMessage">
+            <summary>
+            A message transmitted over the network. Network messages are always transmitted in order and
+            reliably.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.AutomaticTurnGame.EndTurnNetworkMessage.Commands">
+            <summary>
+            Every command (from every computer) that should be issued.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.AutomaticTurnGame.EndTurnNetworkMessage.OnUpdate">
+            <summary>
+            The update the commands should be issued on.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.AutomaticTurnGame.SubmitCommandsNetworkMessage">
+            <summary>
+            Message that goes from clients to the server specifying commands that have been issued.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.AutomaticTurnGame.SubmitCommandsNetworkMessage.Commands">
+            <summary>
+            The requested commands to issue.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.AutomaticTurnGame.SubmitCommandsNetworkMessage.SubmittedOn">
+            <summary>
+            The update number that the command was submitted on.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.AutomaticTurnGame.AdjustTurnDelayNetworkMessage">
+            <summary>
+            Message that only the server processes to adjust the turn delay.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.AutomaticTurnGame.AdjustTurnDelayNetworkMessage.NewDelay">
+            <summary>
+            The new delay for the game.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.AutomaticTurnGame.IGameCommand">
+            <summary>
+            An IGameCommand is some user input that modifies game state during a turn. This interface is
+            not implemented internally; instead it gives some type safety for the API (otherwise only
+            object could be used as parameter types).
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Chat.ChatMessageHandler">
+            <summary>
+            Processes ChatNetworkMessages and adds them to a displayable message list depending on if
+            the local player should be allowed to see the message.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Chat.ChatMessageHandler._localPlayer">
+            <summary>
+            The local player.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Chat.ChatMessageHandler.AllMessages">
+            <summary>
+            All received chat messages.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Chat.ChatMessageHandler.DisplayableMessages">
+            <summary>
+            All chat messages that should be displayed.
+            </summary>
+        </member>
+        <member name="M:Forge.Networking.Chat.ChatMessageHandler.ShouldDisplay(Forge.Utilities.Maybe{System.Collections.Generic.List{Forge.Networking.Core.Player}})">
+            <summary>
+            Returns true if this computer should display the message for the given set of message
+            receivers.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Chat.ChatNetworkMessage">
+            <summary>
+            A network message that is used when sending chat messages.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Chat.ChatNetworkMessage.Content">
+            <summary>
+            The content of the chat message.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Chat.ChatNetworkMessage.Sender">
+            <summary>
+            The player that sent the message.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Chat.ChatNetworkMessage.Receivers">
+            <summary>
+            Specifies what players should see the given message. This will be empty if every player
+            should see the message, and non-empty if not everyone should see it.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Chat.ReceivedChatMessage">
+            <summary>
+            A chat message that has been received.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Chat.ReceivedChatMessage.RecieveTime">
+            <summary>
+            The time that the message was received.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Chat.ReceivedChatMessage.Sender">
+            <summary>
+            The player that sent the message.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Chat.ReceivedChatMessage.Content">
+            <summary>
+            The content of the message.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Core.Configuration">
+            <summary>
+            This class contains Lidgren.Network configuration settings that are used when creating
+            NetPeer (typically either a NetServer or a NetClient type) instances.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Core.Configuration.Port">
+            <summary>
+            The port that is used when hosting.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Core.Configuration.AppName">
+            <summary>
+            Global application name that is used to distinguish Forge.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Chat.ChatManager">
+            <summary>
+            Contains the core APIS for sending and receiving chat messages.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Chat.ChatManager._context">
+            <summary>
+            The networking context to use for retrieving our local player and for adding our
+            ChatNetworkMessage handler.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Chat.ChatManager._handler">
+            <summary>
+            The ChatMessageHandler we use to get chat messages from.
+            </summary>
+        </member>
+        <member name="M:Forge.Networking.Chat.ChatManager.#ctor(Forge.Networking.Core.NetworkContext)">
+            <summary>
+            Construct a new ChatManager using the given networking context and the given object for
+            mapping network players to a directed player relation graph.
+            </summary>
+            <param name="context">The networking context.</param>
+        </member>
+        <member name="M:Forge.Networking.Chat.ChatManager.Dispose">
+            <summary>
+            Cleans up the ChatManager from the NetworkContext it was constructed with.
+            </summary>
+        </member>
+        <member name="M:Forge.Networking.Chat.ChatManager.SendMessage(System.String,System.Collections.Generic.List{Forge.Networking.Core.Player})">
+            <summary>
+            Send a chat message to all players that have the given relationship with the sending
+            player.
+            </summary>
+            <param name="message">The message to send.</param>
+            <param name="receivers">The players that should receive the message.</param>
+        </member>
+        <member name="M:Forge.Networking.Chat.ChatManager.SendMessage(System.String)">
+            <summary>
+            Sends a chat message to every player.
+            </summary>
+            <param name="message">The message to send.</param>
+        </member>
+        <member name="P:Forge.Networking.Chat.ChatManager.DisplayableMessages">
+            <summary>
+            All of the chat messages that have been received that should be displayed.
+            </summary>
+        </member>
+        <member name="P:Forge.Networking.Chat.ChatManager.AllMessages">
+            <summary>
+            All received chat messages.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Core.ServerDiscoveryFormat.Host">
+            <summary>
+            The hosting player.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Core.ServerDiscoveryFormat.Title">
+            <summary>
+            The title of the game.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Core.DiscoveredServer">
+            <summary>
+            Contains information about a running server.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Core.DiscoveredServer.Host">
+            <summary>
+            The player that is hosting the server.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Core.DiscoveredServer.Title">
+            <summary>
+            The title of the server.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Core.DiscoveredServer.IP">
+            <summary>
+            The IP that can be used to connect to the server.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Core.NetworkServerDiscovery">
+            <summary>
+            This class makes it simple to automatically discover servers that are running on the local
+            network.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Core.NetworkServerDiscovery._client">
+            <summary>
+            The NetClient we use to run the discovery service.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Core.NetworkServerDiscovery._discoveredLocalServers">
+            <summary>
+            The servers that we have discovered.
+            </summary>
+        </member>
+        <member name="M:Forge.Networking.Core.NetworkServerDiscovery.DiscoverServers">
+            <summary>
+            Attempts to discover all running servers on the local network. DiscoveredLocalServers
+            will contain the result; it may change over time.
+            </summary>
+        </member>
+        <member name="M:Forge.Networking.Core.NetworkServerDiscovery.ClearDiscoveredServers">
+            <summary>
+            Clears out the list of discovered servers.
+            </summary>
+        </member>
+        <member name="P:Forge.Networking.Core.NetworkServerDiscovery.DiscoveredLocalServers">
+            <summary>
+            Returns a list containing all servers that have been discovered thus far.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Core.INetworkConnectionMonitor">
+            <summary>
+            Object that monitors the connection and disconnection of other computers.
+            </summary>
+        </member>
+        <member name="M:Forge.Networking.Core.INetworkConnectionMonitor.OnConnected(Forge.Networking.Core.Player)">
+            <summary>
+            The given player has connected.
+            </summary>
+        </member>
+        <member name="M:Forge.Networking.Core.INetworkConnectionMonitor.OnDisconnected(Forge.Networking.Core.Player)">
+            <summary>
+            The given player has disconnected.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Lobby.LobbyCommon">
+            <summary>
+            Common code for LobbyMember and LobbyHost.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Lobby.LobbyCommon._context">
+            <summary>
+            The network context that we use for core networking operations.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Lobby.LobbyCommon._lobbyLaunchedHandler">
+            <summary>
+            Message handler used to determine if we've received a LobbyLaunchedNetworkMessage.
+            </summary>
+        </member>
+        <member name="M:Forge.Networking.Lobby.LobbyCommon.GetLobbyMembers">
+            <summary>
+            Get all members of the lobby, including the host.
+            </summary>
+        </member>
+        <member name="M:Forge.Networking.Lobby.LobbyCommon.IsHost(Forge.Networking.Core.Player)">
+            <summary>
+            Is the given player the host of the lobby?
+            </summary>
+        </member>
+        <member name="M:Forge.Networking.Lobby.LobbyCommon.Dispose">
+            <summary>
+            Dispose the lobby.
+            </summary>
+        </member>
+        <member name="P:Forge.Networking.Lobby.LobbyCommon.HasLaunched">
+            <summary>
+            Returns true if the lobby has launched. Make sure to dispose of the lobby.
+            </summary>
+            <returns>True if the lobby has launched, false if it hasn't.</returns>
+        </member>
+        <member name="M:Forge.Networking.Lobby.LobbyHost.TryLaunch">
+            <summary>
+            Try to launch the lobby. All players have to be ready in order to launch.
+            </summary>
+            <remarks>
+            You can also use HasLaunched to determine if the lobby has started. However, HasLaunched
+            will not actually start the game and will only return the lobby launch status.
+            </remarks>
+            <returns>True if the launch attempt was successful, false otherwise.</returns>
+        </member>
+        <member name="M:Forge.Networking.Lobby.LobbyHost.CreateLobby(Forge.Networking.Core.Player,Forge.Networking.Lobby.LobbyHost.LobbySettings)">
+            <summary>
+            Host a new lobby.
+            </summary>
+            <param name="player">The player that is creating the server.</param>
+            <param name="settings">The settings to use for the lobby.</param>
+            <returns>A lobby host if successful.</returns>
+        </member>
+        <member name="M:Forge.Networking.Lobby.LobbyHost.ChangeMap(System.String)">
+            <summary>
+            Change the map.
+            </summary>
+        </member>
+        <member name="M:Forge.Networking.Lobby.LobbyHost.Kick(Forge.Networking.Core.Player)">
+            <summary>
+            Kick the given lobby member from the lobby.
+            </summary>
+            <param name="member">The member to kick.</param>
+        </member>
+        <member name="P:Forge.Networking.Lobby.LobbyHost.PlayersNotReady">
+            <summary>
+            Return players that are not ready.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Lobby.LobbyHost.LobbySettings">
+            <summary>
+            Settings used for creating a lobby.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Lobby.LobbyHost.LobbySettings.Password">
+            <summary>
+            The password required for entering the lobby. Use an empty string for "no" password.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Lobby.LobbyHost.LobbySettings.SerializedMap">
+            <summary>
+            The serialized map that the lobby is hosting, ie, the data that lobby members will
+            download.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Lobby.LobbyHost.LobbySettings.MapManager">
+            <summary>
+            Map manager used to get hashes for serialized maps.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Lobby.LobbyReadyNetworkMessage">
+            <summary>
+            The sending client is ready to launch the game.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Lobby.LobbyNotReadyNetworkMessage">
+            <summary>
+            The sending client is not ready to launch the game.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Lobby.LobbyHostPlayerReadinessMessageHandler">
+            <summary>
+            Handles network messages for determining if every player is ready to launch the game.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Lobby.LobbyHostPlayerReadinessMessageHandler._ready">
+            <summary>
+            Players that are ready to launch.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Lobby.LobbyHostPlayerReadinessMessageHandler._notReady">
+            <summary>
+            Players that are not ready to launch.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Lobby.LobbyHostPlayerReadinessMessageHandler._context">
+            <summary>
+            The networking context.
+            </summary>
+        </member>
+        <member name="M:Forge.Networking.Lobby.LobbyHostPlayerReadinessMessageHandler.CanLaunch">
+            <summary>
+            Returns true if every player is ready.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Lobby.LobbyLaunchedNetworkMessage">
+            <summary>
+            Network message sent when the lobby has been launched.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Lobby.LobbyMapVerifyNetworkMessage">
+            <summary>
+            Network message sent by the lobby server to verify that all clients have the given map.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Lobby.LobbyMapVerifyNetworkMessage.MapHash">
+            <summary>
+            The hash code for the map, used to check to see if we need to download it.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Lobby.LobbyMapDownloadRequestedNetworkMessage">
+            <summary>
+            Network message sent by a lobby client to request a map download.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Lobby.LobbyMapDownloadNetworkMessage">
+            <summary>
+            Network message sent to lobby clients by the lobby server after the lobby server has
+            received a LobbyMapDownloadedRequestedNetworkMessage.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Lobby.MapDownloadServerMessageHandler">
+            <summary>
+            Processes map download request messages and also sends map verification messages to new
+            clients. Supports changing the current map (which causes a rebroadcast for map
+            verification) .
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Lobby.IMapManager">
+            <summary>
+            Interface used to check if a map exists and optionally save a downloaded map if one does
+            not.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Lobby.MapDownloadClientMessageHandler">
+            <summary>
+            Map download handler for the lobby client. Receives map verification messages and map
+            download messages. If the verification message fails, then a map download request message is
+            sent to the server.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Lobby.LobbyMember">
+            <summary>
+            A member of a lobby.
+            </summary>
+        </member>
+        <member name="M:Forge.Networking.Lobby.LobbyMember.JoinLobby(System.String,Forge.Networking.Core.Player,Forge.Networking.Lobby.IMapManager,System.String)">
+            <summary>
+            Try to join the lobby at the given IP end point as the given player.
+            </summary>
+            <param name="host">The IP address that the lobby server is running at.</param>
+            <param name="mapManager">The map manager that will be used to check to see if we have a
+            map and to save a downloaded map.</param>
+            <param name="player">This player that will be used to uniquely identify
+            ourselves.</param>
+            <param name="password">The password that the lobby host has set.</param>
+        </member>
+        <member name="T:Forge.Networking.Lobby.PlayerJoinedNetworkMessage">
+            <summary>
+            The given player has joined the network.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Lobby.PlayerLeftNetworkMessage">
+            <summary>
+            The given player has left the network.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Core.NetworkMessageRecipient">
+            <summary>
+            Specifies which computers an INetworkMessage should be delivered to.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Core.NetworkMessageRecipient.All">
+            <summary>
+            All computers process the message. Each computer will processes each message in the same
+            order. That is, computer A sends message A, and computer B sends message B, both
+            computers will process both messages in the same order (whether it be A then B or B then
+            A is undefined, but both computers will select the same (a,b) or (b,a) group).
+            </summary>
+            <remarks>
+            In regards to implementation details, this message type requires that the message be
+            sent to the server before any computer can process it (for ordering purposes). The
+            server then rebroadcasts the message to every computer for execution. This is not
+            particularly lightweight, but it does simplify networking logic.
+            </remarks>
+        </member>
+        <member name="F:Forge.Networking.Core.NetworkMessageRecipient.Server">
+            <summary>
+            The message should be processed by *only* the server. This message type can only be sent
+            by any computer in the network, whether it be a client or a server.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Core.NetworkMessageRecipient.Clients">
+            <summary>
+            The message should be processed by all clients but *not* the server. This message type
+            can only be sent by the server.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Core.Player">
+            <summary>
+            A network player is an abstraction over a network connection.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Core.Player.Name">
+            <summary>
+            The name that the player gave themselves.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Core.Player.Guid">
+            <summary>
+            The GUID that uniquely identifies this player. This GUID can be per-session and does not
+            need to be permanent.
+            </summary>
+        </member>
+        <member name="M:Forge.Networking.Core.Player.Equals(System.Object)">
+            <summary>
+            Determines whether the specified see cref="System.Object" }, is equal to this instance.
+            </summary>
+            <param name="obj">The <see cref="T:System.Object"/> to compare with this
+            instance.</param>
+            <returns><c>true</c> if the specified <see cref="T:System.Object"/> is equal to this
+            instance; otherwise, /c&gt;.</returns>
+        </member>
+        <member name="M:Forge.Networking.Core.Player.GetHashCode">
+            <summary>
+            Returns a hash code for this instance.
+            </summary>
+            <returns>A hash code for this instance, suitable for use in hashing algorithms and data
+            structures like a hash table.</returns>
+        </member>
+        <member name="T:Forge.Networking.Core.BaseNetworkMessageHandler`1">
+            <summary>
+            Base type that all INetworkMessageHandlers should extend from (for a simplified API).
+            </summary>
+            <typeparam name="TNetworkMessage">The type of message that this handler handles.</typeparam>
+        </member>
+        <member name="T:Forge.Networking.Core.NetworkContext">
+            <summary>
+            Holds important information about the current network connection and additionally about
+            INetworkMessage listeners.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Core.NetworkContext._localPlayerEnumerable">
+            <summary>
+            Enumerable container that merely contains LocalPlayer.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Core.NetworkContext._client">
+            <summary>
+            If the context is a client, then this is the Lidgren.Network client object.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Core.NetworkContext._serverPassword">
+            <summary>
+            If we're a server, then this is the password for the server.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Core.NetworkContext._connectionMonitors">
+            <summary>
+            If we're a server, this is the list of objects which want to know when a client has
+            connected or disconnected.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Core.NetworkContext._dispatcher">
+            <summary>
+            Networking dispatcher that is used for sending messages.
+            </summary>
+        </member>
+        <member name="M:Forge.Networking.Core.NetworkContext.#ctor(Forge.Networking.Core.Player)">
+            <summary>
+            Private constructor for NetworkContext; NetworkContexts can only be created using the
+            static helper methods.
+            </summary>
+            <param name="localPlayer">The local player</param>
+        </member>
+        <member name="M:Forge.Networking.Core.NetworkContext.CreateServer(Forge.Networking.Core.Player,System.String)">
+            <summary>
+            Creates a new server.
+            </summary>
+            <param name="player">The player that is running this server.</param>
+            <param name="password">The password that clients have to have to connect.</param>
+            <returns>A network context for the created server.</returns>
+        </member>
+        <member name="M:Forge.Networking.Core.NetworkContext.GetServerIPs">
+            <summary>
+            Tries to fetch all possible IPs that might be possible for clients to connect to the
+            server with. This operation throws an exception if the context is not a server.
+            </summary>
+        </member>
+        <member name="M:Forge.Networking.Core.NetworkContext.CreateClient(System.String,Forge.Networking.Core.Player,System.String)">
+            <summary>
+            Creates a new client connection connected to the given IP end point. This method blocks
+            until we know if the client has either connected or disconnected.
+            </summary>
+            <param name="ip">The IP to connect to.</param>
+            <param name="player">This computer's player.</param>
+            <param name="password">The password that the server is expecting.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Forge.Networking.Core.NetworkContext.IsPlayerServer(Forge.Networking.Core.Player)">
+            <summary>
+            Returns true if the given Player is the server.
+            </summary>
+            <param name="player">The player to check.</param>
+            <returns>True if the player is the server, otherwise false.</returns>
+        </member>
+        <member name="M:Forge.Networking.Core.NetworkContext.Kick(Forge.Networking.Core.Player)">
+            <summary>
+            Kicks the given player. This function is only operable if the context is a server
+            (otherwise an exception is thrown).
+            </summary>
+            <param name="player">The player to kick.</param>
+        </member>
+        <member name="M:Forge.Networking.Core.NetworkContext.AddMessageHandler(Forge.Networking.Core.INetworkMessageHandler)">
+            <summary>
+            Adds the given message handler to the network context.
+            </summary>
+            <param name="handler">The network message handler to add.</param>
+        </member>
+        <member name="M:Forge.Networking.Core.NetworkContext.RemoveMessageHandler(Forge.Networking.Core.INetworkMessageHandler)">
+            <summary>
+            Removes the given message handler from the context. If the dispatcher was not previously
+            contained in the context, then an exception is thrown.
+            </summary>
+            <param name="handler">The network message handler to remove.</param>
+        </member>
+        <member name="M:Forge.Networking.Core.NetworkContext.AddConnectionMonitor(Forge.Networking.Core.INetworkConnectionMonitor)">
+            <summary>
+            Add a new connection monitor listener. This allows for client code to be notified when
+            another player connects or disconnects from the network.
+            </summary>
+            <param name="monitor">The connection monitor to add.</param>
+        </member>
+        <member name="M:Forge.Networking.Core.NetworkContext.RemoveConnectionMonitor(Forge.Networking.Core.INetworkConnectionMonitor)">
+            <summary>
+            Remove a previously added connection monitor. If the monitor was not found when removing
+            it, an exception is thrown.
+            </summary>
+            <param name="monitor">The connection monitor to remove.</param>
+        </member>
+        <member name="M:Forge.Networking.Core.NetworkContext.Update">
+            <summary>
+            Update the network context; ie, invoke handlers for received network messages if we're a
+            client or broadcast out received messages if we're a server.
+            </summary>
+        </member>
+        <member name="M:Forge.Networking.Core.NetworkContext.SendMessage(Forge.Networking.Core.NetworkMessageRecipient,Forge.Networking.Core.INetworkMessage)">
+            <summary>
+            Send the given message to the given recipients.
+            </summary>
+            <param name="recipient">The computers that should receive the message.</param>
+            <param name="message">The message to send.</param>
+        </member>
+        <member name="M:Forge.Networking.Core.NetworkContext.SendMessage(Forge.Networking.Core.Player,Forge.Networking.Core.INetworkMessage)">
+            <summary>
+            Send the given message to only the specified recipient.
+            </summary>
+            <param name="recipient">The player that should receive the message.</param>
+            <param name="message">Who to send the message to.</param>
+        </member>
+        <member name="M:Forge.Networking.Core.NetworkContext.CreateMessage(Forge.Networking.Core.Player,Forge.Networking.Core.INetworkMessage,System.Boolean)">
+            <summary>
+            Creates an outgoing message with the given sender, message, broadcast state.
+            </summary>
+            <param name="sender">The player who is sending this message.</param>
+            <param name="message">The message to send.</param>
+            <param name="broadcast">If the server receives this message, should it broadcast it out
+            to all clients?</param>
+        </member>
+        <member name="M:Forge.Networking.Core.NetworkContext.GetConnection(Forge.Networking.Core.Player)">
+            <summary>
+            Helper method to lookup the network connection based on the given network player.
+            </summary>
+        </member>
+        <member name="P:Forge.Networking.Core.NetworkContext._server">
+            <summary>
+            If the context is a server, then this is the Lidgren.Network server object.
+            </summary>
+        </member>
+        <member name="P:Forge.Networking.Core.NetworkContext.Peer">
+            <summary>
+            Returns the internal NetPeer instance that represents the core connection.
+            </summary>
+        </member>
+        <member name="P:Forge.Networking.Core.NetworkContext.IsServer">
+            <summary>
+            Returns true if this NetworkConext is acting as a server.
+            </summary>
+        </member>
+        <member name="P:Forge.Networking.Core.NetworkContext.IsClient">
+            <summary>
+            Returns true if this NetworkContext is acting as a client.
+            </summary>
+        </member>
+        <member name="P:Forge.Networking.Core.NetworkContext.LocalPlayer">
+            <summary>
+            The local player.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Core.NetworkContext.NetworkMessageFormat">
+            <summary>
+            Message format for NetIncomingMessageType.Data
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Core.NetworkContext.HailMessageFormat">
+            <summary>
+            Hail message format used when connecting to a server.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Core.NetworkContext.HailMessageFormat.Player">
+            <summary>
+            The player connecting.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Core.NetworkContext.HailMessageFormat.Password">
+            <summary>
+            The password to use when connecting.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Core.NetworkMessageDispatcher">
+            <summary>
+            This class serves as a registry for INetworkMessageHandlers. It supports efficient lookup of
+            message type to message handler responders.
+            </summary>
+            <remarks>
+            In the overall context of Forge.Network, this class serves a critical function as the core
+            mechanism for the event-based message processing loop. The NetworkContext is the primary
+            user of this type. NetworkContext receives and sends out INetworkMessages; when it receives
+            an INetworkMessage, it checks its NetworkMessageDispatcher to see if there are any handlers
+            that need to be invoked.
+            </remarks>
+        </member>
+        <member name="F:Forge.Networking.Core.NetworkMessageDispatcher._handlers">
+            <summary>
+            The message handlers; the key is the type of message, and the value is the list of
+            handlers that can respond to that message type.
+            </summary>
+        </member>
+        <member name="M:Forge.Networking.Core.NetworkMessageDispatcher.#ctor">
+            <summary>
+            Create a new NetworkMessageDispatcher that has no registered message handlers.
+            </summary>
+        </member>
+        <member name="M:Forge.Networking.Core.NetworkMessageDispatcher.GetHandlers(System.Type)">
+            <summary>
+            Helper method to get all message handlers that can respond to the given message type.
+            </summary>
+        </member>
+        <member name="M:Forge.Networking.Core.NetworkMessageDispatcher.AddHandler(Forge.Networking.Core.INetworkMessageHandler)">
+            <summary>
+            Adds a message handler.
+            </summary>
+            <param name="handler">The handler to add.</param>
+        </member>
+        <member name="M:Forge.Networking.Core.NetworkMessageDispatcher.RemoveHandler(Forge.Networking.Core.INetworkMessageHandler)">
+            <summary>
+            Remove the message handler. Throws an exception if the handler was not previously added.
+            </summary>
+            <param name="handler">The handler to remove.</param>
+        </member>
+        <member name="M:Forge.Networking.Core.NetworkMessageDispatcher.InvokeHandlers(Forge.Networking.Core.Player,Forge.Networking.Core.INetworkMessage)">
+            <summary>
+            Invoke all registered INetworkMessageHandlers for the given message and sender.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Pausing.PauseManager">
+            <summary>
+            API for interacting with the pausing subsystem.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Pausing.PauseManager._context">
+            <summary>
+            Network context that we use to transmit pause messages.
+            </summary>
+        </member>
+        <member name="F:Forge.Networking.Pausing.PauseManager._handler">
+            <summary>
+            Message handler that processes the pause messages.
+            </summary>
+        </member>
+        <member name="M:Forge.Networking.Pausing.PauseManager.#ctor(Forge.Networking.Core.NetworkContext)">
+            <summary>
+            Create a new PauseManager instance.
+            </summary>
+            <param name="context">The networking context to use.</param>
+        </member>
+        <member name="M:Forge.Networking.Pausing.PauseManager.Dispose">
+            <summary>
+            Cleans up resources that the PauseManager uses in the NetworkContext.
+            </summary>
+        </member>
+        <member name="P:Forge.Networking.Pausing.PauseManager.IsPaused">
+            <summary>
+            Returns the current pause status for the game. Setting this value emits a network
+            message that changes the pause status to the given value for all computers in the
+            network.
+            </summary>
+        </member>
+        <member name="P:Forge.Networking.Pausing.PauseManager.PausedBy">
+            <summary>
+            If the game is paused, then this returns who paused the game. If the game is not paused,
+            then this returns nothing.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Pausing.PauseMessageHandler">
+            <summary>
+            Updates the pause status when SetPauseStatusNetworkMessages are received.
+            </summary>
+        </member>
+        <member name="P:Forge.Networking.Pausing.PauseMessageHandler.IsPaused">
+            <summary>
+            Getter/setter for if the game is paused.
+            </summary>
+        </member>
+        <member name="P:Forge.Networking.Pausing.PauseMessageHandler.PausedBy">
+            <summary>
+            Returns who paused the game if it is paused.
+            </summary>
+        </member>
+        <member name="T:Forge.Networking.Pausing.SetPauseStatusNetworkMessage">
+            <summary>
+            Network message to set the current pause status for the game.
+            </summary>
+        </member>
+    </members>
+</doc>

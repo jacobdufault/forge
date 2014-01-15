@@ -1,0 +1,389 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Forge.Collections</name>
+    </assembly>
+    <members>
+        <member name="T:Forge.Collections.Bag`1">
+            <summary>
+            An unordered collection of items.
+            </summary>
+        </member>
+        <member name="M:Forge.Collections.Bag`1.CopyFrom(Forge.Collections.Bag{`0})">
+            <summary>
+            Copies from the given bag into this one.
+            </summary>
+            <param name="bag">The bag to copy from</param>
+        </member>
+        <member name="M:Forge.Collections.Bag`1.Copy">
+            <summary>
+            Creates a duplicate of this bag that has a different backing array.
+            </summary>
+        </member>
+        <member name="M:Forge.Collections.Bag`1.IndexOf(`0)">
+            <summary>
+            Returns the index of the given item in the bag, or -1 if it is not found.
+            </summary>
+        </member>
+        <member name="M:Forge.Collections.Bag`1.Remove(System.Int32)">
+            <summary>
+            Removes the item at given index from the bag in O(1) time. This operation does not
+            maintain the order of elements inside of the bag!
+            </summary>
+        </member>
+        <member name="M:Forge.Collections.Bag`1.Clear">
+            <summary>
+            Clears all stored items from this instance.
+            </summary>
+        </member>
+        <member name="M:Forge.Collections.Bag`1.Remove(`0)">
+            <summary>
+            Remove the item from the bag. This is O(n) and has to scan the bag to find the item.
+            </summary>
+            <returns>True if the item was found and removed, false otherwise.</returns>
+        </member>
+        <member name="M:Forge.Collections.Bag`1.Contains(`0)">
+            <summary>
+            Returns true if the Bag contains an instance of the given item.
+            </summary>
+            <param name="item">The item to search for.</param>
+            <returns>True if it is in the bag, false otherwise.</returns>
+        </member>
+        <member name="T:Forge.Collections.BufferedItem`1">
+            <summary>
+            A set of items where only one is active and used.
+            </summary>
+            <typeparam name="T">The type of item stored.</typeparam>
+        </member>
+        <member name="F:Forge.Collections.BufferedItem`1.Items">
+            <summary>
+            The stored items
+            </summary>
+        </member>
+        <member name="F:Forge.Collections.BufferedItem`1.CurrentIndex">
+            <summary>
+            The _currentKeyboardState item that we are accessing
+            </summary>
+        </member>
+        <member name="M:Forge.Collections.BufferedItem`1.#ctor(System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Forge.Collections.BufferedItem`1"/> class.
+            </summary>
+            <param name="count">The number of instances to allocate</param>
+        </member>
+        <member name="M:Forge.Collections.BufferedItem`1.#ctor(`0[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:Forge.Collections.BufferedItem`1"/> class.
+            </summary>
+            <param name="instances">The instances to swap between.</param>
+        </member>
+        <member name="M:Forge.Collections.BufferedItem`1.Swap">
+            <summary>
+            Swaps out the _currentKeyboardState item for the next one.
+            </summary>
+            <returns>The item that was deactivated</returns>
+        </member>
+        <member name="M:Forge.Collections.BufferedItem`1.Get">
+            <summary>
+            Gets the currently active item.
+            </summary>
+        </member>
+        <member name="M:Forge.Collections.BufferedItem`1.Get(System.Int32)">
+            <summary>
+            Returns an item in the rotation queue that is relative to the current item by the given
+            offset.
+            </summary>
+            <param name="relativeOffset">How far away from the current item</param>
+            <returns></returns>
+        </member>
+        <member name="T:Forge.Collections.ConcurrentWriterBag`1">
+            <summary>
+            Provides a queue where pushing is assumed to be done concurrently, but reading is done in a
+            single-thread where no writing is done.
+            </summary>
+            <typeparam name="T">The type of object stored.</typeparam>
+        </member>
+        <member name="F:Forge.Collections.ConcurrentWriterBag`1._allCollections">
+            <summary>
+            All thread-local bags; this is used when iterating over the entire contents of the bag.
+            </summary>
+        </member>
+        <member name="F:Forge.Collections.ConcurrentWriterBag`1._localCollection">
+            <summary>
+            The thread-local bag that is used for appending items.
+            </summary>
+        </member>
+        <member name="F:Forge.Collections.ConcurrentWriterBag`1._canWrite">
+            <summary>
+            Used to set the value of CanWrite.
+            </summary>
+        </member>
+        <member name="M:Forge.Collections.ConcurrentWriterBag`1.#ctor">
+            <summary>
+            Construct a new concurrent writer bag.
+            </summary>
+        </member>
+        <member name="M:Forge.Collections.ConcurrentWriterBag`1.Add(`0)">
+            <summary>
+            Adds the item in the collection.
+            </summary>
+            <remarks>
+            This is a thread-safe function.
+            </remarks>
+            <param name="item">The item to enqueue</param>
+        </member>
+        <member name="M:Forge.Collections.ConcurrentWriterBag`1.ToList">
+            <summary>
+            Returns all items inside of the bag as a list. This method is not thread safe. This
+            method does *not* clear the collection.
+            </summary>
+        </member>
+        <member name="M:Forge.Collections.ConcurrentWriterBag`1.IterateAndClear(System.Action{`0})">
+            <summary>
+            Calls the iterator over every item in the bag and then clears the bags that were
+            iterated.
+            </summary>
+            <remarks>
+            This method is **NOT** thread-safe; do NOT call Add while iterating the items.
+            </remarks>
+            <param name="iterator">The function to invoke on the items.</param>
+        </member>
+        <member name="P:Forge.Collections.ConcurrentWriterBag`1.CanWrite">
+            <summary>
+            Gets/sets if writing is enabled or disabled. Thread-safe. Provides debug diagnostics
+            only and is not critical for correct behavior. This is set to false by the methods which
+            read collections as they are doing their reading.
+            </summary>
+        </member>
+        <member name="T:Forge.Collections.IQuadTreeMonitor`1">
+            <summary>
+            Interface for objects which are monitoring a specific region.
+            </summary>
+        </member>
+        <member name="M:Forge.Collections.IQuadTreeMonitor`1.OnEnter(`0)">
+            <summary>
+            Called when the given item has entered the region.
+            </summary>
+        </member>
+        <member name="M:Forge.Collections.IQuadTreeMonitor`1.OnExit(`0)">
+            <summary>
+            Called when an item has left the region.
+            </summary>
+        </member>
+        <member name="M:Forge.Collections.Rect.Intersects(Forge.Collections.Rect)">
+            <summary>
+            Returns true if this rect intersects with the parameter rect.
+            </summary>
+        </member>
+        <member name="M:Forge.Collections.Rect.Contains(System.Int32,System.Int32)">
+            <summary>
+            Returns true if the given point is contained with this rect.
+            </summary>
+        </member>
+        <member name="M:Forge.Collections.Rect.Contains(Forge.Collections.Rect)">
+            <summary>
+            Returns true if this rect fully contains the parameter rect.
+            </summary>
+        </member>
+        <member name="M:Forge.Collections.Rect.Colliding(Forge.Collections.Rect)">
+            <summary>
+            Returns true if this rect is either intersecting with or fully contains the parameter
+            rect.
+            </summary>
+        </member>
+        <member name="F:Forge.Collections.Node`1._items">
+            <summary>
+            The items that the node contains
+            </summary>
+        </member>
+        <member name="F:Forge.Collections.Node`1._monitors">
+            <summary>
+            The monitors that watch for adds/removes in this node
+            </summary>
+        </member>
+        <member name="F:Forge.Collections.QuadTree`1._baseChunkSize">
+            <summary>
+            The width/height of each chunk
+            </summary>
+        </member>
+        <member name="F:Forge.Collections.QuadTree`1._chunks">
+            <summary>
+            All of the chunks
+            </summary>
+        </member>
+        <member name="T:Forge.Collections.SparseArray`1">
+            <summary>
+            Stores a list of items where the are gaps between items; not every index in the array
+            contains an element.
+            </summary>
+        </member>
+        <member name="F:Forge.Collections.SparseArray`1._items">
+            <summary>
+            The internal array of elements inside of the array.
+            </summary>
+        </member>
+        <member name="M:Forge.Collections.SparseArray`1.#ctor">
+            <summary>
+            Creates a new SparseArray with the default capacity.
+            </summary>
+        </member>
+        <member name="M:Forge.Collections.SparseArray`1.#ctor(System.Int32)">
+            <summary>
+            Creates a new SparseArray with the given capacity.
+            </summary>
+            <param name="capacity">The capacity to initialize with</param>
+        </member>
+        <member name="M:Forge.Collections.SparseArray`1.#ctor(System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{System.Int32,`0}})">
+            <summary>
+            Creates a new sparse array from the given enumerator.
+            </summary>
+            <param name="enumerator">The items to allocate the array from.</param>
+        </member>
+        <member name="M:Forge.Collections.SparseArray`1.Clear">
+            <summary>
+            Clears out all elements inside of the SparseArray.
+            </summary>
+        </member>
+        <member name="M:Forge.Collections.SparseArray`1.Remove(System.Int32)">
+            <summary>
+            Removes the element at the given index.
+            </summary>
+            <param name="index">The index of the element to remove</param>
+            <returns>If an element was removed</returns>
+        </member>
+        <member name="M:Forge.Collections.SparseArray`1.ContainsKey(System.Int32)">
+            <summary>
+            Checks to see if there is an element at the given index.
+            </summary>
+            <param name="index">The index to check.</param>
+            <returns>True if there is a contained element, false otherwise.</returns>
+        </member>
+        <member name="M:Forge.Collections.SparseArray`1.TryGetValue(System.Int32,`0@)">
+            <summary>
+            Gets the value associated with the specified key.
+            </summary>
+            <param name="key">The key whose value to get.</param>
+            <param name="value">When this method returns, the value associated with the specified
+            key, if the key is found; otherwise, the default value for the type of the
+            <paramref name="value" />parameter. This parameter is passed uninitialized.</param>
+            <returns>true if the object that implements
+            <see cref="T:System.Collections.Generic.IDictionary`2" /> contains an element with the
+            specified key; otherwise, false.</returns>
+        </member>
+        <member name="M:Forge.Collections.SparseArray`1.EnsureIndex(System.Int32)">
+            <summary>
+            Ensures that index is a valid index into the Elements array.
+            </summary>
+            <param name="index">The index to verify.</param>
+        </member>
+        <member name="M:Forge.Collections.SparseArray`1.GetEnumerator">
+            <summary>
+            Returns an enumerator that iterates through the collection.
+            </summary>
+        </member>
+        <member name="P:Forge.Collections.SparseArray`1.Item(System.Int32)">
+            <summary>
+            Gets or sets the element at the given index.
+            </summary>
+            <param name="index">The index to set</param>
+            <returns>If getting, then the value at the given index.</returns>
+        </member>
+        <member name="T:Forge.Collections.SwappableItem`1">
+            <summary>
+            Contains two items which can be swapped between a Previous and a Current state.
+            </summary>
+            <typeparam name="T">The type of item stored</typeparam>
+        </member>
+        <member name="F:Forge.Collections.SwappableItem`1._a">
+            <summary>
+            The first item
+            </summary>
+        </member>
+        <member name="F:Forge.Collections.SwappableItem`1._b">
+            <summary>
+            The second item
+            </summary>
+        </member>
+        <member name="F:Forge.Collections.SwappableItem`1._current">
+            <summary>
+            The current item
+            </summary>
+        </member>
+        <member name="M:Forge.Collections.SwappableItem`1.#ctor(`0,`0)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Forge.Collections.SwappableItem`1"/> class.
+            </summary>
+            <param name="a">The first item.</param>
+            <param name="b">The second item.</param>
+        </member>
+        <member name="M:Forge.Collections.SwappableItem`1.Swap">
+            <summary>
+            Swap the Current and Previous items.
+            </summary>
+        </member>
+        <member name="P:Forge.Collections.SwappableItem`1.Current">
+            <summary>
+            The current item.
+            </summary>
+        </member>
+        <member name="P:Forge.Collections.SwappableItem`1.Previous">
+            <summary>
+            The previous item.
+            </summary>
+        </member>
+        <member name="T:Forge.Collections.UnorderedList`1">
+            <summary>
+            A list of items that is unordered. This provides O(1) addition, O(1) removal, and O(1)
+            iteration. However, having all of these nice properties requires some metadata to be stored
+            on each item, which means that Add takes a parameter of metadata for the stored item. Same
+            with remove.
+            </summary>
+            <typeparam name="T">The type of item to store.</typeparam>
+        </member>
+        <member name="F:Forge.Collections.UnorderedList`1.Items">
+            <summary>
+            The stored list of items.
+            </summary>
+        </member>
+        <member name="M:Forge.Collections.UnorderedList`1.#ctor(System.Int32)">
+            <summary>
+            Creates a new UnorderedList with the given capacity.
+            </summary>
+            <param name="capacity">The capacity to give to the list</param>
+        </member>
+        <member name="M:Forge.Collections.UnorderedList`1.Contains(`0,Forge.Collections.UnorderedListMetadata)">
+            <summary>
+            Checks to see if the given item is contained in the UnorderedList. This is O(1).
+            </summary>
+            <param name="item">The item to check</param>
+            <param name="metadata">The item's metadata</param>
+            <returns>True if the item is contained, false otherwise</returns>
+        </member>
+        <member name="M:Forge.Collections.UnorderedList`1.Remove(`0,Forge.Collections.UnorderedListMetadata)">
+            <summary>
+            Removes the stored item.
+            </summary>
+            <returns>True if the item was removed, false otherwise</returns>
+        </member>
+        <member name="M:Forge.Collections.UnorderedList`1.Add(`0,Forge.Collections.UnorderedListMetadata)">
+            <summary>
+            Adds an item to the list. The location of the item in the list is unspecified.
+            </summary>
+        </member>
+        <member name="P:Forge.Collections.UnorderedList`1.Length">
+            <summary>
+            The number of stored objects in Items.
+            </summary>
+        </member>
+        <member name="P:Forge.Collections.UnorderedList`1.Item(System.Int32)">
+            <summary>
+            Set or get the item at the specified index.
+            </summary>
+        </member>
+        <member name="T:Forge.Collections.UnorderedList`1.StoredItem">
+            <summary>
+            Data stored inside of the UnorderedList.
+            </summary>
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Forge.Extensions</name>
+    </assembly>
+    <members>
+        <member name="T:ListExtensions">
+            <summary>
+            Common extensions of types which implement the IList[T] interface.
+            </summary>
+        </member>
+        <member name="M:ListExtensions.Shuffle``1(System.Collections.Generic.IList{``0})">
+            <summary>
+            Shuffle the specified list.
+            </summary>
+            <param name="list">The list to shuffle.</param>
+        </member>
+        <member name="M:ListExtensions.IsEmpty``1(System.Collections.Generic.IList{``0})">
+            <summary>
+            Checks if the given list is empty.
+            </summary>
+        </member>
+    </members>
+</doc>

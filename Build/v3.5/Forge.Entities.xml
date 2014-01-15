@@ -1,0 +1,2087 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Forge.Entities</name>
+    </assembly>
+    <members>
+        <member name="T:Forge.Entities.DataAccessor">
+            <summary>
+            Provides a convenient and efficient way to access a type of Data.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.DataAccessor.#ctor(Forge.Entities.Data.IData)">
+            <summary>
+            Helper constructor for DataAccessor(Type). This merely forwards the call with the type
+            parameter being data.GetType().
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.DataAccessor.#ctor(System.Type)">
+            <summary>
+            Creates a new DataAccessor that accesses the specified Data type.
+            </summary>
+            <param name="dataType">The type of Data to retrieve; note that this parameter must be a
+            subtype of Data</param>
+        </member>
+        <member name="M:Forge.Entities.DataAccessor.#ctor(System.Int32)">
+            <summary>
+            Directly construct a DataAccessor with the given id.
+            </summary>
+            <param name="id">The id of the DataAccessor</param>
+        </member>
+        <member name="F:Forge.Entities.DataAccessor.Id">
+            <summary>
+            Returns the mapped id for this accessor.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.DataAccessor.Equals(System.Object)">
+            <summary>
+            Indicates whether this instance and a specified object are equal.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.DataAccessor.GetHashCode">
+            <summary>
+            Returns a hash code for this instance.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.DataAccessor.op_Equality(Forge.Entities.DataAccessor,Forge.Entities.DataAccessor)">
+            <summary>
+            Indicates whether this instance and a specified object are equal.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.DataAccessor.op_Inequality(Forge.Entities.DataAccessor,Forge.Entities.DataAccessor)">
+            <summary>
+            Indicates whether this instance and a specified object are not equal.
+            </summary>
+        </member>
+        <member name="P:Forge.Entities.DataAccessor.DataType">
+            <summary>
+            Helper method to get the type of data that this given DataAccessor maps back to.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.DataMap`1">
+            <summary>
+            Map a data type to its respective accessor, at compile time.
+            </summary>
+            <typeparam name="T">The type of Data to map.</typeparam>
+        </member>
+        <member name="P:Forge.Entities.DataMap`1.Accessor">
+            <summary>
+            Gets the accessor for the specified data type.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.IDataReference">
+            <summary>
+            Interface used for type erasure by BaseDataReferenceType.
+            </summary>
+        </member>
+        <member name="P:Forge.Entities.IDataReference.Provider">
+            <summary>
+            The entity that this reference uses to resolve its current/previous data references.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.BaseDataReferenceType">
+            <summary>
+            Base type for data references for common code.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.BaseDataReferenceType.Current``1">
+            <summary>
+            Returns the current data value for the given data type.
+            </summary>
+            <typeparam name="TData">The type of data to retrieve. It has to be one of the generic
+            parameters for this type; if it is not, then an exception is thrown.</typeparam>
+            <returns>The current value for the given data type.</returns>
+        </member>
+        <member name="M:Forge.Entities.BaseDataReferenceType.Previous``1">
+            <summary>
+            Returns the previous data value for the given data type.
+            </summary>
+            <typeparam name="TData">The type of data to retrieve. It has to be one of the generic
+            parameters for this type; if it is not, then an exception is thrown.</typeparam>
+            <returns>The current value for the given data type.</returns>
+        </member>
+        <member name="M:Forge.Entities.BaseDataReferenceType.VerifyRequest``1">
+            <summary>
+            Helper method to verify that the given generic type is one of the generic parameters for
+            this type.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.BaseDataReferenceConverter">
+            <summary>
+            JsonConverter used to serialize a DataReference directly as an IQueryableEntity (to avoid an
+            extraneous object definition in the JSON output).
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.DataReference`1">
+            <summary>
+            Data reference that references some data defined in an entity or template.
+            </summary>
+            <typeparam name="TData0">A referenced data type.</typeparam>
+        </member>
+        <member name="M:Forge.Entities.DataReference`1.Current">
+            <summary>
+            Returns the current value for the type of data that this DataReference references.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.DataReference`2">
+            <summary>
+            Data reference that references some data defined in an entity or template.
+            </summary>
+            <typeparam name="TData0">A referenced data type.</typeparam> <typeparam name="TData1">A
+            referenced data type.</typeparam>
+        </member>
+        <member name="T:Forge.Entities.DataReference`3">
+            <summary>
+            Data reference that references some data defined in an entity or template.
+            </summary>
+            <typeparam name="TData0">A referenced data type.</typeparam> <typeparam name="TData1">A
+            referenced data type.</typeparam> <typeparam name="TData2">A referenced data
+            type.</typeparam>
+        </member>
+        <member name="T:Forge.Entities.DataReference`4">
+            <summary>
+            Data reference that references some data defined in an entity or template.
+            </summary>
+            <typeparam name="TData0">A referenced data type.</typeparam> <typeparam name="TData1">A
+            referenced data type.</typeparam> <typeparam name="TData2">A referenced data
+            type.</typeparam> <typeparam name="TData3">A referenced data type.</typeparam>
+        </member>
+        <member name="T:Forge.Entities.DataReference`5">
+            <summary>
+            Data reference that references some data defined in an entity or template.
+            </summary>
+            <typeparam name="TData0">A referenced data type.</typeparam> <typeparam name="TData1">A
+            referenced data type.</typeparam> <typeparam name="TData2">A referenced data
+            type.</typeparam> <typeparam name="TData3">A referenced data type.</typeparam>
+            <typeparam name="TData4">A referenced data type.</typeparam>
+        </member>
+        <member name="T:Forge.Entities.DataReference`6">
+            <summary>
+            Data reference that references some data defined in an entity or template.
+            </summary>
+            <typeparam name="TData0">A referenced data type.</typeparam> <typeparam name="TData1">A
+            referenced data type.</typeparam> <typeparam name="TData2">A referenced data
+            type.</typeparam> <typeparam name="TData3">A referenced data type.</typeparam>
+            <typeparam name="TData4">A referenced data type.</typeparam> <typeparam name="TData5">A
+            referenced data type.</typeparam>
+        </member>
+        <member name="T:Forge.Entities.DataReference`7">
+            <summary>
+            Data reference that references some data defined in an entity or template.
+            </summary>
+            <typeparam name="TData0">A referenced data type.</typeparam> <typeparam name="TData1">A
+            referenced data type.</typeparam> <typeparam name="TData2">A referenced data
+            type.</typeparam> <typeparam name="TData3">A referenced data type.</typeparam>
+            <typeparam name="TData4">A referenced data type.</typeparam> <typeparam name="TData5">A
+            referenced data type.</typeparam> <typeparam name="TData6">A referenced data
+            type.</typeparam>
+        </member>
+        <member name="T:Forge.Entities.DataReference`8">
+            <summary>
+            Data reference that references some data defined in an entity or template.
+            </summary>
+            <typeparam name="TData0">A referenced data type.</typeparam> <typeparam name="TData1">A
+            referenced data type.</typeparam> <typeparam name="TData2">A referenced data
+            type.</typeparam> <typeparam name="TData3">A referenced data type.</typeparam>
+            <typeparam name="TData4">A referenced data type.</typeparam> <typeparam name="TData5">A
+            referenced data type.</typeparam> <typeparam name="TData6">A referenced data
+            type.</typeparam> <typeparam name="TData7">A referenced data type.</typeparam>
+        </member>
+        <member name="T:Forge.Entities.DataReference`9">
+            <summary>
+            Data reference that references some data defined in an entity or template.
+            </summary>
+            <typeparam name="TData0">A referenced data type.</typeparam> <typeparam name="TData1">A
+            referenced data type.</typeparam> <typeparam name="TData2">A referenced data
+            type.</typeparam> <typeparam name="TData3">A referenced data type.</typeparam>
+            <typeparam name="TData4">A referenced data type.</typeparam> <typeparam name="TData5">A
+            referenced data type.</typeparam> <typeparam name="TData6">A referenced data
+            type.</typeparam> <typeparam name="TData7">A referenced data type.</typeparam>
+            <typeparam name="TData8">A referenced data type.</typeparam>
+        </member>
+        <member name="T:Forge.Entities.DataReference`10">
+            <summary>
+            Data reference that references some data defined in an entity or template.
+            </summary>
+            <typeparam name="TData0">A referenced data type.</typeparam> <typeparam name="TData1">A
+            referenced data type.</typeparam> <typeparam name="TData2">A referenced data
+            type.</typeparam> <typeparam name="TData3">A referenced data type.</typeparam>
+            <typeparam name="TData4">A referenced data type.</typeparam> <typeparam name="TData5">A
+            referenced data type.</typeparam> <typeparam name="TData6">A referenced data
+            type.</typeparam> <typeparam name="TData7">A referenced data type.</typeparam>
+            <typeparam name="TData8">A referenced data type.</typeparam> <typeparam name="TData9">A
+            referenced data type.</typeparam>
+        </member>
+        <member name="T:Forge.Entities.IEventDispatcher">
+            <summary>
+            Interface the game-play code can use to submit events to the external world.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.IEventDispatcher.Submit``1(``0)">
+            <summary>
+            Submit an event that listeners will eventually be notified about.
+            </summary>
+            <param name="evnt">The event to submit.</param>
+        </member>
+        <member name="T:Forge.Entities.EntityIndex">
+            <summary>
+            Provides access to all entities in a game engine via the entity's UniqueId.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.EntityIndex.AddEntity(Forge.Entities.IEntity)">
+            <summary>
+            Adds the given entity to the index.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.EntityIndex.RemoveEntity(Forge.Entities.IEntity)">
+            <summary>
+            Removes the given entity from the index.
+            </summary>
+        </member>
+        <member name="P:Forge.Entities.EntityIndex.Item(System.Int32)">
+            <summary>
+            Returns the entity with the given id. If no entity exists with the given id, then an
+            exception is thrown.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.TemplateIndex">
+            <summary>
+            Provides access to all templates in a game engine via the template's TemplateId.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.TemplateIndex.#ctor(System.Collections.Generic.IEnumerable{Forge.Entities.ITemplate})">
+            <summary>
+            Creates a template index with the given templates.
+            </summary>
+        </member>
+        <member name="P:Forge.Entities.TemplateIndex.Item(System.Int32)">
+            <summary>
+            Returns the template with the given TemplateId. If no template with the given TemplateId
+            exists, then an exception is thrown.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.ITemplateGroup">
+            <summary>
+            An ITemplateGroup is simply a collection of templates that IGameSnapshots use.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.ITemplateGroup.CreateTemplate">
+            <summary>
+            Creates a new ITemplate instance that is attached to this snapshot.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.ITemplateGroup.RemoveTemplate(Forge.Entities.ITemplate)">
+            <summary>
+            Attempts to remove the given template from the template group. Be careful that no
+            IGameSnapshots are referencing the given template.
+            </summary>
+            <returns>True if the template was found and removed, false if it was not
+            found.</returns>
+        </member>
+        <member name="P:Forge.Entities.ITemplateGroup.Templates">
+            <summary>
+            All of the templates that are within the group.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.Implementation.Content.GameSnapshotRestorer">
+            <summary>
+            This type is used to deserialize a GameSnapshot instance. It just deserializes the
+            GameSnapshot and TemplateGroup together in the same deserialization call so that the
+            internal references inside of the TemplateGroup have the same ITemplate references as the
+            internal ITemplate references in the GameSnapshot.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Content.GameSnapshotRestorer.CombineJson(System.String,System.String)">
+            <summary>
+            Combines snapshot and template JSON together into the serialized format that the
+            GameSnapshotRestorer can read.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Content.GameSnapshotRestorer.Restore(System.String,System.String,Forge.Utilities.Maybe{Forge.Entities.Implementation.Runtime.GameEngine})">
+            <summary>
+            Restores a GameSnapshot using the given GameSnapshot JSON and the given TemplateGroup
+            JSON.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.Implementation.Content.SystemConverter">
+            <summary>
+            (De)serializes ISystem types
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.IGameSnapshot">
+            <summary>
+            The IGameSnapshot stores a serialized state of the engine. It provides a common interface
+            that both the engine and the editor use for accessing saved games and replays.
+            </summary>
+            <remarks>
+            All implementations of this class must extend the MarshalByRefObject class, as
+            IContentDatabase instances are passed around AppDomains. Similarly, all data that can be
+            exposed by the content database, such as entities, also need to extend MarshalByRefObject.
+            </remarks>
+        </member>
+        <member name="M:Forge.Entities.IGameSnapshot.CreateEntity(System.String)">
+            <summary>
+            Adds a new entity to the snapshot (under the Added entities collection).
+            </summary>
+            <param name="prettyName">The pretty name of the entity.</param>
+            <returns>A new entity.</returns>
+        </member>
+        <member name="M:Forge.Entities.IGameSnapshot.RemoveEntity(Forge.Entities.IEntity)">
+            <summary>
+            Request for the given entity to be removed from the snapshot.
+            </summary>
+            <remarks>
+            This function does different operations depending on what collection the entity is
+            currently in. If it is the GlobalEntity, an exception is thrown. If it is in
+            AddedEntities, the entity is just destroyed completely. If it is in ActiveEntities, the
+            entity is moved to RemovedEntities. If it is RemovedEntities, an exception is thrown.
+            </remarks>
+            <param name="entity">The entity to remove.</param>
+        </member>
+        <member name="P:Forge.Entities.IGameSnapshot.GlobalEntity">
+            <summary>
+            The global entity. It is automatically created and cannot be destroyed, but it can be
+            modified.
+            </summary>
+        </member>
+        <member name="P:Forge.Entities.IGameSnapshot.ActiveEntities">
+            <summary>
+            All entities in the game that were not added or removed in the previous update.
+            </summary>
+        </member>
+        <member name="P:Forge.Entities.IGameSnapshot.RemovedEntities">
+            <summary>
+            All entities that were removed during the previous update.
+            </summary>
+        </member>
+        <member name="P:Forge.Entities.IGameSnapshot.AddedEntities">
+            <summary>
+            All entities that were added during the previous update.
+            </summary>
+        </member>
+        <member name="P:Forge.Entities.IGameSnapshot.Systems">
+            <summary>
+            All systems that are used when executing the game.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Content.GameSnapshot.RestoreDataReferences(System.Runtime.Serialization.StreamingContext)">
+            <summary>
+            This method is called after deserialization is finished. It goes through all
+            DataReferences and restores them.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Content.GameSnapshot.CreateEntity(Forge.Entities.Implementation.Content.GameSnapshot.EntityAddTarget,System.String)">
+            <summary>
+            Helper for tests to create snapshots with entities within more collections than just
+            AddedEntities.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.Implementation.Content.GameSnapshot.EntityAddTarget">
+            <summary>
+            Helper for tests to create snapshots with entities within more collections than just
+            AddedEntities.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.IEntity">
+            <summary>
+            An interface of Entity operations that allow the entity to be both queried and written to.
+            </summary>
+            <remarks>
+            There are numerous extension methods for this interface which make working with it easier,
+            such as generic wrappers for automatically retrieving DataAccessors and casting to the
+            correct return type. It is suggested that the extension methods are used instead of these
+            more primitive ones. The primitive methods are necessary, however, when data type
+            information is not explicitly known at compile-time.
+            </remarks>
+        </member>
+        <member name="T:Forge.Entities.IQueryableEntity">
+            <summary>
+            An entity within the game state that can be queried for information about its current data.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.IQueryableEntity.SelectData(System.Boolean,System.Predicate{Forge.Entities.DataAccessor},System.Collections.Generic.ICollection{Forge.Entities.DataAccessor})">
+            <summary>
+            Selects data inside of the entity that passes the given filter.
+            </summary>
+            <param name="includeRemoved">Should data that has been removed, but is still in the
+            queryable entity, be considered for selection? This means that Contains(accessor) will
+            return false but WasRemoved(accessor) will return true.</param>
+            <param name="filter">The predicate to check items to see if they should be contained
+            inside of the result.</param>
+            <param name="storage">An optional collection to append result to, instead of creating a
+            new one. The collection will *not* be cleared by this method.</param>
+            <returns>A list of data instances that pass the filter.</returns>
+        </member>
+        <member name="M:Forge.Entities.IQueryableEntity.Current(Forge.Entities.DataAccessor)">
+            <summary>
+            Gets the current data value for the given type.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.IQueryableEntity.Previous(Forge.Entities.DataAccessor)">
+            <summary>
+            Gets the previous data value for the data type.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.IQueryableEntity.ContainsData(Forge.Entities.DataAccessor)">
+            <summary>
+            Checks to see if this Entity contains an instance of the given data type. Keep in mind
+            that an IQueryableEntity contains data one frame after it has been removed; both
+            ContainsData(accessor) and WasRemoved(accessor) can return true.
+            </summary>
+        </member>
+        <member name="P:Forge.Entities.IQueryableEntity.PrettyName">
+            <summary>
+            A non-unique string that represents a "human readable" name for the entity. This carries
+            no weight in the simulation, and is only meant for diagnostics.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.IEntity.Destroy">
+            <summary>
+            Destroys the entity. The entity is not destroyed immediately, but instead at the end of
+            the next update loop. Systems will get a chance to process the destruction of the
+            entity.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.IEntity.AddOrModify(Forge.Entities.DataAccessor)">
+            <summary>
+            Adds the given data type, or modifies an instance of it.
+            </summary>
+            <returns>A modifiable instance of data of type T</returns>
+        </member>
+        <member name="M:Forge.Entities.IEntity.AddData(Forge.Entities.DataAccessor)">
+            <summary>
+            Add a Data instance of with the given accessor to the Entity.
+            </summary>
+            <returns>The data instance that can be used to initialize the data</returns>
+        </member>
+        <member name="M:Forge.Entities.IEntity.RemoveData(Forge.Entities.DataAccessor)">
+            <summary>
+            Removes the given data type from the entity.
+            </summary>
+            <remarks>
+            The data instance is not removed in this frame, but in the next one. In the next frame,
+            Previous and Modify will both throw NoSuchData exceptions, but Current will return the
+            current data instance.
+            </remarks>
+        </member>
+        <member name="M:Forge.Entities.IEntity.Modify(Forge.Entities.DataAccessor)">
+            <summary>
+            Modify the given data instance. The current and previous values are still accessible.
+            Please note that a data instance can only be modified once; an exception is thrown if
+            one instance is modified multiple times.
+            </summary>
+            <param name="accessor">The data type to modify.</param>
+        </member>
+        <member name="M:Forge.Entities.IEntity.WasModified(Forge.Entities.DataAccessor)">
+            <summary>
+            Returns if the given data was modified in the previous update.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.IEntity.WasAdded(Forge.Entities.DataAccessor)">
+            <summary>
+            Returns true if the given data was added to the entity in the previous update.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.IEntity.WasRemoved(Forge.Entities.DataAccessor)">
+            <summary>
+            Returns true if the data was removed from the entity in the previous update.
+            </summary>
+        </member>
+        <member name="P:Forge.Entities.IEntity.UniqueId">
+            <summary>
+            Each entity has a unique identifier. The identifier is *never* shared by any other
+            entity during the entire simulation of the game.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.Implementation.Content.ContentEntity.DataInstanceConverter">
+            <summary>
+            A custom converter for DataInstances. This supports a more sophisticated serialization
+            format that only emits data as necessary and additionally allows for custom converters
+            to be defined on Data.IData derived types.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Content.ContentEntity.DataInstance.CurrentData">
+            <summary>
+            The current data instance. Never null.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Content.ContentEntity.DataInstance.PreviousData">
+            <summary>
+            The previous data instance. This is null if the data is not versioned.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Content.ContentEntity.DataInstance.WasAdded">
+            <summary>
+            Did the data get added in the last updated frame?
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Content.ContentEntity.DataInstance.WasRemoved">
+            <summary>
+            Did the data get removed in the last update frame?
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Content.ContentEntity.DataInstance.WasModified">
+            <summary>
+            Did the data get modified in the last update frame?
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.ITemplate">
+            <summary>
+            Used for creating IEntity instances that have a set of data values already initialized.
+            Templates should not be modified at runtime.
+            </summary>
+            <remarks>
+            For example, a generic Orc type will have an ITemplate that defines an Orc. Spawning code
+            will then receive the Orc ITemplate, and when it comes time to spawn it will instantiate an
+            entity from the template, and that entity will be a derivative instance of the original Orc.
+            </remarks>
+        </member>
+        <member name="M:Forge.Entities.ITemplate.Instantiate">
+            <summary>
+            Instantiates the template to create a new IEntity instance. The IEntity is automatically
+            registered with the IGameEngine that owns this template reference. The spawned IEntity
+            will be added to systems on the next update call. The returned entity can be freely
+            modified; modifications can be viewed as pre-initialization.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.ITemplate.AddDefaultData(Forge.Entities.Data.IData)">
+            <summary>
+            Adds a default data instance to the template. The template "owns" the passed data
+            instance; a copy is not made of it.
+            </summary>
+            <remarks>
+            If the ITemplate is currently being backed by an IGameEngine, this will throw an
+            InvalidOperationException. Templates that are being used in an IGameEngine cannot be
+            modified.
+            </remarks>
+            <param name="data">The data instance to copy from.</param>
+        </member>
+        <member name="M:Forge.Entities.ITemplate.RemoveDefaultData(Forge.Entities.DataAccessor)">
+            <summary>
+            Remove the given type of data from the template instance. New instances will not longer
+            have this added to the template.
+            </summary>
+            <remarks>
+            If the ITemplate is currently being backed by an IGameEngine, this will throw an
+            InvalidOperationException.
+            </remarks>
+            <param name="accessor">The type of data to remove.</param>
+            <returns>True if the data was removed.</returns>
+        </member>
+        <member name="P:Forge.Entities.ITemplate.TemplateId">
+            <summary>
+            Each ITemplate can be uniquely identified by its TemplateId.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Content.ContentTemplate.Initialize(Forge.Entities.Implementation.Content.ContentTemplateSerializationFormat)">
+            <summary>
+            Initializes the ContentTemplate with data from the given ContentTemplate.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Content.ContentTemplate.AddDefaultData(Forge.Entities.Data.IData)">
+            <summary>
+            Adds a default data instance to the template. The template "owns" the passed data
+            instance; a copy is not made of it.
+            </summary>
+            <remarks>
+            If the ITemplate is currently being backed by an IGameEngine, this will throw an
+            InvalidOperationException.
+            </remarks>
+            <param name="data">The data instance to copy from.</param>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Content.ContentTemplate.RemoveDefaultData(Forge.Entities.DataAccessor)">
+            <summary>
+            Remove the given type of data from the template instance. New instances will not longer
+            have this added to the template.
+            </summary>
+            <remarks>
+            If the ITemplate is currently being backed by an IGameEngine, this will throw an
+            InvalidOperationException.
+            </remarks>
+            <param name="accessor">The type of data to remove.</param>
+            <returns>True if the data was removed.</returns>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Content.ContentTemplate.Equals(System.Object)">
+            <summary>
+            Indicates whether this instance and a specified object are equal.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Content.ContentTemplate.GetHashCode">
+            <summary>
+            Returns a hash code for this instance.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Content.ContentTemplate.op_Equality(Forge.Entities.Implementation.Content.ContentTemplate,Forge.Entities.ITemplate)">
+            <summary>
+            Indicates whether this instance and a specified object are equal.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Content.ContentTemplate.op_Inequality(Forge.Entities.Implementation.Content.ContentTemplate,Forge.Entities.ITemplate)">
+            <summary>
+            Indicates whether this instance and a specified object are not equal.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Content.TemplateContainerConverter.VerifyReferenceDefinitions(Forge.Entities.Implementation.ContextObjects.GameEngineContext,Forge.Entities.Implementation.ContextObjects.TemplateConversionContext,System.Collections.Generic.List{Forge.Entities.Implementation.Content.ContentTemplateSerializationFormat})">
+            <summary>
+            Verifies that all of created templates in the template context have an associated
+            definition in the list of template definitions.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.Implementation.Runtime.PerformanceInformation">
+            <summary>
+            This stores performance information that can be used to debug slow running code. It is used
+            in Systems when they are updated.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.PerformanceInformation.RunSystemTicks">
+            <summary>
+            Total number of ticks running the system required.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.PerformanceInformation.BookkeepingTicks">
+            <summary>
+            Total number of bookkeeping ticks required.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.PerformanceInformation.AddedTicks">
+            <summary>
+            Ticks required for adding entities when running the system.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.PerformanceInformation.RemovedTicks">
+            <summary>
+            Ticks required for removing entities when running the system.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.PerformanceInformation.StateChangeTicks">
+            <summary>
+            Ticks required for state change operations when running the system.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.PerformanceInformation.ModificationTicks">
+            <summary>
+            Ticks required for modification operations when running the system.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.PerformanceInformation.UpdateTicks">
+            <summary>
+            Ticks required for updating the system.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.Implementation.Runtime.RuntimeTemplate">
+            <summary>
+            A runtime version of an ITemplate designed for efficiency.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.RuntimeTemplate._defaultDataInstances">
+            <summary>
+            The data instances inside of the template.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.RuntimeTemplate._gameEngine">
+            <summary>
+            The game engine that entities are added to when they are instantiated.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Runtime.RuntimeTemplate.Initialize(Forge.Entities.Implementation.Content.ContentTemplateSerializationFormat)">
+            <summary>
+            Initializes the RuntimeTemplate with data from the given ContentTemplate.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Runtime.RuntimeTemplate.AddDefaultData(Forge.Entities.Data.IData)">
+            <summary>
+            Adds a default data instance to the template. The template "owns" the passed data
+            instance; a copy is not made of it.
+            </summary>
+            <remarks>
+            If the ITemplate is currently being backed by an IGameEngine, this will throw an
+            InvalidOperationException.
+            </remarks>
+            <param name="data">The data instance to copy from.</param>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Runtime.RuntimeTemplate.RemoveDefaultData(Forge.Entities.DataAccessor)">
+            <summary>
+            Remove the given type of data from the template instance. New instances will not longer
+            have this added to the template.
+            </summary>
+            <remarks>
+            If the ITemplate is currently being backed by an IGameEngine, this will throw an
+            InvalidOperationException.
+            </remarks>
+            <param name="accessor">The type of data to remove.</param>
+            <returns>True if the data was removed.</returns>
+        </member>
+        <member name="T:Forge.Entities.Implementation.Runtime.SystemExecutionGroup">
+            <summary>
+            A system execution group is a collection of ISystems that have dependencies in the order
+            which they execute. For example, one system may depend on another system for data; it could
+            be important that the first system is *always* processed before the second system. The
+            SystemExecutionGroup makes those guarantees.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.SystemExecutionGroup.Systems">
+            <summary>
+            The systems in this execution group.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Runtime.SystemExecutionGroup.#ctor(System.Collections.Generic.IEnumerable{Forge.Entities.ISystem})">
+            <summary>
+            Construct a new execution group from the given systems.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Runtime.SystemExecutionGroup.IsFullyConcurrent(Forge.Entities.ISystem,System.Collections.Generic.List{Forge.Entities.ISystem})">
+            <summary>
+            Returns true if the given system can be executed completely independently from the other
+            systems.
+            </summary>
+            <param name="system">The system to check.</param>
+            <param name="systems">The systems to check against.</param>
+            <returns>True if the system can be concurrently executed with the other
+            systems.</returns>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Runtime.SystemExecutionGroup.CorrectExecutionOrder(System.Collections.Generic.List{Forge.Entities.ISystem})">
+            <summary>
+            Corrects the execution order of the given systems.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Runtime.SystemExecutionGroup.GetExecutionGroups(System.Collections.Generic.IEnumerable{Forge.Entities.ISystem})">
+            <summary>
+            Returns the execution groups for the given systems.
+            </summary>
+            <param name="allSystems">Every system which is going to be executed.</param>
+            <returns>The execution groups for the systems.</returns>
+        </member>
+        <member name="T:Forge.Entities.Implementation.Shared.EventNotifier">
+            <summary>
+            Handles event dispatch. Events are queued up until some point in time and then they are
+            dispatched.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.IEventNotifier">
+            <summary>
+            An IEventNotifier instance allows for objects to listen to other objects for interesting
+            events based on the given IEvent type. The event dispatcher is a generalization of C#'s
+            support for event, plus additional support for delayed event dispatch.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.IEventNotifier.OnEvent``1(System.Action{``0})">
+            <summary>
+            Add a function that will be called a event of type TEvent has been dispatched to this
+            dispatcher.
+            </summary>
+            <typeparam name="TEvent">The event type to listen for.</typeparam>
+            <param name="onEvent">The code to invoke.</param>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Shared.EventNotifier._handlers">
+            <summary>
+            Event handlers.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Shared.EventNotifier._events">
+            <summary>
+            The queued set of events that have occurred; any thread can write to this list.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Shared.EventNotifier._dispatchingEvents">
+            <summary>
+            Events that are currently being dispatched. This is only read from (its values are
+            retrieved from _events).
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Shared.EventNotifier.CallEventHandlers(System.Object)">
+            <summary>
+            Call event handlers for the given event.
+            </summary>
+            <param name="eventInstance">The event instance to invoke the handlers for</param>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Shared.EventNotifier.DispatchEvents">
+            <summary>
+            Dispatches all queued events to the registered handlers.
+            </summary>
+            <remarks>
+            One of this methods contracts is that OnEventAdded will not be called while events are
+            being dispatched.
+            </remarks>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Shared.EventNotifier.Submit``1(``0)">
+            <summary>
+            Dispatch an event. Event listeners will be notified of the event at a later point in
+            time.
+            </summary>
+            <param name="evnt">The event instance to dispatch</param>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Shared.EventNotifier.OnEvent``1(System.Action{``0})">
+            <summary>
+            Add a function that will be called a event of type TEvent has been dispatched to this
+            dispatcher.
+            </summary>
+            <typeparam name="TEvent">The event type to listen for.</typeparam>
+            <param name="onEvent">The code to invoke.</param>
+        </member>
+        <member name="T:Forge.Entities.Implementation.ContextObjects.GameEngineContext">
+            <summary>
+            A context object that just contains the current GameEngine that is being used to deserialize
+            the object.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.Implementation.Shared.QueryableEntitySerializationProxy">
+            <summary>
+            Proxy type that specifies the serialization format that IQueryableEntity derived type use
+            when converting to and from JSON.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Shared.QueryableEntitySerializationProxy.ReferencedId">
+            <summary>
+            The id of the entity or template that we reference. We serialize this and it will be
+            resolved later.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Shared.QueryableEntitySerializationProxy.ReferenceType">
+            <summary>
+            The type of entity that we are referencing (either an IEntity or an ITemplate).
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.Implementation.Shared.QueryableEntitySerializationProxy.ReferenceTypes">
+            <summary>
+            Specifies the types of entities that this DataReference can reference.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.Implementation.Shared.QueryableEntityConverter">
+            <summary>
+            Converts IQueryableEntities to and from JSON. This uses IQueryableEntityProxy as a
+            serialization format. Deserializing IQueryableEntities requires that the be a
+            GameEngineContext, a EntityConversionContext, and a TemplateConersionContext within the
+            GeneralContext container. This converter supports a large number of different types
+            (IQueryableEntity, IEntity, ITemplate, ContentEntity, ContentTemplate, RuntimeEntity, and
+            RuntimeTemplate) .
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.Implementation.Shared.RequiredConverters">
+            <summary>
+            Helper class that just contains a list of all custom converters that should be used whenever
+            Json.NET is used to serialize/deserialize values.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Shared.RequiredConverters.GetConverters">
+            <summary>
+            Returns the converters that are necessary for proper serialization of an ISavedLevel.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Shared.RequiredConverters.GetContextObjects(Forge.Utilities.Maybe{Forge.Entities.Implementation.Runtime.GameEngine},Forge.Utilities.IContextObject[])">
+            <summary>
+            Returns the context objects that are necessary for proper serialization of ISavedlevel.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.Implementation.Shared.DataAccessorFactory">
+            <summary>
+            Maps different types of Data to a sequential set of integers.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Shared.DataAccessorFactory.MapTypesToDataAccessors(System.Type[])">
+            <summary>
+            Maps a set of types to their respective DataAccessors.
+            </summary>
+            <param name="types">The types to map</param>
+            <returns>A list of DataAccessors that have a 1 to 1 correspondence to the given
+            types.</returns>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Shared.DataAccessorFactory._idGenerator">
+            <summary>
+            The next integer to use.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Shared.DataAccessorFactory._ids">
+            <summary>
+            The mapping from Data types to their integers
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Shared.DataAccessorFactory.GetId(Forge.Entities.Data.IData)">
+            <summary>
+            Returns the id for the given data type. Forwards the call to GetId(Type).
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Shared.DataAccessorFactory.GetId(System.Type)">
+            <summary>
+            Returns the identifier/integer for the given type, constructing if it necessary.
+            </summary>
+            <param name="type">The type to get.</param>
+            <returns>The identifier/integer</returns>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Shared.DataAccessorFactory.GetTypeFromAccessor(Forge.Entities.DataAccessor)">
+            <summary>
+            Looks up the type of data is used for the given accessor.
+            </summary>
+            <remarks>
+            The current implementation of this method runs in O(n) time (instead of O(1)).
+            </remarks>
+            <param name="accessor">The data accessor.</param>
+            <returns>The type used for the given accessor, or an exception if there is
+            none.</returns>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Shared.DataAccessorFactory.GetTypeFromId(System.Int32)">
+            <summary>
+            Looks up the type of data is used for the given accessor.
+            </summary>
+            <remarks>
+            The current implementation of this method runs in O(n) time (instead of O(1)).
+            </remarks>
+            <param name="accessor">The data accessor id.</param>
+            <returns>The type used for the given accessor, or an exception if there is
+            none.</returns>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Runtime.RuntimeEntity.DataStateChangeUpdate">
+            <summary>
+            Applies data state changes to the entity.
+            </summary>
+            <remarks>
+            This function is not thread-safe; no other API calls can be made to the Entity while
+            this function is being executed.
+            </remarks>
+            <returns>If more data state change updates are needed</returns>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.RuntimeEntity._data">
+            <summary>
+            The data contained within the Entity. One item in the tuple is the current state and one
+            item is the next state.
+            </summary>
+            <remarks>
+            Only the entity manager calls entity APIs that write to this; it is single-threaded
+            only.
+            </remarks>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.RuntimeEntity._modifiedLastFrame">
+            <summary>
+            Data that has been modified this frame and needs to be pushed out
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.RuntimeEntity._toAddStage1">
+            <summary>
+            Items that are pending addition in the next update call
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.RuntimeEntity._toRemoveStage1">
+            <summary>
+            Items that are going to be removed. Removal is a two stage process, because after a data
+            item has been removed the final state of the data can be queried in the next update.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.RuntimeEntity._toRemoveStage2">
+            <summary>
+            Data that was removed not in the update that is currently executing, but in the update
+            that previously executed.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.RuntimeEntity._removedLastFrame">
+            <summary>
+            Data that was removed during the last frame (update). This is identical to
+            _toRemoveStage1, except that it provides a fast way to check to see if a data item has
+            been removed.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Runtime.RuntimeEntity.GetAddedData_unlocked(Forge.Entities.DataAccessor)">
+            <summary>
+            Attempts to retrieve a data instance with the given DataAccessor from the list of added
+            data.
+            </summary>
+            <param name="accessor">The DataAccessor to lookup</param>
+            <returns>A data instance, or null if it cannot be found</returns>
+        </member>
+        <member name="P:Forge.Entities.Implementation.Runtime.RuntimeEntity.PrettyName">
+            <summary>
+            The Entity's pretty name, used for debugging / printing purposes.
+            </summary>
+            <remarks>
+            If the entity does not have a pretty name, then this value is set to an empty string.
+            </remarks>
+        </member>
+        <member name="T:Forge.Entities.Implementation.Runtime.EntityManagerMetadata">
+            <summary>
+            Metadata that the EntityManager requires.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.AddedDataEvent">
+            <summary>
+            Event that notifies listener that a new data instance has been added to the entity.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.BaseEvent`1">
+            <summary>
+            Base event type that all events must derive from.
+            </summary>
+            <remarks>
+            BaseEvent provides a number of helpful static methods (available only to the derived type)
+            that make creating a factory for BaseEvent extremely simple. However, it is imperative that
+            the factory methods be used, otherwise a memory leak will occur. The factory methods are
+            thread-safe.
+            </remarks>
+        </member>
+        <member name="M:Forge.Entities.IEvent.Reuse">
+            <summary>
+            Reuse this event instance at a later point in time.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.BaseEvent`1._availableEvents">
+            <summary>
+            Events that have been constructed but are not in use.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.BaseEvent`1.GetInstance">
+            <summary>
+            Helper method to get an instance of the event. The instance may be populated with data,
+            so make sure to fully initialize it. If there is no instance that can be reused, a new
+            one is allocated using the default constructor.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.AddedDataEvent.Entity">
+            <summary>
+            The entity that had the data removed.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.AddedDataEvent.AddedDataType">
+            <summary>
+            The type of data that has been added.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.AddedDataEvent.Create(Forge.Entities.IEntity,System.Type)">
+            <summary>
+            Returns an instance of the AddedDataEvent class.
+            </summary>
+            <param name="entity">The entity that the data was removed from.</param>
+            <param name="addedDataType">Type of the added data.</param>
+        </member>
+        <member name="T:Forge.Entities.RemovedDataEvent">
+            <summary>
+            Event that notifies listener that a new data instance has been added to the entity.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.RemovedDataEvent.Entity">
+            <summary>
+            The entity that had the data removed.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.RemovedDataEvent.RemovedDataType">
+            <summary>
+            The type of data that has been added.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.RemovedDataEvent.Create(Forge.Entities.IEntity,System.Type)">
+            <summary>
+            Initializes a new instance of the RemovedDataEvent class.
+            </summary>
+            <param name="entity">The entity that the data was removed from.</param>
+            <param name="removedDataType">Type of the removed data.</param>
+        </member>
+        <member name="T:Forge.Entities.EntityAddedEvent">
+            <summary>
+            Event that notifies the listener that a new Entity has been added to the EntityManager.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.EntityAddedEvent.Entity">
+            <summary>
+            The entity that was added.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.EntityAddedEvent.Create(Forge.Entities.IEntity)">
+            <summary>
+            Initializes a new instance of the EntityAddedEvent class.
+            </summary>
+            <param name="entity">The entity that was added.</param>
+        </member>
+        <member name="T:Forge.Entities.EntityRemovedEvent">
+            <summary>
+            Event that notifies the listener that a new Entity has been removed from the EntityManager.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.EntityRemovedEvent.Entity">
+            <summary>
+            The entity that was removed.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.EntityRemovedEvent.Create(Forge.Entities.IEntity)">
+            <summary>
+            Initializes a new instance of the EntityRemovedEvent class.
+            </summary>
+            <param name="entity">The entity that was removed.</param>
+        </member>
+        <member name="T:Forge.Entities.HideEntityEvent">
+            <summary>
+            Event notifying listeners that the entity should be hidden.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.ShowEntityEvent">
+            <summary>
+            Event notifying listeners that the entity should be visible.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.DestroyedEntityEvent">
+            <summary>
+            Event notifying listeners that the entity has been destroyed.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.AlreadyAddedDataException">
+            <summary>
+            Exception thrown when a data type is added to an entity, but the entity already contains an
+            instance of said data type.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.AlreadyAddedDataException.#ctor(Forge.Entities.IEntity,Forge.Entities.DataAccessor)">
+            <summary>
+            Creates the exception with the given context and data type.
+            </summary>
+            <param name="context">The entity that triggered the exception.</param>
+            <param name="accessor">The data type that was already added.</param>
+        </member>
+        <member name="T:Forge.Entities.NoSuchDataException">
+            <summary>
+            Exception thrown when data is attempted to be retrieved from an Entity, but the entity does
+            not contain an instance of said data type.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.NoSuchDataException.#ctor(Forge.Entities.IQueryableEntity,Forge.Entities.DataAccessor)">
+            <summary>
+            Creates the exception with the given context and data type.
+            </summary>
+            <param name="context">The entity that triggered the exception.</param>
+            <param name="accessor">The data type that the entity lacks.</param>
+        </member>
+        <member name="T:Forge.Entities.PreviousRequiresVersionedDataException">
+            <summary>
+            Exception thrown when Previous(accessor) is requested but accessor does not map to a
+            versioned data type.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.RemodifiedDataException">
+            <summary>
+            An exception that is thrown when a data instance has been modified more than once in an
+            update loop, but that data is not allowed to be concurrently modified.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.RemodifiedDataException.#ctor(Forge.Entities.IEntity,Forge.Entities.DataAccessor)">
+            <summary>
+            Creates the exception with the given context and data type.
+            </summary>
+            <param name="context">The entity that triggered the exception.</param>
+            <param name="accessor">The data type that was concurrently modified.</param>
+        </member>
+        <member name="T:Forge.Entities.IEntityExtensions">
+            <summary>
+            Helper methods built on top of the core IEntity API.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.DataContainer.ModificationActivation">
+            <summary>
+            Used by the Entity to determine if the data inside of this container has already been
+            modified.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.Implementation.Runtime.NonVersionedDataContainer">
+            <summary>
+            Contains a single data instance.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.Implementation.Runtime.VersionedDataContainer">
+            <summary>
+            Contains a set of three IData instances and allows swapping between those instances such
+            that one of them is the previous state, one of them is the current state, and one of them is
+            a modifiable state.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.VersionedDataContainer.Items">
+            <summary>
+            All stored immutable data items.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.VersionedDataContainer._previousIndex">
+            <summary>
+            The index of the previous item.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Runtime.VersionedDataContainer.#ctor(Forge.Entities.Data.IVersioned,Forge.Entities.Data.IVersioned,Forge.Entities.Data.IVersioned)">
+            <summary>
+            Initializes a new instance of the ImmutableContainer class.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Runtime.VersionedDataContainer.Increment">
+            <summary>
+            Updates Modifying/Current/Previous so that they point to the next element
+            </summary>
+        </member>
+        <member name="P:Forge.Entities.Implementation.Runtime.VersionedDataContainer.Current">
+            <summary>
+            Return the data instance that contains the current values.
+            </summary>
+        </member>
+        <member name="P:Forge.Entities.Implementation.Runtime.VersionedDataContainer.Modifying">
+            <summary>
+            Return the data instance that can be modified.
+            </summary>
+        </member>
+        <member name="P:Forge.Entities.Implementation.Runtime.VersionedDataContainer.Previous">
+            <summary>
+            Return the data instance that contains the previous values.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.GameSnapshotEntityRemoveResult">
+            <summary>
+            Represents the result of removing an entity.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.GameSnapshotEntityRemoveResult.Destroyed">
+            <summary>
+            The entity was completely destroyed and no longer exists.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.GameSnapshotEntityRemoveResult.IntoRemoved">
+            <summary>
+            The entity was moved into the Removed collection.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.GameSnapshotEntityRemoveResult.Failed">
+            <summary>
+            The entity could not be removed (it was the singleton entity or was already in the
+            Removed collection). Removing such an entity would cause invalid state in systems; the
+            entity would not go through its life-cycle.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Data.IData.Duplicate">
+            <summary>
+            Return an exact copy of this data instance.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Data.NonVersioned.Duplicate">
+            <summary>
+            Return an exact copy of this data instance.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Data.IVersioned.CopyFrom(Forge.Entities.Data.IVersioned)">
+            <summary>
+            Moves all of the data from the specified source into this instance. After this call,
+            this data instance must be identical to source, such that this instance could
+            completely replace source in other code and the other code would be unable to tell
+            the difference.
+            </summary>
+            <param name="source">The source to move from.</param>
+        </member>
+        <member name="M:Forge.Entities.Data.IConcurrent.ResolveConcurrentModifications">
+            <summary>
+            This method is called after all modifications have been made during an update have
+            been made to the data instance. The purpose is to allow for client code to resolve
+            multiple modifications so that modA(modB(entity)) == modB(modA(entity)).
+            </summary>
+            <remarks>
+            No other calls will be made to the data instance while this function is being
+            executed.
+            </remarks>
+        </member>
+        <member name="M:Forge.Entities.Data.ConcurrentVersioned`1.ResolveConcurrentModifications">
+            <summary>
+            This method is called after all modifications have been made during an update have
+            been made to the data instance. The purpose is to allow for client code to resolve
+            multiple modifications so that modA(modB(entity)) == modB(modA(entity)).
+            </summary>
+            <remarks>
+            No other calls will be made to the data instance while this function is being
+            executed.
+            </remarks>
+        </member>
+        <member name="M:Forge.Entities.Data.ConcurrentNonVersioned.ResolveConcurrentModifications">
+            <summary>
+            This method is called after all modifications have been made during an update have
+            been made to the data instance. The purpose is to allow for client code to resolve
+            multiple modifications so that modA(modB(entity)) == modB(modA(entity)).
+            </summary>
+            <remarks>
+            No other calls will be made to the data instance while this function is being
+            executed.
+            </remarks>
+        </member>
+        <member name="T:Forge.Entities.IGameEngine">
+            <summary>
+            Manages the execution of a game. Allows for players to input commands to the game, thereby
+            modifying how the game plays out.
+            </summary>
+            <remarks>
+            Instances of this class are allocated when loading levels.
+            </remarks>
+        </member>
+        <member name="M:Forge.Entities.IGameEngine.Update(System.Collections.Generic.IEnumerable{Forge.Entities.IGameInput})">
+            <summary>
+            Runs a game update tick using the given input. This means that systems get executed
+            based on the current game state and the given input.
+            </summary>
+            <returns>A task that is completed when the engine has finished the update.</returns>
+        </member>
+        <member name="M:Forge.Entities.IGameEngine.SynchronizeState">
+            <summary>
+            Synchronizes the state of game. No systems are executed in this method.
+            </summary>
+            <remarks>
+            The game manager will typically run in a multithreaded context, with the rendering
+            thread pulling data from the game. If the shared state between the game and the renderer
+            suddenly changes half-way through a render, then tearing and generally bad things will
+            happen. Because of this, when updating the game, no shared state between the renderer
+            and the engine is modified. Instead, it will be modified after this method has been
+            called.
+            </remarks>
+            <returns>A task that is completed when all state has been synchronized.</returns>
+        </member>
+        <member name="M:Forge.Entities.IGameEngine.DispatchEvents">
+            <summary>
+            Dispatches all of the events that have accumulated from updates since the last call to
+            DispatchEvents(). This method operates on the calling thread, so ensure that the event
+            handlers don't consume lots of processing time.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.IGameEngine.TakeSnapshot">
+            <summary>
+            Iterates through all data inside of the engine and returns a a snapshot of the game that
+            reflects everything contained within the engine.
+            </summary>
+            <remarks>
+            Be wary of calling this method too often; it requires that no update is occurring (it
+            will block until the update is done) and can take a decent amount of time to calculate.
+            It additionally performs a large number of allocations.
+            </remarks>
+            <returns>A content database that contains all content within the engine. All data stored
+            inside of the database is independent of the data stored inside of the engine, so
+            changes to the engine will not be reflected inside of the database.</returns>
+        </member>
+        <member name="M:Forge.Entities.IGameEngine.GetVerificationHash">
+            <summary>
+            Returns a hash code of all data inside of the engine. The hash code is computed via
+            reflection and can be used to attempt to determine if two game engines are out of sync.
+            </summary>
+        </member>
+        <member name="P:Forge.Entities.IGameEngine.EventNotifier">
+            <summary>
+            Event notifier used to notify listeners of events that have occurred inside of the
+            engine, such as an entity being added.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.GameEngineFactory">
+            <summary>
+            Allocates IGameEngines that can be used to play the state stored inside of a game snapshot.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.GameEngineFactory.CreateEngine(System.String,System.String)">
+            <summary>
+            Creates a new game engine that can be used to simulate the game using the content from
+            the given content database. The passed in snapshot will not be modified.
+            </summary>
+            <param name="snapshotJson">The serialized IGameSnapshot to use to create the
+            engine.</param>
+            <param name="templateJson">The serialized ITemplateGroup used to create the
+            engine.</param>
+            <returns>A game engine that can play the given content.</returns>
+        </member>
+        <member name="M:Forge.Entities.GameEngineFactory.CreateEngine(Forge.Entities.IGameSnapshot,Forge.Entities.ITemplateGroup)">
+            <summary>
+            Creates a new game engine that can be used to simulate the game using the content from
+            the given content database. The passed in snapshot will not be modified.
+            </summary>
+            <remarks>
+            This is a helper method; it serializes the arguments and then calls CreateEngine(string,
+            string) which does the actual work.
+            </remarks>
+            <param name="snapshot">The IGameSnapshot to use to create the engine.</param>
+            <param name="templates">The ITemplateGroup used to create the engine.</param>
+            <returns>A game engine that can play the given content.</returns>
+        </member>
+        <member name="T:Forge.Entities.IGameInput">
+            <summary>
+            Input that is given to the game manager.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.LevelManager">
+            <summary>
+            Facilitates the creation, saving, and loading of snapshots and template groups. This is the
+            API point that all serialization occurs in.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.LevelManager.CreateSnapshot">
+            <summary>
+            Returns an empty game snapshot.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.LevelManager.CreateTemplateGroup">
+            <summary>
+            Returns an empty template group with a starting TemplateId of 0.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.LevelManager.CreateTemplateGroup(System.Int32)">
+            <summary>
+            Returns an empty template group.
+            </summary>
+            <param name="startingId">The lowest value for TemplateId in the group, which must be
+            greater than or equal to 0.</param>
+        </member>
+        <member name="M:Forge.Entities.LevelManager.MergeTemplateGroups(System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Merges a set of serialized template groups together into one template group. An
+            InvalidOperationException is thrown if there are two templates with the same TemplateId.
+            </summary>
+            <param name="groups">The serialized template groups to merge.</param>
+            <returns>A serialized template group that contains all of the templates within the given
+            groups.</returns>
+        </member>
+        <member name="M:Forge.Entities.LevelManager.MergeTemplateGroups(System.Collections.Generic.IEnumerable{Forge.Entities.ITemplateGroup})">
+            <summary>
+            Merges a set of template groups together into one template group. An
+            InvalidOperationException is thrown if there are two templates with the same TemplateId.
+            </summary>
+            <param name="groups">The template groups to merge.</param>
+            <returns>A single template group that contains all of the templates within the given
+            groups.</returns>
+        </member>
+        <member name="M:Forge.Entities.LevelManager.SaveSnapshot(Forge.Entities.IGameSnapshot)">
+            <summary>
+            Converts a game snapshot to JSON that can be restored later.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.LevelManager.SaveTemplateGroup(Forge.Entities.ITemplateGroup)">
+            <summary>
+            Converts a template group to JSON that can be restored later.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.LevelManager.LoadSnapshot(System.String,System.String)">
+            <summary>
+            Loads an IGameSnapshot from the given JSON and the given template group. The JSON should
+            have been generated by calling SaveSnapshot.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.LevelManager.LoadTemplateGroup(System.String)">
+            <summary>
+            Loads an ITemplateGroup from the given JSON. The JSON should have been generated by
+            calling SaveTemplates.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.SystemExecutionOrdering">
+            <summary>
+            An enum that specifies the relative execution ordering of a group of systems. It expresses
+            the execution ordering within the context of precisely two systems.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.SystemExecutionOrdering.Concurrent">
+            <summary>
+            The execution order doesn't matter; both systems can be ran concurrently.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.SystemExecutionOrdering.BeforeOther">
+            <summary>
+            This system should be executed before the other system.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.SystemExecutionOrdering.AfterOther">
+            <summary>
+            This system should be executed after the other system.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.ISystem">
+            <summary>
+            All systems need to extend this interface, but it should be done by extending BaseSystem.
+            See documentation on BaseSystem.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.ISystem.GetExecutionOrdering(Forge.Entities.ISystem)">
+            <summary>
+            Return the order of system execution for this system relative to the given system.
+            </summary>
+            <param name="system">The system to compare our execution ordering against.</param>
+            <returns>The order that execution needs to happen in.</returns>
+        </member>
+        <member name="P:Forge.Entities.ISystem.EventDispatcher">
+            <summary>
+            Set the event dispatcher that can be used to notify the external world of events.
+            </summary>
+        </member>
+        <member name="P:Forge.Entities.ISystem.GlobalEntity">
+            <summary>
+            Set the global entity that can be used to store global data.
+            </summary>
+        </member>
+        <member name="P:Forge.Entities.ISystem.EntityIndex">
+            <summary>
+            Set the entity index.
+            </summary>
+        </member>
+        <member name="P:Forge.Entities.ISystem.TemplateIndex">
+            <summary>
+            Set the template index.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.BaseSystem">
+            <summary>
+            All systems need to extend the system class. Systems have callbacks automatically registered
+            by implementing ITrigger* interfaces.
+            </summary>
+            <remarks>
+            Client code should not directly extend this, as it does not give any behavior by itself.
+            </remarks>
+        </member>
+        <member name="M:Forge.Entities.BaseSystem.GetExecutionOrdering(Forge.Entities.ISystem)">
+            <summary>
+            Return the order of system execution for this system relative to the given system. This
+            method defaults to SystemExecutionOrdering.Concurrent, which means that there is no
+            explicit execution ordering required between the two systems.
+            </summary>
+            <param name="system">The system to compare our execution ordering against.</param>
+            <returns>The order that execution needs to happen in.</returns>
+        </member>
+        <member name="P:Forge.Entities.BaseSystem.EventDispatcher">
+            <summary>
+            Get the event dispatcher that can be used to notify the external world of events.
+            </summary>
+        </member>
+        <member name="P:Forge.Entities.BaseSystem.GlobalEntity">
+            <summary>
+            Get the global entity that can be used to store global data.
+            </summary>
+        </member>
+        <member name="P:Forge.Entities.BaseSystem.EntityIndex">
+            <summary>
+            Returns the EntityIndex, which can be used to lookup entities by their UniqueIds.
+            </summary>
+        </member>
+        <member name="P:Forge.Entities.BaseSystem.TemplateIndex">
+            <summary>
+            Returns the TemplateIndex, when can be used to lookup templates by their TemplateIds.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.ITriggerFilterProvider">
+            <summary>
+            * do not extend this type; it does not provide any functionality *
+            A base type for triggers which require a filter that exposes the common RequiredDataTypes
+            method.
+            </summary>
+            <remarks>
+            Client code should not extend this.
+            </remarks>
+        </member>
+        <member name="P:Forge.Entities.ITriggerFilterProvider.RequiredDataTypes">
+            <summary>
+            Computes the entity filter.
+            </summary>
+            <remarks>
+            Entities, by default, pass the filter. They pass the filter when we can prove they don't
+            belong, ie, they lack one of the data types in the entity filter. So, if the filter is
+            empty, then every entity will be within the filter.
+            </remarks>
+            <returns>A list of Data types that the entity needs to have to pass the
+            filter.</returns>
+        </member>
+        <member name="T:Forge.Entities.Trigger">
+            <summary>
+            Provides interfaces that Systems should derive from to receive callbacks.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.Trigger.Added">
+            <summary>
+            Adds an OnAdded method to the system, which is called when the entity has passed the
+            given filter.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Trigger.Added.OnAdded(Forge.Entities.IEntity)">
+            <summary>
+            Called when an Entity has passed the filter.
+            </summary>
+            <param name="entity">An entity that is now passing the filter.</param>
+        </member>
+        <member name="T:Forge.Entities.Trigger.Removed">
+            <summary>
+            Adds an OnRemoved method to the system, which is called when an entity no longer passes
+            the given filter after it has passed it.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Trigger.Removed.OnRemoved(Forge.Entities.IEntity)">
+            <summary>
+            Called when an Entity, which was once passing the filter, is no longer doing so.
+            </summary>
+            <remarks>
+            This can occur for a number of reasons, such as a data state change or the Entity
+            being destroyed.
+            </remarks>
+            <param name="entity">An entity that is no longer passing the filter.</param>
+        </member>
+        <member name="T:Forge.Entities.Trigger.Modified">
+            <summary>
+            Adds an OnModified method to the system, which is called whenever an entity which passes
+            the filter is modified.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Trigger.Modified.OnModified(Forge.Entities.IEntity)">
+            <summary>
+            The given entity, which has passed the filter, has been modified.
+            </summary>
+            <param name="entity">An entity which has passed the filter.</param>
+        </member>
+        <member name="T:Forge.Entities.Trigger.Update">
+            <summary>
+            Adds an OnUpdate method to the system, which is called on every entity that passes the
+            filter each update.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Trigger.Update.OnUpdate(Forge.Entities.IEntity)">
+            <summary>
+            This is called every update frame for all entities which pass the filter.
+            </summary>
+            <remarks>
+            If you need to know when the entities are added or are no longer going to be
+            updated, also implement ILifecycleTrigger.
+            </remarks>
+            <param name="entity">An entity which has passed the filter.</param>
+        </member>
+        <member name="T:Forge.Entities.Trigger.GlobalPreUpdate">
+            <summary>
+            Adds an OnGlobalPreUpdate method to the system, which is called before OnUpdate has
+            started.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Trigger.GlobalPreUpdate.OnGlobalPreUpdate">
+            <summary>
+            Called once per update loop. This is expected to use the EntityManager's global
+            data.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.Trigger.GlobalPostUpdate">
+            <summary>
+            Adds an OnGlobalPostUpdate method to the system, which is called after OnUpdate has
+            completed for this system.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Trigger.GlobalPostUpdate.OnGlobalPostUpdate">
+            <summary>
+            Called once per update loop. This is expected to use the EntityManager's global
+            data.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.Trigger.Input">
+            <summary>
+            Adds an OnInput method to the system, which is called on every entity that passes the
+            filter when one of the given input types has been received by the game engine.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Trigger.Input.OnInput(Forge.Entities.IGameInput,Forge.Entities.IEntity)">
+            <summary>
+            Called on all entities which pass the filter.
+            </summary>
+            <param name="input">The input that was received.</param>
+            <param name="entity">An entity which has passed the filter.</param>
+        </member>
+        <member name="P:Forge.Entities.Trigger.Input.InputTypes">
+            <summary>
+            The types of game input that the trigger is interested in.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.Trigger.GlobalInput">
+            <summary>
+            Adds an OnGlobalInput method to the system, which is called when one of the given input
+            types has been received by the game engine.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Trigger.GlobalInput.OnGlobalInput(Forge.Entities.IGameInput)">
+            <summary>
+            Called whenever the given input type is received.
+            </summary>
+            <param name="input">The input that was received.</param>
+        </member>
+        <member name="P:Forge.Entities.Trigger.GlobalInput.InputTypes">
+            <summary>
+            The types of game input that the trigger is interested in.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.Trigger.OnEngineLoaded">
+            <summary>
+            A trigger that is **NOT** deterministic. Instead, this allows for code to be executed
+            when the game engine has been created (such as when a new level has started or a saved
+            game has been loaded). This is primarily useful for dispatching custom events to notify
+            the rendering engine of initial state.
+            </summary>
+            <remarks>
+            Notice that this interface does *not* extend ISystem. This means that GlobalEntity,
+            EntityIndex, TemplateIndex, etc, are not available for use. They may be null when
+            OnEngineLoaded is called.
+            </remarks>
+        </member>
+        <member name="M:Forge.Entities.Trigger.OnEngineLoaded.OnEngineLoaded(Forge.Entities.IEventDispatcher)">
+            <summary>
+            This method is called when the system has been loaded into a game. It should *NOT*
+            make any modifications to the game state. This method is primarily intended for
+            sending out initial game messages to setup, ie, renderer state.
+            </summary>
+            <param name="eventDispatcher">The event dispatcher to use for sending out
+            events</param>
+        </member>
+        <member name="T:Forge.Entities.Implementation.Runtime.MultithreadedSystemSharedContext">
+            <summary>
+            Shared state between all multithreaded systems.
+            </summary>
+        </member>
+        <member name="P:Forge.Entities.Implementation.Runtime.MultithreadedSystemSharedContext.AddedEntities">
+            <summary>
+            Entities which have been added.
+            </summary>
+        </member>
+        <member name="P:Forge.Entities.Implementation.Runtime.MultithreadedSystemSharedContext.RemovedEntities">
+            <summary>
+            Entities which have been removed.
+            </summary>
+        </member>
+        <member name="P:Forge.Entities.Implementation.Runtime.MultithreadedSystemSharedContext.StateChangedEntities">
+            <summary>
+            Entities which have state changes.
+            </summary>
+        </member>
+        <member name="P:Forge.Entities.Implementation.Runtime.MultithreadedSystemSharedContext.Exceptions">
+            <summary>
+            Contains any exceptions that occurred while running systems.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.Implementation.Runtime.MultithreadedSystem">
+            <summary>
+            Runs an ISystem in another thread.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.MultithreadedSystem._dispatchAdded">
+            <summary>
+            Entities that were added to the system that need to be dispatched to the system.
+            </summary>
+            <remarks>
+            This is populated in the bookkeeping phase and is not touched during execution.
+            </remarks>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.MultithreadedSystem._dispatchRemoved">
+            <summary>
+            Entities that were removed from the system that need to be dispatched to the system.
+            </summary>
+            <remarks>
+            This is populated in the bookkeeping phase and is not touched during execution.
+            </remarks>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.MultithreadedSystem._dispatchModified">
+            <summary>
+            Entities that were modified in the last update that need to be dispatched to the system.
+            </summary>
+            <remarks>
+            This is populated in the bookkeeping phase and is not touched during execution.
+            </remarks>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.MultithreadedSystem._notifiedModifiedEntities">
+            <summary>
+            Entities that have been modified since bookkeeping last ran.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.MultithreadedSystem._entityCache">
+            <summary>
+            A cache of all entities which have passed the entity filter.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.MultithreadedSystem._shared">
+            <summary>
+            Our shared context.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.MultithreadedSystem._filter">
+            <summary>
+            Filter we use for filtering entities
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.MultithreadedSystem.System">
+            <summary>
+            The system that this MultithreadedSystem maps to.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.MultithreadedSystem.PerformanceData">
+            <summary>
+            Performance data
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Runtime.MultithreadedSystem.ModificationNotifier_Listener(Forge.Entities.Implementation.Runtime.RuntimeEntity)">
+            <summary>
+            Called when an entity that is contained within the cache has been modified.
+            </summary>
+            <remarks>
+            This function is only called if we have a modification trigger to invoke.
+            </remarks>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Runtime.MultithreadedSystem.BookkeepingBeforeRunningSystems">
+            <summary>
+            Runs bookkeeping on the system. All systems concurrently run this function. This
+            function makes an *extremely* important guarantee that there will be no external API
+            calls made that can modify the state of other systems that are currently executing.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Runtime.MultithreadedSystem.RunSystem(System.Collections.Generic.List{Forge.Entities.IGameInput})">
+            <summary>
+            Dispatches notifications to the system. All MultithreadedSystems run this function in
+            parallel. There are no guarantees as to the state of the external world when this
+            function is executing, as client code is being called.
+            </summary>
+            <param name="input">The structured input that should be delivered to the client
+            system.</param>
+        </member>
+        <member name="T:Forge.Entities.Implementation.Runtime.MultithreadedSystem.EntityCache">
+            <summary>
+            Caches entities which pass a filter inside of an unordered list.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.MultithreadedSystem.EntityCache._metadataKey">
+            <summary>
+            Key used for retrieving metadata to store items in CachedEntities
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.MultithreadedSystem.EntityCache._filter">
+            <summary>
+            The filter that the trigger is using
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.MultithreadedSystem.EntityCache.CachedEntities">
+            <summary>
+            The list of entities which are currently in the system.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Runtime.MultithreadedSystem.EntityCache.#ctor(Forge.Entities.Implementation.Shared.Filter)">
+            <summary>
+            Creates a new system. Entities are added to the system based on if they pass the
+            given filter.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Runtime.MultithreadedSystem.EntityCache.UpdateCache(Forge.Entities.Implementation.Runtime.RuntimeEntity)">
+            <summary>
+            Updates the status of the entity inside of the cache; ie, if the entity is now
+            passing the filter but was not before, then it will be added to the cache.
+            </summary>
+            <returns>The change in cache status for the entity</returns>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Runtime.MultithreadedSystem.EntityCache.Remove(Forge.Entities.Implementation.Runtime.RuntimeEntity)">
+            <summary>
+            Ensures that an Entity is not in the cache.
+            </summary>
+            <returns>True if the entity was previously in the cache and was removed, false if it
+            was not in the cache and was therefore not removed.</returns>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Runtime.MultithreadedSystem.EntityCache.GetMetadata(Forge.Entities.Implementation.Runtime.RuntimeEntity)">
+            <summary>
+            Returns the CachedEntities metadata for the given entity.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.Implementation.Runtime.MultithreadedSystem.EntityCache.CacheChangeResult">
+            <summary>
+            The result of an UpdateCache operation.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.Implementation.Runtime.GameEngine">
+            <summary>
+            The EntityManager requires an associated Entity which is not injected into the
+            EntityManager.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.GameEngine.EnableMultithreading">
+            <summary>
+            Should the EntityManager execute systems in separate threads?
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.GameEngine._entities">
+            <summary>
+            The list of active Entities in the world.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.GameEngine._addedEntities">
+            <summary>
+            A list of Entities that were added to the EntityManager in the last update loop. This
+            means that they are now ready to actually be added to the EntityManager in this update.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.GameEngine._notifiedAddingEntities">
+            <summary>
+            The entities which are added to the EntityManager in this frame. This is concurrently
+            written to as systems create new entities.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.GameEngine._removedEntities">
+            <summary>
+            A list of Entities that were removed from the EntityManager in the last update loop.
+            This means that they are now ready to actually be removed from the EntityManager in this
+            update.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.GameEngine._notifiedRemovedEntities">
+            <summary>
+            The entities which are removed to the EntityManager in this frame. This is concurrently
+            written to as systems remove entities.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.GameEngine._notifiedModifiedEntities">
+            <summary>
+            A list of Entities that have been modified.
+            </summary>
+            <remarks>
+            If you look at other local variables, this one does not follow a common pattern of also
+            storing the previous update's results. This is because this data is not shared with
+            systems.
+            </remarks>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.GameEngine._stateChangeEntities">
+            <summary>
+            Entities that have state changes. Entities can have state changes for multiple frames,
+            so the entities inside of this list can be from any update before the current one.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.GameEngine._notifiedStateChangeEntities">
+            <summary>
+            Entities which have state changes in this frame. This collection will be added to
+            _stateChangeEntities during the next update.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.GameEngine._updateTaskLock">
+            <summary>
+            Lock used when modifying _updateTask.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.GameEngine._entityUnorderedListMetadataKey">
+            <summary>
+            The key we use to access unordered list metadata from the entity.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.GameEngine.EntityIdGenerator">
+            <summary>
+            Generator used for generating unique identifiers for entities.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.GameEngine.EventNotifier">
+            <summary>
+            Events that the EntityManager dispatches.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.GameEngine._globalEntity">
+            <summary>
+            Global entity that contains global data.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.GameEngine._entityIndex">
+            <summary>
+            The entity index, which needs to be updated whenever an entity is added or destroyed.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.GameEngine._templateJson">
+            <summary>
+            ITemplateGroup JSON so that we can create a snapshot of the content.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Runtime.GameEngine._multithreadingExceptions">
+            <summary>
+            Contains any exceptions that have occurred when running systems.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Runtime.GameEngine.CreateMultithreadedSystem(Forge.Entities.ISystem,Forge.Entities.TemplateIndex)">
+            <summary>
+            Creates a multithreaded system from the given base system.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Runtime.GameEngine.InternalAddEntity(Forge.Entities.Implementation.Runtime.RuntimeEntity)">
+            <summary>
+            Internal method to add an entity to the entity manager and register it with all
+            associated systems. This executes the add immediately.
+            </summary>
+            <param name="toAdd">The entity to add.</param>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Runtime.GameEngine.AddEntity(Forge.Entities.Implementation.Runtime.RuntimeEntity)">
+            <summary>
+            Registers the given entity with the world.
+            </summary>
+            <param name="instance">The instance to add</param>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Runtime.GameEngine.RemoveEntity(Forge.Entities.Implementation.Runtime.RuntimeEntity)">
+            <summary>
+            Removes the given entity from the world.
+            </summary>
+            <param name="instance">The entity instance to remove</param>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Runtime.GameEngine.GetEntitiesListFromMetadata(Forge.Entities.Implementation.Runtime.RuntimeEntity)">
+            <summary>
+            Helper method that returns the _entities unordered list metadata.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Runtime.GameEngine.OnEntityModified(Forge.Entities.Implementation.Runtime.RuntimeEntity)">
+            <summary>
+            Called when an Entity has been modified.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Runtime.GameEngine.OnEntityDataStateChanged(Forge.Entities.Implementation.Runtime.RuntimeEntity)">
+            <summary>
+            Called when an entity has data state changes
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Runtime.GameEngine.GetEntitiesToAdd">
+            <summary>
+            Returns all entities that will be added in the next update.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Runtime.GameEngine.GetEntitiesToRemove">
+            <summary>
+            Returns all entities that will be removed in the next update.
+            </summary>
+        </member>
+        <member name="P:Forge.Entities.Implementation.Runtime.GameEngine.UpdateNumber">
+            <summary>
+            Gets the update number.
+            </summary>
+            <value>The update number.</value>
+        </member>
+        <member name="T:Forge.Entities.Implementation.Shared.Filter">
+            <summary>
+            A filter ensures that an entity contains a set of data types.
+            </summary>
+        </member>
+        <member name="F:Forge.Entities.Implementation.Shared.Filter._accessors">
+            <summary>
+            The list of Data types that the filter has to have.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Shared.Filter.#ctor(Forge.Entities.DataAccessor[])">
+            <summary>
+            Creates a new filter that has to contain a given set of DataAccessors.
+            </summary>
+            <param name="accessors">The required data types that an entity must contain to pass the
+            filter.</param>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Shared.Filter.Check(Forge.Entities.IEntity)">
+            <summary>
+            Check the given Entity to see if it passes this Filter.
+            </summary>
+            <param name="entity">The entity to check</param>
+            <returns>True if it passes the filter, false otherwise.</returns>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Shared.Filter.ModificationCheck(Forge.Entities.IEntity)">
+            <summary>
+            Check to see if the entity has any modifications that this filter cares about.
+            </summary>
+            <param name="entity">The entity to check</param>
+            <returns>If it has a modification that the filter is interested in</returns>
+        </member>
+        <member name="M:Forge.Entities.Implementation.ContextObjects.EntityConversionContext.GetEntityInstance(System.Int32,Forge.Entities.Implementation.ContextObjects.GameEngineContext)">
+            <summary>
+            Returns an entity instance for the given entity UniqueId. If an instance for the given
+            id already exists, then it is returned. Otherwise, either a RuntimeEntity or
+            ContentEntity is created.
+            </summary>
+            <param name="entityId">The id of the entity to get an instance for.</param>
+            <param name="context">The GameEngineContext, used to determine if we should create a
+            ContentTemplate or RuntimeTemplate instance.</param>
+        </member>
+        <member name="F:Forge.Entities.Implementation.ContextObjects.TemplateConversionContext.CreatedTemplates">
+            <summary>
+            All of the created templates, indexed by template id.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.ContextObjects.TemplateConversionContext.GetTemplateInstance(System.Int32,Forge.Entities.Implementation.ContextObjects.GameEngineContext)">
+            <summary>
+            Returns a template instance for the given TemplateId. If an instance for the given id
+            already exists, then it is returned. Otherwise, either a RuntimeTemplate or
+            ContentTemplate is created with an associated id based on the GameEngineContext.
+            </summary>
+            <param name="templateId">The id of the template to get an instance for.</param>
+            <param name="context">The GameEngineContext, used to determine if we should create a
+            ContentTemplate or RuntimeTemplate instance.</param>
+        </member>
+    </members>
+</doc>
