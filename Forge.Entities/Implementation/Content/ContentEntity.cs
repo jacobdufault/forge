@@ -64,7 +64,7 @@ namespace Forge.Entities.Implementation.Content {
                 instance.WasRemoved = Read<bool>(obj, "WasRemoved");
                 instance.WasModified = Read<bool>(obj, "WasModified");
 
-                Type dataType = obj["DataType"].ToObject<Type>();
+                Type dataType = obj["DataType"].ToObject<Type>(serializer);
                 instance.CurrentData = TryReadData(obj, serializer, "CurrentData", dataType);
                 instance.PreviousData = TryReadData(obj, serializer, "PreviousData", dataType);
 

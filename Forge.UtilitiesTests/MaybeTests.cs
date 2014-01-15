@@ -25,13 +25,6 @@ using System.Text;
 using Xunit;
 
 namespace Forge.Utilities.Tests {
-    public static class SerializationHelpers {
-        public static T DeepClone<T>(T instance) {
-            string json = JsonConvert.SerializeObject(instance, typeof(T), Formatting.Indented, null);
-            return (T)JsonConvert.DeserializeObject(json, typeof(T), settings: null);
-        }
-    }
-
     public class MaybeTests {
         [Fact]
         public void MaybeClone() {

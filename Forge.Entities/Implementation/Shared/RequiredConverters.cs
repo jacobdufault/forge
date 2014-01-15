@@ -21,7 +21,6 @@ using Forge.Entities.Implementation.ContextObjects;
 using Forge.Entities.Implementation.Runtime;
 using Forge.Utilities;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using System.Collections.Generic;
 
 namespace Forge.Entities.Implementation.Shared {
@@ -35,7 +34,6 @@ namespace Forge.Entities.Implementation.Shared {
         /// </summary>
         public static JsonConverter[] GetConverters() {
             return new JsonConverter[] {
-               new StringEnumConverter() // we want to always convert enums by name
             };
         }
 

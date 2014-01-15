@@ -163,7 +163,7 @@ namespace Forge.Entities.Implementation.Content {
             }
 
             JObject obj = serializer.Deserialize<JObject>(reader);
-            Type systemType = obj["Type"].ToObject<Type>();
+            Type systemType = obj["Type"].ToObject<Type>(serializer);
             return obj["System"].ToObject(systemType, serializer);
         }
 

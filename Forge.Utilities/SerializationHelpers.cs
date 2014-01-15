@@ -18,15 +18,60 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using System;
+using System.Collections.Generic;
+using System.Reflection;
 using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters;
 
 namespace Forge.Utilities {
     /// <summary>
     /// Helper methods for Newtonsoft.JSON
     /// </summary>
     public static class SerializationHelpers {
+        /// <summary>
+        /// We completely override how Json.NET serializes types
+        /// </summary>
+        internal class FlexibleTypeConverter : JsonConverter {
+            public override bool CanConvert(Type objectType) {
+                return objectType == typeof(Type);
+            }
+
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
+                string name = serializer.Deserialize<string>(reader);
+
+                string[] options = name.Split(',');
+                string typeName = options[0];
+                string assemblyHint = null;
+                if (options.Length >= 2) {
+                    assemblyHint = options[1];
+                }
+
+                return TypeCache.FindType(typeName, assemblyHint);
+            }
+
+            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
+                Type type = (Type)value;
+                serializer.Serialize(writer, type.FullName);
+            }
+        }
+
+        /// <summary>
+        /// Discover types, even if they are not in the proper assembly.
+        /// </summary>
+        private class FlexibleBinder : SerializationBinder {
+            /// <summary>
+            /// Singleton instance
+            /// </summary>
+            public static SerializationBinder Instance = new FlexibleBinder();
+
+            public override Type BindToType(string assemblyName, string typeName) {
+                return TypeCache.FindType(typeName, assemblyName);
+            }
+        }
+
         private class RequireOptInContractResolver : DefaultContractResolver {
             public RequireOptInContractResolver(JsonConverter[] converters) {
                 _converters = converters;
@@ -66,6 +111,18 @@ namespace Forge.Utilities {
         }
 
         /// <summary>
+        /// Returns the two arrays merged together.
+        /// </summary>
+        private static T[] MergeArrays<T>(T[] a, params T[] b) {
+            List<T> result = new List<T>();
+            if (a != null) {
+                result.AddRange(a);
+            }
+            result.AddRange(b);
+            return result.ToArray();
+        }
+
+        /// <summary>
         /// Helper method to create the JsonSerializerSettings that all of the serialization methods
         /// use.
         /// </summary>
@@ -74,7 +131,7 @@ namespace Forge.Utilities {
         /// <returns>An appropriate JsonSerializerSettings instance.</returns>
         private static JsonSerializerSettings CreateSettings(JsonConverter[] converters,
             IContextObject[] contextObjects) {
-            converters = converters ?? new JsonConverter[0];
+            converters = MergeArrays(converters, new StringEnumConverter(), new FlexibleTypeConverter());
             contextObjects = contextObjects ?? new IContextObject[0];
 
             return new JsonSerializerSettings() {
@@ -91,6 +148,10 @@ namespace Forge.Utilities {
 
                 // opt-in to reference handling
                 //PreserveReferencesHandling = PreserveReferencesHandling.All
+
+                // don't be so strict about type name requirements
+                Binder = FlexibleBinder.Instance,
+                TypeNameAssemblyFormat = FormatterAssemblyStyle.Simple
             };
         }
 
