@@ -22,21 +22,90 @@ using Forge.Entities.Implementation.Runtime;
 using Forge.Entities.Implementation.Shared;
 using Forge.Utilities;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Forge.Entities.Implementation.Content {
-    [JsonObject(MemberSerialization.OptIn)]
+    [JsonConverter(typeof(ContentTemplateSerializationFormatConverter))]
     internal class ContentTemplateSerializationFormat {
-        [JsonProperty("TemplateId")]
         public int TemplateId;
-
-        [JsonProperty("PrettyName")]
         public string PrettyName;
-
-        [JsonProperty("DefaultDataInstances")]
         public List<Data.IData> DefaultDataInstances;
+    }
+
+    /// <summary>
+    /// A custom converter for ContentTemplateSerializationFormat. This supports a more
+    /// sophisticated serialization format that only emits data as necessary and additionally allows
+    /// for custom converters to be defined on Data.IData derived types.
+    /// </summary>
+    internal class ContentTemplateSerializationFormatConverter : JsonConverter {
+        public override bool CanConvert(Type objectType) {
+            throw new NotSupportedException();
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
+            var instance = existingValue as ContentTemplateSerializationFormat;
+            if (instance == null) {
+                instance = new ContentTemplateSerializationFormat();
+            }
+
+            JObject obj = serializer.Deserialize<JObject>(reader);
+
+            instance.TemplateId = Read<int>(obj, "TemplateId");
+            instance.PrettyName = Read<string>(obj, "PrettyName") ?? "";
+            instance.DefaultDataInstances = new List<Data.IData>();
+
+            JArray dataInstances = obj["DefaultDataInstances"].ToObject<JArray>(serializer);
+            foreach (JObject dataInstance in dataInstances) {
+                Type dataType = dataInstance["DataType"].ToObject<Type>(serializer);
+                Data.IData data = TryReadData(dataInstance, serializer, "Data", dataType);
+                instance.DefaultDataInstances.Add(data);
+            }
+
+            return instance;
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
+            var instance = (ContentTemplateSerializationFormat)value;
+
+            JObject instanceObj = new JObject();
+
+            instanceObj["TemplateId"] = instance.TemplateId;
+            if (string.IsNullOrEmpty(instance.PrettyName) == false) instanceObj["PrettyName"] = instance.PrettyName;
+
+            JArray array = new JArray();
+            foreach (Data.IData data in instance.DefaultDataInstances) {
+                JObject dataObj = new JObject();
+                dataObj["DataType"] = JToken.FromObject(data.GetType(), serializer);
+                dataObj["Data"] = JToken.FromObject(data, serializer);
+                array.Add(dataObj);
+            }
+            instanceObj["DefaultDataInstances"] = array;
+
+            serializer.Serialize(writer, instanceObj);
+        }
+
+        private static T Read<T>(JObject obj, string key) {
+            JToken token = obj[key];
+            if (token == null) {
+                return default(T);
+            }
+
+            return token.Value<T>();
+        }
+
+        private static Data.IData TryReadData(JObject obj, JsonSerializer serializer,
+            string key, Type dataType) {
+
+            JToken token = obj[key];
+            if (token == null) {
+                return null;
+            }
+
+            return (Data.IData)token.ToObject(dataType, serializer);
+        }
     }
 
     [JsonConverter(typeof(QueryableEntityConverter))]
