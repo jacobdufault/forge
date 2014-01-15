@@ -37,3 +37,7 @@ A library is currently being developed to integrate `Forge` into Unity. There is
 ## External Libraries
 
 `Forge` builds on top of the fantastic work of other developers. The core 3rd party libraries used are `log4net`, `Lidgren.Network`, and `Newtonsoft.JSON`.
+ 
+## License
+
+Forge is freely available under the MIT license.
