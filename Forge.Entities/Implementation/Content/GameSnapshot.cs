@@ -150,30 +150,45 @@ namespace Forge.Entities.Implementation.Content {
     }
 
     /// <summary>
-    /// (De)serializes ISystem types
+    /// Stores a list of ISystems that are properly (de)serialized
     /// </summary>
-    internal class SystemConverter : JsonConverter {
-        public override bool CanConvert(Type objectType) {
-            throw new NotSupportedException();
-        }
-
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
-            if (existingValue != null) {
-                throw new InvalidOperationException("SystemConvert cannot handle existing values");
+    [JsonConverter(typeof(SerializedSystemList.Converter))]
+    internal class SerializedSystemList {
+        private class Converter : JsonConverter {
+            public override bool CanConvert(Type objectType) {
+                throw new NotSupportedException();
             }
 
-            JObject obj = serializer.Deserialize<JObject>(reader);
-            Type systemType = obj["Type"].ToObject<Type>(serializer);
-            return obj["System"].ToObject(systemType, serializer);
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
+                SerializedSystemList list = existingValue as SerializedSystemList ?? new SerializedSystemList();
+
+                JArray array = serializer.Deserialize<JArray>(reader);
+                foreach (JObject obj in array) {
+                    Type systemType = obj["Type"].ToObject<Type>(serializer);
+                    ISystem system = (ISystem)obj["System"].ToObject(systemType, serializer);
+                    list.Systems.Add(system);
+                }
+
+                return list;
+            }
+
+            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
+                SerializedSystemList list = (SerializedSystemList)value;
+
+                JArray array = new JArray();
+
+                foreach (ISystem system in list.Systems) {
+                    JObject obj = new JObject();
+                    obj["Type"] = JToken.FromObject(system.GetType());
+                    obj["System"] = JToken.FromObject(system, serializer);
+                    array.Add(obj);
+                }
+
+                serializer.Serialize(writer, array);
+            }
         }
 
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
-            JObject obj = new JObject();
-            obj["Type"] = JToken.FromObject(value.GetType());
-            obj["System"] = JToken.FromObject(value, serializer);
-
-            serializer.Serialize(writer, obj);
-        }
+        public List<ISystem> Systems = new List<ISystem>();
     }
 
     [JsonObject(MemberSerialization.OptIn)]
@@ -185,7 +200,7 @@ namespace Forge.Entities.Implementation.Content {
             ActiveEntities = new List<IEntity>();
             AddedEntities = new List<IEntity>();
             RemovedEntities = new List<IEntity>();
-            Systems = new List<ISystem>();
+            _systems = new SerializedSystemList();
         }
 
         [JsonProperty("EntityIdGenerator")]
@@ -220,10 +235,16 @@ namespace Forge.Entities.Implementation.Content {
         [JsonProperty("RemovedEntities")]
         private EntitySerializationContainer _removedEntitiesContainer;
 
-        [JsonProperty("Systems", ItemConverterType = typeof(SystemConverter))]
+        [JsonProperty("Systems")]
+        private SerializedSystemList _systems;
+
         public List<ISystem> Systems {
-            get;
-            set;
+            get {
+                return _systems.Systems;
+            }
+            set {
+                _systems.Systems = value;
+            }
         }
 
         [OnSerializing]

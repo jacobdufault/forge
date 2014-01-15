@@ -19,6 +19,7 @@ namespace Forge.Entities.Tests {
             }
         }
 
+        [JsonObject(MemberSerialization.OptIn)]
         private class DoubleModifySystem : BaseSystem, Trigger.Added, Trigger.Update {
             public Type[] RequiredDataTypes {
                 get { return new Type[] { }; }

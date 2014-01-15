@@ -17,7 +17,6 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Newtonsoft.Json;
 using System;
 
 namespace Forge.Entities {
@@ -46,7 +45,6 @@ namespace Forge.Entities {
     /// All systems need to extend this interface, but it should be done by extending BaseSystem.
     /// See documentation on BaseSystem.
     /// </summary>
-    [JsonObject(MemberSerialization.OptIn)]
     public interface ISystem {
         /// <summary>
         /// Set the event dispatcher that can be used to notify the external world of events.
@@ -91,7 +89,6 @@ namespace Forge.Entities {
     /// <remarks>
     /// Client code should not directly extend this, as it does not give any behavior by itself.
     /// </remarks>
-    [JsonObject(MemberSerialization.OptIn)]
     public abstract class BaseSystem : ISystem {
         /// <summary>
         /// Get the event dispatcher that can be used to notify the external world of events.

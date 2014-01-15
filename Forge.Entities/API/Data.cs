@@ -17,11 +17,8 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Newtonsoft.Json;
-
 namespace Forge.Entities {
     public static class Data {
-        [JsonObject(MemberSerialization.OptIn)]
         public interface IData {
 
             /// <summary>
@@ -30,7 +27,6 @@ namespace Forge.Entities {
             IData Duplicate();
         }
 
-        [JsonObject(MemberSerialization.OptIn)]
         public abstract class NonVersioned : IData {
             /// <summary>
             /// Return an exact copy of this data instance.
@@ -43,7 +39,7 @@ namespace Forge.Entities {
                 return Duplicate();
             }
         }
-        [JsonObject(MemberSerialization.OptIn)]
+
         public interface IVersioned : IData {
             /// <summary>
             /// Moves all of the data from the specified source into this instance. After this call,
@@ -74,7 +70,6 @@ namespace Forge.Entities {
             }
         }
 
-        [JsonObject(MemberSerialization.OptIn)]
         public interface IConcurrent {
             /// <summary>
             /// This method is called after all modifications have been made during an update have
@@ -88,7 +83,6 @@ namespace Forge.Entities {
             void ResolveConcurrentModifications();
         }
 
-        [JsonObject(MemberSerialization.OptIn)]
         public abstract class ConcurrentVersioned<TData> : Versioned<TData>, IConcurrent
             where TData : ConcurrentVersioned<TData> {
             /// <summary>
@@ -103,7 +97,6 @@ namespace Forge.Entities {
             public abstract void ResolveConcurrentModifications();
         }
 
-        [JsonObject(MemberSerialization.OptIn)]
         public abstract class ConcurrentNonVersioned : NonVersioned, IConcurrent {
             /// <summary>
             /// This method is called after all modifications have been made during an update have
