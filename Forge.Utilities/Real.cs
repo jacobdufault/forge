@@ -30,6 +30,9 @@ namespace Forge.Utilities {
     /// especially when 3rd party code is running and/or C++ DLL access is unavailable to set x87
     /// FPU rounding modes.
     /// </summary>
+    /// <remarks>
+    /// This class has been adapted from http://stackoverflow.com/a/616015.
+    /// </remarks>
     // TODO: The Real public API needs to be trimmed before the 1.0 release; implementation details
     //       are currently way too public
     [JsonConverter(typeof(RealJsonConverter))]
