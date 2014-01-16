@@ -18,179 +18,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using Forge.Entities.Implementation.ContextObjects;
-using Forge.Entities.Implementation.Runtime;
-using Forge.Entities.Implementation.Shared;
 using Forge.Utilities;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 
 namespace Forge.Entities.Implementation.Content {
-    internal class EntityContainerConverter : JsonConverter {
-        public override bool CanConvert(Type objectType) {
-            throw new InvalidOperationException();
-        }
-
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
-            EntitySerializationContainer container =
-                (EntitySerializationContainer)existingValue ?? new EntitySerializationContainer();
-
-            var serializedEntities = serializer.Deserialize<List<ContentEntitySerializationFormat>>(reader);
-
-            // We need to get our conversion context
-            GeneralStreamingContext generalContext = (GeneralStreamingContext)serializer.Context.Context;
-            EntityConversionContext conversionContext = generalContext.Get<EntityConversionContext>();
-            GameEngineContext engineContext = generalContext.Get<GameEngineContext>();
-
-            // There is only an EventDispatcherContext when we have a GameEngineContext
-            IEventDispatcher eventDispatcher = null;
-            if (engineContext.GameEngine.Exists) {
-                EventDispatcherContext eventContext = generalContext.Get<EventDispatcherContext>();
-                eventDispatcher = eventContext.Dispatcher;
-            }
-
-            // Restore our created entity instances
-            List<IEntity> restored = new List<IEntity>();
-            foreach (ContentEntitySerializationFormat format in serializedEntities) {
-                int entityId = format.UniqueId;
-                IEntity entity = conversionContext.GetEntityInstance(entityId, engineContext);
-                restored.Add(entity);
-
-                if (entity is ContentEntity) {
-                    ((ContentEntity)entity).Initialize(format);
-                }
-                else {
-                    ((RuntimeEntity)entity).Initialize(format, eventDispatcher);
-                }
-            }
-
-            container.Entities = restored;
-            return container;
-        }
-
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
-            EntitySerializationContainer container = (EntitySerializationContainer)value;
-
-            var formats = new List<ContentEntitySerializationFormat>();
-            foreach (IEntity entity in container.Entities) {
-                if (entity is ContentEntity) {
-                    formats.Add(((ContentEntity)entity).GetSerializedFormat());
-                }
-                else {
-                    formats.Add(((RuntimeEntity)entity).GetSerializedFormat());
-                }
-            }
-
-            serializer.Serialize(writer, formats);
-        }
-
-    }
-
-    [JsonConverter(typeof(EntityContainerConverter))]
-    internal class EntitySerializationContainer {
-        public List<IEntity> Entities;
-    }
-
-    /// <summary>
-    /// This type is used to deserialize a GameSnapshot instance. It just deserializes the
-    /// GameSnapshot and TemplateGroup together in the same deserialization call so that the
-    /// internal references inside of the TemplateGroup have the same ITemplate references as the
-    /// internal ITemplate references in the GameSnapshot.
-    /// </summary>
-    [JsonObject(MemberSerialization.OptIn)]
-    internal class GameSnapshotRestorer {
-        [JsonProperty("Snapshot")]
-        public GameSnapshot GameSnapshot {
-            get;
-            private set;
-        }
-
-        [JsonProperty("Templates")]
-        public TemplateGroup Templates {
-            get;
-            private set;
-        }
-
-        [OnDeserializing]
-        private void AddTemplateContext(StreamingContext context) {
-            var generalContext = (GeneralStreamingContext)context.Context;
-            generalContext.Create<TemplateConversionContext>();
-        }
-
-        [OnDeserialized]
-        private void RemoveTemplateContext(StreamingContext context) {
-            var generalContext = (GeneralStreamingContext)context.Context;
-            generalContext.Remove<TemplateConversionContext>();
-        }
-
-        /// <summary>
-        /// Combines snapshot and template JSON together into the serialized format that the
-        /// GameSnapshotRestorer can read.
-        /// </summary>
-        private static string CombineJson(string snapshot, string template) {
-            string s = "{ \"Snapshot\": " + snapshot + ", \"Templates\": " + template + " }";
-            return s;
-        }
-
-        /// <summary>
-        /// Restores a GameSnapshot using the given GameSnapshot JSON and the given TemplateGroup
-        /// JSON.
-        /// </summary>
-        public static GameSnapshotRestorer Restore(string snapshotJson, string templateJson,
-            Maybe<GameEngine> gameEngine) {
-            string json = CombineJson(snapshotJson, templateJson);
-
-            return SerializationHelpers.Deserialize<GameSnapshotRestorer>(json,
-                RequiredConverters.GetConverters(),
-                RequiredConverters.GetContextObjects(gameEngine));
-        }
-    }
-
-    /// <summary>
-    /// Stores a list of ISystems that are properly (de)serialized
-    /// </summary>
-    [JsonConverter(typeof(SerializedSystemList.Converter))]
-    internal class SerializedSystemList {
-        private class Converter : JsonConverter {
-            public override bool CanConvert(Type objectType) {
-                throw new NotSupportedException();
-            }
-
-            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
-                SerializedSystemList list = existingValue as SerializedSystemList ?? new SerializedSystemList();
-
-                JArray array = serializer.Deserialize<JArray>(reader);
-                foreach (JObject obj in array) {
-                    Type systemType = obj["Type"].ToObject<Type>(serializer);
-                    ISystem system = (ISystem)obj["System"].ToObject(systemType, serializer);
-                    list.Systems.Add(system);
-                }
-
-                return list;
-            }
-
-            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
-                SerializedSystemList list = (SerializedSystemList)value;
-
-                JArray array = new JArray();
-
-                foreach (ISystem system in list.Systems) {
-                    JObject obj = new JObject();
-                    obj["Type"] = JToken.FromObject(system.GetType());
-                    obj["System"] = JToken.FromObject(system, serializer);
-                    array.Add(obj);
-                }
-
-                serializer.Serialize(writer, array);
-            }
-        }
-
-        public List<ISystem> Systems = new List<ISystem>();
-    }
-
     [JsonObject(MemberSerialization.OptIn)]
     internal class GameSnapshot : IGameSnapshot {
         public GameSnapshot() {
@@ -200,7 +35,7 @@ namespace Forge.Entities.Implementation.Content {
             ActiveEntities = new List<IEntity>();
             AddedEntities = new List<IEntity>();
             RemovedEntities = new List<IEntity>();
-            _systems = new SerializedSystemList();
+            _systems = new SystemSerializationContainer();
         }
 
         [JsonProperty("EntityIdGenerator")]
@@ -234,9 +69,8 @@ namespace Forge.Entities.Implementation.Content {
         private EntitySerializationContainer _activeEntitiesContainer;
         [JsonProperty("RemovedEntities")]
         private EntitySerializationContainer _removedEntitiesContainer;
-
         [JsonProperty("Systems")]
-        private SerializedSystemList _systems;
+        private SystemSerializationContainer _systems;
 
         public List<ISystem> Systems {
             get {

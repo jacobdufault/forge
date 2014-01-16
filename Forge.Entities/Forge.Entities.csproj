@@ -51,7 +51,6 @@
     <Reference Include="log4net" />
     <Reference Include="Newtonsoft.Json" />
     <Reference Include="System.Threading" />
-    
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -65,9 +64,12 @@
     <Compile Include="API\IEventDispatcher.cs" />
     <Compile Include="API\Indexes.cs" />
     <Compile Include="API\ITemplateGroup.cs" />
+    <Compile Include="Implementation\Content\EntitySerializationContainer.cs" />
     <Compile Include="Implementation\Content\GameSnapshot.cs" />
     <Compile Include="Implementation\Content\ContentEntity.cs" />
     <Compile Include="Implementation\Content\ContentTemplate.cs" />
+    <Compile Include="Implementation\Content\GameSnapshotRestorer.cs" />
+    <Compile Include="Implementation\Content\SystemSerializationContainer.cs" />
     <Compile Include="Implementation\Content\TemplateGroup.cs" />
     <Compile Include="Implementation\ContextObjects\EventDispatcherContext.cs" />
     <Compile Include="Implementation\Runtime\PerformanceInformation.cs" />
