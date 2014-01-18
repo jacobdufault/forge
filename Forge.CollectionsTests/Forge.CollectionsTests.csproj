@@ -30,6 +30,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <ExternalLibs>..\External\v3.5</ExternalLibs>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -39,6 +40,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <ExternalLibs>..\External\v3.5</ExternalLibs>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release 4.0|AnyCPU'">
     <DebugType>pdbonly</DebugType>
@@ -49,6 +51,7 @@
     <WarningLevel>4</WarningLevel>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <ExternalLibs>..\External\v4.0cp</ExternalLibs>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
