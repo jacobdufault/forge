@@ -20,6 +20,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <ExternalLibs>..\External\v3.5</ExternalLibs>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -30,6 +31,7 @@
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Release\Forge.Networking.xml</DocumentationFile>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <ExternalLibs>..\External\v3.5</ExternalLibs>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release 4.0|AnyCPU'">
     <OutputPath>bin\Release 4.0\</OutputPath>
@@ -42,12 +44,35 @@
     <WarningLevel>4</WarningLevel>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <ExternalLibs>..\External\v4.0cp</ExternalLibs>
   </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(TargetFrameworkVersion)' == 'v3.5' ">
+    <DefineConstants>NET35</DefineConstants>
+    <TargetFrameworkVersionNumber>3.5</TargetFrameworkVersionNumber>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFrameworkVersion)' == 'v4.0' ">
+    <DefineConstants>NET40</DefineConstants>
+    <TargetFrameworkVersionNumber>4.0</TargetFrameworkVersionNumber>
+  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="Lidgren.Network" />
-    <Reference Include="log4net" />
-    <Reference Include="Newtonsoft.Json" />
-    <Reference Include="System.Threading" />
+    <Reference Include="System.Threading" Condition=" '$(TargetFrameworkVersionNumber)' == '3.5' ">
+      <HintPath>$(ExternalLibs)\System.Threading.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading" Condition=" '$(TargetFrameworkVersionNumber)' >= '4.0' " />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Lidgren.Network">
+        <HintPath>$(ExternalLibs)\Lidgren.Network.dll</HintPath>
+    </Reference>
+    <Reference Include="log4net">
+        <HintPath>$(ExternalLibs)\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+        <HintPath>$(ExternalLibs)\Newtonsoft.Json.dll</HintPath>
+    </Reference>
 
     <Reference Include="System" />
     <Reference Include="System.Core" />

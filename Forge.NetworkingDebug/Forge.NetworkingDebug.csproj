@@ -9,7 +9,6 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>NetworkDebug</RootNamespace>
     <AssemblyName>NetworkDebug</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -21,6 +20,8 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <ExternalLibs>..\External\v3.5</ExternalLibs>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -30,6 +31,8 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <ExternalLibs>..\External\v3.5</ExternalLibs>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release 4.0|AnyCPU'">
     <OutputPath>bin\Release 4.0\</OutputPath>
@@ -39,19 +42,37 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <ExternalLibs>..\External\v4.0cp</ExternalLibs>
   </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(TargetFrameworkVersion)' == 'v3.5' ">
+    <DefineConstants>NET35</DefineConstants>
+    <TargetFrameworkVersionNumber>3.5</TargetFrameworkVersionNumber>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFrameworkVersion)' == 'v4.0' ">
+    <DefineConstants>NET40</DefineConstants>
+    <TargetFrameworkVersionNumber>4.0</TargetFrameworkVersionNumber>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Threading" Condition=" '$(TargetFrameworkVersionNumber)' == '3.5' ">
+      <HintPath>$(ExternalLibs)\System.Threading.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading" Condition=" '$(TargetFrameworkVersionNumber)' >= '4.0' " />
+  </ItemGroup>
+
   <ItemGroup>
     <Reference Include="log4net">
-      <HintPath>..\External\log4net.dll</HintPath>
+        <HintPath>$(ExternalLibs)\log4net.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
-      <HintPath>..\External\Newtonsoft.Json.dll</HintPath>
+        <HintPath>$(ExternalLibs)\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Threading">
-      <HintPath>..\External\System.Threading.dll</HintPath>
-    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />

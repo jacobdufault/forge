@@ -23,6 +23,7 @@
     <CodeAnalysisRuleSet>..\AnalysisRuleSet.ruleset</CodeAnalysisRuleSet>
     <DocumentationFile>bin\Debug\Forge.Utilities.xml</DocumentationFile>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <ExternalLibs>..\External\v3.5\</ExternalLibs>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -34,6 +35,7 @@
     <Prefer32Bit>false</Prefer32Bit>
     <DocumentationFile>bin\Release\Forge.Utilities.xml</DocumentationFile>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <ExternalLibs>..\External\v3.5</ExternalLibs>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release 4.0|AnyCPU'">
     <OutputPath>bin\Release 4.0\</OutputPath>
@@ -46,10 +48,15 @@
     <WarningLevel>4</WarningLevel>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <ExternalLibs>..\External\v4.0cp</ExternalLibs>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="log4net" />
-    <Reference Include="Newtonsoft.Json" />
+    <Reference Include="log4net">
+        <HintPath>$(ExternalLibs)\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+        <HintPath>$(ExternalLibs)\Newtonsoft.Json.dll</HintPath>
+    </Reference>
 
     <Reference Include="System" />
     <Reference Include="System.Core" />
