@@ -365,13 +365,11 @@ namespace Forge.Utilities {
             return (int)(src.RawValue >> SHIFT_AMOUNT);
         }
 
-        public static explicit operator float(Real src)
-        {
+        public static explicit operator float(Real src) {
             return (float)src.RawValue / (float)One;
         }
 
-        public static explicit operator double(Real src)
-        {
+        public static explicit operator double(Real src) {
             return (double)src.RawValue / (double)One;
         }
 
@@ -550,29 +548,25 @@ namespace Forge.Utilities {
                 return F;
         }
 
-        public static Real Floor(Real F)
-        {
+        public static Real Floor(Real F) {
             Real f2;
             f2.RawValue = (F.RawValue >> SHIFT_AMOUNT) << SHIFT_AMOUNT;
             return f2;
         }
 
-        public static Real Ceiling(Real F)
-        {
+        public static Real Ceiling(Real F) {
             Real f2;
             f2.RawValue = ((F.RawValue >> SHIFT_AMOUNT) << SHIFT_AMOUNT) + One;
             return f2;
         }
         #endregion
-        
+
         #region Min, Max
-        public static Real Min(Real one, Real other)
-        {
+        public static Real Min(Real one, Real other) {
             return one.RawValue < other.RawValue ? one : other;
         }
 
-        public static Real Max(Real one, Real other)
-        {
+        public static Real Max(Real one, Real other) {
             return one.RawValue > other.RawValue ? one : other;
         }
         #endregion
