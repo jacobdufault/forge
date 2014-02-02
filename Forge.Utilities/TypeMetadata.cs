@@ -141,14 +141,13 @@ namespace Forge.Utilities {
 
         /// <summary>
         /// Recursive method that adds all of the properties and fields from the given type into the
-        /// given list. This method also fetches inherited properties by using the TypeCache to
-        /// retrieve the TypeMetadata for the parent type.
+        /// given list. This method does not collect properties for parent types.
         /// </summary>
         /// <param name="reflectedType">The type to process to collect properties from.</param>
         /// <param name="properties">The list of properties that should be appended to</param>
         private static void CollectProperties(Type reflectedType, HashSet<PropertyMetadata> properties) {
 
-            BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance;
+            BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly;
 
             foreach (PropertyInfo property in reflectedType.GetProperties(flags)) {
                 // We don't serialize delegates
@@ -231,14 +230,6 @@ namespace Forge.Utilities {
 
             loop_end: { }
             }
-
-            // add the parent properties
-            if (reflectedType.BaseType != null) {
-                TypeMetadata parent = TypeCache.FindTypeMetadata(reflectedType.BaseType);
-                foreach (PropertyMetadata parentProperty in parent.Properties) {
-                    properties.Add(parentProperty);
-                }
-            }
         }
 
         /// <summary>
@@ -292,14 +283,23 @@ namespace Forge.Utilities {
         /// The properties on the type. This is used when importing/exporting a type that does not
         /// have a user-defined importer/exporter.
         /// </summary>
-        public List<PropertyMetadata> Properties {
+        public IEnumerable<PropertyMetadata> Properties {
             get {
                 if (IsCollection) {
                     throw new InvalidOperationException("A type that is a collection or an array " +
                         "does not have properties (for the metadata on type " + ReflectedType + ")");
                 }
 
-                return _properties;
+                Type type = ReflectedType;
+
+                while (type != null) {
+                    TypeMetadata metadata = TypeCache.FindTypeMetadata(type);
+                    foreach (PropertyMetadata property in metadata._properties) {
+                        yield return property;
+                    }
+
+                    type = type.BaseType;
+                }
             }
         }
         private List<PropertyMetadata> _properties;
