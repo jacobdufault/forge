@@ -260,6 +260,49 @@
             Removes the context object associated with type T.
             </summary>
         </member>
+        <member name="T:Forge.Utilities.IModification">
+            <summary>
+            A generic modification.
+            </summary>
+        </member>
+        <member name="T:Forge.Utilities.IModificationContext">
+            <summary>
+            An object that can provide IModification instances to the ModificationManager.
+            </summary>
+        </member>
+        <member name="P:Forge.Utilities.IModificationContext.ContextGuid">
+            <summary>
+            The GUID that uniquely identifies this context.
+            </summary>
+        </member>
+        <member name="T:Forge.Utilities.ModificationManager">
+            <summary>
+            The modification manager allows for a set of generic modifications to be queued up
+            concurrently. At a later point in time, the modifications can then be retrieved
+            deterministically (such that every computer will process the modification list in the same
+            order) and the modifications can be applied.
+            </summary>
+            <remarks>
+            This class helps make multithreading deterministic.
+            </remarks>
+        </member>
+        <member name="M:Forge.Utilities.ModificationManager.SubmitModification(Forge.Utilities.IModificationContext,Forge.Utilities.IModification)">
+            <summary>
+            Submit a new modification.
+            </summary>
+            <param name="context">The object which is providing this modification.</param>
+            <param name="modification">The modification itself.</param>
+        </member>
+        <member name="M:Forge.Utilities.ModificationManager.GetModifications">
+            <summary>
+            Returns all of the modifications that have been done thus far.
+            </summary>
+        </member>
+        <member name="M:Forge.Utilities.ModificationManager.ClearModifications">
+            <summary>
+            Clears out the list of completed modifications.
+            </summary>
+        </member>
         <member name="T:Forge.Utilities.Notifier`1">
             <summary>
             Wraps the notification pattern, where something happens multiple times but the listeners
@@ -370,6 +413,9 @@
             especially when 3rd party code is running and/or C++ DLL access is unavailable to set x87
             FPU rounding modes.
             </summary>
+            <remarks>
+            This class has been adapted from http://stackoverflow.com/a/616015.
+            </remarks>
         </member>
         <member name="M:Forge.Utilities.Real.ShiftDecimal(System.Int32)">
             <summary>
@@ -631,8 +677,7 @@
         <member name="M:Forge.Utilities.TypeMetadata.CollectProperties(System.Type,System.Collections.Generic.HashSet{Forge.Utilities.PropertyMetadata})">
             <summary>
             Recursive method that adds all of the properties and fields from the given type into the
-            given list. This method also fetches inherited properties by using the TypeCache to
-            retrieve the TypeMetadata for the parent type.
+            given list. This method does not collect properties for parent types.
             </summary>
             <param name="reflectedType">The type to process to collect properties from.</param>
             <param name="properties">The list of properties that should be appended to</param>

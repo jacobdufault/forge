@@ -283,31 +283,6 @@
             All of the templates that are within the group.
             </summary>
         </member>
-        <member name="T:Forge.Entities.Implementation.Content.GameSnapshotRestorer">
-            <summary>
-            This type is used to deserialize a GameSnapshot instance. It just deserializes the
-            GameSnapshot and TemplateGroup together in the same deserialization call so that the
-            internal references inside of the TemplateGroup have the same ITemplate references as the
-            internal ITemplate references in the GameSnapshot.
-            </summary>
-        </member>
-        <member name="M:Forge.Entities.Implementation.Content.GameSnapshotRestorer.CombineJson(System.String,System.String)">
-            <summary>
-            Combines snapshot and template JSON together into the serialized format that the
-            GameSnapshotRestorer can read.
-            </summary>
-        </member>
-        <member name="M:Forge.Entities.Implementation.Content.GameSnapshotRestorer.Restore(System.String,System.String,Forge.Utilities.Maybe{Forge.Entities.Implementation.Runtime.GameEngine})">
-            <summary>
-            Restores a GameSnapshot using the given GameSnapshot JSON and the given TemplateGroup
-            JSON.
-            </summary>
-        </member>
-        <member name="T:Forge.Entities.Implementation.Content.SystemConverter">
-            <summary>
-            (De)serializes ISystem types
-            </summary>
-        </member>
         <member name="T:Forge.Entities.IGameSnapshot">
             <summary>
             The IGameSnapshot stores a serialized state of the engine. It provides a common interface
@@ -525,6 +500,13 @@
             Did the data get modified in the last update frame?
             </summary>
         </member>
+        <member name="T:Forge.Entities.Implementation.Content.ContentTemplateSerializationFormatConverter">
+            <summary>
+            A custom converter for ContentTemplateSerializationFormat. This supports a more
+            sophisticated serialization format that only emits data as necessary and additionally allows
+            for custom converters to be defined on Data.IData derived types.
+            </summary>
+        </member>
         <member name="T:Forge.Entities.ITemplate">
             <summary>
             Used for creating IEntity instances that have a set of data values already initialized.
@@ -619,6 +601,31 @@
         <member name="M:Forge.Entities.Implementation.Content.ContentTemplate.op_Inequality(Forge.Entities.Implementation.Content.ContentTemplate,Forge.Entities.ITemplate)">
             <summary>
             Indicates whether this instance and a specified object are not equal.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.Implementation.Content.GameSnapshotRestorer">
+            <summary>
+            This type is used to deserialize a GameSnapshot instance. It just deserializes the
+            GameSnapshot and TemplateGroup together in the same deserialization call so that the
+            internal references inside of the TemplateGroup have the same ITemplate references as the
+            internal ITemplate references in the GameSnapshot.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Content.GameSnapshotRestorer.CombineJson(System.String,System.String)">
+            <summary>
+            Combines snapshot and template JSON together into the serialized format that the
+            GameSnapshotRestorer can read.
+            </summary>
+        </member>
+        <member name="M:Forge.Entities.Implementation.Content.GameSnapshotRestorer.Restore(System.String,System.String,Forge.Utilities.Maybe{Forge.Entities.Implementation.Runtime.GameEngine})">
+            <summary>
+            Restores a GameSnapshot using the given GameSnapshot JSON and the given TemplateGroup
+            JSON.
+            </summary>
+        </member>
+        <member name="T:Forge.Entities.Implementation.Content.SystemSerializationContainer">
+            <summary>
+            Stores a list of ISystems that are properly (de)serialized
             </summary>
         </member>
         <member name="M:Forge.Entities.Implementation.Content.TemplateContainerConverter.VerifyReferenceDefinitions(Forge.Entities.Implementation.ContextObjects.GameEngineContext,Forge.Entities.Implementation.ContextObjects.TemplateConversionContext,System.Collections.Generic.List{Forge.Entities.Implementation.Content.ContentTemplateSerializationFormat})">
