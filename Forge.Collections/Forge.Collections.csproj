@@ -47,7 +47,6 @@
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <ExternalLibs>..\External\v4.0cp</ExternalLibs>
   </PropertyGroup>
-
   <PropertyGroup Condition=" '$(TargetFrameworkVersion)' == 'v3.5' ">
     <DefineConstants>NET35</DefineConstants>
     <TargetFrameworkVersionNumber>3.5</TargetFrameworkVersionNumber>
@@ -56,17 +55,15 @@
     <DefineConstants>NET40</DefineConstants>
     <TargetFrameworkVersionNumber>4.0</TargetFrameworkVersionNumber>
   </PropertyGroup>
-
   <ItemGroup>
     <Reference Include="System.Threading" Condition=" '$(TargetFrameworkVersionNumber)' == '3.5' ">
       <HintPath>$(ExternalLibs)\System.Threading.dll</HintPath>
     </Reference>
-    <Reference Include="System.Threading" Condition=" '$(TargetFrameworkVersionNumber)' >= '4.0' " />
+    <Reference Include="System.Threading" Condition=" '$(TargetFrameworkVersionNumber)' &gt;= '4.0' " />
   </ItemGroup>
-
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Core" />   
+    <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
@@ -81,6 +78,7 @@
     <Compile Include="SparseArray.cs" />
     <Compile Include="SwappableItem.cs" />
     <Compile Include="UnorderedList.cs" />
+    <Compile Include="WorldIndexCoordinateTransform.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Forge.Utilities\Forge.Utilities.csproj">

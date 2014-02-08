@@ -17,32 +17,13 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using Forge.Collections;
 using Forge.Utilities;
 using System;
+using System.Collections.Generic;
 
 namespace Forge.Collections {
-    /*
-    struct ThreadGroup {
-    }
-
-    class MultithreadingAttribute : Attribute {
-        public MultithreadingAttribute() { }
-        public MultithreadingAttribute(ThreadGroup group) { }
-    }
-
-    class Test {
-        static ThreadGroup Group = new ThreadGroup();
-
-        [Multithreading(Group)]
-        void MyMethod() {
-
-        }
-    }
-    */
-
     /// <summary>
-    /// Interface for objects which are monitoring a specific region.
+    /// Interface for objects which are monitoring a specific region within a QuadTree.
     /// </summary>
     public interface IQuadTreeMonitor<T> {
         /// <summary>
@@ -69,57 +50,17 @@ namespace Forge.Collections {
         public Rect(Bound bound) {
             X0 = (bound.X - bound.Radius).AsInt;
             Z0 = (bound.Z - bound.Radius).AsInt;
-            X1 = (bound.X - bound.Radius + 1).AsInt;
-            Z1 = (bound.Z - bound.Radius + 1).AsInt;
+            X1 = (bound.X + bound.Radius).AsInt;
+            Z1 = (bound.Z + bound.Radius).AsInt;
         }
 
-        public int Width {
-            get {
-                return X1 - X0;
-            }
-        }
+        public static Rect Merge(Rect a, Rect b) {
+            int x0 = Math.Min(a.X0, b.X0);
+            int z0 = Math.Min(a.Z0, b.Z0);
+            int x1 = Math.Max(a.X1, b.X1);
+            int z1 = Math.Max(a.Z1, b.Z1);
 
-        public int Height {
-            get {
-                return Z1 - Z0;
-            }
-        }
-
-        private bool InRange(int v, int min, int max) {
-            return v >= min && v < max;
-        }
-
-        /// <summary>
-        /// Returns true if this rect intersects with the parameter rect.
-        /// </summary>
-        public bool Intersects(Rect rect) {
-            bool xIntersects =
-                (InRange(rect.X0, X0, X1) && rect.X0 < X0) ||
-                (InRange(rect.X1, X0, X1) && rect.X1 > X1);
-            bool zIntersects =
-                (InRange(rect.Z0, Z0, Z1) && rect.Z0 < Z0) ||
-                (InRange(rect.Z1, Z0, Z1) && rect.Z1 > Z1);
-
-            return xIntersects && zIntersects;
-        }
-
-        /// <summary>
-        /// Returns true if the given point is contained with this rect.
-        /// </summary>
-        public bool Contains(int x, int z) {
-            return InRange(x, X0, X1) && InRange(z, Z0, Z1);
-        }
-
-        /// <summary>
-        /// Returns true if this rect fully contains the parameter rect.
-        /// </summary>
-        public bool Contains(Rect rect) {
-            bool xContains =
-                (InRange(rect.X0, X0, X1) && InRange(rect.X1, X0, X1));
-            bool zContains =
-                (InRange(rect.Z0, Z0, Z1) && InRange(rect.Z1, Z0, Z1));
-
-            return xContains && zContains;
+            return new Rect(x0, z0, x1, z1);
         }
 
         /// <summary>
@@ -135,6 +76,13 @@ namespace Forge.Collections {
                 (InRange(rect.Z1, Z0, Z1));
 
             return xCollides && zCollides;
+        }
+
+        /// <summary>
+        /// Returns true if v is between [min, max).
+        /// </summary>
+        private static bool InRange(int v, int min, int max) {
+            return v >= min && v < max;
         }
     }
 
@@ -161,16 +109,6 @@ namespace Forge.Collections {
         }
 
         /// <summary>
-        /// The position of the node on the map
-        /// </summary>
-        //private Rect Position;
-
-        /// <summary>
-        /// The subtrees in this node
-        /// </summary>
-        //private Node<T>[] Children;
-
-        /// <summary>
         /// The items that the node contains
         /// </summary>
         private Bag<StoredItem> _items;
@@ -180,7 +118,16 @@ namespace Forge.Collections {
         /// </summary>
         private Bag<StoredMonitor> _monitors;
 
-        public Node() {
+        /// <summary>
+        /// The area that this node is monitoring
+        /// </summary>
+        public Rect MonitoredRegion {
+            get;
+            private set;
+        }
+
+        public Node(Rect monitoredRegion) {
+            MonitoredRegion = monitoredRegion;
             _items = new Bag<StoredItem>();
             _monitors = new Bag<StoredMonitor>();
         }
@@ -255,6 +202,21 @@ namespace Forge.Collections {
             }
         }
 
+        /// <summary>
+        /// Adds all of the items inside of this node that are contained within the given region to
+        /// the given collection.
+        /// </summary>
+        /// <param name="region">The area to collect objects from.</param>
+        /// <param name="storage">Where to store the collected objects.</param>
+        public void CollectInto(Bound region, ICollection<T> storage) {
+            for (int i = 0; i < _items.Length; ++i) {
+                StoredItem item = _items[i];
+                if (region.Contains(item.Position)) {
+                    storage.Add(item.Item);
+                }
+            }
+        }
+
         public void Update(IQuadTreeMonitor<T> monitor, Bound previousRegion, Bound currentRegion) {
             // update the stored monitor
             for (int i = 0; i < _monitors.Length; ++i) {
@@ -303,34 +265,52 @@ namespace Forge.Collections {
         }
     }
 
-    public class QuadTree<T> {
+    /// <summary>
+    /// Implements a QuadTree, which supports spatial monitoring and spatial querying of
+    /// positionable objects. The objects can be positioned anywhere, even at negative coordinates.
+    /// </summary>
+    /// <remarks>
+    /// In regards to implementation details, this is not currently a recursive QuadTree. Instead,
+    /// the world is divided into a set of chunks which can be queried directly. The size of these
+    /// chunks can be controlled by the constructor parameter.
+    /// </remarks>
+    /// <typeparam name="T">The type of object stored in the QuadTree</typeparam>
+    public class QuadTree<TItem> {
         /// <summary>
         /// The width/height of each chunk
         /// </summary>
-        private int _baseChunkSize;
+        private int _worldScale;
 
         /// <summary>
         /// All of the chunks
         /// </summary>
-        private Node<T>[,] _chunks;
+        private Node<TItem>[,] _chunks;
 
-        public QuadTree(int baseChunkSize = 100) {
-            _baseChunkSize = baseChunkSize;
-            _chunks = new Node<T>[0, 0];
+        public QuadTree(int worldScale = 100) {
+            _worldScale = worldScale;
+            _chunks = new Node<TItem>[0, 0];
         }
 
-        public void Add(T item, Vector2r position) {
-            Log<QuadTree<T>>.Debug("Adding " + item + " at " + position);
-
-            Node<T> chunk = GetChunk(position.X.AsInt, position.Z.AsInt);
+        #region Item API
+        /// <summary>
+        /// Add a new item to the QuadTree at the given position.
+        /// </summary>
+        /// <param name="item">The item to add.</param>
+        /// <param name="position">The position of the item.</param>
+        public void AddItem(TItem item, Vector2r position) {
+            var chunk = GetChunk(position.X.AsInt, position.Z.AsInt);
             chunk.Add(item, position);
         }
 
-        public void Update(T item, Vector2r previous, Vector2r current) {
-            Log<QuadTree<T>>.Debug("Updating " + item + " from " + previous + " to " + current);
-
-            Node<T> previousChunk = GetChunk(previous.X.AsInt, previous.Z.AsInt);
-            Node<T> currentChunk = GetChunk(current.X.AsInt, current.Z.AsInt);
+        /// <summary>
+        /// Update the position of an item. This will notify monitors of position updates.
+        /// </summary>
+        /// <param name="item">The item to update the position of.</param>
+        /// <param name="previous">The old position of the item.</param>
+        /// <param name="current">The updated position of the item.</param>
+        public void UpdateItem(TItem item, Vector2r previous, Vector2r current) {
+            var previousChunk = GetChunk(previous.X.AsInt, previous.Z.AsInt);
+            var currentChunk = GetChunk(current.X.AsInt, current.Z.AsInt);
 
             if (ReferenceEquals(previousChunk, currentChunk)) {
                 previousChunk.Update(item, previous, current);
@@ -341,197 +321,160 @@ namespace Forge.Collections {
             }
         }
 
-        public void Remove(T item, Vector2r position) {
-            Log<QuadTree<T>>.Debug("Removing " + item + " at " + position);
-
-            Node<T> chunk = GetChunk(position.X.AsInt, position.Z.AsInt);
+        /// <summary>
+        /// Remove an item from the QuadTree.
+        /// </summary>
+        /// <param name="item">The item to remove.</param>
+        /// <param name="position">The position of the item.</param>
+        public void RemoveItem(TItem item, Vector2r position) {
+            var chunk = GetChunk(position.X.AsInt, position.Z.AsInt);
             chunk.Remove(item, position);
         }
 
-        public void Insert(IQuadTreeMonitor<T> monitor, Bound monitoredRegion) {
-            // convert the bounds to rectangles
-            Rect positionRect = new Rect(monitoredRegion);
-
-            // get our min/max game coordinates for iteration over chunks
-            int minX = positionRect.X0;
-            int minZ = positionRect.Z0;
-            int maxX = positionRect.X1;
-            int maxZ = positionRect.Z1;
-
-            // make sure that we have enough chunks
-            GetChunk(maxX, maxZ);
-
-            // map our game coordinates to chunk indexes
-            int minChunkX = MapChunkIndex(minX);
-            int minChunkZ = MapChunkIndex(minZ);
-            int maxChunkX = MapChunkIndex(maxX);
-            int maxChunkZ = MapChunkIndex(maxZ);
-
-            // iterate over our chunks and insert the monitor into each chunks
-            for (int chunkX = minChunkX; chunkX <= maxChunkX; ++chunkX) {
-                for (int chunkZ = minChunkZ; chunkZ <= minChunkZ; ++chunkZ) {
-                    _chunks[chunkX, chunkZ].Add(monitor, monitoredRegion);
-                }
+        /// <summary>
+        /// Collect all items that are stored inside of the given region.
+        /// </summary>
+        /// <param name="region">The area to collect entities from.</param>
+        /// <param name="storage">Where to store the collected entities.</param>
+        /// <returns>All entities that are contained in or intersecting with the given
+        /// region.</returns>
+        public ICollection<TItem> CollectItems(Bound region, ICollection<TItem> storage = null) {
+            if (storage == null) {
+                storage = new List<TItem>();
             }
+
+            IterateChunks(region, node => {
+                node.CollectInto(region, storage);
+            });
+
+            return storage;
+        }
+        #endregion
+
+        #region Monitor API
+        /// <summary>
+        /// Inserts the given monitor into the QuadTree. The monitor will be notified of any
+        /// entities that enter or leave it. The monitor can be updated or removed.
+        /// </summary>
+        /// <param name="monitor">The monitor.</param>
+        /// <param name="monitoredRegion">The area that the monitor is viewing.</param>
+        public void AddMonitor(IQuadTreeMonitor<TItem> monitor, Bound monitoredRegion) {
+            IterateChunks(monitoredRegion, node => {
+                node.Add(monitor, monitoredRegion);
+            });
         }
 
-        public void Remove(IQuadTreeMonitor<T> monitor, Bound monitoredRegion) {
-            // convert the bounds to rectangles
-            Rect positionRect = new Rect(monitoredRegion);
-
-            // get our min/max game coordinates for iteration over chunks
-            int minX = positionRect.X0;
-            int minZ = positionRect.Z0;
-            int maxX = positionRect.X1;
-            int maxZ = positionRect.Z1;
-
-            // make sure that we have enough chunks
-            GetChunk(maxX, maxZ);
-
-            // map our game coordinates to chunk indexes
-            int minChunkX = MapChunkIndex(minX);
-            int minChunkZ = MapChunkIndex(minZ);
-            int maxChunkX = MapChunkIndex(maxX);
-            int maxChunkZ = MapChunkIndex(maxZ);
-
-            // iterate over our chunks and insert the monitor into each chunks
-            for (int chunkX = minChunkX; chunkX <= maxChunkX; ++chunkX) {
-                for (int chunkZ = minChunkZ; chunkZ <= minChunkZ; ++chunkZ) {
-                    _chunks[chunkX, chunkZ].Remove(monitor, monitoredRegion);
-                }
-            }
+        /// <summary>
+        /// Removes the given monitor from the quad tree. It will receive a series of OnExit calls
+        /// during this Remove call.
+        /// </summary>
+        /// <param name="monitor">The monitor to remove.</param>
+        /// <param name="monitoredRegion">The region that the monitor was monitoring.</param>
+        public void RemoveMonitor(IQuadTreeMonitor<TItem> monitor, Bound monitoredRegion) {
+            IterateChunks(monitoredRegion, node => {
+                node.Remove(monitor, monitoredRegion);
+            });
         }
 
-        public void Update(IQuadTreeMonitor<T> monitor, Bound previousRegion, Bound currentRegion) {
+        /// <summary>
+        /// Update the position of a monitor.
+        /// </summary>
+        /// <param name="monitor">The monitor whose position has changed.</param>
+        /// <param name="previousRegion">The previous area that the monitor was watching.</param>
+        /// <param name="currentRegion">The new area that the monitor is watching.</param>
+        public void UpdateMonitor(IQuadTreeMonitor<TItem> monitor, Bound previousRegion, Bound currentRegion) {
             // convert the bounds to rectangles
             Rect previousRect = new Rect(previousRegion);
             Rect currentRect = new Rect(currentRegion);
 
-            // get our min/max game coordinates for iteration over chunks
-            int minX = Math.Max(previousRect.X0, currentRect.X0);
-            int minZ = Math.Max(previousRect.Z0, currentRect.Z0);
-            int maxX = Math.Max(previousRect.X1, currentRect.X1);
-            int maxZ = Math.Max(previousRect.Z1, currentRect.Z1);
+            Rect merged = Rect.Merge(previousRect, currentRect);
 
-            // make sure that we have enough chunks
-            GetChunk(maxX, maxZ);
+            IterateChunks(merged, node => {
+                bool previousContains = previousRect.Colliding(node.MonitoredRegion);
+                bool currentContains = currentRect.Colliding(node.MonitoredRegion);
 
-            // map our game coordinates to chunk indexes
-            int minChunkX = MapChunkIndex(minX);
-            int minChunkZ = MapChunkIndex(minZ);
-            int maxChunkX = MapChunkIndex(maxX);
-            int maxChunkZ = MapChunkIndex(maxZ);
+                // the monitor is no longer interested in this chunk
+                if (previousContains && currentContains == false) {
+                    node.Remove(monitor, previousRegion);
+                }
 
-            // map our rects into chunk indexes
-            Rect previousChunkRect = new Rect(MapChunkIndex(previousRect.X0), MapChunkIndex(previousRect.Z0), MapChunkIndex(previousRect.X1), MapChunkIndex(previousRect.Z1));
-            Rect currentChunkRect = new Rect(MapChunkIndex(currentRect.X0), MapChunkIndex(currentRect.Z0), MapChunkIndex(currentRect.X1), MapChunkIndex(currentRect.Z1));
+                // the monitor is still interested in this chunk
+                else if (previousContains && currentContains) {
+                    node.Update(monitor, previousRegion, currentRegion);
+                }
 
-            // iterate over our chunks
-            for (int chunkX = minChunkX; chunkX <= maxChunkX; ++chunkX) {
-                for (int chunkZ = minChunkZ; chunkZ <= minChunkZ; ++chunkZ) {
-                    bool previousContains = previousChunkRect.Contains(chunkX, chunkZ);
-                    bool currentContains = currentChunkRect.Contains(chunkX, chunkZ);
+                // the monitor is now interested in this chunk, but was not before
+                else if (previousContains == false && currentContains) {
+                    node.Add(monitor, currentRegion);
+                }
+            });
+        }
+        #endregion
 
-                    // the monitor is no longer interested in this chunk
-                    if (previousContains && currentContains == false) {
-                        _chunks[chunkX, chunkZ].Remove(monitor, previousRegion);
-                    }
+        #region Chunk Management
+        /// <summary>
+        /// Helper function to iterate all of the chunks that are contained within the given world
+        /// region.
+        /// </summary>
+        private void IterateChunks(Bound region, Action<Node<TItem>> onChunk) {
+            IterateChunks(new Rect(region), onChunk);
+        }
 
-                    // the monitor is still interested in this chunk
-                    else if (previousContains && currentContains) {
-                        _chunks[chunkX, chunkZ].Update(monitor, previousRegion, currentRegion);
-                    }
-
-                    // the monitor is now interested in this chunk, but was not before
-                    else if (previousContains == false && currentContains) {
-                        _chunks[chunkX, chunkZ].Add(monitor, currentRegion);
-                    }
+        /// <summary>
+        /// Helper function to iterate all of the chunks that are contained within the given world
+        /// region.
+        /// </summary>
+        private void IterateChunks(Rect region, Action<Node<TItem>> onChunk) {
+            for (int x = region.X0; x < (region.X1 + _worldScale); x += _worldScale) {
+                for (int z = region.Z0; z < (region.Z1 + _worldScale); z += _worldScale) {
+                    onChunk(GetChunk(x, z));
                 }
             }
         }
 
-        #region Chunk Generation
-        private Node<T> GetChunk(int sourceX, int sourceZ) {
-            int x, z;
-            GetChunkIndicies(sourceX, sourceZ, out x, out z);
+        /// <summary>
+        /// Returns the chunk located at the given x and z world coordinates.
+        /// </summary>
+        private Node<TItem> GetChunk(int xWorld, int zWorld) {
+            int xIndex, zIndex;
+            WorldIndexCoordinateTransform.ConvertWorldToIndex(_worldScale,
+                xWorld, zWorld, out xIndex, out zIndex);
 
-            if (x >= _chunks.GetLength(0) || z >= _chunks.GetLength(1)) {
-                _chunks = GrowArray(_chunks, x + 1, z + 1, GenerateChunk);
+            if (xIndex >= _chunks.GetLength(0) || zIndex >= _chunks.GetLength(1)) {
+                _chunks = GrowArray(_chunks, xIndex + 1, zIndex + 1, GenerateChunk);
             }
 
-            //Log.Info("Getting index at ({0}, {1}); length(0)={2}, length(1)={3}", x, z, _chunks.GetLength(0), _chunks.GetLength(1));
-            return _chunks[x, z];
+            Console.WriteLine("Getting index at ({0}, {1}); length(0)={2}, length(1)={3}",
+                xIndex, zIndex, _chunks.GetLength(0), _chunks.GetLength(1));
+            return _chunks[xIndex, zIndex];
         }
 
-        private Node<T> GenerateChunk(int x, int z) {
-            /*
-            UnmapIndex(ref x);
-            UnmapIndex(ref z);
+        /// <summary>
+        /// Creates a new chunk located at the given x and z index coordinates.
+        /// </summary>
+        private Node<TItem> GenerateChunk(int xIndex, int zIndex) {
+            int xWorld, zWorld;
+            WorldIndexCoordinateTransform.ConvertIndexToWorld(_worldScale,
+                xIndex, zIndex, out xWorld, out zWorld);
 
-            int x0 = x * _baseChunkSize;
-            int z0 = z * _baseChunkSize;
-            int x1 = x0 + _baseChunkSize;
-            int z1 = z0 + _baseChunkSize;
-            Rect rect = new Rect(x0, z0, x1, z1);
-
-            return new Node<T>(rect);
-            */
-            return new Node<T>();
+            Rect rect = new Rect(xWorld, zWorld, xWorld + _worldScale, zWorld + _worldScale);
+            return new Node<TItem>(rect);
         }
 
-        private int MapChunkIndex(int source) {
-            source /= _baseChunkSize;
-            MapIndex(ref source);
-            return source;
-        }
+        /// <summary>
+        /// Helper method that grows a 2D array and populates new elements with values created from
+        /// the generator.
+        /// </summary>
+        private static T[,] GrowArray<T>(T[,] original, int newLengthX, int newLengthZ, Func<int, int, T> generator) {
+            var newArray = new T[newLengthX, newLengthZ];
 
-        private void GetChunkIndicies(int sourceX, int sourceZ, out int x, out int z) {
-            x = sourceX / _baseChunkSize;
-            z = sourceZ / _baseChunkSize;
+            int originalLengthX = original.GetLength(0);
+            int originalLengthZ = original.GetLength(1);
 
-            MapIndex(ref x);
-            MapIndex(ref z);
-        }
-
-        private void MapIndex(ref int v) {
-            // - 4 -> 7
-            // - 3 -> 5
-            // - 2 -> 3
-            // - 1 -> 1
-            // 0 -> 0 1 -> 2 2 -> 4 3 -> 6 4 -> 8
-
-            if (v >= 0) {
-                v = (v * 2);
-            }
-            else {
-                v = (-v * 2) - 1;
-            }
-        }
-
-        private void UnmapIndex(ref int v) {
-            // 0 -> 0 1 -> -1 2 -> 1 3 -> -2 4 -> 2 5 -> -3 6 -> 3 7 -> -4 8 -> 4
-
-            // positive
-            if (v % 2 == 0) {
-                v = (v / 2);
-            }
-
-            // negative
-            else {
-                v = -(v + 1) / 2;
-            }
-        }
-
-        private T[,] GrowArray<T>(T[,] original, int newXLength, int newZLength, Func<int, int, T> generator) {
-            var newArray = new T[newXLength, newZLength];
-
-            int originalXLength = original.GetLength(0);
-            int originalZLength = original.GetLength(1);
-
-            for (int x = 0; x < newXLength; x++) {
-                for (int z = 0; z < newZLength; z++) {
+            for (int x = 0; x < newLengthX; x++) {
+                for (int z = 0; z < newLengthZ; z++) {
                     T stored;
-                    if (x >= originalXLength || z >= originalZLength) {
+                    if (x >= originalLengthX || z >= originalLengthZ) {
                         stored = generator(x, z);
                     }
                     else {
