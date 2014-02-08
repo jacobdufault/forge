@@ -18,6 +18,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
 
 namespace Forge.Utilities {
     [JsonObject(MemberSerialization.OptIn)]
@@ -28,6 +31,27 @@ namespace Forge.Utilities {
 
         [JsonProperty("Item1")]
         public T1 Item1 { get; set; }
+
+        public override bool Equals(object obj) {
+            var tuple = obj as Tuple<T1>;
+            return ReferenceEquals(tuple, null) == false &&
+                EqualityComparer<T1>.Default.Equals(tuple.Item1, Item1);
+        }
+
+        public override int GetHashCode() {
+            var hc = 0;
+            if (ReferenceEquals(Item1, null) == false) {
+                hc = EqualityComparer<T1>.Default.GetHashCode(Item1);
+            }
+            return hc;
+        }
+
+        public override string ToString() {
+            return ToString(null, CultureInfo.CurrentCulture);
+        }
+        public string ToString(string format, IFormatProvider formatProvider) {
+            return string.Format(formatProvider, format ?? "({0})", Item1);
+        }
     }
 
     [JsonObject(MemberSerialization.OptIn)]
@@ -39,6 +63,31 @@ namespace Forge.Utilities {
 
         [JsonProperty("Item2")]
         public T2 Item2 { get; set; }
+
+        public override bool Equals(object obj) {
+            var tuple = obj as Tuple<T1, T2>;
+            return ReferenceEquals(tuple, null) == false &&
+                EqualityComparer<T1>.Default.Equals(tuple.Item1, Item1) &&
+                EqualityComparer<T2>.Default.Equals(tuple.Item2, Item2);
+        }
+
+        public override int GetHashCode() {
+            var hc = 0;
+            if (ReferenceEquals(Item1, null) == false) {
+                hc = EqualityComparer<T1>.Default.GetHashCode(Item1);
+            }
+            if (ReferenceEquals(Item2, null) == false) {
+                hc = (hc << 3) ^ EqualityComparer<T2>.Default.GetHashCode(Item2);
+            }
+            return hc;
+        }
+
+        public override string ToString() {
+            return ToString(null, CultureInfo.CurrentCulture);
+        }
+        public string ToString(string format, IFormatProvider formatProvider) {
+            return string.Format(formatProvider, format ?? "({0}, {1})", Item1, Item2);
+        }
     }
 
     [JsonObject(MemberSerialization.OptIn)]
@@ -50,6 +99,35 @@ namespace Forge.Utilities {
 
         [JsonProperty("Item3")]
         public T3 Item3 { get; set; }
+
+        public override bool Equals(object obj) {
+            var tuple = obj as Tuple<T1, T2, T3>;
+            return ReferenceEquals(tuple, null) == false &&
+                EqualityComparer<T1>.Default.Equals(tuple.Item1, Item1) &&
+                EqualityComparer<T2>.Default.Equals(tuple.Item2, Item2) &&
+                EqualityComparer<T3>.Default.Equals(tuple.Item3, Item3);
+        }
+
+        public override int GetHashCode() {
+            var hc = 0;
+            if (ReferenceEquals(Item1, null) == false) {
+                hc = EqualityComparer<T1>.Default.GetHashCode(Item1);
+            }
+            if (ReferenceEquals(Item2, null) == false) {
+                hc = (hc << 3) ^ EqualityComparer<T2>.Default.GetHashCode(Item2);
+            }
+            if (ReferenceEquals(Item2, null) == false) {
+                hc = (hc << 3) ^ EqualityComparer<T3>.Default.GetHashCode(Item3);
+            }
+            return hc;
+        }
+
+        public override string ToString() {
+            return ToString(null, CultureInfo.CurrentCulture);
+        }
+        public string ToString(string format, IFormatProvider formatProvider) {
+            return string.Format(formatProvider, format ?? "({0}, {1}, {2})", Item1, Item2, Item3);
+        }
     }
 
     public static class Tuple {
