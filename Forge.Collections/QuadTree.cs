@@ -336,11 +336,14 @@ namespace Forge.Collections {
         /// </summary>
         /// <param name="region">The area to collect entities from.</param>
         /// <param name="storage">Where to store the collected entities.</param>
+        /// <typeparam name="TCollection">The type of collection to store items in.</typeparam>
         /// <returns>All entities that are contained in or intersecting with the given
         /// region.</returns>
-        public ICollection<TItem> CollectItems(Bound region, ICollection<TItem> storage = null) {
+        public TCollection CollectItems<TCollection>(Bound region, TCollection storage = null)
+            where TCollection : class, ICollection<TItem>, new() {
+
             if (storage == null) {
-                storage = new List<TItem>();
+                storage = new TCollection();
             }
 
             IterateChunks(region, node => {

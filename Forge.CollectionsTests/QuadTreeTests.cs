@@ -146,7 +146,7 @@ namespace CollectionsTests {
 
             // collect everything (both positive and negative)
             {
-                var everything = tree.CollectItems(new Bound(0, 0, 200));
+                List<string> everything = tree.CollectItems<List<string>>(new Bound(0, 0, 200));
                 Assert.Equal(5, everything.Count);
                 Assert.Contains(added[0], everything);
                 Assert.Contains(added[1], everything);
@@ -157,7 +157,7 @@ namespace CollectionsTests {
 
             // collection a positive region
             {
-                var positiveOnly = tree.CollectItems(new Bound(5, 0, 4));
+                var positiveOnly = tree.CollectItems<List<string>>(new Bound(5, 0, 4));
                 Assert.Equal(2, positiveOnly.Count);
                 Assert.Contains(added[3], positiveOnly);
                 Assert.Contains(added[4], positiveOnly);
@@ -165,7 +165,7 @@ namespace CollectionsTests {
 
             // collect a negative region
             {
-                var negativeOnly = tree.CollectItems(new Bound(-5, 0, 4));
+                var negativeOnly = tree.CollectItems<List<string>>(new Bound(-5, 0, 4));
                 Assert.Equal(2, negativeOnly.Count);
                 Assert.Contains(added[0], negativeOnly);
                 Assert.Contains(added[1], negativeOnly);
@@ -173,7 +173,7 @@ namespace CollectionsTests {
 
             // collect an empty region
             {
-                var nothing = tree.CollectItems(new Bound(100, 0, 5));
+                var nothing = tree.CollectItems<List<string>>(new Bound(100, 0, 5));
                 Assert.Empty(nothing);
             }
         }
