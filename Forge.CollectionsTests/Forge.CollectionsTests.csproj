@@ -64,6 +64,9 @@
     <Reference Include="xunit.extensions">
       <HintPath>..\External\xunit\xunit.extensions.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(ExternalLibs)\Newtonsoft.Json.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <Choose>
     <When Condition="('$(VisualStudioVersion)' == '10.0' or '$(VisualStudioVersion)' == '') and '$(TargetFrameworkVersion)' == 'v3.5'">

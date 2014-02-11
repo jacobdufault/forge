@@ -19,22 +19,36 @@
 
 using Forge.Collections;
 using Forge.Utilities;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Xunit;
 using Xunit.Extensions;
 
 namespace CollectionsTests {
     public class QuadTreeTests {
-        private class TestMonitor : IQuadTreeMonitor<object> {
-            public HashSet<object> Contained = new HashSet<object>();
+        [JsonObject(MemberSerialization.OptIn, IsReference = true)]
+        private class TestMonitor<TItem> : IQuadTreeMonitor<TItem> {
+            [JsonProperty]
+            public HashSet<TItem> Contained = new HashSet<TItem>();
 
-            public void OnEnter(object item) {
+            public void OnEnter(TItem item) {
                 Assert.True(Contained.Add(item), "Duplicate item added to monitor");
             }
 
-            public void OnExit(object item) {
+            public void OnExit(TItem item) {
                 Assert.True(Contained.Remove(item),
                     "Item removed from monitor that was not entered into the monitor");
+            }
+
+            public override bool Equals(object obj) {
+                var monitor = obj as TestMonitor<TItem>;
+                return monitor != null && Contained.Equals(monitor.Contained);
+            }
+
+            public override int GetHashCode() {
+                return Contained.GetHashCode();
             }
         }
 
@@ -48,7 +62,7 @@ namespace CollectionsTests {
             // the item again, ensure the monitor contains the item, update the monitor so that it
             // still contains the item & verify, then remove the monitor and ensure it is empty
             {
-                var monitor = new TestMonitor();
+                var monitor = new TestMonitor<object>();
 
                 // inserting a monitor into an empty tree should result in an empty monitor
                 tree.AddMonitor(monitor, new Bound(0, 0, 25));
@@ -78,7 +92,7 @@ namespace CollectionsTests {
 
             // test a monitor on a non-empty tree
             {
-                var monitor = new TestMonitor();
+                var monitor = new TestMonitor<object>();
 
                 // the monitor should have the object already in the tree added to it
                 tree.AddMonitor(monitor, new Bound(0, 0, 25));
@@ -97,7 +111,7 @@ namespace CollectionsTests {
             // test a monitor on a non-empty tree that doesn't contain the objects already in the
             // tree
             {
-                var monitor = new TestMonitor();
+                var monitor = new TestMonitor<object>();
 
                 // the monitor should remain empty when being added to the tree
                 tree.AddMonitor(monitor, new Bound(100, 100, 25));
@@ -123,6 +137,28 @@ namespace CollectionsTests {
                 yield return new object[] { 50 };
                 yield return new object[] { 100 };
                 yield return new object[] { 1000 };
+            }
+        }
+
+        [Fact]
+        public void SerializeQuadTree() {
+            var tree = new QuadTree<string>();
+
+            tree.AddItem("(0, 0)", new Vector2r());
+            tree.AddItem("(1, -1)", new Vector2r(1, -1));
+            tree.AddMonitor(new TestMonitor<string>(), new Bound(0, 10, 5));
+
+            Console.WriteLine(SerializationHelpers.Serialize(tree));
+            var cloned = SerializationHelpers.DeepClone(tree);
+
+            Assert.Equal(tree.Items.Count(), cloned.Items.Count());
+            foreach (var item in tree.Items) {
+                Assert.Contains(item, cloned.Items);
+            }
+
+            Assert.Equal(tree.Monitors.Count(), cloned.Monitors.Count());
+            foreach (var monitor in tree.Monitors) {
+                Assert.True(tree.Monitors.Contains(monitor));
             }
         }
 

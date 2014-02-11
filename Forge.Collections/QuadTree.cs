@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using Forge.Utilities;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,6 +27,7 @@ namespace Forge.Collections {
     /// <summary>
     /// Interface for objects which are monitoring a specific region within a QuadTree.
     /// </summary>
+    [JsonObject(MemberSerialization.OptIn, IsReference = true)]
     public interface IQuadTreeMonitor<T> {
         /// <summary>
         /// Called when the given item has entered the region.
@@ -38,8 +40,16 @@ namespace Forge.Collections {
         void OnExit(T item);
     }
 
+    [JsonObject(MemberSerialization.OptIn)]
     internal struct Rect {
-        public int X0, Z0, X1, Z1;
+        [JsonProperty("X0")]
+        public int X0;
+        [JsonProperty("Z0")]
+        public int Z0;
+        [JsonProperty("X1")]
+        public int X1;
+        [JsonProperty("Z1")]
+        public int Z1;
 
         public Rect(int x0, int z0, int x1, int z1) {
             X0 = x0;
@@ -88,9 +98,14 @@ namespace Forge.Collections {
     }
 
     // TODO: the linear searches in this class can be removed by using metadata
+    [JsonObject(MemberSerialization.OptIn)]
     internal class Node<T> {
+        [JsonObject(MemberSerialization.OptIn)]
         private class StoredMonitor {
+            [JsonProperty("Monitor")]
             public IQuadTreeMonitor<T> Monitor;
+
+            [JsonProperty("Region")]
             public Bound Region;
 
             public StoredMonitor(IQuadTreeMonitor<T> monitor, Bound region) {
@@ -99,8 +114,12 @@ namespace Forge.Collections {
             }
         }
 
+        [JsonObject(MemberSerialization.OptIn)]
         private class StoredItem {
+            [JsonProperty("Item")]
             public T Item;
+
+            [JsonProperty("Position")]
             public Vector2r Position;
 
             public StoredItem(T item, Vector2r position) {
@@ -112,11 +131,13 @@ namespace Forge.Collections {
         /// <summary>
         /// The items that the node contains
         /// </summary>
+        [JsonProperty("Items")]
         private Bag<StoredItem> _items;
 
         /// <summary>
         /// The monitors that watch for adds/removes in this node
         /// </summary>
+        [JsonProperty("Monitors")]
         private Bag<StoredMonitor> _monitors;
 
         /// <summary>
@@ -142,6 +163,7 @@ namespace Forge.Collections {
         /// <summary>
         /// The area that this node is monitoring
         /// </summary>
+        [JsonProperty("MonitoredRegion")]
         public Rect MonitoredRegion {
             get;
             private set;
@@ -296,15 +318,18 @@ namespace Forge.Collections {
     /// chunks can be controlled by the constructor parameter.
     /// </remarks>
     /// <typeparam name="T">The type of object stored in the QuadTree</typeparam>
+    [JsonObject(MemberSerialization.OptIn)]
     public class QuadTree<TItem> {
         /// <summary>
         /// The width/height of each chunk
         /// </summary>
+        [JsonProperty("WorldScale")]
         private int _worldScale;
 
         /// <summary>
         /// All of the chunks
         /// </summary>
+        [JsonProperty("Chunks")]
         private Node<TItem>[,] _chunks;
 
         /// <summary>
