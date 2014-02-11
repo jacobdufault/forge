@@ -22,6 +22,17 @@ using System;
 
 namespace Forge.Entities {
     /// <summary>
+    /// Exception thrown when a deserialization error has occurred. This is most likely during a
+    /// level load.
+    /// </summary>
+    [Serializable]
+    public class DeserializationException : Exception {
+        internal DeserializationException(string json, Exception e) :
+            base("error " + e + " when deserializing " + json) {
+        }
+    }
+
+    /// <summary>
     /// Exception thrown when a data type is added to an entity, but the entity already contains an
     /// instance of said data type.
     /// </summary>
