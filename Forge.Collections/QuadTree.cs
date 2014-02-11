@@ -20,6 +20,7 @@
 using Forge.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Forge.Collections {
     /// <summary>
@@ -117,6 +118,26 @@ namespace Forge.Collections {
         /// The monitors that watch for adds/removes in this node
         /// </summary>
         private Bag<StoredMonitor> _monitors;
+
+        /// <summary>
+        /// Returns all of the items that are stored in this node.
+        /// </summary>
+        public IEnumerable<T> Items {
+            get {
+                return from item in _items
+                       select item.Item;
+            }
+        }
+
+        /// <summary>
+        /// Returns all of the monitors that are stored in this node.
+        /// </summary>
+        public IEnumerable<IQuadTreeMonitor<T>> Monitors {
+            get {
+                return from monitor in _monitors
+                       select monitor.Monitor;
+            }
+        }
 
         /// <summary>
         /// The area that this node is monitoring
@@ -286,10 +307,53 @@ namespace Forge.Collections {
         /// </summary>
         private Node<TItem>[,] _chunks;
 
+        /// <summary>
+        /// Constructs a new QuadTree that is empty.
+        /// </summary>
+        /// <param name="worldScale">The size of each node inside of the tree. A larger value will
+        /// result in faster queries over large areas, but a smaller value will result in faster
+        /// queries over a smaller area. In general, this should be close to your typical query
+        /// size.</param>
         public QuadTree(int worldScale = 100) {
             _worldScale = worldScale;
             _chunks = new Node<TItem>[0, 0];
         }
+
+        #region Query APIs
+        /// <summary>
+        /// Returns all monitors that are stored in the tree.
+        /// </summary>
+        public IEnumerable<IQuadTreeMonitor<TItem>> Monitors {
+            get {
+                var monitors = new HashSet<IQuadTreeMonitor<TItem>>();
+
+                foreach (var chunk in _chunks) {
+                    foreach (var monitor in chunk.Monitors) {
+                        monitors.Add(monitor);
+                    }
+                }
+
+                return monitors;
+            }
+        }
+
+        /// <summary>
+        /// Returns all items that are stored in the tree.
+        /// </summary>
+        public IEnumerable<TItem> Items {
+            get {
+                var items = new HashSet<TItem>();
+
+                foreach (var chunk in _chunks) {
+                    foreach (var item in chunk.Items) {
+                        items.Add(item);
+                    }
+                }
+
+                return items;
+            }
+        }
+        #endregion
 
         #region Item API
         /// <summary>
@@ -447,8 +511,6 @@ namespace Forge.Collections {
                 _chunks = GrowArray(_chunks, xIndex + 1, zIndex + 1, GenerateChunk);
             }
 
-            Console.WriteLine("Getting index at ({0}, {1}); length(0)={2}, length(1)={3}",
-                xIndex, zIndex, _chunks.GetLength(0), _chunks.GetLength(1));
             return _chunks[xIndex, zIndex];
         }
 
