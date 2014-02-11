@@ -157,7 +157,7 @@
         </member>
         <member name="T:Forge.Collections.IQuadTreeMonitor`1">
             <summary>
-            Interface for objects which are monitoring a specific region.
+            Interface for objects which are monitoring a specific region within a QuadTree.
             </summary>
         </member>
         <member name="M:Forge.Collections.IQuadTreeMonitor`1.OnEnter(`0)">
@@ -170,25 +170,15 @@
             Called when an item has left the region.
             </summary>
         </member>
-        <member name="M:Forge.Collections.Rect.Intersects(Forge.Collections.Rect)">
-            <summary>
-            Returns true if this rect intersects with the parameter rect.
-            </summary>
-        </member>
-        <member name="M:Forge.Collections.Rect.Contains(System.Int32,System.Int32)">
-            <summary>
-            Returns true if the given point is contained with this rect.
-            </summary>
-        </member>
-        <member name="M:Forge.Collections.Rect.Contains(Forge.Collections.Rect)">
-            <summary>
-            Returns true if this rect fully contains the parameter rect.
-            </summary>
-        </member>
         <member name="M:Forge.Collections.Rect.Colliding(Forge.Collections.Rect)">
             <summary>
             Returns true if this rect is either intersecting with or fully contains the parameter
             rect.
+            </summary>
+        </member>
+        <member name="M:Forge.Collections.Rect.InRange(System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Returns true if v is between [min, max).
             </summary>
         </member>
         <member name="F:Forge.Collections.Node`1._items">
@@ -201,7 +191,42 @@
             The monitors that watch for adds/removes in this node
             </summary>
         </member>
-        <member name="F:Forge.Collections.QuadTree`1._baseChunkSize">
+        <member name="M:Forge.Collections.Node`1.CollectInto(Forge.Utilities.Bound,System.Collections.Generic.ICollection{`0})">
+            <summary>
+            Adds all of the items inside of this node that are contained within the given region to
+            the given collection.
+            </summary>
+            <param name="region">The area to collect objects from.</param>
+            <param name="storage">Where to store the collected objects.</param>
+        </member>
+        <member name="P:Forge.Collections.Node`1.Items">
+            <summary>
+            Returns all of the items that are stored in this node.
+            </summary>
+        </member>
+        <member name="P:Forge.Collections.Node`1.Monitors">
+            <summary>
+            Returns all of the monitors that are stored in this node.
+            </summary>
+        </member>
+        <member name="P:Forge.Collections.Node`1.MonitoredRegion">
+            <summary>
+            The area that this node is monitoring
+            </summary>
+        </member>
+        <member name="T:Forge.Collections.QuadTree`1">
+            <summary>
+            Implements a QuadTree, which supports spatial monitoring and spatial querying of
+            positionable objects. The objects can be positioned anywhere, even at negative coordinates.
+            </summary>
+            <remarks>
+            In regards to implementation details, this is not currently a recursive QuadTree. Instead,
+            the world is divided into a set of chunks which can be queried directly. The size of these
+            chunks can be controlled by the constructor parameter.
+            </remarks>
+            <typeparam name="T">The type of object stored in the QuadTree</typeparam>
+        </member>
+        <member name="F:Forge.Collections.QuadTree`1._worldScale">
             <summary>
             The width/height of each chunk
             </summary>
@@ -209,6 +234,109 @@
         <member name="F:Forge.Collections.QuadTree`1._chunks">
             <summary>
             All of the chunks
+            </summary>
+        </member>
+        <member name="M:Forge.Collections.QuadTree`1.#ctor(System.Int32)">
+            <summary>
+            Constructs a new QuadTree that is empty.
+            </summary>
+            <param name="worldScale">The size of each node inside of the tree. A larger value will
+            result in faster queries over large areas, but a smaller value will result in faster
+            queries over a smaller area. In general, this should be close to your typical query
+            size.</param>
+        </member>
+        <member name="M:Forge.Collections.QuadTree`1.AddItem(`0,Forge.Utilities.Vector2r)">
+            <summary>
+            Add a new item to the QuadTree at the given position.
+            </summary>
+            <param name="item">The item to add.</param>
+            <param name="position">The position of the item.</param>
+        </member>
+        <member name="M:Forge.Collections.QuadTree`1.UpdateItem(`0,Forge.Utilities.Vector2r,Forge.Utilities.Vector2r)">
+            <summary>
+            Update the position of an item. This will notify monitors of position updates.
+            </summary>
+            <param name="item">The item to update the position of.</param>
+            <param name="previous">The old position of the item.</param>
+            <param name="current">The updated position of the item.</param>
+        </member>
+        <member name="M:Forge.Collections.QuadTree`1.RemoveItem(`0,Forge.Utilities.Vector2r)">
+            <summary>
+            Remove an item from the QuadTree.
+            </summary>
+            <param name="item">The item to remove.</param>
+            <param name="position">The position of the item.</param>
+        </member>
+        <member name="M:Forge.Collections.QuadTree`1.CollectItems``1(Forge.Utilities.Bound,``0)">
+            <summary>
+            Collect all items that are stored inside of the given region.
+            </summary>
+            <param name="region">The area to collect entities from.</param>
+            <param name="storage">Where to store the collected entities.</param>
+            <typeparam name="TCollection">The type of collection to store items in.</typeparam>
+            <returns>All entities that are contained in or intersecting with the given
+            region.</returns>
+        </member>
+        <member name="M:Forge.Collections.QuadTree`1.AddMonitor(Forge.Collections.IQuadTreeMonitor{`0},Forge.Utilities.Bound)">
+            <summary>
+            Inserts the given monitor into the QuadTree. The monitor will be notified of any
+            entities that enter or leave it. The monitor can be updated or removed.
+            </summary>
+            <param name="monitor">The monitor.</param>
+            <param name="monitoredRegion">The area that the monitor is viewing.</param>
+        </member>
+        <member name="M:Forge.Collections.QuadTree`1.RemoveMonitor(Forge.Collections.IQuadTreeMonitor{`0},Forge.Utilities.Bound)">
+            <summary>
+            Removes the given monitor from the quad tree. It will receive a series of OnExit calls
+            during this Remove call.
+            </summary>
+            <param name="monitor">The monitor to remove.</param>
+            <param name="monitoredRegion">The region that the monitor was monitoring.</param>
+        </member>
+        <member name="M:Forge.Collections.QuadTree`1.UpdateMonitor(Forge.Collections.IQuadTreeMonitor{`0},Forge.Utilities.Bound,Forge.Utilities.Bound)">
+            <summary>
+            Update the position of a monitor.
+            </summary>
+            <param name="monitor">The monitor whose position has changed.</param>
+            <param name="previousRegion">The previous area that the monitor was watching.</param>
+            <param name="currentRegion">The new area that the monitor is watching.</param>
+        </member>
+        <member name="M:Forge.Collections.QuadTree`1.IterateChunks(Forge.Utilities.Bound,System.Action{Forge.Collections.Node{`0}})">
+            <summary>
+            Helper function to iterate all of the chunks that are contained within the given world
+            region.
+            </summary>
+        </member>
+        <member name="M:Forge.Collections.QuadTree`1.IterateChunks(Forge.Collections.Rect,System.Action{Forge.Collections.Node{`0}})">
+            <summary>
+            Helper function to iterate all of the chunks that are contained within the given world
+            region.
+            </summary>
+        </member>
+        <member name="M:Forge.Collections.QuadTree`1.GetChunk(System.Int32,System.Int32)">
+            <summary>
+            Returns the chunk located at the given x and z world coordinates.
+            </summary>
+        </member>
+        <member name="M:Forge.Collections.QuadTree`1.GenerateChunk(System.Int32,System.Int32)">
+            <summary>
+            Creates a new chunk located at the given x and z index coordinates.
+            </summary>
+        </member>
+        <member name="M:Forge.Collections.QuadTree`1.GrowArray``1(``0[0:,0:],System.Int32,System.Int32,System.Func{System.Int32,System.Int32,``0})">
+            <summary>
+            Helper method that grows a 2D array and populates new elements with values created from
+            the generator.
+            </summary>
+        </member>
+        <member name="P:Forge.Collections.QuadTree`1.Monitors">
+            <summary>
+            Returns all monitors that are stored in the tree.
+            </summary>
+        </member>
+        <member name="P:Forge.Collections.QuadTree`1.Items">
+            <summary>
+            Returns all items that are stored in the tree.
             </summary>
         </member>
         <member name="T:Forge.Collections.SparseArray`1">
@@ -384,6 +512,61 @@
             <summary>
             Data stored inside of the UnorderedList.
             </summary>
+        </member>
+        <member name="T:Forge.Collections.WorldIndexCoordinateTransform">
+            <summary>
+            Contains some utility functions that translate between two coordinate systems, called world
+            and index. The world coordinate system is larger than the index coordinate system, ie, every
+            100 units in the world coordinate system maps to 1 unit in the index coordinate system.
+            Further, the world coordinate system contains all 4 quadrants (+-x, +-z), but the index
+            coordinate system only contains +x and +z.
+            </summary>
+        </member>
+        <member name="M:Forge.Collections.WorldIndexCoordinateTransform.ConvertWorldToIndex(System.Int32,System.Int32,System.Int32,System.Int32@,System.Int32@)">
+            <summary>
+            Converts the given game coordinates (which can be negative) into coordinates on a
+            smaller map with only positive coordinates.
+            </summary>
+            <param name="worldScale">The scale difference between the world map and the index map; a
+            value of 100 here means that 100 units of the world map correspond to 1 unit the index
+            map.</param>
+            <param name="xWorld">The x coordinate on the world.</param>
+            <param name="zWorld">The z coordinate on the world.</param>
+            <param name="xIndex">The x coordinate on the index map.</param>
+            <param name="zIndex">The z coordinate on the index map.</param>
+        </member>
+        <member name="M:Forge.Collections.WorldIndexCoordinateTransform.MapWorldToIndex(System.Int32,System.Int32)">
+            <summary>
+            Converts the given world coordinate into an index coordinate.
+            </summary>
+            <param name="worldScale">The scale difference between the world map and the index map; a
+            value of 100 here means that 100 units of the world map correspond to 1 unit the index
+            map.</param>
+            <param name="world">The world coordinate (can be negative).</param>
+            <returns>The index coordinate that is associated with the given world
+            coordinate.</returns>
+        </member>
+        <member name="M:Forge.Collections.WorldIndexCoordinateTransform.ConvertIndexToWorld(System.Int32,System.Int32,System.Int32,System.Int32@,System.Int32@)">
+            <summary>
+            Converts the given index coordinates into the most closely associated world coordinates.
+            </summary>
+            <param name="worldScale">The scale difference between the world map and the index map; a
+            value of 100 here means that 100 units of the world map correspond to 1 unit the index
+            map.</param>
+            <param name="xIndex">The x index coordinate.</param>
+            <param name="zIndex">The z index coordinate.</param>
+            <param name="xWorld">The x world coordinate.</param>
+            <param name="zWorld">The z world coordinate.</param>
+        </member>
+        <member name="M:Forge.Collections.WorldIndexCoordinateTransform.MapIndexToWorld(System.Int32,System.Int32)">
+            <summary>
+            Converts the given index coordinate into its most closely associated world coordinate.
+            </summary>
+            <param name="worldScale">The scale difference between the world map and the index map; a
+            value of 100 here means that 100 units of the world map correspond to 1 unit the index
+            map.</param>
+            <param name="index">The index coordinate (must be >= 0).</param>
+            <returns>A world coordinate that will map back to the given index coordinate.</returns>
         </member>
     </members>
 </doc>
