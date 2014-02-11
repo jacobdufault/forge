@@ -140,25 +140,44 @@ namespace CollectionsTests {
             }
         }
 
-        [Fact]
-        public void SerializeQuadTree() {
-            var tree = new QuadTree<string>();
-
-            tree.AddItem("(0, 0)", new Vector2r());
-            tree.AddItem("(1, -1)", new Vector2r(1, -1));
-            tree.AddMonitor(new TestMonitor<string>(), new Bound(0, 10, 5));
-
-            Console.WriteLine(SerializationHelpers.Serialize(tree));
+        private static void VerifyTreeClone<TItem>(QuadTree<TItem> tree) {
             var cloned = SerializationHelpers.DeepClone(tree);
 
             Assert.Equal(tree.Items.Count(), cloned.Items.Count());
             foreach (var item in tree.Items) {
-                Assert.Contains(item, cloned.Items);
+                Assert.True(tree.Items.Contains(item));
             }
 
             Assert.Equal(tree.Monitors.Count(), cloned.Monitors.Count());
             foreach (var monitor in tree.Monitors) {
                 Assert.True(tree.Monitors.Contains(monitor));
+            }
+        }
+
+        [Fact]
+        public void SerializeQuadTree() {
+            {
+                var tree = new QuadTree<string>();
+                VerifyTreeClone(tree);
+            }
+
+            {
+                var tree = new QuadTree<string>();
+
+                tree.AddItem("(0, 0)", new Vector2r());
+                tree.AddItem("(1, -1)", new Vector2r(1, -1));
+                tree.AddMonitor(new TestMonitor<string>(), new Bound(0, 10, 5));
+
+                VerifyTreeClone(tree);
+            }
+
+            {
+                var tree = new QuadTree<string>();
+
+                tree.AddMonitor(new TestMonitor<string>(), new Bound(0, 0, 100));
+                tree.AddMonitor(new TestMonitor<string>(), new Bound(0, 5, 100));
+
+                VerifyTreeClone(tree);
             }
         }
 
